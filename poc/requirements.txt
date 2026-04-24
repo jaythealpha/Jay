@@ -1,0 +1,6 @@
+# Wrapper-side dependencies only.
+# The heavy ML stack (PyTorch, Detectron2, TorchServe, Animated Drawings)
+# lives inside the Docker container — see docker/Dockerfile.
+
+# Track B (optional): generative image-to-video API client
+fal-client>=0.5.0

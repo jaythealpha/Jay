@@ -1,0 +1,19 @@
+services:
+  animated-drawings:
+    build:
+      context: ./docker
+      dockerfile: Dockerfile
+    image: memory-app/animated-drawings:poc
+    container_name: memory-app-ad
+    ports:
+      - "8080:8080"  # inference API
+      - "8081:8081"  # management API
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+    volumes:
+      - ./samples:/workspace/samples:ro
+      - ./out:/workspace/out

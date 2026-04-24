@@ -1,0 +1,23 @@
+# Sample drawings — children's data, never commit
+samples/*.jpg
+samples/*.jpeg
+samples/*.png
+samples/*.heic
+
+# Outputs
+out/
+*.gif
+*.mp4
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+
+# Env
+.env
