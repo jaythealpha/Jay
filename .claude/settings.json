@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker compose logs*)",
+      "Bash(docker compose ps*)",
+      "Bash(docker compose config*)",
+      "Bash(nvidia-smi*)",
+      "Bash(pip3 list*)"
+    ]
+  }
+}
