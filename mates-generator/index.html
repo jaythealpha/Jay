@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Yogibo Mates 이미지 프롬프트 생성기</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="hero">
+    <h1>Yogibo Mates 이미지 프롬프트 생성기</h1>
+    <p class="subtitle">
+      <a href="https://yogibo.jp/collections/mates" target="_blank" rel="noopener">yogibo.jp/collections/mates</a>
+      의 모든 메이트 캐릭터를 다양한 화풍(수채화 · 유화 · 애니메이션 등)으로 그려내기 위한
+      상세 이미지 프롬프트를 자동 생성합니다.
+    </p>
+  </header>
+
+  <main class="layout">
+    <section class="panel" aria-label="캐릭터 선택">
+      <div class="panel-header">
+        <h2>1. 캐릭터 선택</h2>
+        <input id="search" type="search" placeholder="캐릭터 검색…" aria-label="캐릭터 검색" />
+      </div>
+      <div id="character-grid" class="character-grid" role="listbox" aria-label="캐릭터 목록"></div>
+    </section>
+
+    <section class="panel" aria-label="옵션 및 결과">
+      <h2>2. 화풍 · 옵션 설정</h2>
+
+      <label class="field">
+        <span>화풍 (Style)</span>
+        <select id="style-select"></select>
+      </label>
+
+      <div class="grid-2">
+        <label class="field">
+          <span>포즈 / 액션</span>
+          <input id="pose" type="text" placeholder="예: 책상 위에 앉아 책을 읽는" />
+        </label>
+        <label class="field">
+          <span>장면 / 배경</span>
+          <input id="scene" type="text" placeholder="예: 햇살 가득한 창가, 봄 들판" />
+        </label>
+        <label class="field">
+          <span>분위기 / 무드</span>
+          <input id="mood" type="text" placeholder="예: 평화로운, 몽환적인" />
+        </label>
+        <label class="field">
+          <span>조명</span>
+          <select id="lighting">
+            <option value="">(자동)</option>
+            <option value="soft natural daylight from a window">자연광 (창가)</option>
+            <option value="warm golden hour sunlight">골든아워</option>
+            <option value="overcast diffuse light">흐린 날 디퓨즈드 라이트</option>
+            <option value="cool moonlight at night">달빛</option>
+            <option value="studio softbox lighting, three-point setup">스튜디오 소프트박스</option>
+            <option value="dramatic chiaroscuro lighting with strong shadows">드라마틱 명암</option>
+            <option value="dreamy backlit rim light with bokeh">역광 림라이트</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>카메라 / 구도</span>
+          <select id="camera">
+            <option value="">(자동)</option>
+            <option value="centered eye-level portrait, three-quarter view">아이레벨 3/4 뷰</option>
+            <option value="full body wide shot with environmental context">전신 와이드샷</option>
+            <option value="close-up portrait, shallow depth of field">클로즈업 포트레이트</option>
+            <option value="overhead top-down flat lay composition">탑다운 플랫레이</option>
+            <option value="low angle hero shot looking up">로우앵글 히어로샷</option>
+            <option value="isometric three-quarter view">아이소메트릭</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>화면 비율</span>
+          <select id="aspect">
+            <option value="1:1">1:1 (정사각)</option>
+            <option value="4:5">4:5 (인스타 인물)</option>
+            <option value="3:4">3:4 (포스터)</option>
+            <option value="16:9">16:9 (와이드)</option>
+            <option value="9:16">9:16 (모바일/스토리)</option>
+            <option value="2:3">2:3 (출판물)</option>
+          </select>
+        </label>
+      </div>
+
+      <fieldset class="field">
+        <legend>대상 도구</legend>
+        <label><input type="radio" name="target" value="universal" checked /> 범용 (자연어)</label>
+        <label><input type="radio" name="target" value="midjourney" /> Midjourney (--ar 포함)</label>
+        <label><input type="radio" name="target" value="stable-diffusion" /> Stable Diffusion (negative 포함)</label>
+        <label><input type="radio" name="target" value="dalle" /> DALL·E / GPT Image</label>
+      </fieldset>
+
+      <div class="actions">
+        <button id="generate" type="button" class="primary">프롬프트 생성</button>
+        <button id="copy" type="button" disabled>클립보드에 복사</button>
+        <button id="generate-all-styles" type="button">선택 캐릭터 × 모든 화풍</button>
+      </div>
+
+      <h2>3. 결과 프롬프트</h2>
+      <article id="output" class="output" aria-live="polite">
+        <p class="placeholder">왼쪽에서 캐릭터를 선택하고 <strong>프롬프트 생성</strong>을 눌러주세요.</p>
+      </article>
+    </section>
+  </main>
+
+  <footer>
+    <small>
+      © Yogibo Mates 캐릭터 IP는 ㈜Yogibo의 자산입니다. 본 도구는 학습 및 팬아트 프롬프트 보조용이며,
+      상업적 이용 시 권리자의 허가가 필요합니다.
+    </small>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
