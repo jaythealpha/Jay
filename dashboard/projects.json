@@ -1,0 +1,57 @@
+{
+  "_meta": {
+    "note": "Claude 세션에서 생성된 모든 작업의 레지스트리. 새 작업을 추가하려면 projects 배열에 같은 스키마로 항목을 추가하세요.",
+    "schema": {
+      "id": "고유 슬러그",
+      "title": "표시 제목",
+      "category": "분류 (전략 / 도구 / 분석 / 디자인 등)",
+      "status": "진행 상태 (완료 / 진행 중 / 초안)",
+      "type": "콘텐츠 타입 (markdown / webapp / data / link)",
+      "path": "대시보드 기준 상대 경로 — 마크다운 파일 또는 웹앱 index.html 또는 외부 URL",
+      "icon": "이모지 한 글자",
+      "tags": "검색용 키워드 배열",
+      "summary": "한 줄 요약",
+      "description": "상세 설명 (HTML 허용 안 됨, 일반 텍스트)",
+      "actions": "보조 액션 버튼들 [{label, href}]",
+      "created": "ISO 날짜",
+      "commit": "관련 커밋 해시 (단축)"
+    }
+  },
+  "projects": [
+    {
+      "id": "yogibo-korea-strategy",
+      "title": "Yogibo 한국 시장 매출 10배 확대 전략안",
+      "category": "전략 / 사업기획",
+      "status": "완료",
+      "type": "markdown",
+      "path": "../yogibo-korea-10x-strategy.md",
+      "icon": "📈",
+      "tags": ["yogibo", "korea", "go-to-market", "strategy", "10x"],
+      "summary": "한국 시장에서 매출을 10배로 확대하기 위한 4-Pillar GTM 전략 문서",
+      "description": "유통/브랜딩/제품/운영의 4-Pillar 관점에서 한국 시장 진출과 성장 전략을 정리한 마크다운 문서. 단계별 KPI, 채널 전략, 가격 정책, 협업 후보를 포함합니다.",
+      "actions": [
+        { "label": "원문 보기", "href": "../yogibo-korea-10x-strategy.md" }
+      ],
+      "created": "2026-05-06",
+      "commit": "9529157"
+    },
+    {
+      "id": "mates-generator",
+      "title": "Yogibo Mates 이미지 프롬프트 생성기",
+      "category": "도구 / 크리에이티브",
+      "status": "완료",
+      "type": "webapp",
+      "path": "../mates-generator/index.html",
+      "icon": "🎨",
+      "tags": ["yogibo", "mates", "image", "prompt", "ai-art", "midjourney", "stable-diffusion", "dalle"],
+      "summary": "24종 메이트 캐릭터 × 20종 화풍 조합으로 이미지 생성용 상세 프롬프트를 자동 조립",
+      "description": "Yogibo Mates 캐릭터를 수채화·유화·지브리·Pixar 3D 등 다양한 화풍으로 그려내기 위한 프롬프트를 생성합니다. Midjourney·Stable Diffusion·DALL·E 별 출력 포맷을 지원하며, characters.json / styles.json 으로 데이터 확장 가능.",
+      "actions": [
+        { "label": "새 탭에서 열기", "href": "../mates-generator/index.html", "target": "_blank" },
+        { "label": "README", "href": "../mates-generator/README.md" }
+      ],
+      "created": "2026-05-07",
+      "commit": "7c4b464"
+    }
+  ]
+}
