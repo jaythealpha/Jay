@@ -1,0 +1,7 @@
+.env
+.env.local
+data/
+*.csv
+!tracking/pipeline_template.csv
+__pycache__/
+*.pyc
