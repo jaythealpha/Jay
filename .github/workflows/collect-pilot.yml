@@ -14,7 +14,7 @@ jobs:
         with:
           python-version: '3.11'
 
-      - run: pip install requests
+      - run: pip install requests beautifulsoup4
 
       - name: Run collector
         working-directory: b2b-sales/scripts
@@ -22,6 +22,11 @@ jobs:
           SCHOOLINFO_KEY: ${{ secrets.SCHOOLINFO_KEY }}
           LIBSEOUL_KEY: ${{ secrets.LIBSEOUL_KEY }}
         run: python yogibo_collect_all.py
+
+      - name: Enrich emails
+        working-directory: b2b-sales/scripts
+        run: python enrich_emails.py
+        continue-on-error: true
 
       - name: Upload CSVs
         uses: actions/upload-artifact@v4
