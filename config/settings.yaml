@@ -1,0 +1,31 @@
+# Global runtime settings. Secrets go in .env, not here.
+
+storage:
+  data_dir: ./data
+  db_path: ./data/jobs.db
+
+meshy:
+  base_url: https://api.meshy.ai
+  api_version: v2
+  request_timeout_sec: 60
+  poll_interval_sec: 5
+  poll_max_minutes: 15
+  max_concurrent_tasks: 2
+  retry:
+    max_attempts: 1            # 실패 시 1회만 재시도 (크레딧 절약)
+    backoff_initial_sec: 2
+
+pipeline:
+  human_review_gate: true      # Meshy 생성 후 사람 승인 단계 사용
+  auto_repair: true            # trimesh 자동 mesh 리페어
+  default_material: pla
+  default_quality: standard
+
+routing:
+  # 모델 크기·재질 → 어느 프린터로 보낼지 결정
+  rules:
+    - if: { material: [abs, asa, petg] }
+      use: p2s
+    - if: { max_dimension_mm: 200, material: [pla, silk] }
+      use: a1
+    - default: p2s

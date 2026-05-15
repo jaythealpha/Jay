@@ -1,0 +1,162 @@
+"""Meshy AI API 클라이언트. CreditGuard와 함께 사용.
+
+사용 예:
+    guard = CreditGuard(db, budgets)
+    client = MeshyClient(api_key, config, guard)
+    task_id = client.image_to_3d(job_id, image_url, with_texture=False)
+    model_path = client.wait_and_download(task_id, dest_dir)
+"""
+
+from __future__ import annotations
+
+import time
+from pathlib import Path
+from typing import Any
+
+import httpx
+from tenacity import retry, stop_after_attempt, wait_exponential
+
+from bambu_auto.config import MeshyConfig
+from bambu_auto.services.meshy.credits import BudgetExceeded, CreditGuard
+
+
+class MeshyError(Exception):
+    pass
+
+
+class MeshyClient:
+    """Meshy REST API 래퍼.
+
+    NOTE: 엔드포인트 경로·페이로드는 Meshy 공식 docs 최신 버전과 대조해서
+    실제 호출 전에 검증 필요. 현재 코드는 일반적인 v2 패턴 기준 구현.
+    """
+
+    def __init__(
+        self,
+        api_key: str,
+        config: MeshyConfig,
+        guard: CreditGuard,
+    ) -> None:
+        if not api_key:
+            raise ValueError("MESHY_API_KEY is empty. Set it in .env")
+        self.api_key = api_key
+        self.config = config
+        self.guard = guard
+        self._http = httpx.Client(
+            base_url=f"{config.base_url}/openapi/{config.api_version}",
+            timeout=config.request_timeout_sec,
+            headers={"Authorization": f"Bearer {api_key}"},
+        )
+
+    def close(self) -> None:
+        self._http.close()
+
+    # ---- operations ----
+
+    def image_to_3d(
+        self,
+        job_id: str,
+        image_url: str,
+        with_texture: bool = False,
+        ai_model: str = "meshy-4",
+    ) -> tuple[str, int]:
+        """Image-to-3D 작업 제출. 크레딧 예약 → API 호출 → 예약 commit.
+
+        Returns: (meshy_task_id, ledger_id)
+        """
+        op = "image_to_3d_textured" if with_texture else "image_to_3d_untextured"
+        ledger_id = self.guard.reserve(job_id, op, note=f"image_to_3d ai={ai_model}")
+        try:
+            resp = self._post(
+                "/image-to-3d",
+                {
+                    "image_url": image_url,
+                    "enable_pbr": with_texture,
+                    "ai_model": ai_model,
+                    "topology": "triangle",
+                    "target_polycount": 30000,
+                },
+            )
+            task_id = resp.get("result") or resp.get("id") or resp.get("task_id")
+            if not task_id:
+                raise MeshyError(f"Unexpected response: {resp}")
+            self.guard.commit(ledger_id, meshy_task_id=task_id)
+            return task_id, ledger_id
+        except BudgetExceeded:
+            raise
+        except Exception as e:
+            self.guard.refund(ledger_id, reason=f"submit_failed: {e}")
+            raise
+
+    def text_to_3d_preview(self, job_id: str, prompt: str, art_style: str = "realistic") -> tuple[str, int]:
+        op = "text_to_3d_preview"
+        ledger_id = self.guard.reserve(job_id, op, note=f"prompt={prompt[:60]}")
+        try:
+            resp = self._post(
+                "/text-to-3d",
+                {"mode": "preview", "prompt": prompt, "art_style": art_style},
+            )
+            task_id = resp.get("result") or resp.get("id") or resp.get("task_id")
+            if not task_id:
+                raise MeshyError(f"Unexpected response: {resp}")
+            self.guard.commit(ledger_id, meshy_task_id=task_id)
+            return task_id, ledger_id
+        except Exception as e:
+            self.guard.refund(ledger_id, reason=f"submit_failed: {e}")
+            raise
+
+    def get_task(self, task_id: str, kind: str = "image-to-3d") -> dict[str, Any]:
+        """작업 상태 조회. kind = 'image-to-3d' | 'text-to-3d'"""
+        return self._get(f"/{kind}/{task_id}")
+
+    def wait_for_completion(
+        self,
+        task_id: str,
+        kind: str = "image-to-3d",
+    ) -> dict[str, Any]:
+        """작업 완료까지 폴링. 타임아웃·실패 시 예외."""
+        deadline = time.time() + self.config.poll_max_minutes * 60
+        while time.time() < deadline:
+            data = self.get_task(task_id, kind=kind)
+            status = (data.get("status") or "").upper()
+            if status in {"SUCCEEDED", "SUCCESS", "COMPLETED"}:
+                return data
+            if status in {"FAILED", "CANCELED", "EXPIRED"}:
+                raise MeshyError(f"Task {task_id} ended with status={status}: {data}")
+            time.sleep(self.config.poll_interval_sec)
+        raise MeshyError(f"Task {task_id} timed out after {self.config.poll_max_minutes} min")
+
+    def download_model(self, task_data: dict[str, Any], dest_dir: Path, prefer: str = "glb") -> Path:
+        """완료된 작업에서 모델 파일 다운로드. prefer='glb'|'obj'|'stl'|'fbx'"""
+        urls = task_data.get("model_urls") or task_data.get("model_url") or {}
+        if isinstance(urls, str):
+            urls = {"glb": urls}
+        url = urls.get(prefer) or next(iter(urls.values()), None)
+        if not url:
+            raise MeshyError(f"No model URL in task data: {task_data}")
+
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        ext = prefer if url.lower().endswith(prefer) else url.rsplit(".", 1)[-1].split("?")[0]
+        out = dest_dir / f"{task_data.get('id', 'model')}.{ext}"
+        with httpx.stream("GET", url, timeout=120) as r:
+            r.raise_for_status()
+            with out.open("wb") as f:
+                for chunk in r.iter_bytes():
+                    f.write(chunk)
+        return out
+
+    # ---- low-level ----
+
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(min=1, max=10))
+    def _post(self, path: str, payload: dict[str, Any]) -> dict[str, Any]:
+        r = self._http.post(path, json=payload)
+        if r.status_code >= 400:
+            raise MeshyError(f"POST {path} -> {r.status_code}: {r.text}")
+        return r.json()
+
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(min=1, max=10))
+    def _get(self, path: str) -> dict[str, Any]:
+        r = self._http.get(path)
+        if r.status_code >= 400:
+            raise MeshyError(f"GET {path} -> {r.status_code}: {r.text}")
+        return r.json()

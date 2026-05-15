@@ -1,0 +1,26 @@
+# Meshy 크레딧 예산. 파이프라인이 호출 전에 항상 체크함.
+# 한도를 보수적으로 잡아두고, 안정화되면 늘리는 걸 권장.
+
+meshy:
+  plan: pro                    # free / pro / max
+  monthly_credit_cap: 1000     # Pro = 1000 crd/mo
+  daily_credit_cap: 50         # 하루 최대 (실수 방지)
+  reserve_buffer: 30           # 비상용 예비 (재시도/리페어 실패 대응)
+  hard_stop_ratio: 0.95        # 95% 도달 시 신규 job 거부
+  alert_thresholds: [0.7, 0.9] # 알림 발생 시점
+
+# 작업별 예상 크레딧 (API 기준, Meshy 공식 docs 검증 필요)
+# 실제 호출 후 ledger에서 실측값으로 자동 보정됨
+operation_costs:
+  image_to_3d_untextured: 5
+  image_to_3d_textured: 15     # 5 (mesh) + 10 (texture)
+  text_to_3d_preview: 10
+  text_to_3d_refine: 10
+  text_to_3d_full: 20
+  texturing: 10
+  remesh: 5
+
+# 절감 전략 플래그
+saving:
+  skip_texture_by_default: true   # 단색 PLA 출력물 위주면 텍스처 스킵
+  preview_only_mode: true          # text-to-3d는 preview만 자동, refine 수동

@@ -1,0 +1,23 @@
+# 프린터별 LAN 연결 정보. 실제 값은 .env에서 주입됨.
+# host/serial/access_code 는 ${ENV_VAR} 문법으로 환경변수 참조.
+
+printers:
+  p2s:
+    model: P2S
+    host: ${BAMBU_P2S_HOST}
+    serial: ${BAMBU_P2S_SERIAL}
+    access_code: ${BAMBU_P2S_ACCESS_CODE}
+    build_volume_mm: [256, 256, 256]
+    has_ams: true
+    supported_materials: [pla, petg, abs, asa, tpu, silk]
+    default_profile: p2s_pla_standard
+
+  a1:
+    model: A1
+    host: ${BAMBU_A1_HOST}
+    serial: ${BAMBU_A1_SERIAL}
+    access_code: ${BAMBU_A1_ACCESS_CODE}
+    build_volume_mm: [256, 256, 256]
+    has_ams: true                # AMS Lite
+    supported_materials: [pla, petg, tpu, silk]
+    default_profile: a1_pla_fine

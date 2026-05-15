@@ -1,0 +1,38 @@
+# Secrets
+.env
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+*.egg-info/
+build/
+dist/
+
+# uv
+.uv/
+
+# Project data
+data/jobs.db
+data/jobs.db-journal
+data/assets/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Slicer outputs
+*.3mf
+*.gcode
+*.gcode.3mf
+
+# Test artifacts
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
