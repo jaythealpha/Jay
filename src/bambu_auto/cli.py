@@ -78,10 +78,15 @@ def doctor() -> None:
     ok(f"DB at {db.path}")
 
     # Secrets
-    if cfg.secrets.meshy_api_key:
-        ok("MESHY_API_KEY set")
-    else:
+    key = cfg.secrets.meshy_api_key
+    if not key:
         fail("MESHY_API_KEY missing (set in .env)")
+    elif key.startswith("msy_your_") or key == "your_key_here" or "_here" in key:
+        fail(f"MESHY_API_KEY looks like a placeholder ({key!r}). Replace in .env")
+    elif not key.startswith("msy_"):
+        warn(f"MESHY_API_KEY format unexpected (expected msy_*, got {key[:6]!r}...)")
+    else:
+        ok(f"MESHY_API_KEY set ({key[:8]}…{key[-4:]})")
 
     # Printers
     for name, p in cfg.printers.printers.items():
