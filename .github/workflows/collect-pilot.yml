@@ -1,0 +1,31 @@
+name: Collect B2B pilot targets
+
+on:
+  workflow_dispatch:
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - run: pip install requests
+
+      - name: Run collector
+        working-directory: b2b-sales/scripts
+        env:
+          SCHOOLINFO_KEY: ${{ secrets.SCHOOLINFO_KEY }}
+          LIBSEOUL_KEY: ${{ secrets.LIBSEOUL_KEY }}
+        run: python yogibo_collect_all.py
+
+      - name: Upload CSVs
+        uses: actions/upload-artifact@v4
+        with:
+          name: pilot-csvs
+          path: b2b-sales/scripts/*.csv
+          if-no-files-found: error

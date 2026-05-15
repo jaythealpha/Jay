@@ -178,49 +178,54 @@ def fetch_libraries(region: str) -> list[Target]:
 
 
 # ─────────────────────────────────────────────
-# 3. 공공데이터포털 — 행정기관 코드
+# 3. 시·구·군청 (하드코딩 리스트)
+# data.go.kr StanReginCd 는 기관 목록이 아닌 행정구역 코드만 반환하므로
+# 고정 자치단체 목록을 직접 사용합니다.
 # ─────────────────────────────────────────────
+SEOUL_GOV = [
+    ("서울특별시청", "시청"),
+    ("종로구청", "구청"), ("중구청", "구청"), ("용산구청", "구청"),
+    ("성동구청", "구청"), ("광진구청", "구청"), ("동대문구청", "구청"),
+    ("중랑구청", "구청"), ("성북구청", "구청"), ("강북구청", "구청"),
+    ("도봉구청", "구청"), ("노원구청", "구청"), ("은평구청", "구청"),
+    ("서대문구청", "구청"), ("마포구청", "구청"), ("양천구청", "구청"),
+    ("강서구청", "구청"), ("구로구청", "구청"), ("금천구청", "구청"),
+    ("영등포구청", "구청"), ("동작구청", "구청"), ("관악구청", "구청"),
+    ("서초구청", "구청"), ("강남구청", "구청"), ("송파구청", "구청"),
+    ("강동구청", "구청"),
+]
+
+GYEONGGI_GOV = [
+    ("경기도청", "도청"),
+    ("수원시청", "시청"), ("고양시청", "시청"), ("용인시청", "시청"),
+    ("성남시청", "시청"), ("부천시청", "시청"), ("화성시청", "시청"),
+    ("안산시청", "시청"), ("남양주시청", "시청"), ("안양시청", "시청"),
+    ("평택시청", "시청"), ("시흥시청", "시청"), ("파주시청", "시청"),
+    ("의정부시청", "시청"), ("김포시청", "시청"), ("광주시청", "시청"),
+    ("광명시청", "시청"), ("군포시청", "시청"), ("하남시청", "시청"),
+    ("오산시청", "시청"), ("양주시청", "시청"), ("이천시청", "시청"),
+    ("구리시청", "시청"), ("안성시청", "시청"), ("포천시청", "시청"),
+    ("의왕시청", "시청"), ("여주시청", "시청"), ("동두천시청", "시청"),
+    ("과천시청", "시청"),
+    ("양평군청", "군청"), ("가평군청", "군청"), ("연천군청", "군청"),
+]
+
+
 def fetch_gov(region: str) -> list[Target]:
-    key = need("DATA_GO_KR_KEY")
+    src = SEOUL_GOV if region == "서울특별시" else GYEONGGI_GOV if region == "경기도" else []
     out: list[Target] = []
-    try:
-        r = requests.get(
-            "https://apis.data.go.kr/1741000/StanReginCd/getStanReginCdList",
-            params={
-                "serviceKey": key, "type": "json",
-                "pageNo": 1, "numOfRows": 1000,
-                "locatadd_nm": region,
-            },
-            timeout=TIMEOUT,
-        )
-        if "OpenAPI_ServiceResponse" in r.text:
-            print(f"  [error] 공공데이터포털 인증 실패 — DATA_GO_KR_KEY 확인 필요")
-            return out
-        r.raise_for_status()
-        data = r.json()
-    except Exception as e:
-        print(f"  [error] 관공서 {region}: {e}")
-        return out
-
-    payload = data.get("StanReginCd")
-    if not isinstance(payload, list) or len(payload) < 2:
-        return out
-
-    for r_ in payload[1].get("row", []):
-        name = r_.get("locatadd_nm", "")
-        if not any(k in name for k in ("시청", "구청", "군청", "주민센터", "행정복지센터")):
-            continue
+    for name, sub in src:
         out.append(Target(
             name=name,
             type="gov",
-            sub_type=("시청" if "시청" in name else "구청" if "구청" in name else "기타"),
+            sub_type=sub,
             region=region,
-            address=name,
+            address="",
             phone="",
             homepage="",
             contact_dept="총무과 / 복지문화과",
             contact_email="",
-            est_budget_tier="S" if ("시청" in name or "구청" in name) else "B",
+            est_budget_tier="S",
             notes="민원실/청년공간/직원휴게",
         ))
     return out
@@ -295,21 +300,21 @@ def build_pilot(
         pilot.append(r)
     print(f"  S4 경기도서관:       {min(30, len(s4))}건")
 
-    # S5: 시·구청
-    s5 = [r for r in seoul_gov + gyeonggi_gov if has_kw(r, ["시청", "구청"])]
+    # S5: 시·구·군·도청
+    s5 = [r for r in seoul_gov + gyeonggi_gov if has_kw(r, ["시청", "구청", "군청", "도청"])]
     random.shuffle(s5)
     for r in s5[:30]:
         r.segment = "S5_시구청"
         pilot.append(r)
     print(f"  S5 시·구청:         {min(30, len(s5))}건")
 
-    # S6: 행정복지센터/주민센터 (청년·청소년 공간 잠정)
+    # S6: 행정복지센터/주민센터 — 별도 데이터 소스 필요 (현재 미수집)
     s6 = [r for r in seoul_gov + gyeonggi_gov if has_kw(r, ["행정복지센터", "주민센터"])]
     random.shuffle(s6)
     for r in s6[:30]:
         r.segment = "S6_청년·청소년공간(잠정)"
         pilot.append(r)
-    print(f"  S6 청년·청소년공간: {min(30, len(s6))}건")
+    print(f"  S6 청년·청소년공간: {min(30, len(s6))}건  (※ 별도 데이터 소스 필요)")
 
     return pilot
 
