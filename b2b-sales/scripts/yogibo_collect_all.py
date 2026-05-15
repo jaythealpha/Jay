@@ -47,6 +47,12 @@ SIDO = {
     "경기도": "J10",
 }
 
+# 도서관정보나루 region 코드 (data4library.kr 은 시도명이 아닌 숫자 코드를 받음)
+LIB_REGION = {
+    "서울특별시": "11",
+    "경기도": "31",
+}
+
 
 # ─────────────────────────────────────────────
 @dataclass
@@ -132,10 +138,14 @@ def fetch_schools(region: str) -> list[Target]:
 def fetch_libraries(region: str) -> list[Target]:
     key = need("LIBSEOUL_KEY")
     out: list[Target] = []
+    region_code = LIB_REGION.get(region)
+    if not region_code:
+        print(f"  [error] 도서관 {region}: LIB_REGION 매핑 누락")
+        return out
     try:
         r = requests.get(
             "http://data4library.kr/api/libSrch",
-            params={"authKey": key, "region": region, "pageSize": 1000, "format": "json"},
+            params={"authKey": key, "region": region_code, "pageSize": 1000, "format": "json"},
             timeout=TIMEOUT,
         )
         r.raise_for_status()
@@ -144,7 +154,12 @@ def fetch_libraries(region: str) -> list[Target]:
         print(f"  [error] 도서관 {region}: {e}")
         return out
 
-    for item in data.get("response", {}).get("libs", []):
+    resp = data.get("response", {})
+    if "error" in resp:
+        print(f"  [error] 도서관 {region}: {resp['error']}")
+        return out
+
+    for item in resp.get("libs", []):
         lib = item.get("lib", {})
         out.append(Target(
             name=lib.get("libName", ""),
