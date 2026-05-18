@@ -67,9 +67,11 @@ class OrcaSlicer:
         프로파일은 scripts/build_profiles.py가 생성한 3종 사용:
           {profile}.machine.json / .process.json / .filament.json
         """
-        machine = self.profile_dir / f"{profile}.machine.json"
-        process = self.profile_dir / f"{profile}.process.json"
-        filament = self.profile_dir / f"{profile}.filament.json"
+        # OrcaSlicer는 내부적으로 작업 디렉토리를 변경 → 상대 경로가 깨짐.
+        # 모든 입출력 경로를 절대 경로로 전달해야 export 성공.
+        machine = (self.profile_dir / f"{profile}.machine.json").resolve()
+        process = (self.profile_dir / f"{profile}.process.json").resolve()
+        filament = (self.profile_dir / f"{profile}.filament.json").resolve()
         missing = [p.name for p in (machine, process, filament) if not p.exists()]
         if missing:
             raise SlicingFailed(
@@ -77,7 +79,8 @@ class OrcaSlicer:
                 f"맥에서 `uv run python scripts/build_profiles.py` 실행 필요."
             )
         out_dir.mkdir(parents=True, exist_ok=True)
-        out_3mf = out_dir / f"{model_stl.stem}.gcode.3mf"
+        model_stl = model_stl.resolve()
+        out_3mf = (out_dir / f"{model_stl.stem}.gcode.3mf").resolve()
 
         cmd = [
             self.binary,
