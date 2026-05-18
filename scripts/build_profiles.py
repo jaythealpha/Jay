@@ -91,14 +91,14 @@ def flatten(name: str, index: dict[str, Path], seen: set[str] | None = None) -> 
     return merged
 
 
-def clean(data: dict, kind: str) -> dict:
+def clean(data: dict, kind: str, machine_name: str = "") -> dict:
     out = {k: v for k, v in data.items() if k not in STRIP_KEYS}
     out.update(FORCE_KEYS)   # from=User 등 CLI 로드 호환 메타 강제
     if kind in ("process", "filament"):
-        # 호환성 게이트 무력화: 빈 list/조건 = 모든 프린터와 호환 취급.
-        # 평탄화로 깨진 compatible_printers(_condition) 때문에
-        # 'process not compatible with printer' 거부되는 것 방지.
-        out["compatible_printers"] = []
+        # 빈 list가 '모든 프린터 호환'으로 처리될 거라 가정했으나 이 버전은
+        # 거부함. machine 프리셋 이름을 명시적으로 넣어 확실히 매칭시킴.
+        # condition은 빈 문자열 파싱 실패 가능성 → list 방식만 사용.
+        out["compatible_printers"] = [machine_name] if machine_name else []
         out["compatible_printers_condition"] = ""
         if kind == "filament":
             out["compatible_prints"] = []
@@ -124,8 +124,9 @@ def main() -> int:
         print(f"\n[{out_name}]")
         try:
             machine = clean(flatten(m, idx["machine"]), "machine")
-            process = clean(flatten(pr, idx["process"]), "process")
-            filament = clean(flatten(f, idx["filament"]), "filament")
+            mname = machine.get("name", m)
+            process = clean(flatten(pr, idx["process"]), "process", mname)
+            filament = clean(flatten(f, idx["filament"]), "filament", mname)
         except Exception as e:  # noqa: BLE001
             print(f"  ✗ 실패: {e}")
             return 1

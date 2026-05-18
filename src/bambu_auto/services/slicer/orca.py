@@ -81,6 +81,7 @@ class OrcaSlicer:
 
         cmd = [
             self.binary,
+            "--debug", "2",            # 상세 로그 (호환성 거부 사유 확인용)
             "--load-settings", f"{machine};{process}",
             "--load-filaments", str(filament),
             "--allow-newer-file",
@@ -98,8 +99,16 @@ class OrcaSlicer:
             raise SlicingFailed(f"슬라이싱 타임아웃 ({timeout_sec}s)") from e
 
         if proc.returncode != 0 or not out_3mf.exists():
+            blob = proc.stdout + "\n" + proc.stderr
+            hints = [ln for ln in blob.splitlines()
+                     if any(k in ln.lower() for k in
+                            ("compatible", "error", "not found", "invalid",
+                             "unsupported", "fail"))]
+            hint_txt = "\n".join(hints[-15:]) if hints else "(키워드 매칭 없음)"
             raise SlicingFailed(
                 f"OrcaSlicer 실패 (rc={proc.returncode}).\n"
-                f"stdout: {proc.stdout[-500:]}\nstderr: {proc.stderr[-500:]}"
+                f"--- 관련 로그 ---\n{hint_txt}\n"
+                f"--- stdout tail ---\n{proc.stdout[-800:]}\n"
+                f"--- stderr tail ---\n{proc.stderr[-800:]}"
             )
         return SliceResult(output_3mf=out_3mf, stdout=proc.stdout, profile=profile)
