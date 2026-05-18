@@ -124,10 +124,24 @@ class Pipeline:
         try:
             report = repair_mesh(model_path, work / "repaired")
             job.repaired_path = str(report.path)
-            if not report.printable:
+
+            strict = self.cfg.settings.pipeline.strict_mesh_check
+            if strict and not report.printable:
                 raise ValueError(
-                    f"리페어 후에도 출력 불가: watertight={report.watertight}, "
-                    f"volume={report.volume_mm3:.1f}mm3"
+                    f"엄격 모드: 출력 불가 (watertight={report.watertight}, "
+                    f"volume={report.volume_mm3:.1f}mm3). "
+                    f"settings.yaml의 pipeline.strict_mesh_check=false로 완화 가능."
+                )
+            if not report.has_geometry:
+                raise ValueError(
+                    f"형상 없음: triangles={report.triangle_count}, "
+                    f"max_dim={report.max_dimension_mm:.1f}mm — Meshy 생성 실패 가능"
+                )
+            if not report.watertight:
+                self._notify(
+                    f"  ⚠ 비watertight 메쉬 (slicer 자체 복구 시도). "
+                    f"hull부피≈{report.volume_mm3:.0f}mm3, "
+                    f"크기={report.max_dimension_mm:.0f}mm"
                 )
             self.repo.set_state(job, JobState.REPAIRED)
             return report

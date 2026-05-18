@@ -30,8 +30,14 @@ class MeshReport:
         return max(self.bbox_mm)
 
     @property
+    def has_geometry(self) -> bool:
+        """슬라이서에 넘길 최소 조건: 삼각형 존재 + 크기 합리적.
+        watertight가 아니어도 OrcaSlicer/Bambu가 자체 복구하므로 통과."""
+        return self.triangle_count > 0 and self.max_dimension_mm > 1.0
+
+    @property
     def printable(self) -> bool:
-        # 최소 출력 가능 기준: watertight + 부피 > 0 + 크기 합리적
+        """엄격 기준: 완전 watertight + 부피 확보."""
         return self.watertight and self.volume_mm3 > 1.0 and self.max_dimension_mm > 1.0
 
 
@@ -54,9 +60,14 @@ def repair_mesh(src: Path, dest_dir: Path, scale_to_mm: float | None = None) -> 
 
     repaired = False
     if not mesh.is_watertight:
-        trimesh.repair.fill_holes(mesh)
-        trimesh.repair.fix_normals(mesh)
+        trimesh.repair.fix_inversion(mesh)
         trimesh.repair.fix_winding(mesh)
+        trimesh.repair.fill_holes(mesh)
+        try:
+            mesh.fill_holes()  # Trimesh 인스턴스 메서드 (추가 hole 처리)
+        except Exception:  # noqa: BLE001
+            pass
+        trimesh.repair.fix_normals(mesh)
         repaired = True
 
     # trimesh 4.x는 remove_duplicate_faces() 제거됨 → update_faces(mask) 방식.
@@ -82,10 +93,18 @@ def repair_mesh(src: Path, dest_dir: Path, scale_to_mm: float | None = None) -> 
     mesh.export(out)
 
     ext = mesh.extents
+    # 부피: watertight면 실측, 아니면 convex hull로 근사 (정보용)
+    if mesh.is_watertight:
+        vol = abs(float(mesh.volume))
+    else:
+        try:
+            vol = abs(float(mesh.convex_hull.volume))
+        except Exception:  # noqa: BLE001
+            vol = 0.0
     return MeshReport(
         path=out,
         watertight=bool(mesh.is_watertight),
-        volume_mm3=float(mesh.volume) if mesh.is_watertight else 0.0,
+        volume_mm3=vol,
         bbox_mm=(float(ext[0]), float(ext[1]), float(ext[2])),
         triangle_count=int(len(mesh.faces)),
         repaired=repaired,
