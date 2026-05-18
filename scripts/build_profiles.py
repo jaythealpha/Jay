@@ -34,14 +34,14 @@ TARGETS = [
     ),
 ]
 
-# 평탄화 후 제거할 메타 키 (CLI 로드 시 방해)
-# 평탄화 후 제거할 메타 키. inherits는 평탄화로 불필요, instantiation은
-# 추상 프로파일 표식이라 제거. 'from'은 제거하면 OrcaSlicer가 빈 값으로
-# 읽어 'from  unsupported' 거부 → 삭제 대신 'User'로 강제 설정(아래 finalize).
-STRIP_KEYS = {"inherits", "instantiation"}
+# 평탄화 후 제거할 메타 키. instantiation(추상 프리셋 표식)만 제거.
+# inherits는 제거하면 OrcaSlicer가 프리셋을 호환성 그래프에 등록 못 함
+# (BambuStudio #1963) → 제거 대신 ""로 강제(FORCE_KEYS).
+STRIP_KEYS = {"instantiation"}
 
-# 평탄화 결과에 강제 설정할 키 (CLI 로드 가능한 사용자 프리셋으로 위장)
-FORCE_KEYS = {"from": "User", "is_custom_defined": "1"}
+# 평탄화 결과에 강제 설정할 키. 메타 키들은 '부재'가 아니라 '존재+특정값'
+# 이어야 CLI가 사용자 프리셋으로 인식 (from/inherits 동일 패턴).
+FORCE_KEYS = {"from": "User", "is_custom_defined": "1", "inherits": ""}
 
 
 def build_name_index(category_dir: Path) -> dict[str, Path]:
@@ -95,15 +95,14 @@ def clean(data: dict, kind: str, machine_name: str = "") -> dict:
     out = {k: v for k, v in data.items() if k not in STRIP_KEYS}
     out.update(FORCE_KEYS)   # from=User 등 CLI 로드 호환 메타 강제
     if kind in ("process", "filament"):
-        # debug5 로그: OrcaSlicer는 compatible_printers_condition을 평가해
-        # 호환 결정. 빈문자열/제거 둘 다 'compatible 0'. from 때와 동일
-        # 패턴 — 키가 존재하며 '유효한 참 조건식'이어야 함.
-        # nozzle_diameter[0]>0 = 모든 프린터에 참인 정식 Bambu 문법.
-        out["compatible_printers_condition"] = "nozzle_diameter[0]>0"
+        # BambuStudio #1963 검증 해법: inherits를 ""로 두고(FORCE_KEYS)
+        # compatible_printers에 정확한 프린터 프리셋명을 채움. condition은
+        # 존재+빈문자열(부재 아님 — from/inherits와 동일 패턴).
         out["compatible_printers"] = [machine_name] if machine_name else []
+        out["compatible_printers_condition"] = ""
         if kind == "filament":
-            out["compatible_prints_condition"] = "layer_height>0"
             out["compatible_prints"] = []
+            out["compatible_prints_condition"] = ""
     return out
 
 
