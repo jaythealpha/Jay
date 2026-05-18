@@ -89,13 +89,15 @@ class MeshyClient:
         job_id: str,
         image_url: str,
         with_texture: bool = False,
-        ai_model: str = "meshy-4",
+        ai_model: str | None = None,
     ) -> tuple[str, int]:
         """Image-to-3D 작업 제출. 크레딧 예약 → API 호출 → 예약 commit.
 
         image_url: 공개 URL 또는 로컬 경로(자동 base64 변환).
+        ai_model: None이면 settings.yaml의 meshy.image_ai_model 사용.
         Returns: (meshy_task_id, ledger_id)
         """
+        ai_model = ai_model or self.config.image_ai_model
         op = "image_to_3d_textured" if with_texture else "image_to_3d_untextured"
         ledger_id = self.guard.reserve(job_id, op, note=f"image_to_3d ai={ai_model}")
         try:

@@ -7,6 +7,7 @@ storage:
 meshy:
   base_url: https://api.meshy.ai
   api_version: v2
+  image_ai_model: meshy-6     # Meshy가 모델 deprecate하면 여기만 수정
   request_timeout_sec: 60
   poll_interval_sec: 5
   poll_max_minutes: 15

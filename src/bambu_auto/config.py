@@ -47,6 +47,7 @@ class MeshyRetry(BaseModel):
 class MeshyConfig(BaseModel):
     base_url: str = "https://api.meshy.ai"
     api_version: str = "v2"
+    image_ai_model: str = "meshy-6"
     request_timeout_sec: int = 60
     poll_interval_sec: int = 5
     poll_max_minutes: int = 15
