@@ -35,14 +35,13 @@ TARGETS = [
 ]
 
 # 평탄화 후 제거할 메타 키 (CLI 로드 시 방해)
-# 평탄화 후 제거할 메타 키 — OrcaSlicer CLI가 거부하는 시스템 메타데이터.
-# 'from unsupported' 에러 핵심은 from. type/setting_id/filament_id 등도
-# "unknown config type" 유발 가능해 함께 제거. name/version은 무해해 유지.
-STRIP_KEYS = {
-    "inherits", "from", "instantiation", "type",
-    "setting_id", "filament_id", "filament_settings_id",
-    "is_custom_defined", "user_sub_folder",
-}
+# 평탄화 후 제거할 메타 키. inherits는 평탄화로 불필요, instantiation은
+# 추상 프로파일 표식이라 제거. 'from'은 제거하면 OrcaSlicer가 빈 값으로
+# 읽어 'from  unsupported' 거부 → 삭제 대신 'User'로 강제 설정(아래 finalize).
+STRIP_KEYS = {"inherits", "instantiation"}
+
+# 평탄화 결과에 강제 설정할 키 (CLI 로드 가능한 사용자 프리셋으로 위장)
+FORCE_KEYS = {"from": "User", "is_custom_defined": "1"}
 
 
 def build_name_index(category_dir: Path) -> dict[str, Path]:
@@ -93,7 +92,9 @@ def flatten(name: str, index: dict[str, Path], seen: set[str] | None = None) -> 
 
 
 def clean(data: dict) -> dict:
-    return {k: v for k, v in data.items() if k not in STRIP_KEYS}
+    out = {k: v for k, v in data.items() if k not in STRIP_KEYS}
+    out.update(FORCE_KEYS)   # from=User 등 CLI 로드 호환 메타 강제
+    return out
 
 
 def main() -> int:
