@@ -35,7 +35,14 @@ TARGETS = [
 ]
 
 # 평탄화 후 제거할 메타 키 (CLI 로드 시 방해)
-STRIP_KEYS = {"inherits", "from", "instantiation"}
+# 평탄화 후 제거할 메타 키 — OrcaSlicer CLI가 거부하는 시스템 메타데이터.
+# 'from unsupported' 에러 핵심은 from. type/setting_id/filament_id 등도
+# "unknown config type" 유발 가능해 함께 제거. name/version은 무해해 유지.
+STRIP_KEYS = {
+    "inherits", "from", "instantiation", "type",
+    "setting_id", "filament_id", "filament_settings_id",
+    "is_custom_defined", "user_sub_folder",
+}
 
 
 def build_name_index(category_dir: Path) -> dict[str, Path]:
@@ -117,7 +124,15 @@ def main() -> int:
                               ("filament", filament)):
             out = OUT_DIR / f"{out_name}.{kind}.json"
             out.write_text(json.dumps(payload, ensure_ascii=False, indent=2))
-            print(f"  ✓ {out}  ({len(payload)} keys)")
+            # 재읽기 검증: 금지 키가 정말 사라졌는지 확인
+            reread = json.loads(out.read_text())
+            leftover = sorted(set(reread) & STRIP_KEYS)
+            status = "✓" if not leftover else "✗"
+            extra = f"  ⚠ 잔존 금지키: {leftover}" if leftover else ""
+            print(f"  {status} {out}  ({len(payload)} keys){extra}")
+            if leftover:
+                print(f"     → clean 로직 버그. 키: {leftover}")
+                return 1
 
     print("\n완료. 다음: bambu-auto submit ... --run 으로 슬라이싱 검증")
     return 0
