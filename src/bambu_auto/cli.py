@@ -111,9 +111,11 @@ def submit(
     material: str = typer.Option("pla"),
     quality: str = typer.Option("standard"),
     printer: str = typer.Option("auto", help="auto | p2s | a1"),
+    run: bool = typer.Option(False, "--run", help="제출 후 즉시 파이프라인 실행"),
 ) -> None:
-    """[Phase 2+] 작업 제출. 현재는 스텁 — DB에 NEW 상태로 기록만 함."""
+    """작업 제출. --run 주면 즉시 파이프라인 실행 (Meshy 호출은 인터넷 필요)."""
     from bambu_auto.core.job import Job, SourceType
+    from bambu_auto.core.repository import JobRepository
 
     cfg, db, _ = _bootstrap()
     job = Job(
@@ -123,19 +125,72 @@ def submit(
         quality=quality,
         target_printer=None if printer == "auto" else printer,
     )
-    with db.connect() as conn:
-        conn.execute(
-            "INSERT INTO jobs (id, state, source_type, source_payload, material, quality, "
-            "target_printer, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (
-                job.id, job.state.value, job.source_type.value,
-                str(job.source_payload), job.material, job.quality,
-                job.target_printer, job.created_at.isoformat(),
-                job.updated_at.isoformat(),
-            ),
-        )
+    JobRepository(db).save(job)
     console.print(f"[green]Queued[/green] job {job.id} (state={job.state.value})")
-    console.print("[dim]Note: Phase 2 will wire this to Meshy + slicer + printer.[/dim]")
+    if run:
+        _run_job(cfg, db, job.id)
+
+
+def _run_job(cfg: AppConfig, db: Database, job_id: str) -> None:
+    """파이프라인 실행. Meshy/슬라이서 실제 의존성 연결."""
+    import json
+
+    from bambu_auto.adapters.sources.image import ImageSourceAdapter
+    from bambu_auto.core.job import Job, SourceType
+    from bambu_auto.core.pipeline import Pipeline
+    from bambu_auto.core.repository import JobRepository
+    from bambu_auto.services.meshy.client import MeshyClient
+    from bambu_auto.services.meshy.credits import CreditGuard
+    from bambu_auto.services.slicer.orca import OrcaSlicer
+
+    repo = JobRepository(db)
+    with db.connect() as conn:
+        row = conn.execute("SELECT * FROM jobs WHERE id=?", (job_id,)).fetchone()
+    if not row:
+        console.print(f"[red]Job {job_id} not found[/red]")
+        raise typer.Exit(1)
+
+    job = Job(
+        id=row["id"],
+        source_type=SourceType(row["source_type"]),
+        source_payload=json.loads(row["source_payload"]),
+        material=row["material"],
+        quality=row["quality"],
+        target_printer=row["target_printer"],
+    )
+
+    guard = CreditGuard(db, cfg.budgets)
+    meshy = MeshyClient(cfg.secrets.meshy_api_key, cfg.settings.meshy, guard)
+    try:
+        slicer = OrcaSlicer()
+    except Exception as e:
+        console.print(f"[yellow]⚠ OrcaSlicer 미준비: {e}[/yellow]")
+        console.print("[dim]슬라이싱 전 단계까지만 실행됩니다.[/dim]")
+        slicer = None  # type: ignore
+
+    if job.source_type != SourceType.IMAGE:
+        console.print("[red]Phase 2는 image 소스만 지원[/red]")
+        raise typer.Exit(1)
+
+    adapter = ImageSourceAdapter(job.source_payload["source"])
+    pipe = Pipeline(cfg, repo, meshy, slicer)
+    try:
+        pipe.run(job, adapter)
+        console.print(f"[green]Done[/green] {job.id} -> {job.state.value}")
+        if job.gcode_path:
+            console.print(f"  G-code: {job.gcode_path}")
+    except Exception as e:
+        console.print(f"[red]Failed[/red] {job.id} at {job.state.value}: {e}")
+        raise typer.Exit(1)
+    finally:
+        meshy.close()
+
+
+@app.command()
+def process(job_id: str) -> None:
+    """기존 NEW 작업을 파이프라인에 태움 (재개 포함)."""
+    cfg, db, _ = _bootstrap()
+    _run_job(cfg, db, job_id)
 
 
 @app.command(name="list")

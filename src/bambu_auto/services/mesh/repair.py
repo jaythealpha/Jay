@@ -1,0 +1,83 @@
+"""Mesh 검증 + 자동 리페어.
+
+Meshy 생성물은 출력 불가한 경우가 많음 (non-manifold, 구멍, 뒤집힌 normal).
+trimesh로 기본 리페어 수행 후, 출력 가능성 메트릭을 반환.
+
+trimesh 미설치(mesh extra) 시 ImportError 대신 명확한 안내 예외.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from pathlib import Path
+
+
+class MeshToolingMissing(RuntimeError):
+    """mesh extra 미설치. `uv sync --extra mesh` 필요."""
+
+
+@dataclass
+class MeshReport:
+    path: Path
+    watertight: bool
+    volume_mm3: float
+    bbox_mm: tuple[float, float, float]
+    triangle_count: int
+    repaired: bool
+
+    @property
+    def max_dimension_mm(self) -> float:
+        return max(self.bbox_mm)
+
+    @property
+    def printable(self) -> bool:
+        # 최소 출력 가능 기준: watertight + 부피 > 0 + 크기 합리적
+        return self.watertight and self.volume_mm3 > 1.0 and self.max_dimension_mm > 1.0
+
+
+def repair_mesh(src: Path, dest_dir: Path, scale_to_mm: float | None = None) -> MeshReport:
+    """src 메쉬를 리페어해서 dest_dir에 STL로 저장. MeshReport 반환.
+
+    scale_to_mm: 지정 시 최대 치수를 이 값(mm)에 맞춰 스케일.
+    """
+    try:
+        import numpy as np  # noqa: F401
+        import trimesh
+    except ImportError as e:
+        raise MeshToolingMissing(
+            "trimesh/numpy 필요. `uv sync --extra mesh` 실행."
+        ) from e
+
+    mesh = trimesh.load(src, force="mesh")
+    if mesh.is_empty:
+        raise ValueError(f"Empty mesh: {src}")
+
+    repaired = False
+    if not mesh.is_watertight:
+        trimesh.repair.fill_holes(mesh)
+        trimesh.repair.fix_normals(mesh)
+        trimesh.repair.fix_winding(mesh)
+        repaired = True
+
+    mesh.remove_duplicate_faces()
+    mesh.remove_unreferenced_vertices()
+
+    if scale_to_mm is not None:
+        cur_max = float(mesh.extents.max())
+        if cur_max > 0:
+            mesh.apply_scale(scale_to_mm / cur_max)
+            repaired = True
+
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    out = dest_dir / f"{src.stem}_repaired.stl"
+    mesh.export(out)
+
+    ext = mesh.extents
+    return MeshReport(
+        path=out,
+        watertight=bool(mesh.is_watertight),
+        volume_mm3=float(mesh.volume) if mesh.is_watertight else 0.0,
+        bbox_mm=(float(ext[0]), float(ext[1]), float(ext[2])),
+        triangle_count=int(len(mesh.faces)),
+        repaired=repaired,
+    )
