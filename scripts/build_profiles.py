@@ -51,9 +51,16 @@ def system_preset_exists(category: str, name: str) -> bool:
     return False
 
 
-def thin_preset(kind: str, name: str, inherits: str) -> dict:
-    """시스템 프리셋을 상속하는 최소 사용자 프리셋."""
-    return {
+def thin_preset(kind: str, name: str, inherits: str,
+                machine_names: list[str] | None = None) -> dict:
+    """시스템 프리셋을 상속하는 최소 사용자 프리셋.
+
+    process/filament는 명시적 compatible_printers 리스트를 추가.
+    CLI 호환성 판정이 process.compatible_printers에 프린터명(또는
+    그 inherits)이 있는지로 동작하는 것으로 보임 → 우리 machine
+    프리셋명 + 시스템 machine명 둘 다 넣어 어느 쪽이든 매칭.
+    """
+    preset = {
         "type": kind,
         "name": name,
         "from": "User",
@@ -62,6 +69,10 @@ def thin_preset(kind: str, name: str, inherits: str) -> dict:
         "inherits": inherits,
         "version": "2.3.0.0",
     }
+    if kind in ("process", "filament") and machine_names:
+        preset["compatible_printers"] = machine_names
+        preset["compatible_printers_condition"] = ""
+    return preset
 
 
 def main() -> int:
@@ -79,6 +90,8 @@ def main() -> int:
             ("process", "process", pr),
             ("filament", "filament", f),
         ]
+        # process/filament가 호환 매칭할 machine 후보: 우리 프리셋명 + 시스템명
+        machine_names = [f"{out_name}_machine", m]
         for kind, cat, sys_name in specs:
             ok = system_preset_exists(cat, sys_name)
             mark = "✓" if ok else "✗"
@@ -87,10 +100,12 @@ def main() -> int:
             if not ok:
                 failed = True
                 continue
-            preset = thin_preset(kind, f"{out_name}_{kind}", sys_name)
+            preset = thin_preset(kind, f"{out_name}_{kind}", sys_name,
+                                 machine_names=machine_names)
             out = OUT_DIR / f"{out_name}.{kind}.json"
             out.write_text(json.dumps(preset, ensure_ascii=False, indent=2))
-            print(f"    → {out}  (inherits {sys_name!r})")
+            extra = "" if kind == "machine" else f", compatible={machine_names}"
+            print(f"    → {out}  (inherits {sys_name!r}{extra})")
 
     if failed:
         print("\n일부 시스템 프리셋명을 못 찾음. scripts/inspect_orca.py 로 "
