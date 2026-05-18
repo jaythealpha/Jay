@@ -64,6 +64,7 @@ class PipelineConfig(BaseModel):
     human_review_gate: bool = True
     auto_repair: bool = True
     strict_mesh_check: bool = False   # True면 non-watertight 거부, False면 경고 후 진행
+    target_size_mm: float = 80.0      # 모델 최대치수를 이 크기로 스케일 (Meshy는 스케일 무의미)
     default_material: str = "pla"
     default_quality: str = "standard"
 

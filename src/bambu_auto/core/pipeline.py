@@ -122,8 +122,11 @@ class Pipeline:
             self.repo.set_state(job, JobState.REPAIRED)
             return _trivial_report(model_path)
         try:
-            report = repair_mesh(model_path, work / "repaired")
+            target = self.cfg.settings.pipeline.target_size_mm
+            report = repair_mesh(model_path, work / "repaired", scale_to_mm=target)
             job.repaired_path = str(report.path)
+            self._notify(f"  스케일: 최대치수 → {report.max_dimension_mm:.0f}mm "
+                         f"(목표 {target}mm)")
 
             strict = self.cfg.settings.pipeline.strict_mesh_check
             if strict and not report.printable:

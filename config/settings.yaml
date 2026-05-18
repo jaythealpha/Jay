@@ -20,6 +20,7 @@ pipeline:
   human_review_gate: true      # Meshy 생성 후 사람 승인 단계 사용
   auto_repair: true            # trimesh 자동 mesh 리페어
   strict_mesh_check: false     # true=non-watertight 거부, false=경고 후 슬라이서로
+  target_size_mm: 80           # 모델 최대치수 스케일 목표 (256mm 빌드볼륨 내, 출력시간 합리)
   default_material: pla
   default_quality: standard
 
