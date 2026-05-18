@@ -195,7 +195,8 @@ def _run_job(cfg: AppConfig, db: Database, job_id: str) -> None:
         job.source_payload["source"],
         remove_bg=job.source_payload.get("remove_bg", True),
     )
-    pipe = Pipeline(cfg, repo, meshy, slicer)
+    pipe = Pipeline(cfg, repo, meshy, slicer,
+                    on_progress=lambda m: console.print(f"[cyan]{m}[/cyan]"))
     try:
         pipe.run(job, adapter)
         console.print(f"[green]Done[/green] {job.id} -> {job.state.value}")

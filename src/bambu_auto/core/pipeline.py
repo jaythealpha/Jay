@@ -9,6 +9,7 @@ Meshy/슬라이서는 Protocol로 추상화 → 테스트에서 Mock 주입.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 from typing import Protocol
 
@@ -40,20 +41,27 @@ class Pipeline:
         repo: JobRepository,
         meshy: MeshyPort,
         slicer: SlicerPort,
+        on_progress: "Callable[[str], None] | None" = None,
     ) -> None:
         self.cfg = cfg
         self.repo = repo
         self.meshy = meshy
         self.slicer = slicer
         self.assets = Path(cfg.settings.storage.data_dir) / "assets"
+        self._notify = on_progress or (lambda _msg: None)
 
     def run(self, job: Job, adapter: SourceAdapter) -> Job:
         work = self.assets / job.id
         try:
+            self._notify("[1/5] 소스 준비 중 (이미지 다운로드)…")
             prepared = self._prepare(job, adapter, work)
+            self._notify("[2/5] Meshy 3D 생성 중 (1~5분 소요, 폴링)…")
             model_path = self._generate(job, prepared, work)
+            self._notify("[3/5] mesh 리페어 중…")
             report = self._repair(job, Path(model_path), work)
+            self._notify("[4/5] 프린터 라우팅 중…")
             self._route(job, report)
+            self._notify(f"[5/5] 슬라이싱 중 → {job.target_printer}…")
             self._slice(job, report, work)
         except Exception as e:
             # 단계별 except에서 상태를 이미 세팅했으면 유지, 아니면 일반 실패

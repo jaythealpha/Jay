@@ -59,8 +59,17 @@ def repair_mesh(src: Path, dest_dir: Path, scale_to_mm: float | None = None) -> 
         trimesh.repair.fix_winding(mesh)
         repaired = True
 
-    mesh.remove_duplicate_faces()
-    mesh.remove_unreferenced_vertices()
+    # trimesh 4.x는 remove_duplicate_faces() 제거됨 → update_faces(mask) 방식.
+    # 버전차로 일부 메서드가 없어도 핵심 리페어는 계속되도록 방어적 처리.
+    try:
+        if hasattr(mesh, "unique_faces"):
+            mesh.update_faces(mesh.unique_faces())
+        if hasattr(mesh, "nondegenerate_faces"):
+            mesh.update_faces(mesh.nondegenerate_faces())
+        mesh.remove_unreferenced_vertices()
+        mesh.merge_vertices()
+    except Exception:  # noqa: BLE001 — cleanup은 best-effort
+        pass
 
     if scale_to_mm is not None:
         cur_max = float(mesh.extents.max())
