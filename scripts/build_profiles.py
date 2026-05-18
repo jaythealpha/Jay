@@ -70,12 +70,11 @@ def thin_preset(kind: str, name: str, inherits: str,
         "version": "2.3.0.0",
     }
     if kind == "machine":
-        # 시스템 A1/P2S 프리셋은 relative E 모드 → CLI 검증이 layer_gcode에
-        # G92 E0 요구. 절대 E로 오버라이드하면 요구 자체가 사라지고
-        # Bambu 펌웨어는 절대 E로 정상 출력. (belt&suspenders로 layer
-        # 변경 시 G92 E0도 추가해 어느 검증 경로든 통과)
+        # 시스템 A1/P2S는 relative E 모드 → CLI 검증이 layer_gcode에
+        # G92 E0 요구. 절대 E로 오버라이드하면 요구 소멸. 단, 절대 E +
+        # G92 E0 조합도 거부되므로 G92 E0은 절대 추가하지 않음
+        # (절대 E + G92 E0 없음 = 정상).
         preset["use_relative_e_distances"] = "0"
-        preset["before_layer_change_gcode"] = "G92 E0\n"
     if kind in ("process", "filament") and machine_names:
         preset["compatible_printers"] = machine_names
         preset["compatible_printers_condition"] = ""
