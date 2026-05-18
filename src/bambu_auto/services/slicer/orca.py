@@ -62,19 +62,30 @@ class OrcaSlicer:
         out_dir: Path,
         timeout_sec: int = 300,
     ) -> SliceResult:
-        """STL을 프로파일로 슬라이싱해서 .3mf(또는 gcode.3mf) 생성."""
-        profile_path = self.profile_dir / f"{profile}.json"
-        if not profile_path.exists():
+        """STL을 프로파일로 슬라이싱해서 .gcode.3mf 생성.
+
+        프로파일은 scripts/build_profiles.py가 생성한 3종 사용:
+          {profile}.machine.json / .process.json / .filament.json
+        """
+        machine = self.profile_dir / f"{profile}.machine.json"
+        process = self.profile_dir / f"{profile}.process.json"
+        filament = self.profile_dir / f"{profile}.filament.json"
+        missing = [p.name for p in (machine, process, filament) if not p.exists()]
+        if missing:
             raise SlicingFailed(
-                f"슬라이서 프로파일 없음: {profile_path}. "
-                f"OrcaSlicer에서 export한 process+machine 설정 json 필요."
+                f"슬라이서 프로파일 없음: {missing} (dir={self.profile_dir}). "
+                f"맥에서 `uv run python scripts/build_profiles.py` 실행 필요."
             )
         out_dir.mkdir(parents=True, exist_ok=True)
         out_3mf = out_dir / f"{model_stl.stem}.gcode.3mf"
 
         cmd = [
             self.binary,
-            "--load-settings", str(profile_path),
+            "--load-settings", f"{machine};{process}",
+            "--load-filaments", str(filament),
+            "--allow-newer-file",
+            "--arrange", "1",
+            "--orient", "1",
             "--slice", "0",
             "--export-3mf", str(out_3mf),
             str(model_stl),

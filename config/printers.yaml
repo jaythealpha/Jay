@@ -20,4 +20,4 @@ printers:
     build_volume_mm: [256, 256, 256]
     has_ams: true                # AMS Lite
     supported_materials: [pla, petg, tpu, silk]
-    default_profile: a1_pla_fine
+    default_profile: a1_pla_standard
