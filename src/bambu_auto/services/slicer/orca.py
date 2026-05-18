@@ -81,7 +81,7 @@ class OrcaSlicer:
 
         cmd = [
             self.binary,
-            "--debug", "2",            # 상세 로그 (호환성 거부 사유 확인용)
+            "--debug", "5",            # 최대 상세 로그 (호환성 비교 대상 확인)
             "--load-settings", f"{machine};{process}",
             "--load-filaments", str(filament),
             "--allow-newer-file",
@@ -103,8 +103,9 @@ class OrcaSlicer:
             hints = [ln for ln in blob.splitlines()
                      if any(k in ln.lower() for k in
                             ("compatible", "error", "not found", "invalid",
-                             "unsupported", "fail"))]
-            hint_txt = "\n".join(hints[-15:]) if hints else "(키워드 매칭 없음)"
+                             "unsupported", "fail", "preset", "load_config",
+                             "printer name", "process name"))]
+            hint_txt = "\n".join(hints[-30:]) if hints else "(키워드 매칭 없음)"
             raise SlicingFailed(
                 f"OrcaSlicer 실패 (rc={proc.returncode}).\n"
                 f"--- 관련 로그 ---\n{hint_txt}\n"

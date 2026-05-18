@@ -95,14 +95,14 @@ def clean(data: dict, kind: str, machine_name: str = "") -> dict:
     out = {k: v for k, v in data.items() if k not in STRIP_KEYS}
     out.update(FORCE_KEYS)   # from=User 등 CLI 로드 호환 메타 강제
     if kind in ("process", "filament"):
-        # 빈 list가 '모든 프린터 호환'으로 처리될 거라 가정했으나 이 버전은
-        # 거부함. machine 프리셋 이름을 명시적으로 넣어 확실히 매칭시킴.
-        # condition은 빈 문자열 파싱 실패 가능성 → list 방식만 사용.
+        # 빈 문자열 condition을 OrcaSlicer가 조건식으로 평가하다 실패 →
+        # incompatible. 표준 해법: condition 키 자체를 제거 + 명시적
+        # compatible_printers 리스트만 둠 (없으면 빈 리스트=전체 호환).
+        out.pop("compatible_printers_condition", None)
         out["compatible_printers"] = [machine_name] if machine_name else []
-        out["compatible_printers_condition"] = ""
         if kind == "filament":
+            out.pop("compatible_prints_condition", None)
             out["compatible_prints"] = []
-            out["compatible_prints_condition"] = ""
     return out
 
 
