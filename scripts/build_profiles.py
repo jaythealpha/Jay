@@ -95,13 +95,14 @@ def clean(data: dict, kind: str, machine_name: str = "") -> dict:
     out = {k: v for k, v in data.items() if k not in STRIP_KEYS}
     out.update(FORCE_KEYS)   # from=User 등 CLI 로드 호환 메타 강제
     if kind in ("process", "filament"):
-        # 빈 문자열 condition을 OrcaSlicer가 조건식으로 평가하다 실패 →
-        # incompatible. 표준 해법: condition 키 자체를 제거 + 명시적
-        # compatible_printers 리스트만 둠 (없으면 빈 리스트=전체 호환).
-        out.pop("compatible_printers_condition", None)
+        # debug5 로그: OrcaSlicer는 compatible_printers_condition을 평가해
+        # 호환 결정. 빈문자열/제거 둘 다 'compatible 0'. from 때와 동일
+        # 패턴 — 키가 존재하며 '유효한 참 조건식'이어야 함.
+        # nozzle_diameter[0]>0 = 모든 프린터에 참인 정식 Bambu 문법.
+        out["compatible_printers_condition"] = "nozzle_diameter[0]>0"
         out["compatible_printers"] = [machine_name] if machine_name else []
         if kind == "filament":
-            out.pop("compatible_prints_condition", None)
+            out["compatible_prints_condition"] = "layer_height>0"
             out["compatible_prints"] = []
     return out
 
