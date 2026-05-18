@@ -24,7 +24,15 @@ class ImageSourceAdapter(SourceAdapter):
         if self.source.startswith(("http://", "https://")):
             r = httpx.get(self.source, timeout=60, follow_redirects=True)
             r.raise_for_status()
-            ext = Path(self.source.split("?")[0]).suffix.lower() or ".jpg"
+            ctype = r.headers.get("content-type", "").split(";")[0].strip().lower()
+            if not ctype.startswith("image/"):
+                raise ValueError(
+                    f"URL이 이미지가 아닙니다 (content-type={ctype or 'unknown'}). "
+                    f"상품 '페이지' URL이 아니라 이미지 파일 URL(.jpg/.png)을 주세요. "
+                    f"상품 페이지에서 이미지를 자동 추출하려면 web_url 소스(Phase 3)가 필요합니다."
+                )
+            ext_map = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp"}
+            ext = ext_map.get(ctype) or Path(self.source.split("?")[0]).suffix.lower()
             if ext not in VALID_EXT:
                 ext = ".jpg"
             dst = work_dir / f"input{ext}"

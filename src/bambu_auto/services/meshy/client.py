@@ -15,14 +15,18 @@ from pathlib import Path
 from typing import Any
 
 import httpx
-from tenacity import retry, stop_after_attempt, wait_exponential
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from bambu_auto.config import MeshyConfig
 from bambu_auto.services.meshy.credits import BudgetExceeded, CreditGuard
 
 
 class MeshyError(Exception):
-    pass
+    """재시도해도 의미 없는 결정적 실패 (4xx, 잘못된 입력 등)."""
+
+
+class MeshyTransientError(Exception):
+    """일시적 실패 (네트워크, 5xx) — 재시도 대상."""
 
 
 # Meshy 엔드포인트 (버전이 작업마다 다름 — 공식 docs 기준)
@@ -180,16 +184,40 @@ class MeshyClient:
 
     # ---- low-level ----
 
-    @retry(stop=stop_after_attempt(3), wait=wait_exponential(min=1, max=10))
+    @staticmethod
+    def _raise_for_status(method: str, path: str, r: httpx.Response) -> None:
+        if r.status_code < 400:
+            return
+        snippet = r.text[:400]
+        msg = f"{method} {path} -> {r.status_code}: {snippet}"
+        if r.status_code >= 500:
+            raise MeshyTransientError(msg)   # 재시도 가치 있음
+        raise MeshyError(msg)                # 4xx — 재시도 무의미
+
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(min=1, max=10),
+        retry=retry_if_exception_type(MeshyTransientError),
+        reraise=True,
+    )
     def _post(self, path: str, payload: dict[str, Any]) -> dict[str, Any]:
-        r = self._http.post(path, json=payload)
-        if r.status_code >= 400:
-            raise MeshyError(f"POST {path} -> {r.status_code}: {r.text}")
+        try:
+            r = self._http.post(path, json=payload)
+        except httpx.TransportError as e:
+            raise MeshyTransientError(f"POST {path} network error: {e}") from e
+        self._raise_for_status("POST", path, r)
         return r.json()
 
-    @retry(stop=stop_after_attempt(3), wait=wait_exponential(min=1, max=10))
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(min=1, max=10),
+        retry=retry_if_exception_type(MeshyTransientError),
+        reraise=True,
+    )
     def _get(self, path: str) -> dict[str, Any]:
-        r = self._http.get(path)
-        if r.status_code >= 400:
-            raise MeshyError(f"GET {path} -> {r.status_code}: {r.text}")
+        try:
+            r = self._http.get(path)
+        except httpx.TransportError as e:
+            raise MeshyTransientError(f"GET {path} network error: {e}") from e
+        self._raise_for_status("GET", path, r)
         return r.json()
