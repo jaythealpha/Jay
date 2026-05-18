@@ -9,6 +9,7 @@
 
 from __future__ import annotations
 
+import base64
 import time
 from pathlib import Path
 from typing import Any
@@ -61,6 +62,24 @@ class MeshyClient:
 
     # ---- operations ----
 
+    def _to_image_ref(self, image: str) -> str:
+        """공개 URL이면 그대로, 로컬 경로면 base64 데이터 URI로 변환.
+
+        Meshy image-to-3d는 image_url에 https URL 또는
+        data:image/...;base64,... 형식만 허용.
+        """
+        if image.startswith(("http://", "https://", "data:")):
+            return image
+        p = Path(image)
+        if not p.exists():
+            raise MeshyError(f"Image not found and not a URL: {image}")
+        mime = {
+            ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+            ".webp": "image/webp",
+        }.get(p.suffix.lower(), "image/png")
+        b64 = base64.b64encode(p.read_bytes()).decode("ascii")
+        return f"data:{mime};base64,{b64}"
+
     def image_to_3d(
         self,
         job_id: str,
@@ -70,6 +89,7 @@ class MeshyClient:
     ) -> tuple[str, int]:
         """Image-to-3D 작업 제출. 크레딧 예약 → API 호출 → 예약 commit.
 
+        image_url: 공개 URL 또는 로컬 경로(자동 base64 변환).
         Returns: (meshy_task_id, ledger_id)
         """
         op = "image_to_3d_textured" if with_texture else "image_to_3d_untextured"
@@ -78,7 +98,7 @@ class MeshyClient:
             resp = self._post(
                 EP_IMAGE_TO_3D,
                 {
-                    "image_url": image_url,
+                    "image_url": self._to_image_ref(image_url),
                     "enable_pbr": with_texture,
                     "ai_model": ai_model,
                     "topology": "triangle",

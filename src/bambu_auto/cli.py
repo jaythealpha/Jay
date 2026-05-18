@@ -130,6 +130,7 @@ def submit(
     quality: str = typer.Option("standard"),
     printer: str = typer.Option("auto", help="auto | p2s | a1"),
     run: bool = typer.Option(False, "--run", help="제출 후 즉시 파이프라인 실행"),
+    no_bg: bool = typer.Option(False, "--no-bg", help="배경 제거 건너뛰기(rembg)"),
 ) -> None:
     """작업 제출. --run 주면 즉시 파이프라인 실행 (Meshy 호출은 인터넷 필요)."""
     from bambu_auto.core.job import Job, SourceType
@@ -138,7 +139,7 @@ def submit(
     cfg, db, _ = _bootstrap()
     job = Job(
         source_type=SourceType(source_type),
-        source_payload={"source": source},
+        source_payload={"source": source, "remove_bg": not no_bg},
         material=material,
         quality=quality,
         target_printer=None if printer == "auto" else printer,
@@ -190,7 +191,10 @@ def _run_job(cfg: AppConfig, db: Database, job_id: str) -> None:
         console.print("[red]Phase 2는 image 소스만 지원[/red]")
         raise typer.Exit(1)
 
-    adapter = ImageSourceAdapter(job.source_payload["source"])
+    adapter = ImageSourceAdapter(
+        job.source_payload["source"],
+        remove_bg=job.source_payload.get("remove_bg", True),
+    )
     pipe = Pipeline(cfg, repo, meshy, slicer)
     try:
         pipe.run(job, adapter)
