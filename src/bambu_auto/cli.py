@@ -67,6 +67,24 @@ def credits() -> None:
 
 
 @app.command()
+def balance() -> None:
+    """Meshy 서버에서 실제 크레딧 잔액 조회 (API 키 유효성 검증)."""
+    from bambu_auto.services.meshy.client import MeshyClient
+
+    cfg, db, guard = _bootstrap()
+    client = MeshyClient(cfg.secrets.meshy_api_key, cfg.settings.meshy, guard)
+    try:
+        data = client.balance()
+        console.print("[green]✓ API 키 유효[/green]")
+        console.print(data)
+    except Exception as e:
+        console.print(f"[red]✗ Balance 조회 실패:[/red] {e}")
+        raise typer.Exit(1)
+    finally:
+        client.close()
+
+
+@app.command()
 def doctor() -> None:
     """환경/설정 헬스체크. 어떤 항목이 빠졌는지 알려줌."""
     cfg, db, _ = _bootstrap()

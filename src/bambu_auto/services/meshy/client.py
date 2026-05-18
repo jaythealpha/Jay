@@ -24,6 +24,12 @@ class MeshyError(Exception):
     pass
 
 
+# Meshy 엔드포인트 (버전이 작업마다 다름 — 공식 docs 기준)
+EP_IMAGE_TO_3D = "/openapi/v1/image-to-3d"
+EP_TEXT_TO_3D = "/openapi/v2/text-to-3d"
+EP_BALANCE = "/openapi/v1/balance"
+
+
 class MeshyClient:
     """Meshy REST API 래퍼.
 
@@ -42,8 +48,10 @@ class MeshyClient:
         self.api_key = api_key
         self.config = config
         self.guard = guard
+        # 엔드포인트마다 버전이 다름 (image-to-3d=v1, text-to-3d=v2, balance=v1)
+        # → base_url만 두고 각 메서드가 전체 경로 지정
         self._http = httpx.Client(
-            base_url=f"{config.base_url}/openapi/{config.api_version}",
+            base_url=config.base_url,
             timeout=config.request_timeout_sec,
             headers={"Authorization": f"Bearer {api_key}"},
         )
@@ -68,7 +76,7 @@ class MeshyClient:
         ledger_id = self.guard.reserve(job_id, op, note=f"image_to_3d ai={ai_model}")
         try:
             resp = self._post(
-                "/image-to-3d",
+                EP_IMAGE_TO_3D,
                 {
                     "image_url": image_url,
                     "enable_pbr": with_texture,
@@ -93,7 +101,7 @@ class MeshyClient:
         ledger_id = self.guard.reserve(job_id, op, note=f"prompt={prompt[:60]}")
         try:
             resp = self._post(
-                "/text-to-3d",
+                EP_TEXT_TO_3D,
                 {"mode": "preview", "prompt": prompt, "art_style": art_style},
             )
             task_id = resp.get("result") or resp.get("id") or resp.get("task_id")
@@ -105,9 +113,14 @@ class MeshyClient:
             self.guard.refund(ledger_id, reason=f"submit_failed: {e}")
             raise
 
+    def balance(self) -> dict[str, Any]:
+        """현재 크레딧 잔액 조회 (크레딧 소비 없음)."""
+        return self._get(EP_BALANCE)
+
     def get_task(self, task_id: str, kind: str = "image-to-3d") -> dict[str, Any]:
         """작업 상태 조회. kind = 'image-to-3d' | 'text-to-3d'"""
-        return self._get(f"/{kind}/{task_id}")
+        base = EP_TEXT_TO_3D if kind == "text-to-3d" else EP_IMAGE_TO_3D
+        return self._get(f"{base}/{task_id}")
 
     def wait_for_completion(
         self,
