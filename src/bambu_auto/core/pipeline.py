@@ -26,6 +26,8 @@ class MeshyPort(Protocol):
 
     def image_to_3d(self, job_id: str, image_url: str,
                      with_texture: bool = False) -> tuple[str, int]: ...
+    def multi_image_to_3d(self, job_id: str, image_urls: list[str],
+                           with_texture: bool = False) -> tuple[str, int]: ...
     def wait_for_completion(self, task_id: str, kind: str = "image-to-3d") -> dict: ...
     def download_model(self, task_data: dict, dest_dir: Path, prefer: str = "glb") -> Path: ...
 
@@ -93,23 +95,27 @@ class Pipeline:
             return model_path
 
         try:
-            if prepared.kind != "image" or not prepared.image_paths:
-                raise ValueError("Phase 2는 image 소스만 지원 (text/web은 Phase 3+)")
+            if not prepared.image_paths:
+                raise ValueError("이미지/멀티이미지 소스만 지원 (text/web 추후)")
+            with_tex = not self.cfg.budgets.saving.skip_texture_by_default
 
-            # 로컬 경로를 Meshy가 받을 수 있는 형태로 — 실제 호출은 맥에서.
-            # 여기서는 경로 문자열을 그대로 넘김 (MeshyClient가 URL/데이터 처리).
-            img_ref = str(prepared.image_paths[0])
-            task_id, _ = self.meshy.image_to_3d(
-                job.id, img_ref,
-                with_texture=not self.cfg.budgets.saving.skip_texture_by_default,
-            )
+            if prepared.kind == "multi_image":
+                refs = [str(p) for p in prepared.image_paths]
+                task_id, _ = self.meshy.multi_image_to_3d(
+                    job.id, refs, with_texture=with_tex)
+                kind = "multi-image-to-3d"
+            else:
+                task_id, _ = self.meshy.image_to_3d(
+                    job.id, str(prepared.image_paths[0]), with_texture=with_tex)
+                kind = "image-to-3d"
+
             job.meshy_task_id = task_id
             self.repo.set_state(job, JobState.MESHY_QUEUED)
 
-            data = self.meshy.wait_for_completion(task_id, kind="image-to-3d")
+            data = self.meshy.wait_for_completion(task_id, kind=kind)
             model_path = self.meshy.download_model(data, work / "model", prefer="stl")
             job.model_path = str(model_path)
-            self.repo.cache_store(prepared.input_hash, "image_to_3d",
+            self.repo.cache_store(prepared.input_hash, prepared.kind,
                                   task_id, str(model_path))
             self.repo.set_state(job, JobState.MESHY_COMPLETE)
             return str(model_path)

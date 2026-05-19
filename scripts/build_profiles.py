@@ -15,26 +15,22 @@ import json
 import sys
 from pathlib import Path
 
+import yaml
+
 PROFILES_ROOT = Path("/Applications/OrcaSlicer.app/Contents/Resources/profiles")
 VENDOR = "BBL"
 OUT_DIR = Path("config/slicer_profiles")
+TARGETS_YAML = Path("config/slicer_targets.yaml")
 
-# (출력 프로파일명, machine 시스템 프리셋명, process 시스템 프리셋명,
-#  filament 시스템 프리셋명)
-TARGETS = [
-    (
-        "p2s_pla_standard",
-        "Bambu Lab P2S 0.4 nozzle",
-        "0.20mm Standard @BBL P2S",
-        "Bambu PLA Basic @BBL P2S",
-    ),
-    (
-        "a1_pla_standard",
-        "Bambu Lab A1 0.4 nozzle",
-        "0.20mm Standard @BBL A1",
-        "Bambu PLA Basic @BBL A1",
-    ),
-]
+
+def load_targets() -> list[tuple[str, str, str, str]]:
+    """config/slicer_targets.yaml → [(이름, machine, process, filament)].
+    프린터 모델 추가는 yaml 편집만으로 됨 (코드 수정 불필요)."""
+    data = yaml.safe_load(TARGETS_YAML.read_text()) or {}
+    out: list[tuple[str, str, str, str]] = []
+    for name, spec in (data.get("targets") or {}).items():
+        out.append((name, spec["machine"], spec["process"], spec["filament"]))
+    return out
 
 
 def system_preset_exists(category: str, name: str) -> bool:
@@ -87,35 +83,38 @@ def main() -> int:
         return 1
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    failed = False
+    targets = load_targets()
+    print(f"슬라이서 대상 {len(targets)}개 (config/slicer_targets.yaml)")
 
-    for out_name, m, pr, f in TARGETS:
+    built = 0
+    for out_name, m, pr, f in targets:
         print(f"\n[{out_name}]")
         specs = [
             ("machine", "machine", m),
             ("process", "process", pr),
             ("filament", "filament", f),
         ]
-        # process/filament가 호환 매칭할 machine 후보: 우리 프리셋명 + 시스템명
+        # 누락 프리셋 먼저 검사 → 하나라도 없으면 이 대상만 스킵
+        # (다른 대상 빌드는 계속 — 추측성 모델 추가가 P2S/A1을 깨지 않게)
+        missing = [(k, n) for k, c, n in specs if not system_preset_exists(c, n)]
+        if missing:
+            print(f"  ⊘ 스킵 — 시스템 프리셋 없음: {missing}")
+            continue
+
         machine_names = [f"{out_name}_machine", m]
-        for kind, cat, sys_name in specs:
-            ok = system_preset_exists(cat, sys_name)
-            mark = "✓" if ok else "✗"
-            print(f"  {mark} 시스템 {kind} 프리셋: {sys_name!r} "
-                  f"{'존재' if ok else '없음(이름 확인 필요)'}")
-            if not ok:
-                failed = True
-                continue
+        for kind, _cat, sys_name in specs:
             preset = thin_preset(kind, f"{out_name}_{kind}", sys_name,
                                  machine_names=machine_names)
             out = OUT_DIR / f"{out_name}.{kind}.json"
             out.write_text(json.dumps(preset, ensure_ascii=False, indent=2))
             extra = "" if kind == "machine" else f", compatible={machine_names}"
-            print(f"    → {out}  (inherits {sys_name!r}{extra})")
+            print(f"  ✓ {out}  (inherits {sys_name!r}{extra})")
+        built += 1
 
-    if failed:
-        print("\n일부 시스템 프리셋명을 못 찾음. scripts/inspect_orca.py 로 "
-              "정확한 name을 확인 후 TARGETS 수정 필요.")
+    print(f"\n빌드 완료: {built}/{len(targets)} 대상")
+    if built == 0:
+        print("생성된 프로파일 없음. scripts/inspect_orca.py 로 "
+              "정확한 name 확인 후 config/slicer_targets.yaml 수정.")
         return 1
     print("\n완료. 다음: bambu-auto submit ... --run 으로 슬라이싱 검증")
     return 0

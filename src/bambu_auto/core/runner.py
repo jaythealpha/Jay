@@ -50,8 +50,16 @@ def run_job(
         target_printer=row["target_printer"],
     )
 
-    if job.source_type != SourceType.IMAGE:
-        raise ValueError("현재 image 소스만 지원 (text/web은 추후)")
+    remove_bg = job.source_payload.get("remove_bg", False)
+    if job.source_type == SourceType.IMAGE:
+        adapter = ImageSourceAdapter(
+            job.source_payload["source"], remove_bg=remove_bg)
+    elif job.source_type == SourceType.MULTI_IMAGE:
+        from bambu_auto.adapters.sources.multi_image import MultiImageSourceAdapter
+        adapter = MultiImageSourceAdapter(
+            job.source_payload["sources"], remove_bg=remove_bg)
+    else:
+        raise ValueError("현재 image / multi_image 소스만 지원 (text/web 추후)")
 
     guard = CreditGuard(db, cfg.budgets)
     meshy = MeshyClient(cfg.secrets.meshy_api_key, cfg.settings.meshy, guard)
@@ -60,11 +68,6 @@ def run_job(
     except Exception as e:  # noqa: BLE001
         notify(f"⚠ OrcaSlicer 미준비: {e} (슬라이싱 전 단계까지)")
         slicer = None  # type: ignore
-
-    adapter = ImageSourceAdapter(
-        job.source_payload["source"],
-        remove_bg=job.source_payload.get("remove_bg", True),
-    )
     pipe = Pipeline(cfg, repo, meshy, slicer, on_progress=notify)
     try:
         pipe.run(job, adapter)

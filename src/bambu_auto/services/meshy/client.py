@@ -31,6 +31,7 @@ class MeshyTransientError(Exception):
 
 # Meshy 엔드포인트 (버전이 작업마다 다름 — 공식 docs 기준)
 EP_IMAGE_TO_3D = "/openapi/v1/image-to-3d"
+EP_MULTI_IMAGE_TO_3D = "/openapi/v1/multi-image-to-3d"
 EP_TEXT_TO_3D = "/openapi/v2/text-to-3d"
 EP_BALANCE = "/openapi/v1/balance"
 
@@ -122,6 +123,45 @@ class MeshyClient:
             self.guard.refund(ledger_id, reason=f"submit_failed: {e}")
             raise
 
+    def multi_image_to_3d(
+        self,
+        job_id: str,
+        image_urls: list[str],
+        with_texture: bool = False,
+        ai_model: str | None = None,
+    ) -> tuple[str, int]:
+        """Multi-Image-to-3D (1~4장, 같은 물체 다른 각도). 품질↑.
+
+        image_urls: 공개 URL 또는 로컬 경로(자동 base64 변환), 1~4개.
+        """
+        if not 1 <= len(image_urls) <= 4:
+            raise MeshyError(f"multi-image는 1~4장 필요 (받음: {len(image_urls)})")
+        ai_model = ai_model or self.config.image_ai_model
+        op = "image_to_3d_textured" if with_texture else "image_to_3d_untextured"
+        ledger_id = self.guard.reserve(job_id, op,
+                                       note=f"multi_image x{len(image_urls)}")
+        try:
+            resp = self._post(
+                EP_MULTI_IMAGE_TO_3D,
+                {
+                    "image_urls": [self._to_image_ref(u) for u in image_urls],
+                    "should_texture": with_texture,
+                    "enable_pbr": with_texture,
+                    "ai_model": ai_model,
+                    "target_formats": ["glb"],
+                },
+            )
+            task_id = resp.get("result") or resp.get("id") or resp.get("task_id")
+            if not task_id:
+                raise MeshyError(f"Unexpected response: {resp}")
+            self.guard.commit(ledger_id, meshy_task_id=task_id)
+            return task_id, ledger_id
+        except BudgetExceeded:
+            raise
+        except Exception as e:
+            self.guard.refund(ledger_id, reason=f"submit_failed: {e}")
+            raise
+
     def text_to_3d_preview(self, job_id: str, prompt: str, art_style: str = "realistic") -> tuple[str, int]:
         op = "text_to_3d_preview"
         ledger_id = self.guard.reserve(job_id, op, note=f"prompt={prompt[:60]}")
@@ -144,8 +184,11 @@ class MeshyClient:
         return self._get(EP_BALANCE)
 
     def get_task(self, task_id: str, kind: str = "image-to-3d") -> dict[str, Any]:
-        """작업 상태 조회. kind = 'image-to-3d' | 'text-to-3d'"""
-        base = EP_TEXT_TO_3D if kind == "text-to-3d" else EP_IMAGE_TO_3D
+        """작업 상태 조회. kind = image-to-3d | multi-image-to-3d | text-to-3d"""
+        base = {
+            "text-to-3d": EP_TEXT_TO_3D,
+            "multi-image-to-3d": EP_MULTI_IMAGE_TO_3D,
+        }.get(kind, EP_IMAGE_TO_3D)
         return self._get(f"{base}/{task_id}")
 
     def wait_for_completion(

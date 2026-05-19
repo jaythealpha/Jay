@@ -49,17 +49,16 @@ INDEX_HTML = """<!doctype html>
 <h1>Bambu Auto — 이미지 → 3D → G-code</h1>
 <div class="card">
   <div class="row">
-    <input id="src" type="text" placeholder="상품 이미지 URL (.jpg / .png)">
+    <textarea id="src" rows="3" style="width:100%;box-sizing:border-box;
+      font-size:14px;padding:8px;border:1px solid #ccc;border-radius:7px"
+      placeholder="이미지 URL — 한 줄에 하나 (1장=단일, 2~4장=멀티뷰, 같은 물체 다른 각도면 품질↑)"></textarea>
   </div>
   <div class="row">
     <select id="mat">
       <option value="pla">PLA</option><option value="petg">PETG</option>
       <option value="abs">ABS</option><option value="silk">PLA Silk</option>
     </select>
-    <select id="prn">
-      <option value="auto">자동 라우팅</option>
-      <option value="p2s">P2S</option><option value="a1">A1</option>
-    </select>
+    <select id="prn"><option value="auto">자동 라우팅</option></select>
     <label class="muted"><input id="bg" type="checkbox"> 배경 제거</label>
     <button id="go" onclick="submit()">제작 시작</button>
   </div>
@@ -69,23 +68,33 @@ INDEX_HTML = """<!doctype html>
 <h2>제작 현황 / 다운로드</h2>
 <div class="card"><table id="tbl"><thead><tr>
  <th>ID</th><th>상태</th><th>재질</th><th>프린터</th><th>진행</th>
- <th>생성</th><th>파일</th></tr></thead><tbody></tbody></table></div>
+ <th>생성</th><th>파일</th><th>공유</th></tr></thead><tbody></tbody></table></div>
 <script>
+async function loadPrinters(){
+ try{const p=await (await fetch('/api/printers')).json();
+  const sel=document.getElementById('prn');
+  for(const name of p.printers){
+   const o=document.createElement('option');o.value=name;
+   o.textContent=name.toUpperCase();sel.appendChild(o);}
+ }catch(e){}
+}
 async function submit(){
- const src=document.getElementById('src').value.trim();
- if(!src){alert('이미지 URL을 입력하세요');return;}
+ const raw=document.getElementById('src').value;
+ const srcs=raw.split(/\\n/).map(s=>s.trim()).filter(Boolean);
+ if(!srcs.length){alert('이미지 URL을 한 줄 이상 입력하세요');return;}
+ if(srcs.length>4){alert('최대 4장까지 가능합니다');return;}
  const b=document.getElementById('go');b.disabled=true;
  document.getElementById('msg').textContent='제출 중…';
  try{
   const r=await fetch('/api/jobs',{method:'POST',
    headers:{'Content-Type':'application/json'},
-   body:JSON.stringify({source:src,
+   body:JSON.stringify({sources:srcs,
     material:document.getElementById('mat').value,
     printer:document.getElementById('prn').value,
     remove_bg:document.getElementById('bg').checked})});
   const j=await r.json();
   document.getElementById('msg').textContent= r.ok
-   ? '대기열 등록: '+j.id+' (워커가 순차 처리합니다)'
+   ? '대기열 등록: '+j.id+' ('+srcs.length+'장, 워커가 순차 처리)'
    : ('오류: '+(j.detail||r.status));
  }catch(e){document.getElementById('msg').textContent='오류: '+e;}
  b.disabled=false;refresh();
@@ -99,12 +108,14 @@ async function refresh(){
  for(const x of j.jobs){
   const dl=x.has_gcode
    ?'<a class="dl" href="/api/download/'+x.id+'">⬇ 3MF</a>':'—';
+  const sh=x.has_gcode
+   ?'<a href="#" onclick="share(\\''+x.id+'\\');return false">🔗 링크</a>':'—';
   tb.insertAdjacentHTML('beforeend',
    '<tr><td>'+x.id.slice(0,8)+'</td><td>'+badge(x.state)+'</td>'+
    '<td>'+x.material+'</td><td>'+(x.printer||'auto')+'</td>'+
    '<td class="muted">'+(x.message||'')+'</td>'+
    '<td class="muted">'+x.created.slice(5,16).replace('T',' ')+'</td>'+
-   '<td>'+dl+'</td></tr>');
+   '<td>'+dl+'</td><td>'+sh+'</td></tr>');
  }
  const c=await (await fetch('/api/credits')).json();
  const bal=(c.meshy_balance==null)?'조회실패':c.meshy_balance.toLocaleString();
@@ -113,12 +124,18 @@ async function refresh(){
   ' &nbsp;·&nbsp; 안전한도 일 '+c.daily_used+'/'+c.daily_cap+
   ' · 월 '+c.monthly_used+'/'+c.monthly_cap;
 }
-refresh();setInterval(refresh,3000);
+function share(id){
+ const u=location.origin+'/share/'+id;
+ navigator.clipboard.writeText(u).then(
+  ()=>alert('공유 링크 복사됨:\\n'+u),
+  ()=>prompt('공유 링크:',u));
+}
+loadPrinters();refresh();setInterval(refresh,3000);
 </script></body></html>"""
 
 
 class SubmitReq(BaseModel):
-    source: str
+    sources: list[str]
     material: str = "pla"
     printer: str = "auto"
     remove_bg: bool = False
@@ -140,14 +157,26 @@ def create_app(cfg: AppConfig) -> FastAPI:
     def index() -> str:
         return INDEX_HTML
 
+    @app.get("/api/printers")
+    def printers() -> dict:
+        return {"printers": list(cfg.printers.printers.keys())}
+
     @app.post("/api/jobs")
     def submit(req: SubmitReq) -> dict:
-        if not req.source.strip():
-            raise HTTPException(400, "source가 비어있음")
+        srcs = [s.strip() for s in req.sources if s.strip()]
+        if not srcs:
+            raise HTTPException(400, "이미지 URL이 비어있음")
+        if len(srcs) > 4:
+            raise HTTPException(400, "최대 4장까지 가능")
+        if len(srcs) == 1:
+            payload = {"source": srcs[0], "remove_bg": req.remove_bg}
+            stype = SourceType.IMAGE
+        else:
+            payload = {"sources": srcs, "remove_bg": req.remove_bg}
+            stype = SourceType.MULTI_IMAGE
         job = Job(
-            source_type=SourceType.IMAGE,
-            source_payload={"source": req.source.strip(),
-                            "remove_bg": req.remove_bg},
+            source_type=stype,
+            source_payload=payload,
             material=req.material,
             target_printer=None if req.printer == "auto" else req.printer,
         )
@@ -227,5 +256,37 @@ def create_app(cfg: AppConfig) -> FastAPI:
             raise HTTPException(404, "파일이 디스크에 없음")
         return FileResponse(p, filename=p.name,
                             media_type="application/octet-stream")
+
+    @app.get("/share/{job_id}", response_class=HTMLResponse)
+    def share(job_id: str) -> str:
+        with db.connect() as conn:
+            r = conn.execute(
+                "SELECT id, state, material, target_printer, gcode_path, "
+                "created_at FROM jobs WHERE id=?", (job_id,)
+            ).fetchone()
+        if not r:
+            raise HTTPException(404, "작업을 찾을 수 없음")
+        ready = bool(r["gcode_path"]) and Path(r["gcode_path"]).exists()
+        dl = (f'<a href="/api/download/{job_id}" '
+              f'style="display:inline-block;background:#111;color:#fff;'
+              f'padding:12px 22px;border-radius:8px;text-decoration:none;'
+              f'font-weight:600">⬇ 3MF 다운로드</a>') if ready else \
+             '<p style="color:#a40000">아직 준비되지 않았습니다 ' \
+             f'(상태: {r["state"]})</p>'
+        return f"""<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bambu Auto 공유 — {job_id[:8]}</title>
+<style>body{{font-family:-apple-system,sans-serif;max-width:560px;
+margin:60px auto;padding:0 16px;text-align:center;color:#1a1a1a}}
+.card{{border:1px solid #e3e3e3;border-radius:12px;padding:32px}}
+.m{{color:#888;font-size:13px}}</style></head><body>
+<div class="card">
+<h2>3D 프린트 파일 공유</h2>
+<p class="m">ID {job_id[:8]} · 재질 {r['material']} ·
+ 프린터 {r['target_printer'] or 'auto'} ·
+ {r['created_at'][:16].replace('T',' ')}</p>
+<div style="margin:28px 0">{dl}</div>
+<p class="m">이 파일을 Bambu Studio/Handy로 열어 출력하세요.</p>
+</div></body></html>"""
 
     return app

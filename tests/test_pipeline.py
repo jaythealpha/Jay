@@ -46,6 +46,10 @@ class FakeMeshy:
         self.calls += 1
         return ("task_fake_1", 1)
 
+    def multi_image_to_3d(self, job_id, image_urls, with_texture=False):
+        self.calls += 1
+        return ("task_fake_multi", 1)
+
     def wait_for_completion(self, task_id, kind="image-to-3d"):
         return {"id": task_id, "status": "SUCCEEDED",
                 "model_urls": {"stl": "https://example.com/m.stl"}}
@@ -104,6 +108,27 @@ def test_full_pipeline_reaches_sliced(cfg: AppConfig) -> None:
     assert job.state == JobState.SLICED
     assert job.gcode_path is not None
     assert job.target_printer == "a1"  # pla + small -> a1
+
+
+class FakeMultiAdapter(SourceAdapter):
+    def prepare(self, work_dir: Path) -> PreparedSource:
+        work_dir.mkdir(parents=True, exist_ok=True)
+        ps = []
+        for i in range(3):
+            p = work_dir / f"i{i}.png"
+            p.write_bytes(b"fake")
+            ps.append(p)
+        return PreparedSource(kind="multi_image", input_hash="multi1",
+                              image_paths=ps)
+
+
+def test_multi_image_pipeline_uses_multi_endpoint(cfg: AppConfig) -> None:
+    pipe, _ = _pipeline(cfg)
+    job = Job(source_type=SourceType.MULTI_IMAGE,
+              source_payload={"sources": ["a", "b", "c"]}, material="pla")
+    pipe.run(job, FakeMultiAdapter())
+    assert job.state == JobState.SLICED
+    assert job.meshy_task_id == "task_fake_multi"
 
 
 def test_routing_abs_goes_to_p2s(cfg: AppConfig) -> None:
