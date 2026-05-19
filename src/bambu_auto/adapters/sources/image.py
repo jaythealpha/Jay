@@ -49,10 +49,14 @@ class ImageSourceAdapter(SourceAdapter):
         return dst
 
     def _strip_background(self, img_path: Path) -> Path:
+        """배경·인물 제거. rembg가 사진의 주요 물체만 남김.
+        (사람이 화면을 지배하면 사람이 남을 수 있음 — 상품 중심 사진 권장)"""
         try:
             from rembg import remove  # type: ignore
-        except ImportError:
-            return img_path  # preprocess extra 미설치 — 원본 사용
+        except ImportError as e:
+            raise RuntimeError(
+                "배경 제거에는 rembg 필요. `uv sync` 재실행 (핵심 의존성)."
+            ) from e
         out = img_path.with_name("input_nobg.png")
         out.write_bytes(remove(img_path.read_bytes()))
         return out

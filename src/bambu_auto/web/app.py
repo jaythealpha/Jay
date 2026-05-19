@@ -58,8 +58,9 @@ INDEX_HTML = """<!doctype html>
       <option value="pla">PLA</option><option value="petg">PETG</option>
       <option value="abs">ABS</option><option value="silk">PLA Silk</option>
     </select>
-    <select id="prn"><option value="auto">자동 라우팅</option></select>
-    <label class="muted"><input id="bg" type="checkbox"> 배경 제거</label>
+    <select id="prn"><option value="auto">자동 (기본 A1)</option></select>
+    <label class="muted"><input id="bg" type="checkbox" checked>
+      배경·인물 제거</label>
     <button id="go" onclick="submit()">제작 시작</button>
   </div>
   <div id="msg" class="muted"></div>
@@ -76,6 +77,7 @@ async function loadPrinters(){
   for(const name of p.printers){
    const o=document.createElement('option');o.value=name;
    o.textContent=name.toUpperCase();sel.appendChild(o);}
+  if([...sel.options].some(o=>o.value==='a1')) sel.value='a1';
  }catch(e){}
 }
 async function submit(){

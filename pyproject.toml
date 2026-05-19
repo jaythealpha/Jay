@@ -16,13 +16,12 @@ dependencies = [
     "uvicorn>=0.29",
     "trimesh[easy]>=4.4",
     "numpy>=1.26",
+    "pillow>=10.3",
+    "rembg>=2.0",
+    "onnxruntime>=1.17",
 ]
 
 [project.optional-dependencies]
-preprocess = [
-    "pillow>=10.3",
-    "rembg>=2.0",
-]
 printer = [
     "bambulabs-api>=2.5",
 ]
