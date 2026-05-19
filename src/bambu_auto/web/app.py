@@ -133,9 +133,15 @@ INDEX_HTML = r"""<!doctype html>
 <div class="card">
   <div class="bar" style="margin:0 0 12px">
     <strong style="font-size:14px">제작 현황</strong>
-    <a href="/api/download-all" style="font-size:13px">⬇ 완료분 전체 ZIP</a>
+    <span>
+      <button id="bulk" onclick="bulkDelete()" disabled
+        style="background:#b91c1c;padding:7px 14px;font-size:13px;
+        margin-right:8px">선택 삭제</button>
+      <a href="/api/download-all" style="font-size:13px">⬇ 완료분 전체 ZIP</a>
+    </span>
   </div>
   <table><thead><tr>
+    <th><input type="checkbox" id="all" onclick="toggleAll(this)"></th>
     <th></th><th>ID</th><th>상태</th><th>재질</th><th>프린터</th>
     <th>진행</th><th>생성</th><th>파일</th><th>공유</th><th></th>
   </tr></thead><tbody id="tb"></tbody></table>
@@ -195,8 +201,11 @@ async function refresh(){
   const th='<img src="/api/thumb/'+x.id+'" style="width:34px;height:34px;'+
    'object-fit:cover;border-radius:6px;background:#eee" '+
    'onerror="this.style.visibility=\'hidden\'">';
+  const ck=SEL.has(x.id)?' checked':'';
   const tr=document.createElement('tr');
-  tr.innerHTML='<td>'+th+'</td><td class="id">'+x.id.slice(0,8)+
+  tr.innerHTML='<td><input type="checkbox" class="sel" data-id="'+x.id+'"'+
+   ck+' onclick="onSel(this)"></td>'+
+   '<td>'+th+'</td><td class="id">'+x.id.slice(0,8)+
    '</td><td>'+badge(x.state)+
    '</td><td>'+x.material+'</td><td>'+(x.printer||'auto')+
    '</td><td class="prog" title="'+m+'">'+m+
@@ -205,6 +214,7 @@ async function refresh(){
    '</td><td class="msg">'+rt+
    '<a href="#" onclick="del(\''+x.id+'\');return false">🗑</a></td>';
   tb.appendChild(tr);}
+ syncBulk();
  const c=await (await fetch('/api/credits')).json();
  const bal=(c.meshy_balance==null)?'조회실패':c.meshy_balance.toLocaleString();
  document.getElementById('cred').innerHTML='<b>Meshy 잔액 '+bal+'</b>'+
@@ -217,9 +227,28 @@ async function retry(id){
  await fetch('/api/jobs/'+id+'/retry',{method:'POST'});refresh();}
 async function del(id){
  if(!confirm('이 작업을 삭제할까요? (파일도 함께 삭제)'))return;
- await fetch('/api/jobs/'+id,{method:'DELETE'});refresh();}
+ await fetch('/api/jobs/'+id,{method:'DELETE'});SEL.delete(id);refresh();}
+const SEL=new Set();
+function onSel(cb){cb.checked?SEL.add(cb.dataset.id):SEL.delete(cb.dataset.id);
+ syncBulk();}
+function toggleAll(cb){document.querySelectorAll('.sel').forEach(x=>{
+ x.checked=cb.checked;x.checked?SEL.add(x.dataset.id):SEL.delete(x.dataset.id);});
+ syncBulk();}
+function syncBulk(){const n=SEL.size;const b=document.getElementById('bulk');
+ b.disabled=!n;b.textContent=n?('선택 삭제 ('+n+')'):'선택 삭제';}
+async function bulkDelete(){
+ const ids=[...SEL];if(!ids.length)return;
+ if(!confirm(ids.length+'개 작업을 삭제할까요? (파일도 함께 삭제)'))return;
+ await fetch('/api/jobs/bulk-delete',{method:'POST',
+  headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({ids:ids})});
+ SEL.clear();document.getElementById('all').checked=false;refresh();}
 loadPrinters();refresh();setInterval(refresh,3000);
 </script></body></html>"""
+
+
+class BulkIds(BaseModel):
+    ids: list[str]
 
 
 class SubmitReq(BaseModel):
@@ -419,13 +448,22 @@ def create_app(cfg: AppConfig) -> FastAPI:
         worker.last_message.pop(job_id, None)
         return {"id": job_id, "state": "new"}
 
-    @app.delete("/api/jobs/{job_id}")
-    def delete(job_id: str) -> dict:
+    def _delete_one(job_id: str) -> None:
         with db.connect() as conn:
             conn.execute("DELETE FROM jobs WHERE id=?", (job_id,))
         shutil.rmtree(assets_dir / job_id, ignore_errors=True)
         worker.last_message.pop(job_id, None)
+
+    @app.delete("/api/jobs/{job_id}")
+    def delete(job_id: str) -> dict:
+        _delete_one(job_id)
         return {"deleted": job_id}
+
+    @app.post("/api/jobs/bulk-delete")
+    def bulk_delete(req: BulkIds) -> dict:
+        for jid in req.ids:
+            _delete_one(jid)
+        return {"deleted": len(req.ids)}
 
     @app.get("/share/{job_id}", response_class=HTMLResponse)
     def share(job_id: str) -> str:
