@@ -151,62 +151,22 @@ def submit(
 
 
 def _run_job(cfg: AppConfig, db: Database, job_id: str) -> None:
-    """파이프라인 실행. Meshy/슬라이서 실제 의존성 연결."""
-    import json
+    """파이프라인 실행 (CLI 래퍼 — 공용 runner.run_job 사용)."""
+    from bambu_auto.core.runner import JobNotFound, run_job
 
-    from bambu_auto.adapters.sources.image import ImageSourceAdapter
-    from bambu_auto.core.job import Job, SourceType
-    from bambu_auto.core.pipeline import Pipeline
-    from bambu_auto.core.repository import JobRepository
-    from bambu_auto.services.meshy.client import MeshyClient
-    from bambu_auto.services.meshy.credits import CreditGuard
-    from bambu_auto.services.slicer.orca import OrcaSlicer
-
-    repo = JobRepository(db)
-    with db.connect() as conn:
-        row = conn.execute("SELECT * FROM jobs WHERE id=?", (job_id,)).fetchone()
-    if not row:
+    try:
+        job = run_job(cfg, db, job_id,
+                      on_progress=lambda m: console.print(f"[cyan]{m}[/cyan]"))
+    except JobNotFound:
         console.print(f"[red]Job {job_id} not found[/red]")
-        raise typer.Exit(1)
-
-    job = Job(
-        id=row["id"],
-        source_type=SourceType(row["source_type"]),
-        source_payload=json.loads(row["source_payload"]),
-        material=row["material"],
-        quality=row["quality"],
-        target_printer=row["target_printer"],
-    )
-
-    guard = CreditGuard(db, cfg.budgets)
-    meshy = MeshyClient(cfg.secrets.meshy_api_key, cfg.settings.meshy, guard)
-    try:
-        slicer = OrcaSlicer()
+        raise typer.Exit(1) from None
     except Exception as e:
-        console.print(f"[yellow]⚠ OrcaSlicer 미준비: {e}[/yellow]")
-        console.print("[dim]슬라이싱 전 단계까지만 실행됩니다.[/dim]")
-        slicer = None  # type: ignore
+        console.print(f"[red]Failed[/red] {job_id}: {e}")
+        raise typer.Exit(1) from e
 
-    if job.source_type != SourceType.IMAGE:
-        console.print("[red]Phase 2는 image 소스만 지원[/red]")
-        raise typer.Exit(1)
-
-    adapter = ImageSourceAdapter(
-        job.source_payload["source"],
-        remove_bg=job.source_payload.get("remove_bg", True),
-    )
-    pipe = Pipeline(cfg, repo, meshy, slicer,
-                    on_progress=lambda m: console.print(f"[cyan]{m}[/cyan]"))
-    try:
-        pipe.run(job, adapter)
-        console.print(f"[green]Done[/green] {job.id} -> {job.state.value}")
-        if job.gcode_path:
-            console.print(f"  G-code: {job.gcode_path}")
-    except Exception as e:
-        console.print(f"[red]Failed[/red] {job.id} at {job.state.value}: {e}")
-        raise typer.Exit(1)
-    finally:
-        meshy.close()
+    console.print(f"[green]Done[/green] {job.id} -> {job.state.value}")
+    if job.gcode_path:
+        console.print(f"  G-code: {job.gcode_path}")
 
 
 @app.command()
@@ -214,6 +174,19 @@ def process(job_id: str) -> None:
     """기존 NEW 작업을 파이프라인에 태움 (재개 포함)."""
     cfg, db, _ = _bootstrap()
     _run_job(cfg, db, job_id)
+
+
+@app.command()
+def serve(host: str = "0.0.0.0", port: int = 8000) -> None:
+    """웹 대시보드 실행. 브라우저에서 제출·다운로드 (CLI 대체)."""
+    import uvicorn
+
+    from bambu_auto.web.app import create_app
+
+    cfg = AppConfig.load()
+    console.print(f"[green]웹 대시보드[/green] http://{host}:{port}  "
+                  f"(같은 네트워크에서 접속 가능)")
+    uvicorn.run(create_app(cfg), host=host, port=port, log_level="info")
 
 
 @app.command(name="list")
