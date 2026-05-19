@@ -14,13 +14,11 @@ dependencies = [
     "python-dotenv>=1.0",
     "fastapi>=0.110",
     "uvicorn>=0.29",
-]
-
-[project.optional-dependencies]
-mesh = [
     "trimesh>=4.4",
     "numpy>=1.26",
 ]
+
+[project.optional-dependencies]
 preprocess = [
     "pillow>=10.3",
     "rembg>=2.0",

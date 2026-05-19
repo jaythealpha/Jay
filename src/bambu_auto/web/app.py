@@ -107,9 +107,11 @@ async function refresh(){
    '<td>'+dl+'</td></tr>');
  }
  const c=await (await fetch('/api/credits')).json();
- document.getElementById('cred').textContent=
-  'Meshy 크레딧: 월 '+c.monthly_used+'/'+c.monthly_cap+
-  ' · 잔여 '+c.monthly_remaining+' · 일 '+c.daily_used+'/'+c.daily_cap;
+ const bal=(c.meshy_balance==null)?'조회실패':c.meshy_balance.toLocaleString();
+ document.getElementById('cred').innerHTML=
+  '<b>Meshy 실시간 잔액: '+bal+'</b>'+
+  ' &nbsp;·&nbsp; 안전한도 일 '+c.daily_used+'/'+c.daily_cap+
+  ' · 월 '+c.monthly_used+'/'+c.monthly_cap;
 }
 refresh();setInterval(refresh,3000);
 </script></body></html>"""
@@ -167,10 +169,37 @@ def create_app(cfg: AppConfig) -> FastAPI:
             "message": worker.last_message.get(r["id"], ""),
         } for r in rows]}
 
+    # 실시간 Meshy 잔액 (60초 TTL 캐시 — 3초 폴링 API 남용 방지)
+    _bal_cache: dict[str, float | int | None] = {"ts": 0.0, "value": None}
+
+    def _live_balance() -> int | None:
+        import time
+
+        from bambu_auto.services.meshy.client import MeshyClient
+
+        now = time.time()
+        if now - float(_bal_cache["ts"] or 0) < 60 and _bal_cache["value"] is not None:
+            return int(_bal_cache["value"])
+        try:
+            mc = MeshyClient(cfg.secrets.meshy_api_key, cfg.settings.meshy, guard)
+            try:
+                data = mc.balance()
+            finally:
+                mc.close()
+            bal = data.get("balance") if isinstance(data, dict) else None
+            if isinstance(bal, (int, float)):
+                _bal_cache["ts"] = now
+                _bal_cache["value"] = int(bal)
+                return int(bal)
+        except Exception:  # noqa: BLE001 — 잔액 조회 실패는 치명적 아님
+            pass
+        return int(_bal_cache["value"]) if _bal_cache["value"] is not None else None
+
     @app.get("/api/credits")
     def credits() -> dict:
         u = guard.usage()
-        return {"monthly_used": u.monthly_used, "monthly_cap": u.monthly_cap,
+        return {"meshy_balance": _live_balance(),
+                "monthly_used": u.monthly_used, "monthly_cap": u.monthly_cap,
                 "monthly_remaining": u.monthly_remaining,
                 "daily_used": u.daily_used, "daily_cap": u.daily_cap}
 
