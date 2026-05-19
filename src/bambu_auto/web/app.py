@@ -120,10 +120,15 @@ INDEX_HTML = r"""<!doctype html>
       </select></div>
     <div><label class="fld">프린터</label>
       <select id="prn"><option value="auto">자동 (기본 A1)</option></select></div>
-    <div><label class="fld">옵션</label>
-      <div class="opts"><label><input id="bg" type="checkbox" checked>
-        배경·인물 제거</label></div></div>
+    <div><label class="fld">추가</label>
+      <select id="addon">
+        <option value="">없음</option>
+        <option value="keychain">열쇠고리</option>
+        <option value="stand">받침대</option>
+      </select></div>
   </div>
+  <div class="opts"><label><input id="bg" type="checkbox" checked>
+    배경·인물 제거</label></div>
   <div class="bar">
     <span id="msg" class="msg"></span>
     <button id="go" onclick="submit()">제작 시작</button>
@@ -184,6 +189,7 @@ async function submit(){
    body:JSON.stringify({sources:srcs,mode:MODE,
     material:document.getElementById('mat').value,
     printer:document.getElementById('prn').value,
+    addon:document.getElementById('addon').value,
     remove_bg:document.getElementById('bg').checked})});
   const j=await r.json();
   document.getElementById('msg').textContent= r.ok
@@ -263,6 +269,7 @@ class SubmitReq(BaseModel):
     mode: str = "batch"          # batch=각 URL 별도 물체 / multiview=한 물체 다각도
     material: str = "pla"
     printer: str = "auto"
+    addon: str = ""              # "" | keychain | stand
     remove_bg: bool = False
 
 
@@ -294,6 +301,8 @@ def create_app(cfg: AppConfig) -> FastAPI:
         printer = None if req.printer == "auto" else req.printer
 
         def mk(stype: SourceType, payload: dict) -> str:
+            if req.addon in ("keychain", "stand"):
+                payload = {**payload, "addon": req.addon}
             job = Job(source_type=stype, source_payload=payload,
                       material=req.material, target_printer=printer)
             repo.save(job)

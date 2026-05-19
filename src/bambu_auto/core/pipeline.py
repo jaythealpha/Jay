@@ -65,6 +65,7 @@ class Pipeline:
             model_path = self._generate(job, prepared, work)
             self._notify("[3/5] mesh 리페어 중…")
             report = self._repair(job, Path(model_path), work)
+            self._addon(job, report, work)
             self._notify("[4/5] 프린터 라우팅 중…")
             self._route(job, report)
             self._notify(f"[5/5] 슬라이싱 중 → {job.target_printer}…")
@@ -180,6 +181,28 @@ class Pipeline:
         except Exception as e:
             self.repo.set_state(job, JobState.FAILED_REPAIR, error=str(e))
             raise
+
+    def _addon(self, job: Job, report: MeshReport, work: Path) -> None:
+        """키링/받침 부착 (옵션). 실패해도 원본 유지 — 비치명적."""
+        addon = (job.source_payload or {}).get("addon")
+        if addon not in ("keychain", "stand"):
+            return
+        from bambu_auto.services.mesh.addons import ADDONS
+
+        label = "키링 고리" if addon == "keychain" else "받침대"
+        self._notify(f"  {label} 부착 중…")
+        out = work / "repaired" / f"{Path(report.path).stem}_{addon}.stl"
+        try:
+            ok = ADDONS[addon](Path(report.path), out)
+        except Exception as e:  # noqa: BLE001
+            ok = False
+            self._notify(f"  ⚠ {label} 부착 오류: {e}")
+        if ok and out.exists():
+            report.path = out
+            job.repaired_path = str(out)
+            self.repo.save(job)
+        else:
+            self._notify(f"  ⚠ {label} 부착 실패 — 원본으로 진행")
 
     def _route(self, job: Job, report: MeshReport) -> None:
         ctx = RouteContext(material=job.material,
