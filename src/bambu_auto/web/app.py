@@ -159,14 +159,25 @@ def create_app(cfg: AppConfig) -> FastAPI:
         with db.connect() as conn:
             rows = conn.execute(
                 "SELECT id, state, material, target_printer, gcode_path, "
-                "created_at FROM jobs ORDER BY created_at DESC LIMIT 100"
+                "error, created_at FROM jobs ORDER BY created_at DESC LIMIT 100"
             ).fetchall()
+
+        def msg(r) -> str:
+            st = r["state"]
+            if st in ("sliced", "done"):
+                return "✅ 완료"
+            if st.startswith("failed"):
+                return f"❌ {r['error'] or worker.last_message.get(r['id'], st)}"
+            if st == "new":
+                return "대기 중…"
+            return worker.last_message.get(r["id"], "진행 중…")
+
         return {"jobs": [{
             "id": r["id"], "state": r["state"], "material": r["material"],
             "printer": r["target_printer"],
             "has_gcode": bool(r["gcode_path"]),
             "created": r["created_at"],
-            "message": worker.last_message.get(r["id"], ""),
+            "message": msg(r),
         } for r in rows]}
 
     # 실시간 Meshy 잔액 (60초 TTL 캐시 — 3초 폴링 API 남용 방지)
