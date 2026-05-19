@@ -9,21 +9,49 @@
 
 from __future__ import annotations
 
+import io
 import json
+import re
+import shutil
+import zipfile
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from pydantic import BaseModel
 
 from bambu_auto.config import AppConfig
-from bambu_auto.core.job import Job, SourceType
+from bambu_auto.core.job import Job, JobState, SourceType
 from bambu_auto.core.repository import JobRepository
 from bambu_auto.services.meshy.credits import CreditGuard
 from bambu_auto.storage.db import Database
 from bambu_auto.web.worker import Worker
 
-INDEX_HTML = """<!doctype html>
+
+def _slice_stats(gcode_3mf: str) -> dict:
+    """슬라이싱된 .gcode.3mf에서 예상 출력시간·필라멘트량 추출.
+    Bambu/Orca gcode 헤더 주석 파싱. 실패 시 빈 dict."""
+    try:
+        with zipfile.ZipFile(gcode_3mf) as z:
+            name = next((n for n in z.namelist()
+                         if n.endswith(".gcode")), None)
+            if not name:
+                return {}
+            head = z.read(name)[:8000].decode("utf-8", "ignore")
+    except Exception:  # noqa: BLE001
+        return {}
+    out: dict[str, str] = {}
+    t = re.search(r"(?:total estimated time|model printing time)\s*[:=]\s*"
+                  r"([0-9hms ]+)", head, re.I)
+    if t:
+        out["time"] = t.group(1).strip()
+    f = re.search(r"(?:total )?filament used \[g\]\s*[:=]\s*([0-9.]+)",
+                  head, re.I)
+    if f:
+        out["filament_g"] = f.group(1)
+    return out
+
+INDEX_HTML = r"""<!doctype html>
 <html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Bambu Auto</title>
@@ -103,9 +131,13 @@ INDEX_HTML = """<!doctype html>
 </div>
 
 <div class="card">
+  <div class="bar" style="margin:0 0 12px">
+    <strong style="font-size:14px">제작 현황</strong>
+    <a href="/api/download-all" style="font-size:13px">⬇ 완료분 전체 ZIP</a>
+  </div>
   <table><thead><tr>
-    <th>ID</th><th>상태</th><th>재질</th><th>프린터</th><th>진행</th>
-    <th>생성</th><th>파일</th><th>공유</th>
+    <th></th><th>ID</th><th>상태</th><th>재질</th><th>프린터</th>
+    <th>진행</th><th>생성</th><th>파일</th><th>공유</th><th></th>
   </tr></thead><tbody id="tb"></tbody></table>
   <div id="empty" class="empty" style="display:none">아직 작업이 없습니다.</div>
 </div>
@@ -158,13 +190,20 @@ async function refresh(){
  for(const x of j.jobs){
   const dl=x.has_gcode?'<a href="/api/download/'+x.id+'">⬇ 3MF</a>':'<span class="msg">—</span>';
   const sh=x.has_gcode?'<a href="#" onclick="share(\''+x.id+'\');return false">🔗</a>':'<span class="msg">—</span>';
+  const rt=x.can_retry?'<a href="#" onclick="retry(\''+x.id+'\');return false">↻</a> ':'';
   const m=(x.message||'').replace(/"/g,'&quot;');
+  const th='<img src="/api/thumb/'+x.id+'" style="width:34px;height:34px;'+
+   'object-fit:cover;border-radius:6px;background:#eee" '+
+   'onerror="this.style.visibility=\'hidden\'">';
   const tr=document.createElement('tr');
-  tr.innerHTML='<td class="id">'+x.id.slice(0,8)+'</td><td>'+badge(x.state)+
+  tr.innerHTML='<td>'+th+'</td><td class="id">'+x.id.slice(0,8)+
+   '</td><td>'+badge(x.state)+
    '</td><td>'+x.material+'</td><td>'+(x.printer||'auto')+
    '</td><td class="prog" title="'+m+'">'+m+
    '</td><td class="msg">'+x.created.slice(5,16).replace('T',' ')+
-   '</td><td>'+dl+'</td><td>'+sh+'</td>';
+   '</td><td>'+dl+'</td><td>'+sh+
+   '</td><td class="msg">'+rt+
+   '<a href="#" onclick="del(\''+x.id+'\');return false">🗑</a></td>';
   tb.appendChild(tr);}
  const c=await (await fetch('/api/credits')).json();
  const bal=(c.meshy_balance==null)?'조회실패':c.meshy_balance.toLocaleString();
@@ -174,6 +213,11 @@ async function refresh(){
 function share(id){const u=location.origin+'/share/'+id;
  navigator.clipboard.writeText(u).then(
   ()=>alert('공유 링크 복사됨:\n'+u),()=>prompt('공유 링크:',u));}
+async function retry(id){
+ await fetch('/api/jobs/'+id+'/retry',{method:'POST'});refresh();}
+async function del(id){
+ if(!confirm('이 작업을 삭제할까요? (파일도 함께 삭제)'))return;
+ await fetch('/api/jobs/'+id,{method:'DELETE'});refresh();}
 loadPrinters();refresh();setInterval(refresh,3000);
 </script></body></html>"""
 
@@ -236,6 +280,16 @@ def create_app(cfg: AppConfig) -> FastAPI:
                    for s in srcs]
         return {"ids": ids, "count": len(ids)}
 
+    _stats_cache: dict[str, dict] = {}  # gcode_path -> stats (mtime키)
+
+    def _stats_for(gcode_path: str | None) -> dict:
+        if not gcode_path or not Path(gcode_path).exists():
+            return {}
+        key = f"{gcode_path}:{Path(gcode_path).stat().st_mtime_ns}"
+        if key not in _stats_cache:
+            _stats_cache[key] = _slice_stats(gcode_path)
+        return _stats_cache[key]
+
     @app.get("/api/jobs")
     def jobs() -> dict:
         with db.connect() as conn:
@@ -247,6 +301,14 @@ def create_app(cfg: AppConfig) -> FastAPI:
         def msg(r) -> str:
             st = r["state"]
             if st in ("sliced", "done"):
+                s = _stats_for(r["gcode_path"])
+                if s:
+                    bits = []
+                    if s.get("time"):
+                        bits.append(f"⏱ {s['time']}")
+                    if s.get("filament_g"):
+                        bits.append(f"🧵 {s['filament_g']}g")
+                    return "✅ " + " · ".join(bits) if bits else "✅ 완료"
                 return "✅ 완료"
             if st.startswith("failed"):
                 return f"❌ {r['error'] or worker.last_message.get(r['id'], st)}"
@@ -258,6 +320,7 @@ def create_app(cfg: AppConfig) -> FastAPI:
             "id": r["id"], "state": r["state"], "material": r["material"],
             "printer": r["target_printer"],
             "has_gcode": bool(r["gcode_path"]),
+            "can_retry": r["state"].startswith("failed"),
             "created": r["created_at"],
             "message": msg(r),
         } for r in rows]}
@@ -296,6 +359,8 @@ def create_app(cfg: AppConfig) -> FastAPI:
                 "monthly_remaining": u.monthly_remaining,
                 "daily_used": u.daily_used, "daily_cap": u.daily_cap}
 
+    assets_dir = Path(cfg.settings.storage.data_dir) / "assets"
+
     @app.get("/api/download/{job_id}")
     def download(job_id: str) -> FileResponse:
         with db.connect() as conn:
@@ -309,6 +374,58 @@ def create_app(cfg: AppConfig) -> FastAPI:
             raise HTTPException(404, "파일이 디스크에 없음")
         return FileResponse(p, filename=p.name,
                             media_type="application/octet-stream")
+
+    @app.get("/api/download-all")
+    def download_all() -> StreamingResponse:
+        with db.connect() as conn:
+            rows = conn.execute(
+                "SELECT id, gcode_path FROM jobs WHERE gcode_path IS NOT NULL"
+            ).fetchall()
+        files = [(r["id"], Path(r["gcode_path"])) for r in rows
+                 if r["gcode_path"] and Path(r["gcode_path"]).exists()]
+        if not files:
+            raise HTTPException(404, "완료된 파일이 없음")
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w", zipfile.ZIP_STORED) as z:
+            for jid, p in files:
+                z.write(p, arcname=f"{jid[:8]}_{p.name}")
+        buf.seek(0)
+        return StreamingResponse(
+            buf, media_type="application/zip",
+            headers={"Content-Disposition":
+                     'attachment; filename="bambu_auto_all.zip"'})
+
+    @app.get("/api/thumb/{job_id}")
+    def thumb(job_id: str) -> FileResponse:
+        src = assets_dir / job_id / "source"
+        if not src.exists():
+            raise HTTPException(404, "이미지 없음")
+        imgs = sorted(src.rglob("input*"))
+        if not imgs:
+            raise HTTPException(404, "이미지 없음")
+        return FileResponse(imgs[0])
+
+    @app.post("/api/jobs/{job_id}/retry")
+    def retry(job_id: str) -> dict:
+        with db.connect() as conn:
+            row = conn.execute("SELECT state FROM jobs WHERE id=?",
+                               (job_id,)).fetchone()
+            if not row:
+                raise HTTPException(404, "작업 없음")
+            conn.execute(
+                "UPDATE jobs SET state=?, error=NULL, model_path=NULL, "
+                "repaired_path=NULL, gcode_path=NULL WHERE id=?",
+                (JobState.NEW.value, job_id))
+        worker.last_message.pop(job_id, None)
+        return {"id": job_id, "state": "new"}
+
+    @app.delete("/api/jobs/{job_id}")
+    def delete(job_id: str) -> dict:
+        with db.connect() as conn:
+            conn.execute("DELETE FROM jobs WHERE id=?", (job_id,))
+        shutil.rmtree(assets_dir / job_id, ignore_errors=True)
+        worker.last_message.pop(job_id, None)
+        return {"deleted": job_id}
 
     @app.get("/share/{job_id}", response_class=HTMLResponse)
     def share(job_id: str) -> str:
