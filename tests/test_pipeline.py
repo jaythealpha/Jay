@@ -50,6 +50,10 @@ class FakeMeshy:
         self.calls += 1
         return ("task_fake_multi", 1)
 
+    def text_to_3d_preview(self, job_id, prompt):
+        self.calls += 1
+        return ("task_fake_text", 1)
+
     def wait_for_completion(self, task_id, kind="image-to-3d"):
         return {"id": task_id, "status": "SUCCEEDED",
                 "model_urls": {"stl": "https://example.com/m.stl"}}
@@ -129,6 +133,22 @@ def test_multi_image_pipeline_uses_multi_endpoint(cfg: AppConfig) -> None:
     pipe.run(job, FakeMultiAdapter())
     assert job.state == JobState.SLICED
     assert job.meshy_task_id == "task_fake_multi"
+
+
+class FakeTextAdapter(SourceAdapter):
+    def prepare(self, work_dir: Path) -> PreparedSource:
+        work_dir.mkdir(parents=True, exist_ok=True)
+        return PreparedSource(kind="text", input_hash="txt1",
+                              prompt="요기보 캐릭터 키링")
+
+
+def test_text_pipeline_uses_text_endpoint(cfg: AppConfig) -> None:
+    pipe, _ = _pipeline(cfg)
+    job = Job(source_type=SourceType.TEXT,
+              source_payload={"prompt": "요기보 캐릭터 키링"}, material="pla")
+    pipe.run(job, FakeTextAdapter())
+    assert job.state == JobState.SLICED
+    assert job.meshy_task_id == "task_fake_text"
 
 
 def test_routing_abs_goes_to_p2s(cfg: AppConfig) -> None:

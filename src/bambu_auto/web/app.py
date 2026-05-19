@@ -105,8 +105,9 @@ INDEX_HTML = r"""<!doctype html>
 
 <div class="card">
   <div class="seg">
-    <button id="mBatch" class="on" onclick="setMode('batch')">여러 물체 (배치)</button>
-    <button id="mView" onclick="setMode('multiview')">한 물체 · 여러 각도</button>
+    <button id="mBatch" class="on" onclick="setMode('batch')">이미지 (배치)</button>
+    <button id="mView" onclick="setMode('multiview')">한 물체·여러 각도</button>
+    <button id="mText" onclick="setMode('text')">텍스트 → 3D</button>
   </div>
   <label class="fld" id="hint">한 줄에 이미지 URL 1개 = 물체 1개. 여러 줄이면 각각 별도 제작.</label>
   <textarea id="src" rows="5"
@@ -153,9 +154,14 @@ let MODE='batch';
 function setMode(m){MODE=m;
  document.getElementById('mBatch').className=m==='batch'?'on':'';
  document.getElementById('mView').className=m==='multiview'?'on':'';
- document.getElementById('hint').textContent= m==='batch'
-  ? '한 줄에 이미지 URL 1개 = 물체 1개. 여러 줄이면 각각 별도로 제작됩니다.'
-  : '같은 물체를 다른 각도로 찍은 2~4장. 합쳐서 정밀한 3D 1개를 만듭니다.';}
+ document.getElementById('mText').className=m==='text'?'on':'';
+ const h={batch:'한 줄에 이미지 URL 1개 = 물체 1개. 여러 줄이면 각각 별도 제작.',
+  multiview:'같은 물체를 다른 각도로 찍은 2~4장. 합쳐서 정밀한 3D 1개.',
+  text:'한 줄에 설명 1개 = 굿즈 1개. 예: 요기보 캐릭터 키링, 단순한 형태'};
+ document.getElementById('hint').textContent=h[m];
+ document.getElementById('src').placeholder= m==='text'
+  ? '요기보 캐릭터 하트 키링, 두꺼운 벽\\n요기보 캐릭터 미니 피규어'
+  : 'https://.../productA.jpg';}
 async function loadPrinters(){
  try{const p=await (await fetch('/api/printers')).json();
   const s=document.getElementById('prn');
@@ -166,9 +172,10 @@ async function loadPrinters(){
 async function submit(){
  const raw=document.getElementById('src').value;
  const srcs=raw.split(/\n/).map(s=>s.trim()).filter(Boolean);
- if(!srcs.length){alert('이미지 URL을 한 줄 이상 입력하세요');return;}
+ if(!srcs.length){alert('한 줄 이상 입력하세요');return;}
  if(MODE==='multiview'&&srcs.length>4){alert('멀티뷰는 최대 4장');return;}
- if(MODE==='batch'&&srcs.length>20){alert('배치는 한 번에 최대 20개');return;}
+ if((MODE==='batch'||MODE==='text')&&srcs.length>20){
+  alert('한 번에 최대 20개');return;}
  const b=document.getElementById('go');b.disabled=true;
  document.getElementById('msg').textContent='제출 중…';
  try{
@@ -283,7 +290,7 @@ def create_app(cfg: AppConfig) -> FastAPI:
     def submit(req: SubmitReq) -> dict:
         srcs = [s.strip() for s in req.sources if s.strip()]
         if not srcs:
-            raise HTTPException(400, "이미지 URL이 비어있음")
+            raise HTTPException(400, "입력이 비어있음")
         printer = None if req.printer == "auto" else req.printer
 
         def mk(stype: SourceType, payload: dict) -> str:
@@ -292,7 +299,11 @@ def create_app(cfg: AppConfig) -> FastAPI:
             repo.save(job)
             return job.id
 
-        if req.mode == "multiview":
+        if req.mode == "text":
+            if len(srcs) > 20:
+                raise HTTPException(400, "한 번에 최대 20개")
+            ids = [mk(SourceType.TEXT, {"prompt": s}) for s in srcs]
+        elif req.mode == "multiview":
             if len(srcs) > 4:
                 raise HTTPException(400, "멀티뷰는 최대 4장")
             if len(srcs) == 1:

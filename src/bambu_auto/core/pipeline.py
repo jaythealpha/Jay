@@ -28,6 +28,8 @@ class MeshyPort(Protocol):
                      with_texture: bool = False) -> tuple[str, int]: ...
     def multi_image_to_3d(self, job_id: str, image_urls: list[str],
                            with_texture: bool = False) -> tuple[str, int]: ...
+    def text_to_3d_preview(self, job_id: str,
+                           prompt: str) -> tuple[str, int]: ...
     def wait_for_completion(self, task_id: str, kind: str = "image-to-3d") -> dict: ...
     def download_model(self, task_data: dict, dest_dir: Path, prefer: str = "glb") -> Path: ...
 
@@ -95,16 +97,24 @@ class Pipeline:
             return model_path
 
         try:
-            if not prepared.image_paths:
-                raise ValueError("이미지/멀티이미지 소스만 지원 (text/web 추후)")
             with_tex = not self.cfg.budgets.saving.skip_texture_by_default
 
-            if prepared.kind == "multi_image":
+            if prepared.kind == "text":
+                if not prepared.prompt:
+                    raise ValueError("프롬프트가 비어있음")
+                task_id, _ = self.meshy.text_to_3d_preview(
+                    job.id, prepared.prompt)
+                kind = "text-to-3d"
+            elif prepared.kind == "multi_image":
+                if not prepared.image_paths:
+                    raise ValueError("멀티이미지 경로 없음")
                 refs = [str(p) for p in prepared.image_paths]
                 task_id, _ = self.meshy.multi_image_to_3d(
                     job.id, refs, with_texture=with_tex)
                 kind = "multi-image-to-3d"
             else:
+                if not prepared.image_paths:
+                    raise ValueError("이미지 경로 없음")
                 task_id, _ = self.meshy.image_to_3d(
                     job.id, str(prepared.image_paths[0]), with_texture=with_tex)
                 kind = "image-to-3d"

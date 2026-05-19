@@ -58,8 +58,11 @@ def run_job(
         from bambu_auto.adapters.sources.multi_image import MultiImageSourceAdapter
         adapter = MultiImageSourceAdapter(
             job.source_payload["sources"], remove_bg=remove_bg)
+    elif job.source_type == SourceType.TEXT:
+        from bambu_auto.adapters.sources.text import TextSourceAdapter
+        adapter = TextSourceAdapter(job.source_payload["prompt"])
     else:
-        raise ValueError("현재 image / multi_image 소스만 지원 (text/web 추후)")
+        raise ValueError("지원하지 않는 소스 타입 (web은 추후)")
 
     guard = CreditGuard(db, cfg.budgets)
     meshy = MeshyClient(cfg.secrets.meshy_api_key, cfg.settings.meshy, guard)

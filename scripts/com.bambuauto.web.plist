@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Bambu Auto 웹 대시보드 상시 실행 (launchd).
+
+  설치 (맥미니, 한 번만):
+    1) 이 파일의 __UV__ / __PROJECT__ 를 실제 경로로 치환:
+         which uv                       # __UV__ 에 넣을 값
+         echo $HOME/Jay                 # __PROJECT__ 에 넣을 값 (clone 위치)
+    2) cp scripts/com.bambuauto.web.plist ~/Library/LaunchAgents/
+    3) 편집해서 __UV__ / __PROJECT__ 치환 (nano 등)
+    4) launchctl load  ~/Library/LaunchAgents/com.bambuauto.web.plist
+       launchctl start com.bambuauto.web
+
+  상태/로그:
+    launchctl list | grep bambuauto
+    tail -f /tmp/bambuauto.web.log
+  중지/제거:
+    launchctl unload ~/Library/LaunchAgents/com.bambuauto.web.plist
+-->
+<plist version="1.0"><dict>
+  <key>Label</key><string>com.bambuauto.web</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>__UV__</string>
+    <string>run</string>
+    <string>bambu-auto</string>
+    <string>serve</string>
+  </array>
+  <key>WorkingDirectory</key><string>__PROJECT__</string>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>StandardOutPath</key><string>/tmp/bambuauto.web.log</string>
+  <key>StandardErrorPath</key><string>/tmp/bambuauto.web.log</string>
+</dict></plist>
