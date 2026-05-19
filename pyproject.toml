@@ -14,7 +14,7 @@ dependencies = [
     "python-dotenv>=1.0",
     "fastapi>=0.110",
     "uvicorn>=0.29",
-    "trimesh>=4.4",
+    "trimesh[easy]>=4.4",
     "numpy>=1.26",
 ]
 
