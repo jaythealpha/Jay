@@ -54,6 +54,10 @@ class FakeMeshy:
         self.calls += 1
         return ("task_fake_text", 1)
 
+    def remesh(self, job_id, input_task_id):
+        self.remeshed = True
+        return ("task_fake_remesh", 1)
+
     def wait_for_completion(self, task_id, kind="image-to-3d"):
         return {"id": task_id, "status": "SUCCEEDED",
                 "model_urls": {"stl": "https://example.com/m.stl"}}
@@ -149,6 +153,15 @@ def test_text_pipeline_uses_text_endpoint(cfg: AppConfig) -> None:
     pipe.run(job, FakeTextAdapter())
     assert job.state == JobState.SLICED
     assert job.meshy_task_id == "task_fake_text"
+
+
+def test_remesh_runs_by_default(cfg: AppConfig) -> None:
+    pipe, _ = _pipeline(cfg)
+    job = Job(source_type=SourceType.IMAGE, source_payload={"source": "x.png"},
+              material="pla")
+    pipe.run(job, FakeImageAdapter())
+    assert job.state == JobState.SLICED
+    assert getattr(pipe.meshy, "remeshed", False) is True  # 리메시 호출됨
 
 
 def test_routing_abs_goes_to_p2s(cfg: AppConfig) -> None:

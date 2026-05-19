@@ -33,6 +33,7 @@ class MeshyTransientError(Exception):
 EP_IMAGE_TO_3D = "/openapi/v1/image-to-3d"
 EP_MULTI_IMAGE_TO_3D = "/openapi/v1/multi-image-to-3d"
 EP_TEXT_TO_3D = "/openapi/v2/text-to-3d"
+EP_REMESH = "/openapi/v1/remesh"
 EP_BALANCE = "/openapi/v1/balance"
 
 
@@ -179,6 +180,38 @@ class MeshyClient:
             self.guard.refund(ledger_id, reason=f"submit_failed: {e}")
             raise
 
+    def remesh(
+        self,
+        job_id: str,
+        input_task_id: str,
+        target_polycount: int = 30000,
+        topology: str = "triangle",
+    ) -> tuple[str, int]:
+        """생성 완료된 task를 리메시 — 토폴로지 정리로 출력 적합성↑
+        (비watertight·degenerate 감소)."""
+        ledger_id = self.guard.reserve(job_id, "remesh",
+                                       note=f"remesh of {input_task_id}")
+        try:
+            resp = self._post(
+                EP_REMESH,
+                {
+                    "input_task_id": input_task_id,
+                    "target_formats": ["stl", "glb"],
+                    "topology": topology,
+                    "target_polycount": target_polycount,
+                },
+            )
+            task_id = resp.get("result") or resp.get("id") or resp.get("task_id")
+            if not task_id:
+                raise MeshyError(f"Unexpected response: {resp}")
+            self.guard.commit(ledger_id, meshy_task_id=task_id)
+            return task_id, ledger_id
+        except BudgetExceeded:
+            raise
+        except Exception as e:
+            self.guard.refund(ledger_id, reason=f"submit_failed: {e}")
+            raise
+
     def balance(self) -> dict[str, Any]:
         """현재 크레딧 잔액 조회 (크레딧 소비 없음)."""
         return self._get(EP_BALANCE)
@@ -188,6 +221,7 @@ class MeshyClient:
         base = {
             "text-to-3d": EP_TEXT_TO_3D,
             "multi-image-to-3d": EP_MULTI_IMAGE_TO_3D,
+            "remesh": EP_REMESH,
         }.get(kind, EP_IMAGE_TO_3D)
         return self._get(f"{base}/{task_id}")
 

@@ -30,6 +30,8 @@ class MeshyPort(Protocol):
                            with_texture: bool = False) -> tuple[str, int]: ...
     def text_to_3d_preview(self, job_id: str,
                            prompt: str) -> tuple[str, int]: ...
+    def remesh(self, job_id: str,
+               input_task_id: str) -> tuple[str, int]: ...
     def wait_for_completion(self, task_id: str, kind: str = "image-to-3d") -> dict: ...
     def download_model(self, task_data: dict, dest_dir: Path, prefer: str = "glb") -> Path: ...
 
@@ -123,6 +125,17 @@ class Pipeline:
             self.repo.set_state(job, JobState.MESHY_QUEUED)
 
             data = self.meshy.wait_for_completion(task_id, kind=kind)
+
+            # 리메시(옵션): 생성물 토폴로지 정리 → 비watertight 실패↓.
+            # 실패해도 원본으로 진행 (enhancement, 치명적 아님).
+            if self.cfg.settings.pipeline.use_remesh:
+                try:
+                    self._notify("  리메시 중 (토폴로지 정리)…")
+                    rm_id, _ = self.meshy.remesh(job.id, task_id)
+                    data = self.meshy.wait_for_completion(rm_id, kind="remesh")
+                except Exception as e:  # noqa: BLE001
+                    self._notify(f"  ⚠ 리메시 건너뜀: {e}")
+
             model_path = self.meshy.download_model(data, work / "model", prefer="stl")
             job.model_path = str(model_path)
             self.repo.cache_store(prepared.input_hash, prepared.kind,
