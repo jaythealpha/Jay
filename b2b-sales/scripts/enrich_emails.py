@@ -1,18 +1,20 @@
 """
-이메일 추출 (homepage 크롤링 → contact_email 자동 채우기)
-===========================================================
+이메일 추출 (homepage 크롤링 + 네이버 검색 폴백 → contact_email 자동 채우기)
+=============================================================================
 입력 : ./pilot_seoul_gyeonggi_200.csv
 출력 : ./pilot_seoul_gyeonggi_200_enriched.csv
 
-특징:
-  - ThreadPoolExecutor 로 10개 동시 처리
-  - 타임아웃 5초, 보조 페이지 3개로 축소
-  - 매 25건마다 중간 저장 (job 타임아웃 대비)
+처리 순서:
+  1) homepage 대표 페이지 크롤링 (mailto: → 텍스트 정규식)
+  2) 보조 페이지 (/contact, /about, /이용안내 등) 시도
+  3) 그래도 못 찾으면 NAVER_CLIENT_ID / NAVER_CLIENT_SECRET 환경변수가 있을 때
+     네이버 웹문서 검색 API 로 "{기관명} 이메일" 같은 쿼리 폴백
 """
 
 from __future__ import annotations
 
 import csv
+import os
 import re
 import sys
 import time
@@ -30,19 +32,35 @@ TIMEOUT = 5
 WORKERS = 10
 USER_AGENT = "Mozilla/5.0 (compatible; YogiboB2BBot/1.0)"
 
+NAVER_CLIENT_ID = os.environ.get("NAVER_CLIENT_ID", "").strip()
+NAVER_CLIENT_SECRET = os.environ.get("NAVER_CLIENT_SECRET", "").strip()
+NAVER_ENABLED = bool(NAVER_CLIENT_ID and NAVER_CLIENT_SECRET)
+
 DEPT_KEYWORDS = {
     "school":  ["행정실", "총무부", "교무실", "교장실"],
     "library": ["사서실", "운영팀", "관리과", "정보봉사", "문의"],
     "gov":     ["총무과", "청년정책", "복지문화", "기획", "민원"],
 }
 
-SECONDARY_PATHS = ["/contact", "/about", "/이용안내"]
+SECONDARY_PATHS = {
+    "school":  ["/contact", "/about", "/이용안내"],
+    "library": ["/contact", "/about", "/이용안내", "/오시는길"],
+    "gov":     ["/contact", "/cs", "/cs/contact", "/main/contact",
+                "/intro/intro", "/orgInfo", "/department", "/global"],
+}
+DEFAULT_SECONDARY = ["/contact", "/about", "/이용안내"]
 
 EMAIL_RE = re.compile(r"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}")
 BAD_PREFIX = ("noreply@", "no-reply@", "donotreply@", "do-not-reply@")
 BAD_DOMAINS = ("example.com", "test.com", "sample.com")
 
 EXTRA_COLS = ("email_source_url", "email_dept", "manual_check", "enrich_note")
+
+NAVER_QUERIES = {
+    "school":  ["{name} 행정실 이메일", "{name} 연락처 이메일"],
+    "library": ["{name} 사서실 이메일", "{name} 이메일"],
+    "gov":     ["{name} 이메일", "{name} 대표 메일"],
+}
 
 
 def fetch(url, session):
@@ -121,7 +139,7 @@ def normalize_url(url):
     return url
 
 
-def find_email_for(homepage, target_type):
+def crawl_homepage(homepage, target_type):
     session = requests.Session()
     html = fetch(homepage, session)
     cands = extract_candidates(html) if html else []
@@ -130,7 +148,7 @@ def find_email_for(homepage, target_type):
     if not cands:
         parsed = urlparse(homepage)
         base = f"{parsed.scheme}://{parsed.netloc}"
-        for path in SECONDARY_PATHS:
+        for path in SECONDARY_PATHS.get(target_type, DEFAULT_SECONDARY):
             sub_url = urljoin(base, path)
             sub_html = fetch(sub_url, session)
             if sub_html:
@@ -144,6 +162,40 @@ def find_email_for(homepage, target_type):
     return (email or ""), (chosen_url if email else ""), dept
 
 
+def naver_search_email(name, target_type):
+    if not NAVER_ENABLED or not name:
+        return "", ""
+    templates = NAVER_QUERIES.get(target_type, ["{name} 이메일"])
+    for tpl in templates:
+        query = tpl.format(name=name)
+        try:
+            r = requests.get(
+                "https://openapi.naver.com/v1/search/webkr.json",
+                params={"query": query, "display": 10},
+                headers={
+                    "X-Naver-Client-Id": NAVER_CLIENT_ID,
+                    "X-Naver-Client-Secret": NAVER_CLIENT_SECRET,
+                    "User-Agent": USER_AGENT,
+                },
+                timeout=TIMEOUT,
+            )
+            if r.status_code != 200:
+                continue
+            items = r.json().get("items", [])
+        except Exception:
+            continue
+
+        for item in items:
+            blob = " ".join([item.get("title", ""), item.get("description", "")])
+            blob = re.sub(r"<[^>]+>", " ", blob)
+            for m in EMAIL_RE.finditer(blob):
+                email = m.group(0)
+                if is_junk(email):
+                    continue
+                return email, item.get("link", "")
+    return "", ""
+
+
 def save(rows, fieldnames):
     with OUTPUT.open("w", encoding="utf-8-sig", newline="") as f:
         w = csv.DictWriter(f, fieldnames=fieldnames)
@@ -152,23 +204,32 @@ def save(rows, fieldnames):
 
 
 def process_one(idx, row):
-    """병렬 워커가 호출하는 단위 작업"""
     existing = row.get("contact_email", "").strip()
     if existing:
         return idx, existing, "", "", "", "preserved_existing"
 
+    name = row.get("name", "").strip()
+    target_type = row.get("type", "")
     homepage = normalize_url(row.get("homepage", ""))
+
+    if homepage:
+        try:
+            email, src_url, dept = crawl_homepage(homepage, target_type)
+        except Exception as e:
+            email, src_url, dept = "", "", f"error:{type(e).__name__}"
+        if email:
+            return idx, email, src_url, dept, "", "ok"
+
+    if NAVER_ENABLED:
+        try:
+            n_email, n_url = naver_search_email(name, target_type)
+        except Exception:
+            n_email, n_url = "", ""
+        if n_email:
+            return idx, n_email, n_url, "", "", "ok_naver"
+
     if not homepage:
         return idx, "", "", "", "Y", "no_homepage"
-
-    target_type = row.get("type", "")
-    try:
-        email, src_url, dept = find_email_for(homepage, target_type)
-    except Exception as e:
-        return idx, "", "", "", "Y", f"error:{type(e).__name__}"
-
-    if email:
-        return idx, email, src_url, dept, "", "ok"
     return idx, "", "", "", "Y", "no_email_found"
 
 
@@ -187,9 +248,9 @@ def main():
         for row in rows:
             row.setdefault(col, "")
 
-    print(f"[enrich] {len(rows)}개 행, workers={WORKERS}, timeout={TIMEOUT}s\n")
+    print(f"[enrich] {len(rows)}개 행 / workers={WORKERS} / 네이버={'ON' if NAVER_ENABLED else 'OFF'}\n")
     t0 = time.time()
-    done = filled = 0
+    done = filled = naver_hits = 0
 
     with ThreadPoolExecutor(max_workers=WORKERS) as ex:
         futures = {ex.submit(process_one, i, r): i for i, r in enumerate(rows)}
@@ -203,13 +264,17 @@ def main():
             done += 1
             if email:
                 filled += 1
+                if note == "ok_naver":
+                    naver_hits += 1
             if done % 25 == 0 or done == len(rows):
                 elapsed = time.time() - t0
-                print(f"  [{done:>3}/{len(rows)}]  채움 {filled}  /  경과 {elapsed:.0f}s")
-                save(rows, fieldnames)  # 중간 저장
+                print(f"  [{done:>3}/{len(rows)}]  채움 {filled} (네이버 {naver_hits})  /  경과 {elapsed:.0f}s")
+                save(rows, fieldnames)
 
     save(rows, fieldnames)
-    print(f"\n=== 완료 ===  채움 {filled}건 / 미수집 {len(rows)-filled}건 / {time.time()-t0:.0f}s")
+    print(f"\n=== 완료 ===")
+    print(f"  채움 {filled}건 (홈페이지 {filled-naver_hits} + 네이버 {naver_hits})")
+    print(f"  미수집 {len(rows)-filled}건 / 총 {time.time()-t0:.0f}s")
     print(f"  → {OUTPUT}")
 
 

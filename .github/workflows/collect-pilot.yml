@@ -25,6 +25,9 @@ jobs:
 
       - name: Enrich emails
         working-directory: b2b-sales/scripts
+        env:
+          NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
+          NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
         run: python enrich_emails.py
         continue-on-error: true
 
