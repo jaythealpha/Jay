@@ -1,7 +1,7 @@
 import zipfile
 from pathlib import Path
 
-from bambu_auto.services.slicer.postprocess import inject_pause
+from bambu_auto.services.slicer.postprocess import compute_total_z, inject_pause
 
 
 def _build_3mf(p: Path, gcode_text: str) -> None:
@@ -40,3 +40,10 @@ def test_no_injection_if_target_too_high(tmp_path: Path) -> None:
     _build_3mf(p, g)
     res = inject_pause(p, 100.0)
     assert res["injected"] is False
+
+
+def test_compute_total_z(tmp_path: Path) -> None:
+    g = "; Z_HEIGHT: 0.2\nG1 Z0.2\n; Z_HEIGHT: 5.4\nG1 Z5.4\n; Z_HEIGHT: 12.0\n"
+    p = tmp_path / "test.gcode.3mf"
+    _build_3mf(p, g)
+    assert abs(compute_total_z(p) - 12.0) < 0.001

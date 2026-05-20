@@ -71,3 +71,22 @@ def _find_insert_line(lines: list[str], z_mm: float) -> int | None:
             if mv and float(mv.group(1)) >= z_mm:
                 return i
     return None
+
+
+def compute_total_z(gcode_3mf: Path) -> float:
+    """gcode.3mf의 최대 Z (모델 총 높이, mm). 마커 우선 → 이동명령 fallback."""
+    with zipfile.ZipFile(gcode_3mf, "r") as z:
+        name = next((n for n in z.namelist() if n.endswith(".gcode")), None)
+        if not name:
+            return 0.0
+        text = z.read(name).decode("utf-8", "ignore")
+    max_z = 0.0
+    for ln in text.split("\n"):
+        m = _ZH.match(ln)
+        if m:
+            max_z = max(max_z, float(m.group(1)))
+            continue
+        mv = _MOVE_Z.match(ln)
+        if mv:
+            max_z = max(max_z, float(mv.group(1)))
+    return max_z

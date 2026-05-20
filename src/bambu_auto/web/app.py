@@ -121,25 +121,29 @@ INDEX_HTML = r"""<!doctype html>
     <div><label class="fld">프린터</label>
       <select id="prn"><option value="auto">자동 (기본 A1)</option></select></div>
     <div><label class="fld">추가</label>
-      <select id="addon">
+      <select id="addon" onchange="onAddonChange()">
         <option value="">없음</option>
         <option value="keychain">열쇠고리</option>
         <option value="stand">받침대</option>
+        <option value="magnet">자석 삽입(공동+자동정지)</option>
+        <option value="nfc">NFC 삽입(27mm 공동+자동정지)</option>
       </select></div>
   </div>
   <div class="opts" style="margin-top:10px">
     <label><input id="bg" type="checkbox" checked> 배경·인물 제거</label>
+    <label id="magWrap" style="display:none">자석 크기:
+      <select id="magsize">
+        <option value="4x2">4×2</option><option value="4x3">4×3</option>
+        <option value="5x2" selected>5×2</option><option value="5x3">5×3</option>
+        <option value="6x2">6×2</option><option value="6x3">6×3</option>
+        <option value="8x2">8×2</option><option value="10x2">10×2</option>
+      </select></label>
     <span style="flex:1"></span>
-    <label>출력 중 일시정지(mm):
-      <input id="pause" type="number" min="0" step="0.5" value="0"
-        style="width:80px;padding:6px 8px;border:1px solid #d1d5db;
+    <label id="pauseWrap">수동 일시정지(%):
+      <input id="pause" type="number" min="0" max="100" step="1" value="0"
+        style="width:70px;padding:6px 8px;border:1px solid #d1d5db;
         border-radius:6px"></label>
-    <button type="button" onclick="document.getElementById('pause').value=5"
-      style="padding:6px 10px;font-size:12px;background:#eef0f2;color:#374151">
-      자석(5mm)</button>
-    <button type="button" onclick="document.getElementById('pause').value=8"
-      style="padding:6px 10px;font-size:12px;background:#eef0f2;color:#374151">
-      NFC(8mm)</button>
+    <span class="msg" id="pauseHint">0=없음. 자석/NFC면 자동.</span>
   </div>
   <div class="bar">
     <span id="msg" class="msg"></span>
@@ -202,7 +206,8 @@ async function submit(){
     material:document.getElementById('mat').value,
     printer:document.getElementById('prn').value,
     addon:document.getElementById('addon').value,
-    pause_at_mm:parseFloat(document.getElementById('pause').value)||0,
+    magnet_size:document.getElementById('magsize').value,
+    pause_at_pct:parseFloat(document.getElementById('pause').value)||0,
     remove_bg:document.getElementById('bg').checked})});
   const j=await r.json();
   document.getElementById('msg').textContent= r.ok
@@ -269,7 +274,14 @@ async function bulkDelete(){
   headers:{'Content-Type':'application/json'},
   body:JSON.stringify({ids:ids})});
  SEL.clear();document.getElementById('all').checked=false;refresh();}
-loadPrinters();refresh();setInterval(refresh,3000);
+function onAddonChange(){const v=document.getElementById('addon').value;
+ document.getElementById('magWrap').style.display=v==='magnet'?'flex':'none';
+ const auto=(v==='magnet'||v==='nfc');
+ document.getElementById('pause').disabled=auto;
+ document.getElementById('pauseHint').textContent=auto
+  ?'자석/NFC: 공동 천장 Z에서 자동 일시정지'
+  :'0=없음. 50=출력 절반에서 정지';}
+loadPrinters();refresh();setInterval(refresh,3000);onAddonChange();
 </script></body></html>"""
 
 
@@ -282,8 +294,9 @@ class SubmitReq(BaseModel):
     mode: str = "batch"          # batch=각 URL 별도 물체 / multiview=한 물체 다각도
     material: str = "pla"
     printer: str = "auto"
-    addon: str = ""              # "" | keychain | stand
-    pause_at_mm: float = 0       # >0이면 슬라이싱 후 M400 U1 삽입 (자석/NFC)
+    addon: str = ""              # "" | keychain | stand | magnet | nfc
+    magnet_size: str = "5x2"     # magnet일 때 사용 (D×H mm)
+    pause_at_pct: float = 0      # 0~100. 자석/NFC면 자동 override
     remove_bg: bool = False
 
 
@@ -315,11 +328,13 @@ def create_app(cfg: AppConfig) -> FastAPI:
         printer = None if req.printer == "auto" else req.printer
 
         def mk(stype: SourceType, payload: dict) -> str:
-            extras = {}
-            if req.addon in ("keychain", "stand"):
+            extras: dict = {}
+            if req.addon in ("keychain", "stand", "magnet", "nfc"):
                 extras["addon"] = req.addon
-            if req.pause_at_mm and req.pause_at_mm > 0:
-                extras["pause_at_mm"] = float(req.pause_at_mm)
+                if req.addon == "magnet":
+                    extras["magnet_size"] = req.magnet_size
+            if req.pause_at_pct and req.pause_at_pct > 0:
+                extras["pause_at_pct"] = float(req.pause_at_pct)
             payload = {**payload, **extras}
             job = Job(source_type=stype, source_payload=payload,
                       material=req.material, target_printer=printer)

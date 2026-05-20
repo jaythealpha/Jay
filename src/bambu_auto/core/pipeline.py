@@ -183,28 +183,57 @@ class Pipeline:
             raise
 
     def _addon(self, job: Job, report: MeshReport, work: Path) -> None:
-        """키링/받침 부착 (옵션). 실패해도 원본 유지 — 비치명적."""
-        addon = (job.source_payload or {}).get("addon")
-        if addon not in ("keychain", "stand"):
+        """부착(키링/받침) 또는 공동(자석/NFC). 실패해도 원본 유지."""
+        payload = job.source_payload or {}
+        addon = payload.get("addon")
+        if addon not in ("keychain", "stand", "magnet", "nfc"):
             return
-        from bambu_auto.services.mesh.addons import ADDONS
+        from bambu_auto.services.mesh import addons as A
 
-        label = "키링 고리" if addon == "keychain" else "받침대"
-        self._notify(f"  {label} 부착 중…")
+        label_map = {"keychain": "키링 고리", "stand": "받침대",
+                     "magnet": "자석 공동", "nfc": "NFC 공동"}
+        label = label_map[addon]
+        self._notify(f"  {label} 작업 중…")
         out = work / "repaired" / f"{Path(report.path).stem}_{addon}.stl"
+
         method = ""
+        cavity_top_z = 0.0
         try:
-            method = ADDONS[addon](Path(report.path), out)
+            if addon in ("keychain", "stand"):
+                method = A.ADDONS[addon](Path(report.path), out)
+            elif addon == "magnet":
+                d, h = self._parse_magnet_size(payload.get("magnet_size", "5x2"))
+                r = A.add_magnet_cavity(Path(report.path), out, d, h)
+                method = r["method"] if r["ok"] else ""
+                cavity_top_z = r["top_z"]
+            elif addon == "nfc":
+                r = A.add_nfc_cavity(Path(report.path), out)
+                method = r["method"] if r["ok"] else ""
+                cavity_top_z = r["top_z"]
         except Exception as e:  # noqa: BLE001
-            self._notify(f"  ⚠ {label} 부착 오류: {e}")
+            self._notify(f"  ⚠ {label} 오류: {e}")
+
         if method and out.exists():
             report.path = out
             job.repaired_path = str(out)
+            if cavity_top_z > 0:
+                payload["cavity_top_z"] = cavity_top_z
+                job.source_payload = payload
             self.repo.save(job)
-            tag = "union(완전 결합)" if method == "union" else "concat(인접 배치)"
-            self._notify(f"  ✓ {label} 부착 — {tag}")
+            extra = f" (자동 일시정지 Z={cavity_top_z:.1f}mm)" if cavity_top_z else ""
+            tag = "union(완전결합)" if method == "union" else \
+                  "subtract(공동)" if method == "subtract" else "concat(인접배치)"
+            self._notify(f"  ✓ {label} — {tag}{extra}")
         else:
-            self._notify(f"  ⚠ {label} 부착 실패 — 원본으로 진행")
+            self._notify(f"  ⚠ {label} 실패 — 원본으로 진행")
+
+    @staticmethod
+    def _parse_magnet_size(s: str) -> tuple[float, float]:
+        try:
+            a, b = s.lower().replace("×", "x").split("x")
+            return float(a), float(b)
+        except Exception:  # noqa: BLE001
+            return 5.0, 2.0  # 안전 기본값
 
     def _route(self, job: Job, report: MeshReport) -> None:
         ctx = RouteContext(material=job.material,
@@ -221,14 +250,30 @@ class Pipeline:
             result = self.slicer.slice(report.path, profile, work / "gcode")
             job.gcode_path = str(result.output_3mf)
 
-            # 자석/NFC 삽입용 일시정지 (M400 U1) 후처리
-            pause_z = float((job.source_payload or {}).get("pause_at_mm") or 0)
+            # 일시정지 (M400 U1) 결정:
+            # 1) 자석/NFC 공동 → cavity 천장 Z에 자동 (override)
+            # 2) 아니면 pause_at_pct (%) → 전체 Z의 해당 비율
+            from bambu_auto.services.slicer.postprocess import (
+                compute_total_z, inject_pause,
+            )
+            p = job.source_payload or {}
+            cav_z = float(p.get("cavity_top_z") or 0)
+            pct = float(p.get("pause_at_pct") or 0)
+            pause_z = 0.0
+            reason = ""
+            if cav_z > 0:
+                pause_z = cav_z
+                reason = "공동 자동"
+            elif pct > 0:
+                total_z = compute_total_z(Path(job.gcode_path))
+                if total_z > 0:
+                    pause_z = total_z * (pct / 100.0)
+                    reason = f"{pct:.0f}% × 총높이 {total_z:.1f}mm"
             if pause_z > 0:
-                from bambu_auto.services.slicer.postprocess import inject_pause
-
                 res = inject_pause(Path(job.gcode_path), pause_z)
                 if res.get("injected"):
-                    self._notify(f"  ⏸ Z={pause_z}mm에 M400 U1 삽입 완료")
+                    self._notify(
+                        f"  ⏸ Z={pause_z:.2f}mm에 M400 U1 삽입 ({reason})")
                 else:
                     self._notify(
                         f"  ⚠ 일시정지 삽입 실패: {res.get('reason')}")
