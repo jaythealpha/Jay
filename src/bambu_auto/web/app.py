@@ -192,7 +192,7 @@ INDEX_HTML = r"""<!doctype html>
   <table><thead><tr>
     <th><input type="checkbox" id="all" onclick="toggleAll(this)"></th>
     <th></th><th>ID</th><th>상태</th><th>재질</th><th>프린터</th>
-    <th>진행</th><th>생성</th><th>파일</th><th>공유</th><th></th>
+    <th>옵션</th><th>진행</th><th>생성</th><th>파일</th><th>공유</th><th></th>
   </tr></thead><tbody id="tb"></tbody></table>
   <div id="empty" class="empty" style="display:none">아직 작업이 없습니다.</div>
 </div>
@@ -266,11 +266,14 @@ async function refresh(){
    'onerror="this.style.visibility=\'hidden\'">';
   const ck=SEL.has(x.id)?' checked':'';
   const tr=document.createElement('tr');
+  const op=(x.options||[]).map(s=>'<span class="b" style="margin-right:3px">'+
+   s+'</span>').join('') || '<span class="msg">—</span>';
   tr.innerHTML='<td><input type="checkbox" class="sel" data-id="'+x.id+'"'+
    ck+' onclick="onSel(this)"></td>'+
    '<td>'+th+'</td><td class="id">'+x.id.slice(0,8)+
    '</td><td>'+badge(x.state)+
    '</td><td>'+x.material+'</td><td>'+(x.printer||'auto')+
+   '</td><td>'+op+
    '</td><td class="prog" title="'+m+'">'+m+
    '</td><td class="msg">'+x.created.slice(5,16).replace('T',' ')+
    '</td><td>'+dl+'</td><td>'+sh+
@@ -425,7 +428,8 @@ def create_app(cfg: AppConfig) -> FastAPI:
         with db.connect() as conn:
             rows = conn.execute(
                 "SELECT id, state, material, target_printer, gcode_path, "
-                "error, created_at FROM jobs ORDER BY created_at DESC LIMIT 100"
+                "source_payload, repaired_path, error, created_at "
+                "FROM jobs ORDER BY created_at DESC LIMIT 100"
             ).fetchall()
 
         def msg(r) -> str:
@@ -446,6 +450,31 @@ def create_app(cfg: AppConfig) -> FastAPI:
                 return "대기 중…"
             return worker.last_message.get(r["id"], "진행 중…")
 
+        def opts_summary(r) -> dict:
+            """요청한 옵션 요약 + 적용 여부 (repaired 파일명 기반)."""
+            try:
+                pl = json.loads(r["source_payload"] or "{}")
+            except Exception:  # noqa: BLE001
+                pl = {}
+            chips: list[str] = []
+            rp = (r["repaired_path"] or "").lower()
+            done = r["state"] in ("sliced", "done")
+
+            addon = pl.get("addon")
+            if addon:
+                label = {"keychain": "키링", "stand": "받침",
+                         "magnet": f"자석{pl.get('magnet_size','')}",
+                         "nfc": "NFC"}[addon]
+                mark = "✓" if done and f"_{addon}" in rp else ("?" if done else "·")
+                chips.append(f"{mark} {label}")
+            if pl.get("brand_text") or pl.get("brand_icon"):
+                what = pl.get("brand_text") or pl.get("brand_icon")
+                mark = "✓" if done and "_brand" in rp else ("?" if done else "·")
+                chips.append(f"{mark} 로고:{what}")
+            if (pl.get("pause_at_pct") or 0) > 0:
+                chips.append(f"· 정지{int(pl['pause_at_pct'])}%")
+            return {"chips": chips}
+
         return {"jobs": [{
             "id": r["id"], "state": r["state"], "material": r["material"],
             "printer": r["target_printer"],
@@ -453,6 +482,7 @@ def create_app(cfg: AppConfig) -> FastAPI:
             "can_retry": r["state"].startswith("failed"),
             "created": r["created_at"],
             "message": msg(r),
+            "options": opts_summary(r)["chips"],
         } for r in rows]}
 
     # 실시간 Meshy 잔액 (60초 TTL 캐시 — 3초 폴링 API 남용 방지)

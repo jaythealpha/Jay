@@ -89,7 +89,8 @@ class OrcaSlicer:
             "--load-filaments", str(filament),
             "--allow-newer-file",
             "--arrange", "1",
-            "--orient", "1",
+            # --orient 끔: 자동 회전이 우리가 바닥에 새긴 로고/공동을
+            # 다른 면으로 돌려놓는 문제 방지. 모델 좌표계 그대로 사용.
             "--slice", "0",
             "--export-3mf", str(out_3mf),
             str(model_stl),
