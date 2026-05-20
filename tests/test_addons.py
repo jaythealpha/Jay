@@ -16,7 +16,8 @@ def test_keychain_loop_adds_geometry(tmp_path: Path) -> None:
     out = tmp_path / "k.stl"
     _box(src)
     base_faces = len(trimesh.load(src, force="mesh").faces)
-    assert add_keychain_loop(src, out) is True
+    method = add_keychain_loop(src, out)
+    assert method in ("union", "concat")
     assert out.exists()
     assert len(trimesh.load(out, force="mesh").faces) > base_faces
 
@@ -25,7 +26,7 @@ def test_base_adds_geometry(tmp_path: Path) -> None:
     src = tmp_path / "in.stl"
     out = tmp_path / "s.stl"
     _box(src)
-    assert add_base(src, out) is True
+    assert add_base(src, out) in ("union", "concat")
     m = trimesh.load(out, force="mesh")
     # 받침으로 바닥 면적(둘레)이 원본보다 커짐
     assert m.extents[2] > 39  # 높이 = 원본40 + 받침 일부

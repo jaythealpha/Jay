@@ -192,15 +192,17 @@ class Pipeline:
         label = "키링 고리" if addon == "keychain" else "받침대"
         self._notify(f"  {label} 부착 중…")
         out = work / "repaired" / f"{Path(report.path).stem}_{addon}.stl"
+        method = ""
         try:
-            ok = ADDONS[addon](Path(report.path), out)
+            method = ADDONS[addon](Path(report.path), out)
         except Exception as e:  # noqa: BLE001
-            ok = False
             self._notify(f"  ⚠ {label} 부착 오류: {e}")
-        if ok and out.exists():
+        if method and out.exists():
             report.path = out
             job.repaired_path = str(out)
             self.repo.save(job)
+            tag = "union(완전 결합)" if method == "union" else "concat(인접 배치)"
+            self._notify(f"  ✓ {label} 부착 — {tag}")
         else:
             self._notify(f"  ⚠ {label} 부착 실패 — 원본으로 진행")
 
@@ -218,6 +220,19 @@ class Pipeline:
             profile = printer.default_profile
             result = self.slicer.slice(report.path, profile, work / "gcode")
             job.gcode_path = str(result.output_3mf)
+
+            # 자석/NFC 삽입용 일시정지 (M400 U1) 후처리
+            pause_z = float((job.source_payload or {}).get("pause_at_mm") or 0)
+            if pause_z > 0:
+                from bambu_auto.services.slicer.postprocess import inject_pause
+
+                res = inject_pause(Path(job.gcode_path), pause_z)
+                if res.get("injected"):
+                    self._notify(f"  ⏸ Z={pause_z}mm에 M400 U1 삽입 완료")
+                else:
+                    self._notify(
+                        f"  ⚠ 일시정지 삽입 실패: {res.get('reason')}")
+
             self.repo.set_state(job, JobState.SLICED)
         except Exception as e:
             self.repo.set_state(job, JobState.FAILED_SLICE, error=str(e))

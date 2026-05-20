@@ -127,8 +127,20 @@ INDEX_HTML = r"""<!doctype html>
         <option value="stand">받침대</option>
       </select></div>
   </div>
-  <div class="opts"><label><input id="bg" type="checkbox" checked>
-    배경·인물 제거</label></div>
+  <div class="opts" style="margin-top:10px">
+    <label><input id="bg" type="checkbox" checked> 배경·인물 제거</label>
+    <span style="flex:1"></span>
+    <label>출력 중 일시정지(mm):
+      <input id="pause" type="number" min="0" step="0.5" value="0"
+        style="width:80px;padding:6px 8px;border:1px solid #d1d5db;
+        border-radius:6px"></label>
+    <button type="button" onclick="document.getElementById('pause').value=5"
+      style="padding:6px 10px;font-size:12px;background:#eef0f2;color:#374151">
+      자석(5mm)</button>
+    <button type="button" onclick="document.getElementById('pause').value=8"
+      style="padding:6px 10px;font-size:12px;background:#eef0f2;color:#374151">
+      NFC(8mm)</button>
+  </div>
   <div class="bar">
     <span id="msg" class="msg"></span>
     <button id="go" onclick="submit()">제작 시작</button>
@@ -190,6 +202,7 @@ async function submit(){
     material:document.getElementById('mat').value,
     printer:document.getElementById('prn').value,
     addon:document.getElementById('addon').value,
+    pause_at_mm:parseFloat(document.getElementById('pause').value)||0,
     remove_bg:document.getElementById('bg').checked})});
   const j=await r.json();
   document.getElementById('msg').textContent= r.ok
@@ -270,6 +283,7 @@ class SubmitReq(BaseModel):
     material: str = "pla"
     printer: str = "auto"
     addon: str = ""              # "" | keychain | stand
+    pause_at_mm: float = 0       # >0이면 슬라이싱 후 M400 U1 삽입 (자석/NFC)
     remove_bg: bool = False
 
 
@@ -301,8 +315,12 @@ def create_app(cfg: AppConfig) -> FastAPI:
         printer = None if req.printer == "auto" else req.printer
 
         def mk(stype: SourceType, payload: dict) -> str:
+            extras = {}
             if req.addon in ("keychain", "stand"):
-                payload = {**payload, "addon": req.addon}
+                extras["addon"] = req.addon
+            if req.pause_at_mm and req.pause_at_mm > 0:
+                extras["pause_at_mm"] = float(req.pause_at_mm)
+            payload = {**payload, **extras}
             job = Job(source_type=stype, source_payload=payload,
                       material=req.material, target_printer=printer)
             repo.save(job)
