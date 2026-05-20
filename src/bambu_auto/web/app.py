@@ -277,9 +277,8 @@ async function bulkDelete(){
 function onAddonChange(){const v=document.getElementById('addon').value;
  document.getElementById('magWrap').style.display=v==='magnet'?'flex':'none';
  const auto=(v==='magnet'||v==='nfc');
- document.getElementById('pause').disabled=auto;
  document.getElementById('pauseHint').textContent=auto
-  ?'자석/NFC: 공동 천장 Z에서 자동 일시정지'
+  ?'자석/NFC: 공동 위치에서 자동 일시정지 (이 값은 무시됨)'
   :'0=없음. 50=출력 절반에서 정지';}
 loadPrinters();refresh();setInterval(refresh,3000);onAddonChange();
 </script></body></html>"""
