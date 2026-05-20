@@ -66,6 +66,7 @@ class Pipeline:
             self._notify("[3/5] mesh 리페어 중…")
             report = self._repair(job, Path(model_path), work)
             self._addon(job, report, work)
+            self._brand(job, report, work)
             self._notify("[4/5] 프린터 라우팅 중…")
             self._route(job, report)
             self._notify(f"[5/5] 슬라이싱 중 → {job.target_printer}…")
@@ -234,6 +235,36 @@ class Pipeline:
             return float(a), float(b)
         except Exception:  # noqa: BLE001
             return 5.0, 2.0  # 안전 기본값
+
+    def _brand(self, job: Job, report: MeshReport, work: Path) -> None:
+        """바닥면 디보스(로고 텍스트/아이콘). 실패해도 원본 유지."""
+        payload = job.source_payload or {}
+        text = (payload.get("brand_text") or "").strip()
+        icon = (payload.get("brand_icon") or "").strip()
+        content = text or icon
+        if not content:
+            return
+        size_mm = float(payload.get("brand_size_mm") or 25.0)
+        depth_mm = float(payload.get("brand_depth_mm") or 0.6)
+        from bambu_auto.services.mesh.branding import (
+            ICON_LABELS, add_bottom_branding,
+        )
+        label = ICON_LABELS.get(content, content)
+        self._notify(f"  바닥 로고 디보스 중: '{label}'…")
+        out = work / "repaired" / f"{Path(report.path).stem}_brand.stl"
+        try:
+            r = add_bottom_branding(Path(report.path), out,
+                                    content=content, size_mm=size_mm,
+                                    depth_mm=depth_mm)
+        except Exception as e:  # noqa: BLE001
+            r = {"ok": False, "method": f"err:{e}"}
+        if r.get("ok") and out.exists():
+            report.path = out
+            job.repaired_path = str(out)
+            self.repo.save(job)
+            self._notify(f"  ✓ 바닥 로고 — {r['method']}")
+        else:
+            self._notify(f"  ⚠ 바닥 로고 실패({r.get('method')}) — 원본 진행")
 
     def _route(self, job: Job, report: MeshReport) -> None:
         ctx = RouteContext(material=job.material,

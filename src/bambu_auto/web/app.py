@@ -145,6 +145,33 @@ INDEX_HTML = r"""<!doctype html>
         border-radius:6px"></label>
     <span class="msg" id="pauseHint">0=없음. 자석/NFC면 자동.</span>
   </div>
+  <div class="opts" style="margin-top:10px;flex-wrap:wrap">
+    <label>바닥 로고:
+      <select id="brandType" onchange="onBrandChange()">
+        <option value="">없음</option>
+        <option value="text">텍스트</option>
+        <option value="icon">아이콘</option>
+      </select></label>
+    <input id="brandText" type="text" placeholder="예: YOGIBO"
+      style="flex:1;min-width:160px;padding:6px 10px;border:1px solid #d1d5db;
+      border-radius:6px;display:none">
+    <select id="brandIcon" style="display:none">
+      <option value="wifi">Wi-Fi</option>
+      <option value="nfc">NFC</option>
+      <option value="phone">전화 ☎</option>
+      <option value="mobile">휴대폰 📱</option>
+      <option value="email">이메일 ✉</option>
+      <option value="bluetooth">블루투스</option>
+    </select>
+    <label class="msg">크기(mm)
+      <input id="brandSize" type="number" min="8" max="80" step="1" value="25"
+        style="width:60px;padding:5px 7px;border:1px solid #d1d5db;
+        border-radius:6px"></label>
+    <label class="msg">깊이(mm)
+      <input id="brandDepth" type="number" min="0.2" max="2.0" step="0.1"
+        value="0.6" style="width:60px;padding:5px 7px;
+        border:1px solid #d1d5db;border-radius:6px"></label>
+  </div>
   <div class="bar">
     <span id="msg" class="msg"></span>
     <button id="go" onclick="submit()">제작 시작</button>
@@ -208,6 +235,11 @@ async function submit(){
     addon:document.getElementById('addon').value,
     magnet_size:document.getElementById('magsize').value,
     pause_at_pct:parseFloat(document.getElementById('pause').value)||0,
+    brand_type:document.getElementById('brandType').value,
+    brand_text:document.getElementById('brandText').value,
+    brand_icon:document.getElementById('brandIcon').value,
+    brand_size_mm:parseFloat(document.getElementById('brandSize').value)||25,
+    brand_depth_mm:parseFloat(document.getElementById('brandDepth').value)||0.6,
     remove_bg:document.getElementById('bg').checked})});
   const j=await r.json();
   document.getElementById('msg').textContent= r.ok
@@ -274,13 +306,17 @@ async function bulkDelete(){
   headers:{'Content-Type':'application/json'},
   body:JSON.stringify({ids:ids})});
  SEL.clear();document.getElementById('all').checked=false;refresh();}
+function onBrandChange(){const t=document.getElementById('brandType').value;
+ document.getElementById('brandText').style.display=t==='text'?'block':'none';
+ document.getElementById('brandIcon').style.display=t==='icon'?'inline-block':'none';}
 function onAddonChange(){const v=document.getElementById('addon').value;
  document.getElementById('magWrap').style.display=v==='magnet'?'flex':'none';
  const auto=(v==='magnet'||v==='nfc');
  document.getElementById('pauseHint').textContent=auto
   ?'자석/NFC: 공동 위치에서 자동 일시정지 (이 값은 무시됨)'
   :'0=없음. 50=출력 절반에서 정지';}
-loadPrinters();refresh();setInterval(refresh,3000);onAddonChange();
+loadPrinters();refresh();setInterval(refresh,3000);
+onAddonChange();onBrandChange();
 </script></body></html>"""
 
 
@@ -296,6 +332,11 @@ class SubmitReq(BaseModel):
     addon: str = ""              # "" | keychain | stand | magnet | nfc
     magnet_size: str = "5x2"     # magnet일 때 사용 (D×H mm)
     pause_at_pct: float = 0      # 0~100. 자석/NFC면 자동 override
+    brand_type: str = ""         # "" | text | icon
+    brand_text: str = ""
+    brand_icon: str = ""         # wifi | nfc | phone | mobile | email | bluetooth
+    brand_size_mm: float = 25.0
+    brand_depth_mm: float = 0.6
     remove_bg: bool = False
 
 
@@ -334,6 +375,14 @@ def create_app(cfg: AppConfig) -> FastAPI:
                     extras["magnet_size"] = req.magnet_size
             if req.pause_at_pct and req.pause_at_pct > 0:
                 extras["pause_at_pct"] = float(req.pause_at_pct)
+            if req.brand_type == "text" and req.brand_text.strip():
+                extras["brand_text"] = req.brand_text.strip()
+                extras["brand_size_mm"] = float(req.brand_size_mm)
+                extras["brand_depth_mm"] = float(req.brand_depth_mm)
+            elif req.brand_type == "icon" and req.brand_icon:
+                extras["brand_icon"] = req.brand_icon
+                extras["brand_size_mm"] = float(req.brand_size_mm)
+                extras["brand_depth_mm"] = float(req.brand_depth_mm)
             payload = {**payload, **extras}
             job = Job(source_type=stype, source_payload=payload,
                       material=req.material, target_printer=printer)
