@@ -14,7 +14,7 @@ jobs:
         with:
           python-version: '3.11'
 
-      - run: pip install requests beautifulsoup4
+      - run: pip install requests beautifulsoup4 anthropic
 
       - name: Run collector
         working-directory: b2b-sales/scripts
@@ -29,6 +29,13 @@ jobs:
           NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
           NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
         run: python enrich_emails.py
+        continue-on-error: true
+
+      - name: Enrich emails (LLM)
+        working-directory: b2b-sales/scripts
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python enrich_emails_llm.py
         continue-on-error: true
 
       - name: Upload CSVs
