@@ -111,6 +111,7 @@ class MeshyClient:
                     "ai_model": ai_model,
                     "topology": "triangle",
                     "target_polycount": 30000,
+                    "target_formats": ["glb", "obj", "stl"],
                 },
             )
             task_id = resp.get("result") or resp.get("id") or resp.get("task_id")
@@ -259,6 +260,34 @@ class MeshyClient:
             with out.open("wb") as f:
                 for chunk in r.iter_bytes():
                     f.write(chunk)
+        return out
+
+    def download_all_models(
+        self, task_data: dict[str, Any], dest_dir: Path,
+        formats: tuple[str, ...] = ("glb", "obj", "stl", "fbx", "usdz"),
+    ) -> dict[str, Path]:
+        """완료된 작업의 model_urls에 있는 모든 포맷을 다운로드.
+        반환: {fmt: path}. (3MF 외에 원본 모델을 여러 포맷으로 제공)"""
+        urls = task_data.get("model_urls") or task_data.get("model_url") or {}
+        if isinstance(urls, str):
+            urls = {"glb": urls}
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        tid = task_data.get("id", "model")
+        out: dict[str, Path] = {}
+        for fmt in formats:
+            url = urls.get(fmt)
+            if not url:
+                continue
+            dst = dest_dir / f"{tid}.{fmt}"
+            try:
+                with httpx.stream("GET", url, timeout=120) as r:
+                    r.raise_for_status()
+                    with dst.open("wb") as f:
+                        for chunk in r.iter_bytes():
+                            f.write(chunk)
+                out[fmt] = dst
+            except Exception:  # noqa: BLE001 — 일부 포맷 실패는 무시
+                continue
         return out
 
     # ---- low-level ----

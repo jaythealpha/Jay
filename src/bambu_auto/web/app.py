@@ -127,6 +127,7 @@ INDEX_HTML = r"""<!doctype html>
         <option value="stand">받침대</option>
         <option value="magnet">자석 삽입(공동+자동정지)</option>
         <option value="nfc">NFC 삽입(27mm 공동+자동정지)</option>
+        <option value="keycap">키캡 (기계식 키보드 MX)</option>
       </select></div>
   </div>
   <div class="opts" style="margin-top:10px">
@@ -257,7 +258,10 @@ async function refresh(){
  const tb=document.getElementById('tb');tb.innerHTML='';
  document.getElementById('empty').style.display=j.jobs.length?'none':'block';
  for(const x of j.jobs){
-  const dl=x.has_gcode?'<a href="/api/download/'+x.id+'">⬇ 3MF</a>':'<span class="msg">—</span>';
+  let dl=x.has_gcode?'<a href="/api/download/'+x.id+'">⬇ 3MF</a>':'';
+  const mf=(x.model_formats||[]).map(f=>
+   ' <a href="/api/model/'+x.id+'/'+f+'" class="msg">'+f+'</a>').join('');
+  dl=(dl+mf)||'<span class="msg">—</span>';
   const sh=x.has_gcode?'<a href="#" onclick="share(\''+x.id+'\');return false">🔗</a>':'<span class="msg">—</span>';
   const rt=x.can_retry?'<a href="#" onclick="retry(\''+x.id+'\');return false">↻</a> ':'';
   const m=(x.message||'').replace(/"/g,'&quot;');
@@ -464,7 +468,7 @@ def create_app(cfg: AppConfig) -> FastAPI:
             if addon:
                 label = {"keychain": "키링", "stand": "받침",
                          "magnet": f"자석{pl.get('magnet_size','')}",
-                         "nfc": "NFC"}[addon]
+                         "nfc": "NFC", "keycap": "키캡"}.get(addon, addon)
                 mark = "✓" if done and f"_{addon}" in rp else ("?" if done else "·")
                 chips.append(f"{mark} {label}")
             if pl.get("brand_text") or pl.get("brand_icon"):
@@ -475,6 +479,18 @@ def create_app(cfg: AppConfig) -> FastAPI:
                 chips.append(f"· 정지{int(pl['pause_at_pct'])}%")
             return {"chips": chips}
 
+        data_dir = Path(cfg.settings.storage.data_dir)
+
+        def model_formats(job_id: str) -> list[str]:
+            md = data_dir / "assets" / job_id / "model"
+            if not md.exists():
+                return []
+            fmts = sorted({p.suffix.lstrip(".").lower()
+                           for p in md.glob("*.*")
+                           if p.suffix.lower() in
+                           (".glb", ".obj", ".stl", ".fbx", ".usdz")})
+            return fmts
+
         return {"jobs": [{
             "id": r["id"], "state": r["state"], "material": r["material"],
             "printer": r["target_printer"],
@@ -483,6 +499,7 @@ def create_app(cfg: AppConfig) -> FastAPI:
             "created": r["created_at"],
             "message": msg(r),
             "options": opts_summary(r)["chips"],
+            "model_formats": model_formats(r["id"]),
         } for r in rows]}
 
     # 실시간 Meshy 잔액 (60초 TTL 캐시 — 3초 폴링 API 남용 방지)
@@ -520,6 +537,18 @@ def create_app(cfg: AppConfig) -> FastAPI:
                 "daily_used": u.daily_used, "daily_cap": u.daily_cap}
 
     assets_dir = Path(cfg.settings.storage.data_dir) / "assets"
+
+    @app.get("/api/model/{job_id}/{fmt}")
+    def model_file(job_id: str, fmt: str) -> FileResponse:
+        fmt = fmt.lower()
+        if fmt not in ("glb", "obj", "stl", "fbx", "usdz"):
+            raise HTTPException(400, "지원하지 않는 포맷")
+        md = assets_dir / job_id / "model"
+        hits = sorted(md.glob(f"*.{fmt}")) if md.exists() else []
+        if not hits:
+            raise HTTPException(404, f"{fmt} 파일 없음")
+        return FileResponse(hits[0], filename=f"{job_id[:8]}.{fmt}",
+                            media_type="application/octet-stream")
 
     @app.get("/api/download/{job_id}")
     def download(job_id: str) -> FileResponse:

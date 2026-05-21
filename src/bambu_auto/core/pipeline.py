@@ -34,6 +34,7 @@ class MeshyPort(Protocol):
                input_task_id: str) -> tuple[str, int]: ...
     def wait_for_completion(self, task_id: str, kind: str = "image-to-3d") -> dict: ...
     def download_model(self, task_data: dict, dest_dir: Path, prefer: str = "glb") -> Path: ...
+    def download_all_models(self, task_data: dict, dest_dir: Path) -> dict: ...
 
 
 class SlicerPort(Protocol):
@@ -138,7 +139,17 @@ class Pipeline:
                 except Exception as e:  # noqa: BLE001
                     self._notify(f"  ⚠ 리메시 건너뜀: {e}")
 
-            model_path = self.meshy.download_model(data, work / "model", prefer="stl")
+            # 가능한 모든 포맷 다운로드 (glb/obj/stl 등) — 사용자가 원본을
+            # 여러 포맷으로 받을 수 있게. 처리는 stl>glb>첫 포맷 순으로.
+            models = self.meshy.download_all_models(data, work / "model")
+            if not models:
+                # 폴백: 단일 다운로드
+                model_path = self.meshy.download_model(
+                    data, work / "model", prefer="stl")
+            else:
+                pick = models.get("stl") or models.get("glb") or \
+                    next(iter(models.values()))
+                model_path = pick
             job.model_path = str(model_path)
             self.repo.cache_store(prepared.input_hash, prepared.kind,
                                   task_id, str(model_path))
@@ -184,11 +195,31 @@ class Pipeline:
             raise
 
     def _addon(self, job: Job, report: MeshReport, work: Path) -> None:
-        """부착(키링/받침) 또는 공동(자석/NFC). 실패해도 원본 유지."""
+        """부착(키링/받침/키캡) 또는 공동(자석/NFC). 실패해도 원본 유지."""
         payload = job.source_payload or {}
         addon = payload.get("addon")
-        if addon not in ("keychain", "stand", "magnet", "nfc"):
+        if addon not in ("keychain", "stand", "magnet", "nfc", "keycap"):
             return
+
+        # 키캡: 모델을 MX 키캡 위에 얹음 (별도 처리)
+        if addon == "keycap":
+            from bambu_auto.services.mesh.keycap import make_keycap
+
+            self._notify("  키캡 생성 중 (MX 스템 + 토퍼)…")
+            out = work / "repaired" / f"{Path(report.path).stem}_keycap.stl"
+            try:
+                r = make_keycap(Path(report.path), out)
+            except Exception as e:  # noqa: BLE001
+                r = {"ok": False, "method": f"err:{e}"}
+            if r.get("ok") and out.exists():
+                report.path = out
+                job.repaired_path = str(out)
+                self.repo.save(job)
+                self._notify("  ✓ 키캡 생성 완료 (MX 호환)")
+            else:
+                self._notify(f"  ⚠ 키캡 실패({r.get('method')}) — 원본 진행")
+            return
+
         from bambu_auto.services.mesh import addons as A
 
         label_map = {"keychain": "키링 고리", "stand": "받침대",

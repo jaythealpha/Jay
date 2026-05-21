@@ -68,6 +68,12 @@ class FakeMeshy:
         out.write_text("solid fake\nendsolid fake\n")
         return out
 
+    def download_all_models(self, task_data, dest_dir: Path):
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        out = dest_dir / "m.stl"
+        out.write_text("solid fake\nendsolid fake\n")
+        return {"stl": out}
+
 
 class FakeSlicer:
     def slice(self, model_stl: Path, profile: str, out_dir: Path):
