@@ -283,9 +283,9 @@ async function refresh(){
  syncBulk();
  const c=await (await fetch('/api/credits')).json();
  const bal=(c.meshy_balance==null)?'조회실패':c.meshy_balance.toLocaleString();
+ const daily=c.daily_cap>0?(c.daily_used+'/'+c.daily_cap):(c.daily_used+' (무제한)');
  document.getElementById('cred').innerHTML='<b>Meshy 잔액 '+bal+'</b>'+
-  ' · 안전한도 일 '+c.daily_used+'/'+c.daily_cap+
-  ' · 월 '+c.monthly_used+'/'+c.monthly_cap;}
+  ' · 일 '+daily+' · 월 '+c.monthly_used+'/'+c.monthly_cap;}
 function share(id){const u=location.origin+'/share/'+id;
  navigator.clipboard.writeText(u).then(
   ()=>alert('공유 링크 복사됨:\n'+u),()=>prompt('공유 링크:',u));}

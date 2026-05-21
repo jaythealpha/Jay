@@ -112,8 +112,8 @@ class CreditGuard:
                 f"after this op (buffer={self.budgets.meshy.reserve_buffer})"
             )
 
-        # 3) daily cap
-        if u.daily_used + u.reserved_now + cost > u.daily_cap:
+        # 3) daily cap (0 이하면 무제한 — 검사 생략)
+        if u.daily_cap > 0 and u.daily_used + u.reserved_now + cost > u.daily_cap:
             raise BudgetExceeded(
                 f"Daily cap exceeded: {u.daily_used + cost}/{u.daily_cap}"
             )

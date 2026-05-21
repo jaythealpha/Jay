@@ -4,7 +4,7 @@
 meshy:
   plan: pro                    # free / pro / max
   monthly_credit_cap: 1000     # Pro = 1000 crd/mo
-  daily_credit_cap: 50         # 하루 최대 (실수 방지)
+  daily_credit_cap: 0          # 0 = 무제한 (일 한도 없음)
   reserve_buffer: 30           # 비상용 예비 (재시도/리페어 실패 대응)
   hard_stop_ratio: 0.95        # 95% 도달 시 신규 job 거부
   alert_thresholds: [0.7, 0.9] # 알림 발생 시점
