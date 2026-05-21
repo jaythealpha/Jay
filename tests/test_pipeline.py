@@ -42,11 +42,13 @@ class FakeMeshy:
     def __init__(self) -> None:
         self.calls = 0
 
-    def image_to_3d(self, job_id, image_url, with_texture=False):
+    def image_to_3d(self, job_id, image_url, with_texture=False,
+                    target_polycount=30000):
         self.calls += 1
         return ("task_fake_1", 1)
 
-    def multi_image_to_3d(self, job_id, image_urls, with_texture=False):
+    def multi_image_to_3d(self, job_id, image_urls, with_texture=False,
+                          target_polycount=30000):
         self.calls += 1
         return ("task_fake_multi", 1)
 
@@ -54,7 +56,7 @@ class FakeMeshy:
         self.calls += 1
         return ("task_fake_text", 1)
 
-    def remesh(self, job_id, input_task_id):
+    def remesh(self, job_id, input_task_id, target_polycount=30000):
         self.remeshed = True
         return ("task_fake_remesh", 1)
 

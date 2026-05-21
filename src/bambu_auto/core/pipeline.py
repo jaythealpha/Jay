@@ -92,18 +92,21 @@ class Pipeline:
             raise
 
     def _generate(self, job: Job, prepared: PreparedSource, work: Path) -> str:
-        # 캐시 히트면 크레딧 소비 없이 재사용
+        # 캐시 히트면 크레딧 소비 없이 재사용 (모델 파일들을 현재 job 폴더로 복사)
         cached = self.repo.cache_lookup(prepared.input_hash)
         if cached:
             task_id, model_path = cached
             job.meshy_task_id = task_id
-            job.model_path = model_path
+            job.model_path = self._copy_cached_models(model_path, work)
             self.repo.set_state(job, JobState.MESHY_COMPLETE)
-            return model_path
+            return job.model_path
+
+        payload = job.source_payload or {}
+        with_tex = bool(payload.get(
+            "texture", not self.cfg.budgets.saving.skip_texture_by_default))
+        poly = 100000 if payload.get("precision") == "high" else 30000
 
         try:
-            with_tex = not self.cfg.budgets.saving.skip_texture_by_default
-
             if prepared.kind == "text":
                 if not prepared.prompt:
                     raise ValueError("프롬프트가 비어있음")
@@ -115,13 +118,14 @@ class Pipeline:
                     raise ValueError("멀티이미지 경로 없음")
                 refs = [str(p) for p in prepared.image_paths]
                 task_id, _ = self.meshy.multi_image_to_3d(
-                    job.id, refs, with_texture=with_tex)
+                    job.id, refs, with_texture=with_tex, target_polycount=poly)
                 kind = "multi-image-to-3d"
             else:
                 if not prepared.image_paths:
                     raise ValueError("이미지 경로 없음")
                 task_id, _ = self.meshy.image_to_3d(
-                    job.id, str(prepared.image_paths[0]), with_texture=with_tex)
+                    job.id, str(prepared.image_paths[0]),
+                    with_texture=with_tex, target_polycount=poly)
                 kind = "image-to-3d"
 
             job.meshy_task_id = task_id
@@ -134,7 +138,8 @@ class Pipeline:
             if self.cfg.settings.pipeline.use_remesh:
                 try:
                     self._notify("  리메시 중 (토폴로지 정리)…")
-                    rm_id, _ = self.meshy.remesh(job.id, task_id)
+                    rm_id, _ = self.meshy.remesh(
+                        job.id, task_id, target_polycount=poly)
                     data = self.meshy.wait_for_completion(rm_id, kind="remesh")
                 except Exception as e:  # noqa: BLE001
                     self._notify(f"  ⚠ 리메시 건너뜀: {e}")
@@ -158,6 +163,28 @@ class Pipeline:
         except Exception as e:
             self.repo.set_state(job, JobState.FAILED_MESHY, error=str(e))
             raise
+
+    def _copy_cached_models(self, cached_model_path: str, work: Path) -> str:
+        """캐시 히트 시 원본 job의 모델 파일(전 포맷)을 현재 job 폴더로 복사.
+        → 멀티 포맷 다운로드 링크가 캐시 재사용에도 동작."""
+        import shutil
+
+        src = Path(cached_model_path)
+        if not src.exists():
+            return cached_model_path
+        dest_dir = work / "model"
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        copied_main = None
+        for f in src.parent.glob("*.*"):
+            if f.suffix.lower() in (".glb", ".obj", ".stl", ".fbx", ".usdz"):
+                dst = dest_dir / f.name
+                try:
+                    shutil.copy2(f, dst)
+                    if f == src:
+                        copied_main = dst
+                except Exception:  # noqa: BLE001
+                    continue
+        return str(copied_main or (dest_dir / src.name))
 
     def _repair(self, job: Job, model_path: Path, work: Path) -> MeshReport:
         if not self.cfg.settings.pipeline.auto_repair:

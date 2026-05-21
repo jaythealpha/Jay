@@ -132,6 +132,12 @@ INDEX_HTML = r"""<!doctype html>
   </div>
   <div class="opts" style="margin-top:10px">
     <label><input id="bg" type="checkbox" checked> 배경·인물 제거</label>
+    <label><input id="tex" type="checkbox"> 텍스처(컬러) 생성</label>
+    <label>정밀도:
+      <select id="prec">
+        <option value="standard">표준(빠름)</option>
+        <option value="high">고정밀(느림·크레딧↑)</option>
+      </select></label>
     <label id="magWrap" style="display:none">자석 크기:
       <select id="magsize">
         <option value="4x2">4×2</option><option value="4x3">4×3</option>
@@ -241,6 +247,8 @@ async function submit(){
     brand_icon:document.getElementById('brandIcon').value,
     brand_size_mm:parseFloat(document.getElementById('brandSize').value)||25,
     brand_depth_mm:parseFloat(document.getElementById('brandDepth').value)||0.6,
+    texture:document.getElementById('tex').checked,
+    precision:document.getElementById('prec').value,
     remove_bg:document.getElementById('bg').checked})});
   const j=await r.json();
   document.getElementById('msg').textContent= r.ok
@@ -270,8 +278,10 @@ async function refresh(){
    'onerror="this.style.visibility=\'hidden\'">';
   const ck=SEL.has(x.id)?' checked':'';
   const tr=document.createElement('tr');
-  const op=(x.options||[]).map(s=>'<span class="b" style="margin-right:3px">'+
-   s+'</span>').join('') || '<span class="msg">—</span>';
+  const cr=x.credits>0?'<span class="b" style="margin-right:3px;'+
+   'background:#fef3c7;color:#92400e">🪙'+x.credits+'</span>':'';
+  const op=cr+((x.options||[]).map(s=>'<span class="b" style="margin-right:3px">'+
+   s+'</span>').join('')) || '<span class="msg">—</span>';
   tr.innerHTML='<td><input type="checkbox" class="sel" data-id="'+x.id+'"'+
    ck+' onclick="onSel(this)"></td>'+
    '<td>'+th+'</td><td class="id">'+x.id.slice(0,8)+
@@ -344,6 +354,8 @@ class SubmitReq(BaseModel):
     brand_icon: str = ""         # wifi | nfc | phone | mobile | email | bluetooth
     brand_size_mm: float = 25.0
     brand_depth_mm: float = 0.6
+    texture: bool = False        # 컬러/PBR 텍스처 생성 (크레딧↑)
+    precision: str = "standard"  # standard | high (target_polycount)
     remove_bg: bool = False
 
 
@@ -376,7 +388,11 @@ def create_app(cfg: AppConfig) -> FastAPI:
 
         def mk(stype: SourceType, payload: dict) -> str:
             extras: dict = {}
-            if req.addon in ("keychain", "stand", "magnet", "nfc"):
+            if req.texture:
+                extras["texture"] = True
+            if req.precision == "high":
+                extras["precision"] = "high"
+            if req.addon in ("keychain", "stand", "magnet", "nfc", "keycap"):
                 extras["addon"] = req.addon
                 if req.addon == "magnet":
                     extras["magnet_size"] = req.magnet_size
@@ -491,6 +507,14 @@ def create_app(cfg: AppConfig) -> FastAPI:
                            (".glb", ".obj", ".stl", ".fbx", ".usdz")})
             return fmts
 
+        # 작업별 소비 크레딧 (committed 합계)
+        with db.connect() as conn:
+            crows = conn.execute(
+                "SELECT job_id, COALESCE(SUM(credits),0) c FROM credit_ledger "
+                "WHERE status='committed' GROUP BY job_id"
+            ).fetchall()
+        credit_by_job = {cr["job_id"]: cr["c"] for cr in crows}
+
         return {"jobs": [{
             "id": r["id"], "state": r["state"], "material": r["material"],
             "printer": r["target_printer"],
@@ -500,6 +524,7 @@ def create_app(cfg: AppConfig) -> FastAPI:
             "message": msg(r),
             "options": opts_summary(r)["chips"],
             "model_formats": model_formats(r["id"]),
+            "credits": credit_by_job.get(r["id"], 0),
         } for r in rows]}
 
     # 실시간 Meshy 잔액 (60초 TTL 캐시 — 3초 폴링 API 남용 방지)

@@ -92,6 +92,7 @@ class MeshyClient:
         image_url: str,
         with_texture: bool = False,
         ai_model: str | None = None,
+        target_polycount: int = 30000,
     ) -> tuple[str, int]:
         """Image-to-3D 작업 제출. 크레딧 예약 → API 호출 → 예약 commit.
 
@@ -110,7 +111,7 @@ class MeshyClient:
                     "enable_pbr": with_texture,
                     "ai_model": ai_model,
                     "topology": "triangle",
-                    "target_polycount": 30000,
+                    "target_polycount": target_polycount,
                     "target_formats": ["glb", "obj", "stl"],
                 },
             )
@@ -131,6 +132,7 @@ class MeshyClient:
         image_urls: list[str],
         with_texture: bool = False,
         ai_model: str | None = None,
+        target_polycount: int = 30000,
     ) -> tuple[str, int]:
         """Multi-Image-to-3D (1~4장, 같은 물체 다른 각도). 품질↑.
 
@@ -150,7 +152,8 @@ class MeshyClient:
                     "should_texture": with_texture,
                     "enable_pbr": with_texture,
                     "ai_model": ai_model,
-                    "target_formats": ["glb"],
+                    "target_polycount": target_polycount,
+                    "target_formats": ["glb", "obj", "stl"],
                 },
             )
             task_id = resp.get("result") or resp.get("id") or resp.get("task_id")
@@ -197,7 +200,7 @@ class MeshyClient:
                 EP_REMESH,
                 {
                     "input_task_id": input_task_id,
-                    "target_formats": ["stl", "glb"],
+                    "target_formats": ["glb", "obj", "stl"],
                     "topology": topology,
                     "target_polycount": target_polycount,
                 },
