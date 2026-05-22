@@ -47,6 +47,12 @@ CREATE TABLE IF NOT EXISTS meshy_cache (
     model_path      TEXT NOT NULL,
     created_at      TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS job_actual_credits (
+    job_id          TEXT PRIMARY KEY,
+    credits         INTEGER NOT NULL,
+    ts              TEXT NOT NULL
+);
 """
 
 

@@ -16,7 +16,7 @@ import shutil
 import zipfile
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Header, HTTPException
 from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from pydantic import BaseModel
 
@@ -110,7 +110,20 @@ INDEX_HTML = r"""<!doctype html>
  .empty{color:var(--mut);text-align:center;padding:28px 0;font-size:13px}
 </style></head><body>
 <h1>Bambu Auto</h1>
-<p class="sub">이미지 → 3D → 출력용 G-code · 내부팀 도구</p>
+<p class="sub">이미지/텍스트 → 3D → 출력용 파일 · 본인 Meshy API 키 사용</p>
+
+<div class="card" style="padding:12px 18px">
+  <label class="fld">내 Meshy API 키 (이 브라우저에만 저장 · 서버 미저장)</label>
+  <div class="row" style="display:flex;gap:8px">
+    <input id="key" type="password" placeholder="msy_..."
+      style="flex:1;padding:8px 11px;border:1px solid #d1d5db;border-radius:8px"
+      oninput="saveKey()">
+    <button type="button" onclick="checkBal()"
+      style="background:#374151;padding:9px 14px">잔액 확인</button>
+  </div>
+  <div id="keyMsg" class="msg" style="margin-top:6px">
+    키는 brower localStorage + 작업 처리 중 메모리에만 사용됩니다.</div>
+</div>
 
 <div class="card">
   <div class="seg">
@@ -142,6 +155,8 @@ INDEX_HTML = r"""<!doctype html>
   <div class="opts" style="margin-top:10px">
     <label><input id="bg" type="checkbox" checked> 배경·인물 제거</label>
     <label><input id="tex" type="checkbox"> 텍스처(컬러) 생성</label>
+    <label title="끄면 생성만 — 크레딧 절약(약 절반). 출력 실패율은 약간↑">
+      <input id="rem" type="checkbox" checked> 리메시(품질↑·크레딧↑)</label>
     <label>정밀도:
       <select id="prec">
         <option value="standard">표준(빠름)</option>
@@ -258,6 +273,8 @@ async function submit(){
     brand_depth_mm:parseFloat(document.getElementById('brandDepth').value)||0.6,
     texture:document.getElementById('tex').checked,
     precision:document.getElementById('prec').value,
+    remesh:document.getElementById('rem').checked,
+    meshy_key:document.getElementById('key').value.trim(),
     remove_bg:document.getElementById('bg').checked})});
   const j=await r.json();
   document.getElementById('msg').textContent= r.ok
@@ -292,7 +309,9 @@ async function refresh(){
    '<div class="msg">'+x.material+' · '+(x.printer||'auto')+
    ' · '+x.created.slice(5,16).replace('T',' ')+'</div>';
   // 옵션·크레딧 셀
-  const cr=x.credits>0?'<span class="b coin">🪙'+x.credits+'</span>':'';
+  const cr=x.credits>0?'<span class="b coin" title="'+
+   (x.credits_actual?'실측(잔액차)':'견적')+'">🪙'+x.credits+
+   (x.credits_actual?'':'~')+'</span>':'';
   const op=(cr+(x.options||[]).map(s=>'<span class="b">'+s+'</span>').join(''))
    ||'<span class="msg">—</span>';
   // 관리 셀
@@ -307,11 +326,18 @@ async function refresh(){
    '<a href="#" title="삭제" onclick="del(\''+x.id+'\');return false">🗑</a></td>';
   tb.appendChild(tr);}
  syncBulk();
- const c=await (await fetch('/api/credits')).json();
- const bal=(c.meshy_balance==null)?'조회실패':c.meshy_balance.toLocaleString();
- const daily=c.daily_cap>0?(c.daily_used+'/'+c.daily_cap):(c.daily_used+' (무제한)');
+ const c=await (await fetch('/api/credits',{headers:keyHdr()})).json();
+ const bal=(c.meshy_balance==null)?'키 입력 후 잔액 확인':c.meshy_balance.toLocaleString();
  document.getElementById('cred').innerHTML='<b>Meshy 잔액 '+bal+'</b>'+
-  ' · 일 '+daily+' · 월 '+c.monthly_used+'/'+c.monthly_cap;}
+  ' · 월 견적 '+c.monthly_used+'/'+c.monthly_cap;}
+function keyHdr(){const k=document.getElementById('key').value.trim();
+ return k?{'X-Meshy-Key':k}:{};}
+function saveKey(){localStorage.setItem('meshy_key',
+ document.getElementById('key').value.trim());}
+async function checkBal(){
+ const c=await (await fetch('/api/credits',{headers:keyHdr()})).json();
+ document.getElementById('keyMsg').textContent=(c.meshy_balance==null)
+  ?'잔액 조회 실패 — 키를 확인하세요':('현재 잔액: '+c.meshy_balance);}
 function share(id){const u=location.origin+'/share/'+id;
  navigator.clipboard.writeText(u).then(
   ()=>alert('공유 링크 복사됨:\n'+u),()=>prompt('공유 링크:',u));}
@@ -344,6 +370,7 @@ function onAddonChange(){const v=document.getElementById('addon').value;
  document.getElementById('pauseHint').textContent=auto
   ?'자석/NFC: 공동 위치에서 자동 일시정지 (이 값은 무시됨)'
   :'0=없음. 50=출력 절반에서 정지';}
+document.getElementById('key').value=localStorage.getItem('meshy_key')||'';
 loadPrinters();refresh();setInterval(refresh,3000);
 onAddonChange();onBrandChange();
 </script></body></html>"""
@@ -368,7 +395,9 @@ class SubmitReq(BaseModel):
     brand_depth_mm: float = 0.6
     texture: bool = False        # 컬러/PBR 텍스처 생성 (크레딧↑)
     precision: str = "standard"  # standard | high (target_polycount)
+    remesh: bool = True          # 리메시(토폴로지 정리). 끄면 크레딧 절약(생성만)
     remove_bg: bool = False
+    meshy_key: str = ""          # BYO: 사용자 Meshy 키 (미입력 시 서버 .env)
 
 
 def create_app(cfg: AppConfig) -> FastAPI:
@@ -404,6 +433,8 @@ def create_app(cfg: AppConfig) -> FastAPI:
                 extras["texture"] = True
             if req.precision == "high":
                 extras["precision"] = "high"
+            if not req.remesh:
+                extras["remesh"] = False
             if req.addon in ("keychain", "stand", "magnet", "nfc", "keycap"):
                 extras["addon"] = req.addon
                 if req.addon == "magnet":
@@ -422,6 +453,9 @@ def create_app(cfg: AppConfig) -> FastAPI:
             job = Job(source_type=stype, source_payload=payload,
                       material=req.material, target_printer=printer)
             repo.save(job)
+            # BYO 키: 메모리에만 보관(DB 미저장), 워커가 사용 후 삭제
+            if req.meshy_key.strip():
+                worker.job_keys[job.id] = req.meshy_key.strip()
             return job.id
 
         if req.mode == "text":
@@ -519,56 +553,78 @@ def create_app(cfg: AppConfig) -> FastAPI:
                            (".glb", ".obj", ".stl", ".ply")})
             return fmts
 
-        # 작업별 소비 크레딧 (committed 합계)
+        # 작업별 소비 크레딧: 실측(잔액차) 우선, 없으면 견적(committed 합)
         with db.connect() as conn:
-            crows = conn.execute(
+            est = conn.execute(
                 "SELECT job_id, COALESCE(SUM(credits),0) c FROM credit_ledger "
                 "WHERE status='committed' GROUP BY job_id"
             ).fetchall()
-        credit_by_job = {cr["job_id"]: cr["c"] for cr in crows}
+            act = conn.execute(
+                "SELECT job_id, credits FROM job_actual_credits"
+            ).fetchall()
+        est_by_job = {cr["job_id"]: cr["c"] for cr in est}
+        actual_by_job = {cr["job_id"]: cr["credits"] for cr in act}
 
-        return {"jobs": [{
-            "id": r["id"], "state": r["state"], "material": r["material"],
-            "printer": r["target_printer"],
-            "has_gcode": bool(r["gcode_path"]),
-            "can_retry": r["state"].startswith("failed"),
-            "created": r["created_at"],
-            "message": msg(r),
-            "options": opts_summary(r)["chips"],
-            "model_formats": model_formats(r["id"]),
-            "credits": credit_by_job.get(r["id"], 0),
-        } for r in rows]}
+        def credit_of(jid):
+            if jid in actual_by_job:
+                return actual_by_job[jid], True   # (값, 실측여부)
+            return est_by_job.get(jid, 0), False
+        credit_by_job = credit_of
+
+        def jobrow(r):
+            cval, is_actual = credit_by_job(r["id"])
+            return {
+                "id": r["id"], "state": r["state"], "material": r["material"],
+                "printer": r["target_printer"],
+                "has_gcode": bool(r["gcode_path"]),
+                "can_retry": r["state"].startswith("failed"),
+                "created": r["created_at"],
+                "message": msg(r),
+                "options": opts_summary(r)["chips"],
+                "model_formats": model_formats(r["id"]),
+                "credits": cval,
+                "credits_actual": is_actual,
+            }
+        return {"jobs": [jobrow(r) for r in rows]}
 
     # 실시간 Meshy 잔액 (60초 TTL 캐시 — 3초 폴링 API 남용 방지)
     _bal_cache: dict[str, float | int | None] = {"ts": 0.0, "value": None}
 
-    def _live_balance() -> int | None:
+    def _live_balance(api_key: str | None = None) -> int | None:
         import time
 
         from bambu_auto.services.meshy.client import MeshyClient
 
+        key = (api_key or "").strip() or cfg.secrets.meshy_api_key
+        if not key:
+            return None
+        # BYO 키는 캐시 안 함(사용자별로 다름). 서버 키만 60초 캐시.
+        use_cache = not (api_key and api_key.strip())
         now = time.time()
-        if now - float(_bal_cache["ts"] or 0) < 60 and _bal_cache["value"] is not None:
+        if use_cache and now - float(_bal_cache["ts"] or 0) < 60 \
+                and _bal_cache["value"] is not None:
             return int(_bal_cache["value"])
         try:
-            mc = MeshyClient(cfg.secrets.meshy_api_key, cfg.settings.meshy, guard)
+            mc = MeshyClient(key, cfg.settings.meshy, guard)
             try:
                 data = mc.balance()
             finally:
                 mc.close()
             bal = data.get("balance") if isinstance(data, dict) else None
             if isinstance(bal, (int, float)):
-                _bal_cache["ts"] = now
-                _bal_cache["value"] = int(bal)
+                if use_cache:
+                    _bal_cache["ts"] = now
+                    _bal_cache["value"] = int(bal)
                 return int(bal)
         except Exception:  # noqa: BLE001 — 잔액 조회 실패는 치명적 아님
             pass
-        return int(_bal_cache["value"]) if _bal_cache["value"] is not None else None
+        return int(_bal_cache["value"]) if use_cache and \
+            _bal_cache["value"] is not None else None
 
     @app.get("/api/credits")
-    def credits() -> dict:
+    def credits(x_meshy_key: str = Header(default="")) -> dict:
         u = guard.usage()
-        return {"meshy_balance": _live_balance(),
+        return {"meshy_balance": _live_balance(x_meshy_key),
                 "monthly_used": u.monthly_used, "monthly_cap": u.monthly_cap,
                 "monthly_remaining": u.monthly_remaining,
                 "daily_used": u.daily_used, "daily_cap": u.daily_cap}

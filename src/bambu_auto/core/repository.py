@@ -60,3 +60,12 @@ class JobRepository:
                 (input_hash, operation, meshy_task_id, model_path,
                  datetime.now(timezone.utc).isoformat()),
             )
+
+    def set_actual_credits(self, job_id: str, credits: int) -> None:
+        """Meshy 잔액 차이로 측정한 실제 소비 크레딧 기록."""
+        with self.db.connect() as conn:
+            conn.execute(
+                "INSERT OR REPLACE INTO job_actual_credits "
+                "(job_id, credits, ts) VALUES (?,?,?)",
+                (job_id, int(credits), datetime.now(timezone.utc).isoformat()),
+            )

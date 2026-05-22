@@ -76,6 +76,9 @@ class FakeMeshy:
         out.write_text("solid fake\nendsolid fake\n")
         return {"stl": out}
 
+    def balance(self):
+        return {"balance": 1000}
+
 
 class FakeSlicer:
     def slice(self, model_stl: Path, profile: str, out_dir: Path):

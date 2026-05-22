@@ -24,6 +24,7 @@ class Worker:
         self._thread: threading.Thread | None = None
         self.current_job: str | None = None
         self.last_message: dict[str, str] = {}  # job_id -> 최근 진행 메시지
+        self.job_keys: dict[str, str] = {}      # job_id -> BYO Meshy 키(메모리만)
 
     def start(self) -> None:
         if self._thread and self._thread.is_alive():
@@ -53,8 +54,10 @@ class Worker:
                 run_job(
                     self.cfg, self.db, job_id,
                     on_progress=lambda m, jid=job_id: self.last_message.__setitem__(jid, m),
+                    api_key=self.job_keys.get(job_id),  # BYO 키(있으면)
                 )
             except Exception as e:  # noqa: BLE001 — 상태는 pipeline이 DB에 기록
                 self.last_message[job_id] = f"실패: {e}"
             finally:
                 self.current_job = None
+                self.job_keys.pop(job_id, None)  # 키는 처리 후 메모리에서 제거

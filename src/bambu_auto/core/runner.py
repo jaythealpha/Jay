@@ -31,8 +31,12 @@ def run_job(
     db: Database,
     job_id: str,
     on_progress: ProgressCb | None = None,
+    api_key: str | None = None,
 ) -> Job:
-    """job_id를 파이프라인에 태우고 완료된 Job 반환. 예외는 그대로 전파."""
+    """job_id를 파이프라인에 태우고 완료된 Job 반환. 예외는 그대로 전파.
+
+    api_key: BYO-key — 사용자가 입력한 Meshy 키. None이면 .env 키 사용.
+    """
     notify = on_progress or (lambda _m: None)
     repo = JobRepository(db)
 
@@ -65,7 +69,8 @@ def run_job(
         raise ValueError("지원하지 않는 소스 타입 (web은 추후)")
 
     guard = CreditGuard(db, cfg.budgets)
-    meshy = MeshyClient(cfg.secrets.meshy_api_key, cfg.settings.meshy, guard)
+    key = api_key or cfg.secrets.meshy_api_key
+    meshy = MeshyClient(key, cfg.settings.meshy, guard)
     try:
         slicer = OrcaSlicer()
     except Exception as e:  # noqa: BLE001

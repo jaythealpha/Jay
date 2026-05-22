@@ -305,17 +305,13 @@ class MeshyClient:
             raise MeshyTransientError(msg)   # 재시도 가치 있음
         raise MeshyError(msg)                # 4xx — 재시도 무의미
 
-    @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(min=1, max=10),
-        retry=retry_if_exception_type(MeshyTransientError),
-        reraise=True,
-    )
     def _post(self, path: str, payload: dict[str, Any]) -> dict[str, Any]:
+        # 제출(POST)은 절대 자동 재시도하지 않음 — 재시도가 Meshy에 중복
+        # 작업을 생성해 크레딧을 2~3배 소모할 수 있음(과금 안전). 단일 시도.
         try:
             r = self._http.post(path, json=payload)
         except httpx.TransportError as e:
-            raise MeshyTransientError(f"POST {path} network error: {e}") from e
+            raise MeshyError(f"POST {path} network error: {e}") from e
         self._raise_for_status("POST", path, r)
         return r.json()
 

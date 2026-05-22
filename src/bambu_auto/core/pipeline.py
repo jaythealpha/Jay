@@ -35,6 +35,7 @@ class MeshyPort(Protocol):
     def wait_for_completion(self, task_id: str, kind: str = "image-to-3d") -> dict: ...
     def download_model(self, task_data: dict, dest_dir: Path, prefer: str = "glb") -> Path: ...
     def download_all_models(self, task_data: dict, dest_dir: Path) -> dict: ...
+    def balance(self) -> dict: ...
 
 
 class SlicerPort(Protocol):
@@ -106,6 +107,7 @@ class Pipeline:
         with_tex = bool(payload.get(
             "texture", not self.cfg.budgets.saving.skip_texture_by_default))
         poly = 100000 if payload.get("precision") == "high" else 30000
+        bal_before = self._safe_balance()  # 실측 크레딧 측정용
 
         try:
             if prepared.kind == "text":
@@ -135,8 +137,11 @@ class Pipeline:
             data = self.meshy.wait_for_completion(task_id, kind=kind)
 
             # 리메시(옵션): 생성물 토폴로지 정리 → 비watertight 실패↓.
+            # 매 작업마다 생성+리메시로 크레딧이 2배 → 작업별 토글 허용.
             # 실패해도 원본으로 진행 (enhancement, 치명적 아님).
-            if self.cfg.settings.pipeline.use_remesh:
+            use_remesh = bool(payload.get(
+                "remesh", self.cfg.settings.pipeline.use_remesh))
+            if use_remesh:
                 try:
                     self._notify("  리메시 중 (토폴로지 정리)…")
                     rm_id, _ = self.meshy.remesh(
@@ -159,11 +164,27 @@ class Pipeline:
             job.model_path = str(model_path)
             self.repo.cache_store(prepared.input_hash, prepared.kind,
                                   task_id, str(model_path))
+
+            # 실측 크레딧: 잔액 차이로 이 작업의 진짜 소비량 기록
+            bal_after = self._safe_balance()
+            if bal_before is not None and bal_after is not None:
+                delta = max(0, bal_before - bal_after)
+                self.repo.set_actual_credits(job.id, delta)
+                self._notify(f"  실측 크레딧 소비: {delta} (잔액 {bal_after})")
+
             self.repo.set_state(job, JobState.MESHY_COMPLETE)
             return str(model_path)
         except Exception as e:
             self.repo.set_state(job, JobState.FAILED_MESHY, error=str(e))
             raise
+
+    def _safe_balance(self) -> int | None:
+        try:
+            d = self.meshy.balance()
+            b = d.get("balance") if isinstance(d, dict) else None
+            return int(b) if isinstance(b, (int, float)) else None
+        except Exception:  # noqa: BLE001
+            return None
 
     def _copy_cached_models(self, cached_model_path: str, work: Path) -> str:
         """캐시 히트 시 원본 job의 모델 파일(전 포맷)을 현재 job 폴더로 복사.
