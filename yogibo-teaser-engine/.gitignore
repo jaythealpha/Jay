@@ -1,0 +1,6 @@
+# 생성된 이미지 산출물(대용량) — 레포에 커밋하지 않음
+output/*.png
+output/*.jpg
+output/*.jpeg
+*.tmp
+__pycache__/

@@ -1,0 +1,7 @@
+# 프롬프트 생성(generate_prompts.py)은 표준 라이브러리만으로 동작 — 설치 불필요.
+
+# 이미지 합성(overlay.py) 및 mock 프로바이더
+pillow>=10.0.0
+
+# openai 프로바이더 사용 시
+openai>=1.0.0
