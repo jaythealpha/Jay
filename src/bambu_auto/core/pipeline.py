@@ -68,6 +68,7 @@ class Pipeline:
             report = self._repair(job, Path(model_path), work)
             self._addon(job, report, work)
             self._brand(job, report, work)
+            self._export_formats(job, report, work)
             self._notify("[4/5] 프린터 라우팅 중…")
             self._route(job, report)
             self._notify(f"[5/5] 슬라이싱 중 → {job.target_printer}…")
@@ -323,6 +324,27 @@ class Pipeline:
             self._notify(f"  ✓ 바닥 로고 — {r['method']}")
         else:
             self._notify(f"  ⚠ 바닥 로고 실패({r.get('method')}) — 원본 진행")
+
+    def _export_formats(self, job: Job, report: MeshReport, work: Path) -> None:
+        """최종 메쉬를 stl/obj/glb/ply로 직접 변환 (Meshy 포맷 의존 제거).
+        다운로드는 이 폴더에서 서빙 → 항상 전 포맷 보장·안정."""
+        try:
+            import trimesh
+
+            mesh = trimesh.load(report.path, force="mesh")
+            ddir = work / "download"
+            ddir.mkdir(parents=True, exist_ok=True)
+            stem = job.id[:8]
+            done = []
+            for ext in ("stl", "obj", "glb", "ply"):
+                try:
+                    mesh.export(ddir / f"{stem}.{ext}")
+                    done.append(ext)
+                except Exception:  # noqa: BLE001
+                    continue
+            self._notify(f"  포맷 변환: {', '.join(done) or '실패'}")
+        except Exception as e:  # noqa: BLE001
+            self._notify(f"  ⚠ 포맷 변환 건너뜀: {e}")
 
     def _route(self, job: Job, report: MeshReport) -> None:
         ctx = RouteContext(material=job.material,

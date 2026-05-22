@@ -89,13 +89,22 @@ INDEX_HTML = r"""<!doctype html>
    text-transform:uppercase;letter-spacing:.04em;padding:8px 8px}
  td{padding:10px 8px;border-top:1px solid #f0f0f1;vertical-align:middle}
  .id{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--mut)}
- .b{font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px;
-   background:#eef0f2;color:#374151;white-space:nowrap}
+ .b{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;
+   border-radius:99px;background:#eef0f2;color:#374151;white-space:nowrap;
+   margin:1px 3px 1px 0}
  .b.ok{background:#dcfce7;color:#15803d}
  .b.no{background:#fee2e2;color:#b91c1c}
  .b.go{background:#fef9c3;color:#854d0e}
- .prog{max-width:340px;color:var(--mut);font-size:12px;overflow:hidden;
-   text-overflow:ellipsis;white-space:nowrap}
+ .b.coin{background:#fef3c7;color:#92400e}
+ .jid{font-family:ui-monospace,Menlo,monospace;font-size:12px;
+   display:flex;align-items:center;gap:6px}
+ .prog{max-width:300px;color:var(--mut);font-size:12px;overflow:hidden;
+   text-overflow:ellipsis;white-space:nowrap;margin:2px 0}
+ .thumb{width:40px;height:40px;object-fit:cover;border-radius:8px;
+   background:#eee}
+ td{vertical-align:middle}
+ .dlcell a{font-size:12px} .sep{color:#d1d5db;margin:0 5px}
+ .acts{white-space:nowrap} .acts a{font-size:15px;margin-left:8px}
  a{color:#1d4ed8;text-decoration:none;font-weight:600}
  a:hover{text-decoration:underline}
  .empty{color:var(--mut);text-align:center;padding:28px 0;font-size:13px}
@@ -197,9 +206,9 @@ INDEX_HTML = r"""<!doctype html>
     </span>
   </div>
   <table><thead><tr>
-    <th><input type="checkbox" id="all" onclick="toggleAll(this)"></th>
-    <th></th><th>ID</th><th>상태</th><th>재질</th><th>프린터</th>
-    <th>옵션</th><th>진행</th><th>생성</th><th>파일</th><th>공유</th><th></th>
+    <th style="width:24px"><input type="checkbox" id="all" onclick="toggleAll(this)"></th>
+    <th style="width:44px"></th><th>작업</th><th>옵션 · 크레딧</th>
+    <th>다운로드</th><th style="width:90px">관리</th>
   </tr></thead><tbody id="tb"></tbody></table>
   <div id="empty" class="empty" style="display:none">아직 작업이 없습니다.</div>
 </div>
@@ -266,33 +275,36 @@ async function refresh(){
  const tb=document.getElementById('tb');tb.innerHTML='';
  document.getElementById('empty').style.display=j.jobs.length?'none':'block';
  for(const x of j.jobs){
-  let dl=x.has_gcode?'<a href="/api/download/'+x.id+'">⬇ 3MF</a>':'';
-  const mf=(x.model_formats||[]).map(f=>
-   ' <a href="/api/model/'+x.id+'/'+f+'" class="msg">'+f+'</a>').join('');
-  dl=(dl+mf)||'<span class="msg">—</span>';
-  const sh=x.has_gcode?'<a href="#" onclick="share(\''+x.id+'\');return false">🔗</a>':'<span class="msg">—</span>';
-  const rt=x.can_retry?'<a href="#" onclick="retry(\''+x.id+'\');return false">↻</a> ':'';
+  // 다운로드: 3MF + 변환 포맷
+  const links=[];
+  if(x.has_gcode)links.push('<a href="/api/download/'+x.id+'">3MF</a>');
+  for(const f of (x.model_formats||[]))
+   links.push('<a href="/api/model/'+x.id+'/'+f+'">'+f+'</a>');
+  const dl=links.length?links.join('<span class="sep">·</span>')
+   :'<span class="msg">—</span>';
   const m=(x.message||'').replace(/"/g,'&quot;');
-  const th='<img src="/api/thumb/'+x.id+'" style="width:34px;height:34px;'+
-   'object-fit:cover;border-radius:6px;background:#eee" '+
+  const th='<img src="/api/thumb/'+x.id+'" class="thumb" '+
    'onerror="this.style.visibility=\'hidden\'">';
   const ck=SEL.has(x.id)?' checked':'';
+  // 작업 셀: ID · 상태 · 진행 · 시각 (세로 스택)
+  const job='<div class="jid">'+x.id.slice(0,8)+' '+badge(x.state)+'</div>'+
+   '<div class="prog" title="'+m+'">'+m+'</div>'+
+   '<div class="msg">'+x.material+' · '+(x.printer||'auto')+
+   ' · '+x.created.slice(5,16).replace('T',' ')+'</div>';
+  // 옵션·크레딧 셀
+  const cr=x.credits>0?'<span class="b coin">🪙'+x.credits+'</span>':'';
+  const op=(cr+(x.options||[]).map(s=>'<span class="b">'+s+'</span>').join(''))
+   ||'<span class="msg">—</span>';
+  // 관리 셀
+  const rt=x.can_retry?'<a href="#" title="재시도" onclick="retry(\''+x.id+'\');return false">↻</a>':'';
+  const sh=x.has_gcode?'<a href="#" title="공유" onclick="share(\''+x.id+'\');return false">🔗</a>':'';
   const tr=document.createElement('tr');
-  const cr=x.credits>0?'<span class="b" style="margin-right:3px;'+
-   'background:#fef3c7;color:#92400e">🪙'+x.credits+'</span>':'';
-  const op=cr+((x.options||[]).map(s=>'<span class="b" style="margin-right:3px">'+
-   s+'</span>').join('')) || '<span class="msg">—</span>';
   tr.innerHTML='<td><input type="checkbox" class="sel" data-id="'+x.id+'"'+
    ck+' onclick="onSel(this)"></td>'+
-   '<td>'+th+'</td><td class="id">'+x.id.slice(0,8)+
-   '</td><td>'+badge(x.state)+
-   '</td><td>'+x.material+'</td><td>'+(x.printer||'auto')+
-   '</td><td>'+op+
-   '</td><td class="prog" title="'+m+'">'+m+
-   '</td><td class="msg">'+x.created.slice(5,16).replace('T',' ')+
-   '</td><td>'+dl+'</td><td>'+sh+
-   '</td><td class="msg">'+rt+
-   '<a href="#" onclick="del(\''+x.id+'\');return false">🗑</a></td>';
+   '<td>'+th+'</td><td>'+job+'</td><td>'+op+'</td>'+
+   '<td class="dlcell">'+dl+'</td>'+
+   '<td class="acts">'+rt+sh+
+   '<a href="#" title="삭제" onclick="del(\''+x.id+'\');return false">🗑</a></td>';
   tb.appendChild(tr);}
  syncBulk();
  const c=await (await fetch('/api/credits')).json();
@@ -498,13 +510,13 @@ def create_app(cfg: AppConfig) -> FastAPI:
         data_dir = Path(cfg.settings.storage.data_dir)
 
         def model_formats(job_id: str) -> list[str]:
-            md = data_dir / "assets" / job_id / "model"
+            md = data_dir / "assets" / job_id / "download"
             if not md.exists():
                 return []
             fmts = sorted({p.suffix.lstrip(".").lower()
                            for p in md.glob("*.*")
                            if p.suffix.lower() in
-                           (".glb", ".obj", ".stl", ".fbx", ".usdz")})
+                           (".glb", ".obj", ".stl", ".ply")})
             return fmts
 
         # 작업별 소비 크레딧 (committed 합계)
@@ -566,9 +578,9 @@ def create_app(cfg: AppConfig) -> FastAPI:
     @app.get("/api/model/{job_id}/{fmt}")
     def model_file(job_id: str, fmt: str) -> FileResponse:
         fmt = fmt.lower()
-        if fmt not in ("glb", "obj", "stl", "fbx", "usdz"):
+        if fmt not in ("glb", "obj", "stl", "ply"):
             raise HTTPException(400, "지원하지 않는 포맷")
-        md = assets_dir / job_id / "model"
+        md = assets_dir / job_id / "download"
         hits = sorted(md.glob(f"*.{fmt}")) if md.exists() else []
         if not hits:
             raise HTTPException(404, f"{fmt} 파일 없음")
