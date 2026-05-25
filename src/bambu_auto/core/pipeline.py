@@ -94,6 +94,29 @@ class Pipeline:
             raise
 
     def _generate(self, job: Job, prepared: PreparedSource, work: Path) -> str:
+        payload = job.source_payload or {}
+
+        # 2D 평면 패널 모드: Meshy 미사용, 이미지 실루엣을 로컬에서 압출 (크레딧 0)
+        if payload.get("flat") and prepared.image_paths:
+            from bambu_auto.services.mesh.flat_panel import make_flat_panel
+
+            self._notify("  2D 평면 패널 생성 중 (Meshy 미사용)…")
+            out = work / "model" / "flat.stl"
+            out.parent.mkdir(parents=True, exist_ok=True)
+            r = make_flat_panel(
+                prepared.image_paths[0], out,
+                size_mm=float(payload.get("flat_size_mm") or 50),
+                thickness_mm=float(payload.get("flat_thickness_mm") or 3.5),
+            )
+            if not r.get("ok"):
+                self.repo.set_state(job, JobState.FAILED_MESHY,
+                                    error=f"평면 패널 실패: {r.get('method')}")
+                raise ValueError(f"평면 패널 실패: {r.get('method')}")
+            job.model_path = str(out)
+            self.repo.set_actual_credits(job.id, 0)  # 크레딧 0
+            self.repo.set_state(job, JobState.MESHY_COMPLETE)
+            return str(out)
+
         # 캐시 히트면 크레딧 소비 없이 재사용 (모델 파일들을 현재 job 폴더로 복사)
         cached = self.repo.cache_lookup(prepared.input_hash)
         if cached:
@@ -103,7 +126,6 @@ class Pipeline:
             self.repo.set_state(job, JobState.MESHY_COMPLETE)
             return job.model_path
 
-        payload = job.source_payload or {}
         with_tex = bool(payload.get(
             "texture", not self.cfg.budgets.saving.skip_texture_by_default))
         poly = 100000 if payload.get("precision") == "high" else 30000
@@ -213,7 +235,11 @@ class Pipeline:
             self.repo.set_state(job, JobState.REPAIRED)
             return _trivial_report(model_path)
         try:
-            target = self.cfg.settings.pipeline.target_size_mm
+            # 평면 패널은 이미 실제 크기로 생성됨 → 재스케일 금지
+            if (job.source_payload or {}).get("flat"):
+                target = None
+            else:
+                target = self.cfg.settings.pipeline.target_size_mm
             report = repair_mesh(model_path, work / "repaired", scale_to_mm=target)
             job.repaired_path = str(report.path)
             self._notify(f"  스케일: 최대치수 → {report.max_dimension_mm:.0f}mm "

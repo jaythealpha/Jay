@@ -153,6 +153,17 @@ INDEX_HTML = r"""<!doctype html>
       </select></div>
   </div>
   <div class="opts" style="margin-top:10px">
+    <label title="이미지 실루엣을 평판으로 압출+선 음각. Meshy 미사용·크레딧 0. 자석/NFC에 최적">
+      <input id="flat" type="checkbox" onchange="onFlatChange()">
+      2D 평면 패널(자석/NFC·크레딧 0)</label>
+    <label id="flatSizeWrap" style="display:none">크기(mm)
+      <input id="flatSize" type="number" min="20" max="120" step="1" value="50"
+        style="width:60px;padding:5px 7px;border:1px solid #d1d5db;border-radius:6px"></label>
+    <label id="flatThWrap" style="display:none">두께(mm)
+      <input id="flatTh" type="number" min="1.5" max="10" step="0.5" value="3.5"
+        style="width:60px;padding:5px 7px;border:1px solid #d1d5db;border-radius:6px"></label>
+  </div>
+  <div class="opts" style="margin-top:8px">
     <label><input id="bg" type="checkbox" checked> 배경·인물 제거</label>
     <label><input id="tex" type="checkbox"> 텍스처(컬러) 생성</label>
     <label title="끄면 생성만 — 크레딧 절약(약 절반). 출력 실패율은 약간↑">
@@ -274,6 +285,9 @@ async function submit(){
     texture:document.getElementById('tex').checked,
     precision:document.getElementById('prec').value,
     remesh:document.getElementById('rem').checked,
+    flat:document.getElementById('flat').checked,
+    flat_size_mm:parseFloat(document.getElementById('flatSize').value)||50,
+    flat_thickness_mm:parseFloat(document.getElementById('flatTh').value)||3.5,
     meshy_key:document.getElementById('key').value.trim(),
     remove_bg:document.getElementById('bg').checked})});
   const j=await r.json();
@@ -361,6 +375,9 @@ async function bulkDelete(){
   headers:{'Content-Type':'application/json'},
   body:JSON.stringify({ids:ids})});
  SEL.clear();document.getElementById('all').checked=false;refresh();}
+function onFlatChange(){const v=document.getElementById('flat').checked;
+ document.getElementById('flatSizeWrap').style.display=v?'inline-block':'none';
+ document.getElementById('flatThWrap').style.display=v?'inline-block':'none';}
 function onBrandChange(){const t=document.getElementById('brandType').value;
  document.getElementById('brandText').style.display=t==='text'?'block':'none';
  document.getElementById('brandIcon').style.display=t==='icon'?'inline-block':'none';}
@@ -371,7 +388,7 @@ function onAddonChange(){const v=document.getElementById('addon').value;
   ?'자석/NFC: 공동 위치에서 자동 일시정지 (이 값은 무시됨)'
   :'0=없음. 50=출력 절반에서 정지';}
 document.getElementById('key').value=localStorage.getItem('meshy_key')||'';
-loadPrinters();refresh();setInterval(refresh,3000);
+loadPrinters();refresh();setInterval(refresh,3000);onFlatChange();
 onAddonChange();onBrandChange();
 </script></body></html>"""
 
@@ -396,6 +413,9 @@ class SubmitReq(BaseModel):
     texture: bool = False        # 컬러/PBR 텍스처 생성 (크레딧↑)
     precision: str = "standard"  # standard | high (target_polycount)
     remesh: bool = True          # 리메시(토폴로지 정리). 끄면 크레딧 절약(생성만)
+    flat: bool = False           # 2D 평면 패널 모드 (Meshy 미사용·크레딧 0)
+    flat_size_mm: float = 50.0
+    flat_thickness_mm: float = 3.5
     remove_bg: bool = False
     meshy_key: str = ""          # BYO: 사용자 Meshy 키 (미입력 시 서버 .env)
 
@@ -435,6 +455,10 @@ def create_app(cfg: AppConfig) -> FastAPI:
                 extras["precision"] = "high"
             if not req.remesh:
                 extras["remesh"] = False
+            if req.flat:
+                extras["flat"] = True
+                extras["flat_size_mm"] = float(req.flat_size_mm)
+                extras["flat_thickness_mm"] = float(req.flat_thickness_mm)
             if req.addon in ("keychain", "stand", "magnet", "nfc", "keycap"):
                 extras["addon"] = req.addon
                 if req.addon == "magnet":
