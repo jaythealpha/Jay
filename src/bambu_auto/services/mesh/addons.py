@@ -134,8 +134,33 @@ def add_nfc_cavity(stl_in: Path, stl_out: Path,
                              clearance_d=0.0, clearance_h=0.2)
 
 
+def add_keyring_hole(stl_in: Path, stl_out: Path,
+                     hole_d: float = 5.0, edge_margin: float = 4.0) -> dict:
+    """평면 패널 상단 가장자리에 키링용 관통 구멍. 3D 토러스 고리와 달리
+    납작한 태그에 적합. 반환 {ok, method}."""
+    import trimesh
+
+    mesh = trimesh.load(stl_in, force="mesh")
+    bmin, bmax = mesh.bounds
+    cx = (bmin[0] + bmax[0]) / 2
+    top_y = bmax[1] - edge_margin - hole_d / 2  # 상단 가장자리 근처
+    thick = float(bmax[2] - bmin[2])
+    cyl = trimesh.creation.cylinder(radius=hole_d / 2, height=thick + 2)
+    cyl.apply_translation([cx, top_y, (bmin[2] + bmax[2]) / 2])
+    for engine in ("manifold", None):
+        try:
+            kw = {"engine": engine} if engine else {}
+            out = trimesh.boolean.difference([mesh, cyl], **kw)
+            if out is not None and not out.is_empty:
+                out.export(stl_out)
+                return {"ok": True, "method": "keyring_hole"}
+        except Exception:  # noqa: BLE001
+            continue
+    return {"ok": False, "method": "boolean_failed"}
+
+
 ADDONS = {
     "keychain": add_keychain_loop,
     "stand": add_base,
-    # 'magnet' / 'nfc' 는 별도 시그니처(파라미터 필요) — pipeline에서 직접 호출
+    # 'magnet'/'nfc'/'keyring' 는 별도 시그니처 — pipeline에서 직접 호출
 }

@@ -273,7 +273,7 @@ class Pipeline:
         """부착(키링/받침/키캡) 또는 공동(자석/NFC). 실패해도 원본 유지."""
         payload = job.source_payload or {}
         addon = payload.get("addon")
-        if addon not in ("keychain", "stand", "magnet", "nfc", "keycap"):
+        if addon not in ("keychain", "stand", "magnet", "nfc", "keycap", "keyring"):
             return
 
         # 키캡: 모델을 MX 키캡 위에 얹음 (별도 처리)
@@ -298,7 +298,8 @@ class Pipeline:
         from bambu_auto.services.mesh import addons as A
 
         label_map = {"keychain": "키링 고리", "stand": "받침대",
-                     "magnet": "자석 공동", "nfc": "NFC 공동"}
+                     "magnet": "자석 공동", "nfc": "NFC 공동",
+                     "keyring": "키링 구멍"}
         label = label_map[addon]
         self._notify(f"  {label} 작업 중…")
         out = work / "repaired" / f"{Path(report.path).stem}_{addon}.stl"
@@ -317,6 +318,9 @@ class Pipeline:
                 r = A.add_nfc_cavity(Path(report.path), out)
                 method = r["method"] if r["ok"] else ""
                 cavity_top_z = r["top_z"]
+            elif addon == "keyring":
+                r = A.add_keyring_hole(Path(report.path), out)
+                method = r["method"] if r["ok"] else ""
         except Exception as e:  # noqa: BLE001
             self._notify(f"  ⚠ {label} 오류: {e}")
 

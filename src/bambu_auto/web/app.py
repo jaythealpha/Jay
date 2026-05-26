@@ -110,7 +110,7 @@ INDEX_HTML = r"""<!doctype html>
  .empty{color:var(--mut);text-align:center;padding:28px 0;font-size:13px}
 </style></head><body>
 <h1>Bambu Auto</h1>
-<p class="sub">이미지/텍스트 → 3D → 출력용 파일 · 본인 Meshy API 키 사용</p>
+<p class="sub">이미지/텍스트 → 3D 모델 또는 기능 제품(마그넷·NFC·키링) · 본인 Meshy 키</p>
 
 <div class="card" style="padding:12px 18px">
   <label class="fld">내 Meshy API 키 (이 브라우저에만 저장 · 서버 미저장)</label>
@@ -118,116 +118,93 @@ INDEX_HTML = r"""<!doctype html>
     <input id="key" type="password" placeholder="msy_..."
       style="flex:1;padding:8px 11px;border:1px solid #d1d5db;border-radius:8px"
       oninput="saveKey()">
-    <button type="button" onclick="checkBal()"
-      style="background:#374151;padding:9px 14px">잔액 확인</button>
+    <button type="button" onclick="checkBal()" style="background:#374151;padding:9px 14px">잔액 확인</button>
   </div>
-  <div id="keyMsg" class="msg" style="margin-top:6px">
-    키는 brower localStorage + 작업 처리 중 메모리에만 사용됩니다.</div>
+  <div id="keyMsg" class="msg" style="margin-top:6px">키는 브라우저 localStorage + 처리 중 메모리에만 사용.</div>
 </div>
 
-<div class="card">
+<div class="seg" style="margin-bottom:4px">
+  <button id="t3d" class="on" onclick="setTrack('3d')">① 3D 모델 (Meshy)</button>
+  <button id="tfn" onclick="setTrack('func')">② 기능 제품 (마그넷·NFC·키링)</button>
+</div>
+
+<div id="form3d" class="card">
   <div class="seg">
     <button id="mBatch" class="on" onclick="setMode('batch')">이미지 (배치)</button>
     <button id="mView" onclick="setMode('multiview')">한 물체·여러 각도</button>
     <button id="mText" onclick="setMode('text')">텍스트 → 3D</button>
   </div>
-  <label class="fld" id="hint">한 줄에 이미지 URL 1개 = 물체 1개. 여러 줄이면 각각 별도 제작.</label>
-  <textarea id="src" rows="5"
-    placeholder="https://.../productA.jpg&#10;https://.../productB.jpg&#10;https://.../productC.jpg"></textarea>
+  <label class="fld" id="hint">한 줄에 이미지 URL 1개 = 물체 1개.</label>
+  <textarea id="src" rows="4" placeholder="https://.../productA.jpg"></textarea>
   <div class="grid">
     <div><label class="fld">재질</label>
-      <select id="mat">
-        <option value="pla">PLA</option><option value="petg">PETG</option>
-        <option value="abs">ABS</option><option value="silk">PLA Silk</option>
-      </select></div>
+      <select id="mat"><option value="pla">PLA</option><option value="petg">PETG</option>
+        <option value="abs">ABS</option><option value="silk">PLA Silk</option></select></div>
     <div><label class="fld">프린터</label>
       <select id="prn"><option value="auto">자동 (기본 A1)</option></select></div>
-    <div><label class="fld">추가</label>
-      <select id="addon" onchange="onAddonChange()">
+    <div><label class="fld">3D 추가</label>
+      <select id="addon">
         <option value="">없음</option>
-        <option value="keychain">열쇠고리</option>
         <option value="stand">받침대</option>
-        <option value="magnet">자석 삽입(공동+자동정지)</option>
-        <option value="nfc">NFC 삽입(27mm 공동+자동정지)</option>
+        <option value="keychain">열쇠고리(3D 입체고리)</option>
         <option value="keycap">키캡 (기계식 키보드 MX)</option>
       </select></div>
   </div>
   <div class="opts" style="margin-top:10px">
-    <label title="이미지 실루엣을 평판으로 압출+선 음각. Meshy 미사용·크레딧 0. 자석/NFC에 최적">
-      <input id="flat" type="checkbox" onchange="onFlatChange()">
-      2D 평면 패널(자석/NFC·크레딧 0)</label>
-    <label id="flatSizeWrap" style="display:none">크기(mm)
-      <input id="flatSize" type="number" min="20" max="120" step="1" value="50"
-        style="width:60px;padding:5px 7px;border:1px solid #d1d5db;border-radius:6px"></label>
-    <label id="flatThWrap" style="display:none">두께(mm)
-      <input id="flatTh" type="number" min="1.5" max="10" step="0.5" value="3.5"
-        style="width:60px;padding:5px 7px;border:1px solid #d1d5db;border-radius:6px"></label>
+    <label><input id="bg" type="checkbox" checked> 배경·인물 제거</label>
+    <label><input id="tex" type="checkbox"> 텍스처(컬러)</label>
+    <label title="끄면 생성만 — 크레딧 절약(약 절반)"><input id="rem" type="checkbox" checked> 리메시</label>
+    <label>정밀도: <select id="prec" style="width:auto">
+      <option value="standard">표준</option><option value="high">고정밀</option></select></label>
   </div>
   <div class="opts" style="margin-top:8px">
-    <label><input id="bg" type="checkbox" checked> 배경·인물 제거</label>
-    <label><input id="tex" type="checkbox"> 텍스처(컬러) 생성</label>
-    <label title="끄면 생성만 — 크레딧 절약(약 절반). 출력 실패율은 약간↑">
-      <input id="rem" type="checkbox" checked> 리메시(품질↑·크레딧↑)</label>
-    <label>정밀도:
-      <select id="prec">
-        <option value="standard">표준(빠름)</option>
-        <option value="high">고정밀(느림·크레딧↑)</option>
-      </select></label>
-    <label id="magWrap" style="display:none">자석 크기:
-      <select id="magsize">
-        <option value="4x2">4×2</option><option value="4x3">4×3</option>
-        <option value="5x2" selected>5×2</option><option value="5x3">5×3</option>
-        <option value="6x2">6×2</option><option value="6x3">6×3</option>
-        <option value="8x2">8×2</option><option value="10x2">10×2</option>
-      </select></label>
-    <span style="flex:1"></span>
-    <label id="pauseWrap">수동 일시정지(%):
-      <input id="pause" type="number" min="0" max="100" step="1" value="0"
-        style="width:70px;padding:6px 8px;border:1px solid #d1d5db;
-        border-radius:6px"></label>
-    <span class="msg" id="pauseHint">0=없음. 자석/NFC면 자동.</span>
-  </div>
-  <div class="opts" style="margin-top:10px;flex-wrap:wrap">
     <label>바닥 로고:
-      <select id="brandType" onchange="onBrandChange()">
-        <option value="">없음</option>
-        <option value="text">텍스트</option>
-        <option value="icon">아이콘</option>
-      </select></label>
-    <input id="brandText" type="text" placeholder="예: YOGIBO"
-      style="flex:1;min-width:160px;padding:6px 10px;border:1px solid #d1d5db;
-      border-radius:6px;display:none">
-    <select id="brandIcon" style="display:none">
-      <option value="wifi">Wi-Fi</option>
-      <option value="nfc">NFC</option>
-      <option value="phone">전화 ☎</option>
-      <option value="mobile">휴대폰 📱</option>
-      <option value="email">이메일 ✉</option>
-      <option value="bluetooth">블루투스</option>
-    </select>
-    <label class="msg">크기(mm)
-      <input id="brandSize" type="number" min="8" max="80" step="1" value="25"
-        style="width:60px;padding:5px 7px;border:1px solid #d1d5db;
-        border-radius:6px"></label>
-    <label class="msg">깊이(mm)
-      <input id="brandDepth" type="number" min="0.2" max="2.0" step="0.1"
-        value="0.6" style="width:60px;padding:5px 7px;
-        border:1px solid #d1d5db;border-radius:6px"></label>
+      <select id="brandType" onchange="onBrandChange()" style="width:auto">
+        <option value="">없음</option><option value="text">텍스트</option><option value="icon">아이콘</option></select></label>
+    <input id="brandText" type="text" placeholder="예: YOGIBO" style="flex:1;min-width:120px;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;display:none">
+    <select id="brandIcon" style="display:none;width:auto"><option value="wifi">Wi-Fi</option><option value="nfc">NFC</option>
+      <option value="phone">전화</option><option value="mobile">휴대폰</option><option value="email">이메일</option><option value="bluetooth">블루투스</option></select>
   </div>
   <div class="bar">
-    <span id="msg" class="msg"></span>
-    <button id="go" onclick="submit()">제작 시작</button>
+    <span id="msg3d" class="msg"></span>
+    <button id="go3d" onclick="submit3d()">3D 제작 시작</button>
   </div>
-  <div id="cred" class="msg" style="margin-top:6px"></div>
 </div>
+
+<div id="formFunc" class="card" style="display:none">
+  <p class="msg" style="margin:0 0 10px">이미지를 <b>평면 제품</b>으로 — Meshy 미사용·<b>크레딧 0</b>. 한 줄에 1개(배치).</p>
+  <textarea id="fsrc" rows="4" placeholder="https://.../character.png (배경 제거되는 캐릭터 이미지 권장)"></textarea>
+  <div class="grid">
+    <div><label class="fld">제품</label>
+      <select id="product" onchange="onProductChange()">
+        <option value="magnet">마그넷 (자석 공동)</option>
+        <option value="nfc">NFC 태그 (27mm 공동)</option>
+        <option value="keyring">키링 (구멍)</option>
+      </select></div>
+    <div id="fmagWrap"><label class="fld">자석 크기 (D×H)</label>
+      <select id="fmagsize"><option value="4x2">4×2</option><option value="4x3">4×3</option>
+        <option value="5x2" selected>5×2</option><option value="5x3">5×3</option>
+        <option value="6x2">6×2</option><option value="6x3">6×3</option><option value="8x2">8×2</option><option value="10x2">10×2</option></select></div>
+    <div><label class="fld">프린터</label><select id="fprn"><option value="auto">자동 (기본 A1)</option></select></div>
+  </div>
+  <div class="opts" style="margin-top:10px">
+    <label>크기(mm) <input id="fsize" type="number" min="20" max="120" step="1" value="50" style="width:64px;padding:6px;border:1px solid #d1d5db;border-radius:6px"></label>
+    <label>두께(mm) <input id="fth" type="number" min="1.5" max="10" step="0.5" value="3.5" style="width:64px;padding:6px;border:1px solid #d1d5db;border-radius:6px"></label>
+    <label>재질 <select id="fmat" style="width:auto"><option value="pla">PLA</option><option value="petg">PETG</option><option value="silk">PLA Silk</option></select></label>
+    <label><input id="fbg" type="checkbox" checked> 배경·인물 제거</label>
+  </div>
+  <div class="bar">
+    <span id="msgFn" class="msg"></span>
+    <button id="goFn" onclick="submitFunc()">기능 제품 제작 (크레딧 0)</button>
+  </div>
+</div>
+<div id="cred" class="msg" style="margin:0 4px 14px"></div>
 
 <div class="card">
   <div class="bar" style="margin:0 0 12px">
     <strong style="font-size:14px">제작 현황</strong>
     <span>
-      <button id="bulk" onclick="bulkDelete()" disabled
-        style="background:#b91c1c;padding:7px 14px;font-size:13px;
-        margin-right:8px">선택 삭제</button>
+      <button id="bulk" onclick="bulkDelete()" disabled style="background:#b91c1c;padding:7px 14px;font-size:13px;margin-right:8px">선택 삭제</button>
       <a href="/api/download-all" style="font-size:13px">⬇ 완료분 전체 ZIP</a>
     </span>
   </div>
@@ -240,156 +217,108 @@ INDEX_HTML = r"""<!doctype html>
 </div>
 
 <script>
-let MODE='batch';
+let MODE='batch', TRACK='3d';
+function setTrack(t){TRACK=t;
+ document.getElementById('t3d').className=t==='3d'?'on':'';
+ document.getElementById('tfn').className=t==='func'?'on':'';
+ document.getElementById('form3d').style.display=t==='3d'?'block':'none';
+ document.getElementById('formFunc').style.display=t==='func'?'block':'none';}
 function setMode(m){MODE=m;
  document.getElementById('mBatch').className=m==='batch'?'on':'';
  document.getElementById('mView').className=m==='multiview'?'on':'';
  document.getElementById('mText').className=m==='text'?'on':'';
- const h={batch:'한 줄에 이미지 URL 1개 = 물체 1개. 여러 줄이면 각각 별도 제작.',
-  multiview:'같은 물체를 다른 각도로 찍은 2~4장. 합쳐서 정밀한 3D 1개.',
-  text:'한 줄에 설명 1개 = 굿즈 1개. 예: 요기보 캐릭터 키링, 단순한 형태'};
+ const h={batch:'한 줄에 이미지 URL 1개 = 물체 1개.',
+  multiview:'같은 물체 2~4장 → 정밀 3D 1개.',
+  text:'한 줄에 설명 1개. 예: 요기보 캐릭터 피규어'};
  document.getElementById('hint').textContent=h[m];
- document.getElementById('src').placeholder= m==='text'
-  ? '요기보 캐릭터 하트 키링, 두꺼운 벽\\n요기보 캐릭터 미니 피규어'
-  : 'https://.../productA.jpg';}
-async function loadPrinters(){
- try{const p=await (await fetch('/api/printers')).json();
-  const s=document.getElementById('prn');
-  for(const n of p.printers){const o=document.createElement('option');
-   o.value=n;o.textContent=n.toUpperCase();s.appendChild(o);}
-  if([...s.options].some(o=>o.value==='a1'))s.value='a1';
- }catch(e){}}
-async function submit(){
- const raw=document.getElementById('src').value;
- const srcs=raw.split(/\n/).map(s=>s.trim()).filter(Boolean);
- if(!srcs.length){alert('한 줄 이상 입력하세요');return;}
- if(MODE==='multiview'&&srcs.length>4){alert('멀티뷰는 최대 4장');return;}
- if((MODE==='batch'||MODE==='text')&&srcs.length>20){
-  alert('한 번에 최대 20개');return;}
- const b=document.getElementById('go');b.disabled=true;
- document.getElementById('msg').textContent='제출 중…';
- try{
-  const r=await fetch('/api/jobs',{method:'POST',
-   headers:{'Content-Type':'application/json'},
-   body:JSON.stringify({sources:srcs,mode:MODE,
-    material:document.getElementById('mat').value,
-    printer:document.getElementById('prn').value,
-    addon:document.getElementById('addon').value,
-    magnet_size:document.getElementById('magsize').value,
-    pause_at_pct:parseFloat(document.getElementById('pause').value)||0,
-    brand_type:document.getElementById('brandType').value,
-    brand_text:document.getElementById('brandText').value,
-    brand_icon:document.getElementById('brandIcon').value,
-    brand_size_mm:parseFloat(document.getElementById('brandSize').value)||25,
-    brand_depth_mm:parseFloat(document.getElementById('brandDepth').value)||0.6,
-    texture:document.getElementById('tex').checked,
-    precision:document.getElementById('prec').value,
-    remesh:document.getElementById('rem').checked,
-    flat:document.getElementById('flat').checked,
-    flat_size_mm:parseFloat(document.getElementById('flatSize').value)||50,
-    flat_thickness_mm:parseFloat(document.getElementById('flatTh').value)||3.5,
-    meshy_key:document.getElementById('key').value.trim(),
-    remove_bg:document.getElementById('bg').checked})});
-  const j=await r.json();
-  document.getElementById('msg').textContent= r.ok
-   ? (j.ids.length+'개 작업 대기열 등록 (워커가 순차 처리)')
-   : ('오류: '+(j.detail||r.status));
-  if(r.ok)document.getElementById('src').value='';
- }catch(e){document.getElementById('msg').textContent='오류: '+e;}
- b.disabled=false;refresh();}
+ document.getElementById('src').placeholder=m==='text'?'요기보 캐릭터 피규어':'https://.../productA.jpg';}
+function onBrandChange(){const t=document.getElementById('brandType').value;
+ document.getElementById('brandText').style.display=t==='text'?'block':'none';
+ document.getElementById('brandIcon').style.display=t==='icon'?'inline-block':'none';}
+function onProductChange(){
+ document.getElementById('fmagWrap').style.display=
+  document.getElementById('product').value==='magnet'?'block':'none';}
+async function loadPrinters(){try{const p=await (await fetch('/api/printers')).json();
+ for(const id of ['prn','fprn']){const s=document.getElementById(id);
+  for(const n of p.printers){const o=document.createElement('option');o.value=n;o.textContent=n.toUpperCase();s.appendChild(o);}
+  if([...s.options].some(o=>o.value==='a1'))s.value='a1';}}catch(e){}}
+function keyHdr(){const k=document.getElementById('key').value.trim();return k?{'X-Meshy-Key':k}:{};}
+function saveKey(){localStorage.setItem('meshy_key',document.getElementById('key').value.trim());}
+async function checkBal(){const c=await (await fetch('/api/credits',{headers:keyHdr()})).json();
+ document.getElementById('keyMsg').textContent=(c.meshy_balance==null)?'잔액 조회 실패 — 키 확인':('현재 잔액: '+c.meshy_balance);}
+async function post(body,msgEl,btn){btn.disabled=true;msgEl.textContent='제출 중…';
+ try{const r=await fetch('/api/jobs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const j=await r.json();msgEl.textContent=r.ok?(j.count+'개 대기열 등록'):('오류: '+(j.detail||r.status));
+ }catch(e){msgEl.textContent='오류: '+e;}btn.disabled=false;refresh();}
+function srcs(id){return document.getElementById(id).value.split(/\n/).map(s=>s.trim()).filter(Boolean);}
+async function submit3d(){const s=srcs('src');
+ if(!s.length){alert('입력하세요');return;}
+ if(MODE==='multiview'&&s.length>4){alert('멀티뷰 최대 4장');return;}
+ if(s.length>20){alert('최대 20개');return;}
+ await post({track:'3d',sources:s,mode:MODE,
+  material:document.getElementById('mat').value,printer:document.getElementById('prn').value,
+  addon:document.getElementById('addon').value,
+  texture:document.getElementById('tex').checked,remesh:document.getElementById('rem').checked,
+  precision:document.getElementById('prec').value,remove_bg:document.getElementById('bg').checked,
+  brand_type:document.getElementById('brandType').value,brand_text:document.getElementById('brandText').value,
+  brand_icon:document.getElementById('brandIcon').value,
+  meshy_key:document.getElementById('key').value.trim()},
+  document.getElementById('msg3d'),document.getElementById('go3d'));}
+async function submitFunc(){const s=srcs('fsrc');
+ if(!s.length){alert('이미지 URL을 입력하세요');return;}
+ if(s.length>20){alert('최대 20개');return;}
+ await post({track:'func',sources:s,mode:'batch',product:document.getElementById('product').value,
+  magnet_size:document.getElementById('fmagsize').value,
+  flat_size_mm:parseFloat(document.getElementById('fsize').value)||50,
+  flat_thickness_mm:parseFloat(document.getElementById('fth').value)||3.5,
+  material:document.getElementById('fmat').value,printer:document.getElementById('fprn').value,
+  remove_bg:document.getElementById('fbg').checked},
+  document.getElementById('msgFn'),document.getElementById('goFn'));}
 function badge(s){let c='b';if(s==='sliced'||s==='done')c+=' ok';
  else if(s.startsWith('failed'))c+=' no';else if(s!=='new')c+=' go';
- const t=s==='sliced'?'완료':s==='new'?'대기':s;
- return '<span class="'+c+'">'+t+'</span>';}
-async function refresh(){
- const j=await (await fetch('/api/jobs')).json();
+ const t=s==='sliced'?'완료':s==='new'?'대기':s;return '<span class="'+c+'">'+t+'</span>';}
+const SEL=new Set();
+function onSel(cb){cb.checked?SEL.add(cb.dataset.id):SEL.delete(cb.dataset.id);syncBulk();}
+function toggleAll(cb){document.querySelectorAll('.sel').forEach(x=>{x.checked=cb.checked;
+ x.checked?SEL.add(x.dataset.id):SEL.delete(x.dataset.id);});syncBulk();}
+function syncBulk(){const n=SEL.size;const b=document.getElementById('bulk');
+ b.disabled=!n;b.textContent=n?('선택 삭제 ('+n+')'):'선택 삭제';}
+async function bulkDelete(){const ids=[...SEL];if(!ids.length)return;
+ if(!confirm(ids.length+'개 삭제할까요?'))return;
+ await fetch('/api/jobs/bulk-delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids})});
+ SEL.clear();document.getElementById('all').checked=false;refresh();}
+async function refresh(){const j=await (await fetch('/api/jobs')).json();
  const tb=document.getElementById('tb');tb.innerHTML='';
  document.getElementById('empty').style.display=j.jobs.length?'none':'block';
  for(const x of j.jobs){
-  // 다운로드: 3MF + 변환 포맷
-  const links=[];
-  if(x.has_gcode)links.push('<a href="/api/download/'+x.id+'">3MF</a>');
-  for(const f of (x.model_formats||[]))
-   links.push('<a href="/api/model/'+x.id+'/'+f+'">'+f+'</a>');
-  const dl=links.length?links.join('<span class="sep">·</span>')
-   :'<span class="msg">—</span>';
+  const links=[];if(x.has_gcode)links.push('<a href="/api/download/'+x.id+'">3MF</a>');
+  for(const f of (x.model_formats||[]))links.push('<a href="/api/model/'+x.id+'/'+f+'">'+f+'</a>');
+  const dl=links.length?links.join('<span class="sep">·</span>'):'<span class="msg">—</span>';
   const m=(x.message||'').replace(/"/g,'&quot;');
-  const th='<img src="/api/thumb/'+x.id+'" class="thumb" '+
-   'onerror="this.style.visibility=\'hidden\'">';
+  const th='<img src="/api/thumb/'+x.id+'" class="thumb" onerror="this.style.visibility=\'hidden\'">';
   const ck=SEL.has(x.id)?' checked':'';
-  // 작업 셀: ID · 상태 · 진행 · 시각 (세로 스택)
   const job='<div class="jid">'+x.id.slice(0,8)+' '+badge(x.state)+'</div>'+
    '<div class="prog" title="'+m+'">'+m+'</div>'+
-   '<div class="msg">'+x.material+' · '+(x.printer||'auto')+
-   ' · '+x.created.slice(5,16).replace('T',' ')+'</div>';
-  // 옵션·크레딧 셀
-  const cr=x.credits>0?'<span class="b coin" title="'+
-   (x.credits_actual?'실측(잔액차)':'견적')+'">🪙'+x.credits+
-   (x.credits_actual?'':'~')+'</span>':'';
-  const op=(cr+(x.options||[]).map(s=>'<span class="b">'+s+'</span>').join(''))
-   ||'<span class="msg">—</span>';
-  // 관리 셀
+   '<div class="msg">'+x.material+' · '+(x.printer||'auto')+' · '+x.created.slice(5,16).replace('T',' ')+'</div>';
+  const cr=x.credits>0?'<span class="b coin" title="'+(x.credits_actual?'실측':'견적')+'">🪙'+x.credits+(x.credits_actual?'':'~')+'</span>':'';
+  const op=(cr+(x.options||[]).map(s=>'<span class="b">'+s+'</span>').join(''))||'<span class="msg">—</span>';
   const rt=x.can_retry?'<a href="#" title="재시도" onclick="retry(\''+x.id+'\');return false">↻</a>':'';
   const sh=x.has_gcode?'<a href="#" title="공유" onclick="share(\''+x.id+'\');return false">🔗</a>':'';
   const tr=document.createElement('tr');
-  tr.innerHTML='<td><input type="checkbox" class="sel" data-id="'+x.id+'"'+
-   ck+' onclick="onSel(this)"></td>'+
-   '<td>'+th+'</td><td>'+job+'</td><td>'+op+'</td>'+
-   '<td class="dlcell">'+dl+'</td>'+
-   '<td class="acts">'+rt+sh+
-   '<a href="#" title="삭제" onclick="del(\''+x.id+'\');return false">🗑</a></td>';
+  tr.innerHTML='<td><input type="checkbox" class="sel" data-id="'+x.id+'"'+ck+' onclick="onSel(this)"></td>'+
+   '<td>'+th+'</td><td>'+job+'</td><td>'+op+'</td><td class="dlcell">'+dl+'</td>'+
+   '<td class="acts">'+rt+sh+'<a href="#" title="삭제" onclick="del(\''+x.id+'\');return false">🗑</a></td>';
   tb.appendChild(tr);}
  syncBulk();
  const c=await (await fetch('/api/credits',{headers:keyHdr()})).json();
  const bal=(c.meshy_balance==null)?'키 입력 후 잔액 확인':c.meshy_balance.toLocaleString();
- document.getElementById('cred').innerHTML='<b>Meshy 잔액 '+bal+'</b>'+
-  ' · 월 견적 '+c.monthly_used+'/'+c.monthly_cap;}
-function keyHdr(){const k=document.getElementById('key').value.trim();
- return k?{'X-Meshy-Key':k}:{};}
-function saveKey(){localStorage.setItem('meshy_key',
- document.getElementById('key').value.trim());}
-async function checkBal(){
- const c=await (await fetch('/api/credits',{headers:keyHdr()})).json();
- document.getElementById('keyMsg').textContent=(c.meshy_balance==null)
-  ?'잔액 조회 실패 — 키를 확인하세요':('현재 잔액: '+c.meshy_balance);}
+ document.getElementById('cred').innerHTML='<b>Meshy 잔액 '+bal+'</b> · 월 견적 '+c.monthly_used+'/'+c.monthly_cap;}
 function share(id){const u=location.origin+'/share/'+id;
- navigator.clipboard.writeText(u).then(
-  ()=>alert('공유 링크 복사됨:\n'+u),()=>prompt('공유 링크:',u));}
-async function retry(id){
- await fetch('/api/jobs/'+id+'/retry',{method:'POST'});refresh();}
-async function del(id){
- if(!confirm('이 작업을 삭제할까요? (파일도 함께 삭제)'))return;
- await fetch('/api/jobs/'+id,{method:'DELETE'});SEL.delete(id);refresh();}
-const SEL=new Set();
-function onSel(cb){cb.checked?SEL.add(cb.dataset.id):SEL.delete(cb.dataset.id);
- syncBulk();}
-function toggleAll(cb){document.querySelectorAll('.sel').forEach(x=>{
- x.checked=cb.checked;x.checked?SEL.add(x.dataset.id):SEL.delete(x.dataset.id);});
- syncBulk();}
-function syncBulk(){const n=SEL.size;const b=document.getElementById('bulk');
- b.disabled=!n;b.textContent=n?('선택 삭제 ('+n+')'):'선택 삭제';}
-async function bulkDelete(){
- const ids=[...SEL];if(!ids.length)return;
- if(!confirm(ids.length+'개 작업을 삭제할까요? (파일도 함께 삭제)'))return;
- await fetch('/api/jobs/bulk-delete',{method:'POST',
-  headers:{'Content-Type':'application/json'},
-  body:JSON.stringify({ids:ids})});
- SEL.clear();document.getElementById('all').checked=false;refresh();}
-function onFlatChange(){const v=document.getElementById('flat').checked;
- document.getElementById('flatSizeWrap').style.display=v?'inline-block':'none';
- document.getElementById('flatThWrap').style.display=v?'inline-block':'none';}
-function onBrandChange(){const t=document.getElementById('brandType').value;
- document.getElementById('brandText').style.display=t==='text'?'block':'none';
- document.getElementById('brandIcon').style.display=t==='icon'?'inline-block':'none';}
-function onAddonChange(){const v=document.getElementById('addon').value;
- document.getElementById('magWrap').style.display=v==='magnet'?'flex':'none';
- const auto=(v==='magnet'||v==='nfc');
- document.getElementById('pauseHint').textContent=auto
-  ?'자석/NFC: 공동 위치에서 자동 일시정지 (이 값은 무시됨)'
-  :'0=없음. 50=출력 절반에서 정지';}
+ navigator.clipboard.writeText(u).then(()=>alert('공유 링크 복사됨:\n'+u),()=>prompt('공유 링크:',u));}
+async function retry(id){await fetch('/api/jobs/'+id+'/retry',{method:'POST'});refresh();}
+async function del(id){if(!confirm('삭제할까요?'))return;await fetch('/api/jobs/'+id,{method:'DELETE'});SEL.delete(id);refresh();}
 document.getElementById('key').value=localStorage.getItem('meshy_key')||'';
-loadPrinters();refresh();setInterval(refresh,3000);onFlatChange();
-onAddonChange();onBrandChange();
+loadPrinters();refresh();setInterval(refresh,3000);onProductChange();
 </script></body></html>"""
 
 
@@ -399,6 +328,8 @@ class BulkIds(BaseModel):
 
 class SubmitReq(BaseModel):
     sources: list[str]
+    track: str = "3d"            # 3d=Meshy 3D / func=기능 제품(평면)
+    product: str = "magnet"      # func일 때: magnet | nfc | keyring
     mode: str = "batch"          # batch=각 URL 별도 물체 / multiview=한 물체 다각도
     material: str = "pla"
     printer: str = "auto"
@@ -447,6 +378,13 @@ def create_app(cfg: AppConfig) -> FastAPI:
             raise HTTPException(400, "입력이 비어있음")
         printer = None if req.printer == "auto" else req.printer
 
+        # 기능 제품 트랙: Meshy 미사용 평면 패널 + 제품별 기능(공동/구멍)
+        if req.track == "func":
+            req.flat = True
+            req.mode = "batch"
+            req.addon = req.product   # magnet | nfc | keyring
+            req.remesh = False        # 평면은 리메시 불필요
+
         def mk(stype: SourceType, payload: dict) -> str:
             extras: dict = {}
             if req.texture:
@@ -459,7 +397,7 @@ def create_app(cfg: AppConfig) -> FastAPI:
                 extras["flat"] = True
                 extras["flat_size_mm"] = float(req.flat_size_mm)
                 extras["flat_thickness_mm"] = float(req.flat_thickness_mm)
-            if req.addon in ("keychain", "stand", "magnet", "nfc", "keycap"):
+            if req.addon in ("keychain", "stand", "magnet", "nfc", "keycap", "keyring"):
                 extras["addon"] = req.addon
                 if req.addon == "magnet":
                     extras["magnet_size"] = req.magnet_size
