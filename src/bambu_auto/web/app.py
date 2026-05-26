@@ -16,7 +16,9 @@ import shutil
 import zipfile
 from pathlib import Path
 
-from fastapi import FastAPI, Header, HTTPException
+import uuid
+
+from fastapi import FastAPI, File, Header, HTTPException, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from pydantic import BaseModel
 
@@ -135,7 +137,13 @@ INDEX_HTML = r"""<!doctype html>
     <button id="mText" onclick="setMode('text')">텍스트 → 3D</button>
   </div>
   <label class="fld" id="hint">한 줄에 이미지 URL 1개 = 물체 1개.</label>
-  <textarea id="src" rows="4" placeholder="https://.../productA.jpg"></textarea>
+  <textarea id="src" rows="4" placeholder="https://.../productA.jpg (이미지 직접 URL)"></textarea>
+  <div class="opts" style="margin-top:6px">
+    <label class="msg">또는 파일 첨부:
+      <input type="file" accept="image/*" multiple
+        onchange="upFiles(this,'up3d','up3dMsg')"></label>
+    <span id="up3dMsg" class="msg"></span>
+  </div>
   <div class="grid">
     <div><label class="fld">재질</label>
       <select id="mat"><option value="pla">PLA</option><option value="petg">PETG</option>
@@ -173,7 +181,13 @@ INDEX_HTML = r"""<!doctype html>
 
 <div id="formFunc" class="card" style="display:none">
   <p class="msg" style="margin:0 0 10px">이미지를 <b>평면 제품</b>으로 — Meshy 미사용·<b>크레딧 0</b>. 한 줄에 1개(배치).</p>
-  <textarea id="fsrc" rows="4" placeholder="https://.../character.png (배경 제거되는 캐릭터 이미지 권장)"></textarea>
+  <textarea id="fsrc" rows="4" placeholder="https://.../character.png (이미지 직접 URL)"></textarea>
+  <div class="opts" style="margin-top:6px">
+    <label class="msg">또는 파일 첨부:
+      <input type="file" accept="image/*" multiple
+        onchange="upFiles(this,'upFn','upFnMsg')"></label>
+    <span id="upFnMsg" class="msg"></span>
+  </div>
   <div class="grid">
     <div><label class="fld">제품</label>
       <select id="product" onchange="onProductChange()">
@@ -251,8 +265,17 @@ async function post(body,msgEl,btn){btn.disabled=true;msgEl.textContent='제출 
   const j=await r.json();msgEl.textContent=r.ok?(j.count+'개 대기열 등록'):('오류: '+(j.detail||r.status));
  }catch(e){msgEl.textContent='오류: '+e;}btn.disabled=false;refresh();}
 function srcs(id){return document.getElementById(id).value.split(/\n/).map(s=>s.trim()).filter(Boolean);}
-async function submit3d(){const s=srcs('src');
- if(!s.length){alert('입력하세요');return;}
+const UP={up3d:[],upFn:[]};
+async function upFiles(input,store,msgId){
+ const fs=input.files;if(!fs.length)return;
+ document.getElementById(msgId).textContent='업로드 중…';
+ const fd=new FormData();for(const f of fs)fd.append('files',f);
+ try{const r=await fetch('/api/upload',{method:'POST',body:fd});
+  const j=await r.json();UP[store]=(UP[store]||[]).concat(j.paths||[]);
+  document.getElementById(msgId).textContent=UP[store].length+'개 첨부됨';
+ }catch(e){document.getElementById(msgId).textContent='업로드 실패: '+e;}}
+async function submit3d(){const s=srcs('src').concat(UP.up3d);
+ if(!s.length){alert('URL 입력 또는 파일 첨부');return;}
  if(MODE==='multiview'&&s.length>4){alert('멀티뷰 최대 4장');return;}
  if(s.length>20){alert('최대 20개');return;}
  await post({track:'3d',sources:s,mode:MODE,
@@ -263,9 +286,10 @@ async function submit3d(){const s=srcs('src');
   brand_type:document.getElementById('brandType').value,brand_text:document.getElementById('brandText').value,
   brand_icon:document.getElementById('brandIcon').value,
   meshy_key:document.getElementById('key').value.trim()},
-  document.getElementById('msg3d'),document.getElementById('go3d'));}
-async function submitFunc(){const s=srcs('fsrc');
- if(!s.length){alert('이미지 URL을 입력하세요');return;}
+  document.getElementById('msg3d'),document.getElementById('go3d'));
+ UP.up3d=[];document.getElementById('up3dMsg').textContent='';}
+async function submitFunc(){const s=srcs('fsrc').concat(UP.upFn);
+ if(!s.length){alert('URL 입력 또는 파일 첨부');return;}
  if(s.length>20){alert('최대 20개');return;}
  await post({track:'func',sources:s,mode:'batch',product:document.getElementById('product').value,
   magnet_size:document.getElementById('fmagsize').value,
@@ -273,7 +297,8 @@ async function submitFunc(){const s=srcs('fsrc');
   flat_thickness_mm:parseFloat(document.getElementById('fth').value)||3.5,
   material:document.getElementById('fmat').value,printer:document.getElementById('fprn').value,
   remove_bg:document.getElementById('fbg').checked},
-  document.getElementById('msgFn'),document.getElementById('goFn'));}
+  document.getElementById('msgFn'),document.getElementById('goFn'));
+ UP.upFn=[];document.getElementById('upFnMsg').textContent='';}
 function badge(s){let c='b';if(s==='sliced'||s==='done')c+=' ok';
  else if(s.startsWith('failed'))c+=' no';else if(s!=='new')c+=' go';
  const t=s==='sliced'?'완료':s==='new'?'대기':s;return '<span class="'+c+'">'+t+'</span>';}
@@ -370,6 +395,24 @@ def create_app(cfg: AppConfig) -> FastAPI:
     @app.get("/api/printers")
     def printers() -> dict:
         return {"printers": list(cfg.printers.printers.keys())}
+
+    upload_dir = Path(cfg.settings.storage.data_dir) / "uploads"
+
+    @app.post("/api/upload")
+    async def upload(files: list[UploadFile] = File(...)) -> dict:
+        """이미지 파일 첨부 → 서버에 저장하고 절대경로 반환.
+        반환된 경로를 submit의 sources로 사용 (URL 대신 로컬 파일)."""
+        upload_dir.mkdir(parents=True, exist_ok=True)
+        paths: list[str] = []
+        for f in files:
+            ext = Path(f.filename or "img.png").suffix.lower()
+            if ext not in (".jpg", ".jpeg", ".png", ".webp"):
+                ext = ".png"
+            dst = upload_dir / f"{uuid.uuid4().hex}{ext}"
+            with dst.open("wb") as out:
+                shutil.copyfileobj(f.file, out)
+            paths.append(str(dst.resolve()))
+        return {"paths": paths}
 
     @app.post("/api/jobs")
     def submit(req: SubmitReq) -> dict:
