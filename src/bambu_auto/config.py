@@ -74,11 +74,18 @@ class RoutingConfig(BaseModel):
     rules: list[dict[str, Any]] = Field(default_factory=list)
 
 
+class WebConfig(BaseModel):
+    # False(기본·내부): 서버 .env 키 사용, 키 입력 선택.
+    # True(외부 배포): 각 사용자 BYO 키 필수, .env 폴백 없음.
+    byo_required: bool = False
+
+
 class Settings(BaseModel):
     storage: StorageConfig = StorageConfig()
     meshy: MeshyConfig = MeshyConfig()
     pipeline: PipelineConfig = PipelineConfig()
     routing: RoutingConfig = RoutingConfig()
+    web: WebConfig = WebConfig()
 
 
 class BudgetSaving(BaseModel):

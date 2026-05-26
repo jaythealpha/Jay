@@ -330,10 +330,11 @@ async function refresh(){const j=await (await fetch('/api/jobs')).json();
   const op=(cr+(x.options||[]).map(s=>'<span class="b">'+s+'</span>').join(''))||'<span class="msg">—</span>';
   const rt=x.can_retry?'<a href="#" title="재시도" onclick="retry(\''+x.id+'\');return false">↻</a>':'';
   const sh=x.has_gcode?'<a href="#" title="공유" onclick="share(\''+x.id+'\');return false">🔗</a>':'';
+  const tx=(TRACK==='3d'&&x.state==='sliced')?'<a href="#" title="텍스처 입히기" onclick="retexture(\''+x.id+'\');return false">🎨</a>':'';
   const tr=document.createElement('tr');
   tr.innerHTML='<td><input type="checkbox" class="sel" data-id="'+x.id+'"'+ck+' onclick="onSel(this)"></td>'+
    '<td>'+th+'</td><td>'+job+'</td><td>'+op+'</td><td class="dlcell">'+dl+'</td>'+
-   '<td class="acts">'+rt+sh+'<a href="#" title="삭제" onclick="del(\''+x.id+'\');return false">🗑</a></td>';
+   '<td class="acts">'+tx+rt+sh+'<a href="#" title="삭제" onclick="del(\''+x.id+'\');return false">🗑</a></td>';
   tb.appendChild(tr);}
  syncBulk();
  const c=await (await fetch('/api/credits',{headers:keyHdr()})).json();
@@ -342,14 +343,27 @@ async function refresh(){const j=await (await fetch('/api/jobs')).json();
 function share(id){const u=location.origin+'/share/'+id;
  navigator.clipboard.writeText(u).then(()=>alert('공유 링크 복사됨:\n'+u),()=>prompt('공유 링크:',u));}
 async function retry(id){await fetch('/api/jobs/'+id+'/retry',{method:'POST'});refresh();}
+async function retexture(id){
+ const p=prompt('텍스처 설명 (예: 광택 파스텔 컬러, 만화풍):');
+ if(!p)return;
+ const h=Object.assign({'Content-Type':'application/json'},keyHdr());
+ const r=await fetch('/api/jobs/'+id+'/retexture',{method:'POST',headers:h,body:JSON.stringify({prompt:p})});
+ const j=await r.json();
+ if(!r.ok)alert('오류: '+(j.detail||r.status));refresh();}
 async function del(id){if(!confirm('삭제할까요?'))return;await fetch('/api/jobs/'+id,{method:'DELETE'});SEL.delete(id);refresh();}
 document.getElementById('key').value=localStorage.getItem('meshy_key')||'';
+fetch('/api/config').then(r=>r.json()).then(c=>{if(c.byo_required)
+ document.getElementById('keyMsg').textContent='⚠ 본인 Meshy 키 입력 필수 (외부 배포 모드)';});
 loadPrinters();refresh();setInterval(refresh,3000);onProductChange();
 </script></body></html>"""
 
 
 class BulkIds(BaseModel):
     ids: list[str]
+
+
+class RetextureReq(BaseModel):
+    prompt: str
 
 
 class SubmitReq(BaseModel):
@@ -397,6 +411,10 @@ def create_app(cfg: AppConfig) -> FastAPI:
     def printers() -> dict:
         return {"printers": list(cfg.printers.printers.keys())}
 
+    @app.get("/api/config")
+    def webconfig() -> dict:
+        return {"byo_required": cfg.settings.web.byo_required}
+
     upload_dir = Path(cfg.settings.storage.data_dir) / "uploads"
 
     @app.post("/api/upload")
@@ -421,6 +439,11 @@ def create_app(cfg: AppConfig) -> FastAPI:
         if not srcs:
             raise HTTPException(400, "입력이 비어있음")
         printer = None if req.printer == "auto" else req.printer
+
+        # 외부 배포(BYO 필수) 모드: 3D 트랙(Meshy 사용)은 키 필수
+        if (req.track == "3d" and cfg.settings.web.byo_required
+                and not req.meshy_key.strip()):
+            raise HTTPException(400, "본인 Meshy API 키가 필요합니다 (외부 배포 모드)")
 
         # 기능 제품 트랙: Meshy 미사용 평면 패널 + 제품별 기능(공동/구멍)
         if req.track == "func":
@@ -606,7 +629,9 @@ def create_app(cfg: AppConfig) -> FastAPI:
 
         from bambu_auto.services.meshy.client import MeshyClient
 
-        key = (api_key or "").strip() or cfg.secrets.meshy_api_key
+        # BYO 필수 모드면 .env 폴백 금지 (사용자 키만)
+        fallback = "" if cfg.settings.web.byo_required else cfg.secrets.meshy_api_key
+        key = (api_key or "").strip() or fallback
         if not key:
             return None
         # BYO 키는 캐시 안 함(사용자별로 다름). 서버 키만 60초 캐시.
@@ -711,6 +736,31 @@ def create_app(cfg: AppConfig) -> FastAPI:
                 (JobState.NEW.value, job_id))
         worker.last_message.pop(job_id, None)
         return {"id": job_id, "state": "new"}
+
+    @app.post("/api/jobs/{job_id}/retexture")
+    def retexture(job_id: str, req: RetextureReq,
+                  x_meshy_key: str = Header(default="")) -> dict:
+        with db.connect() as conn:
+            r = conn.execute(
+                "SELECT meshy_task_id, material, target_printer FROM jobs "
+                "WHERE id=?", (job_id,)).fetchone()
+        if not r:
+            raise HTTPException(404, "작업 없음")
+        if not r["meshy_task_id"]:
+            raise HTTPException(
+                400, "Meshy 작업이 없는 항목입니다 (평면/외부파일은 Meshy 웹앱 이용)")
+        if not req.prompt.strip():
+            raise HTTPException(400, "텍스처 설명을 입력하세요")
+        job = Job(
+            source_type=SourceType.IMAGE,
+            source_payload={"retexture_task_id": r["meshy_task_id"],
+                            "texture_prompt": req.prompt.strip(), "track": "3d"},
+            material=r["material"], target_printer=r["target_printer"])
+        repo.save(job)
+        key = (x_meshy_key or "").strip()
+        if key:
+            worker.job_keys[job.id] = key
+        return {"id": job.id, "state": "new"}
 
     def _delete_one(job_id: str) -> None:
         with db.connect() as conn:

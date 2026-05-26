@@ -31,3 +31,6 @@ routing:
     - if: { material: [abs, asa, petg] }
       use: p2s
     - default: a1            # 기본 A1 (P2S는 명시 선택 또는 ABS/ASA/PETG시)
+
+web:
+  byo_required: false          # false=서버 .env 키 사용(내부). true=사용자 BYO 키 필수(외부 배포)

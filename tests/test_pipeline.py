@@ -60,6 +60,10 @@ class FakeMeshy:
         self.remeshed = True
         return ("task_fake_remesh", 1)
 
+    def retexture(self, job_id, input_task_id, prompt):
+        self.retextured = True
+        return ("task_fake_retex", 1)
+
     def wait_for_completion(self, task_id, kind="image-to-3d"):
         return {"id": task_id, "status": "SUCCEEDED",
                 "model_urls": {"stl": "https://example.com/m.stl"}}
@@ -173,6 +177,17 @@ def test_remesh_runs_by_default(cfg: AppConfig) -> None:
     pipe.run(job, FakeImageAdapter())
     assert job.state == JobState.SLICED
     assert getattr(pipe.meshy, "remeshed", False) is True  # 리메시 호출됨
+
+
+def test_retexture_uses_existing_task(cfg: AppConfig) -> None:
+    pipe, _ = _pipeline(cfg)
+    job = Job(source_type=SourceType.IMAGE,
+              source_payload={"retexture_task_id": "orig_task",
+                              "texture_prompt": "광택 파스텔"}, material="pla")
+    pipe.run(job, FakeImageAdapter())  # adapter 미사용(재텍스처 분기)
+    assert job.state == JobState.SLICED
+    assert getattr(pipe.meshy, "retextured", False) is True
+    assert job.meshy_task_id == "task_fake_retex"
 
 
 def test_routing_abs_goes_to_p2s(cfg: AppConfig) -> None:

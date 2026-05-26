@@ -32,6 +32,8 @@ class MeshyPort(Protocol):
                            prompt: str) -> tuple[str, int]: ...
     def remesh(self, job_id: str,
                input_task_id: str) -> tuple[str, int]: ...
+    def retexture(self, job_id: str, input_task_id: str,
+                  prompt: str) -> tuple[str, int]: ...
     def wait_for_completion(self, task_id: str, kind: str = "image-to-3d") -> dict: ...
     def download_model(self, task_data: dict, dest_dir: Path, prefer: str = "glb") -> Path: ...
     def download_all_models(self, task_data: dict, dest_dir: Path) -> dict: ...
@@ -60,11 +62,16 @@ class Pipeline:
 
     def run(self, job: Job, adapter: SourceAdapter) -> Job:
         work = self.assets / job.id
+        payload = job.source_payload or {}
         try:
-            self._notify("[1/5] 소스 준비 중 (이미지 다운로드)…")
-            prepared = self._prepare(job, adapter, work)
-            self._notify("[2/5] Meshy 3D 생성 중 (1~5분 소요, 폴링)…")
-            model_path = self._generate(job, prepared, work)
+            if payload.get("retexture_task_id"):
+                self._notify("[1/4] Meshy 재텍스처 중…")
+                model_path = self._retexture(job, work)
+            else:
+                self._notify("[1/5] 소스 준비 중 (이미지 다운로드)…")
+                prepared = self._prepare(job, adapter, work)
+                self._notify("[2/5] Meshy 3D 생성 중 (1~5분 소요, 폴링)…")
+                model_path = self._generate(job, prepared, work)
             self._notify("[3/5] mesh 리페어 중…")
             report = self._repair(job, Path(model_path), work)
             self._addon(job, report, work)
@@ -207,6 +214,30 @@ class Pipeline:
             return int(b) if isinstance(b, (int, float)) else None
         except Exception:  # noqa: BLE001
             return None
+
+    def _retexture(self, job: Job, work: Path) -> str:
+        """기존 Meshy 작업에 새 텍스처를 입혀 컬러 모델 생성."""
+        payload = job.source_payload or {}
+        tid = payload["retexture_task_id"]
+        prompt = payload.get("texture_prompt", "")
+        bal_before = self._safe_balance()
+        try:
+            rt_id, _ = self.meshy.retexture(job.id, tid, prompt)
+            job.meshy_task_id = rt_id
+            self.repo.set_state(job, JobState.MESHY_QUEUED)
+            data = self.meshy.wait_for_completion(rt_id, kind="retexture")
+            models = self.meshy.download_all_models(data, work / "model")
+            model_path = (models.get("stl") or models.get("glb")
+                          or next(iter(models.values())))
+            job.model_path = str(model_path)
+            bal_after = self._safe_balance()
+            if bal_before is not None and bal_after is not None:
+                self.repo.set_actual_credits(job.id, max(0, bal_before - bal_after))
+            self.repo.set_state(job, JobState.MESHY_COMPLETE)
+            return str(model_path)
+        except Exception as e:
+            self.repo.set_state(job, JobState.FAILED_MESHY, error=str(e))
+            raise
 
     def _copy_cached_models(self, cached_model_path: str, work: Path) -> str:
         """캐시 히트 시 원본 job의 모델 파일(전 포맷)을 현재 job 폴더로 복사.
@@ -393,9 +424,42 @@ class Pipeline:
                     done.append(ext)
                 except Exception:  # noqa: BLE001
                     continue
+
+            # 평면 제품: 원본 이미지를 윗면에 컬러 텍스처로 입혀 GLB/OBJ 재출력
+            # → 단색이라 뭔지 모르던 문제 해소 (컬러 미리보기/AMS용).
+            if (job.source_payload or {}).get("flat"):
+                if self._apply_flat_texture(mesh, work, ddir, stem):
+                    done.append("glb(컬러)")
             self._notify(f"  포맷 변환: {', '.join(done) or '실패'}")
         except Exception as e:  # noqa: BLE001
             self._notify(f"  ⚠ 포맷 변환 건너뜀: {e}")
+
+    def _apply_flat_texture(self, mesh, work: Path, ddir: Path, stem: str) -> bool:
+        """평면 메쉬 윗면에 원본 이미지를 평면투영 UV 텍스처로 입혀
+        컬러 GLB/OBJ 저장. 성공 시 True."""
+        try:
+            import numpy as np
+            import trimesh
+            from PIL import Image
+
+            src = work / "source"
+            imgs = sorted(src.rglob("input*")) if src.exists() else []
+            if not imgs:
+                return False
+            img = Image.open(imgs[-1]).convert("RGBA")  # 배경제거본 우선(나중 생성)
+            bmin, bmax = mesh.bounds
+            dx = (bmax[0] - bmin[0]) or 1.0
+            dy = (bmax[1] - bmin[1]) or 1.0
+            v = mesh.vertices
+            uv = np.column_stack([(v[:, 0] - bmin[0]) / dx,
+                                  (v[:, 1] - bmin[1]) / dy])
+            tex = mesh.copy()
+            tex.visual = trimesh.visual.TextureVisuals(uv=uv, image=img)
+            tex.export(ddir / f"{stem}.glb")
+            tex.export(ddir / f"{stem}.obj")
+            return True
+        except Exception:  # noqa: BLE001
+            return False
 
     def _route(self, job: Job, report: MeshReport) -> None:
         ctx = RouteContext(material=job.material,

@@ -34,6 +34,7 @@ EP_IMAGE_TO_3D = "/openapi/v1/image-to-3d"
 EP_MULTI_IMAGE_TO_3D = "/openapi/v1/multi-image-to-3d"
 EP_TEXT_TO_3D = "/openapi/v2/text-to-3d"
 EP_REMESH = "/openapi/v1/remesh"
+EP_RETEXTURE = "/openapi/v1/retexture"
 EP_BALANCE = "/openapi/v1/balance"
 
 
@@ -216,6 +217,40 @@ class MeshyClient:
             self.guard.refund(ledger_id, reason=f"submit_failed: {e}")
             raise
 
+    def retexture(
+        self,
+        job_id: str,
+        input_task_id: str,
+        prompt: str,
+        ai_model: str | None = None,
+    ) -> tuple[str, int]:
+        """완료된 Meshy 작업에 새 텍스처를 입힘 (Text-to-Texture).
+        input_task_id = 기존 image/text/remesh 작업 ID."""
+        ai_model = ai_model or self.config.image_ai_model
+        ledger_id = self.guard.reserve(job_id, "texturing",
+                                       note=f"retexture of {input_task_id}")
+        try:
+            resp = self._post(
+                EP_RETEXTURE,
+                {
+                    "input_task_id": input_task_id,
+                    "text_style_prompt": prompt,
+                    "enable_pbr": True,
+                    "ai_model": ai_model,
+                    "target_formats": ["glb", "obj", "stl"],
+                },
+            )
+            task_id = resp.get("result") or resp.get("id") or resp.get("task_id")
+            if not task_id:
+                raise MeshyError(f"Unexpected response: {resp}")
+            self.guard.commit(ledger_id, meshy_task_id=task_id)
+            return task_id, ledger_id
+        except BudgetExceeded:
+            raise
+        except Exception as e:
+            self.guard.refund(ledger_id, reason=f"submit_failed: {e}")
+            raise
+
     def balance(self) -> dict[str, Any]:
         """현재 크레딧 잔액 조회 (크레딧 소비 없음)."""
         return self._get(EP_BALANCE)
@@ -226,6 +261,7 @@ class MeshyClient:
             "text-to-3d": EP_TEXT_TO_3D,
             "multi-image-to-3d": EP_MULTI_IMAGE_TO_3D,
             "remesh": EP_REMESH,
+            "retexture": EP_RETEXTURE,
         }.get(kind, EP_IMAGE_TO_3D)
         return self._get(f"{base}/{task_id}")
 
