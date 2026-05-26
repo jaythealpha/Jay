@@ -236,7 +236,7 @@ function setTrack(t){TRACK=t;
  document.getElementById('t3d').className=t==='3d'?'on':'';
  document.getElementById('tfn').className=t==='func'?'on':'';
  document.getElementById('form3d').style.display=t==='3d'?'block':'none';
- document.getElementById('formFunc').style.display=t==='func'?'block':'none';}
+ document.getElementById('formFunc').style.display=t==='func'?'block':'none';refresh();}
 function setMode(m){MODE=m;
  document.getElementById('mBatch').className=m==='batch'?'on':'';
  document.getElementById('mView').className=m==='multiview'?'on':'';
@@ -314,8 +314,9 @@ async function bulkDelete(){const ids=[...SEL];if(!ids.length)return;
  SEL.clear();document.getElementById('all').checked=false;refresh();}
 async function refresh(){const j=await (await fetch('/api/jobs')).json();
  const tb=document.getElementById('tb');tb.innerHTML='';
- document.getElementById('empty').style.display=j.jobs.length?'none':'block';
- for(const x of j.jobs){
+ const rows=j.jobs.filter(x=>(x.track||'3d')===TRACK);
+ document.getElementById('empty').style.display=rows.length?'none':'block';
+ for(const x of rows){
   const links=[];if(x.has_gcode)links.push('<a href="/api/download/'+x.id+'">3MF</a>');
   for(const f of (x.model_formats||[]))links.push('<a href="/api/model/'+x.id+'/'+f+'">'+f+'</a>');
   const dl=links.length?links.join('<span class="sep">·</span>'):'<span class="msg">—</span>';
@@ -429,7 +430,7 @@ def create_app(cfg: AppConfig) -> FastAPI:
             req.remesh = False        # 평면은 리메시 불필요
 
         def mk(stype: SourceType, payload: dict) -> str:
-            extras: dict = {}
+            extras: dict = {"track": req.track}
             if req.texture:
                 extras["texture"] = True
             if req.precision == "high":
@@ -578,6 +579,10 @@ def create_app(cfg: AppConfig) -> FastAPI:
 
         def jobrow(r):
             cval, is_actual = credit_by_job(r["id"])
+            try:
+                pl = json.loads(r["source_payload"] or "{}")
+            except Exception:  # noqa: BLE001
+                pl = {}
             return {
                 "id": r["id"], "state": r["state"], "material": r["material"],
                 "printer": r["target_printer"],
@@ -589,6 +594,7 @@ def create_app(cfg: AppConfig) -> FastAPI:
                 "model_formats": model_formats(r["id"]),
                 "credits": cval,
                 "credits_actual": is_actual,
+                "track": pl.get("track", "3d"),  # 미태깅 기존작업 = 3D 세션
             }
         return {"jobs": [jobrow(r) for r in rows]}
 
