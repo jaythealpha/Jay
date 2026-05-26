@@ -14,10 +14,8 @@ dist/
 # uv
 .uv/
 
-# Project data
-data/jobs.db
-data/jobs.db-journal
-data/assets/
+# Project data (런타임 산출물 — DB·생성물·업로드 전부 제외)
+data/
 
 # IDE
 .vscode/
