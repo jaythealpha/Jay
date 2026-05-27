@@ -199,25 +199,11 @@ def build_multicolor(
 
     # feature 적용: 키링은 베이스에 고리 탭 '추가'(캐릭터 온전), 공동은 차감
     cx = (bmin[0] + bmax[0]) / 2
-    cz = (bmin[2] + bmax[2]) / 2
     if feature and feature.get("kind") == "hole":
-        d = 5.0
-        r = d / 2 + 2.5
-        cy = bmax[1] + r - min(3.0, r)
-        outer = trimesh.creation.cylinder(radius=r, height=thickness_mm)
-        outer.apply_translation([cx, cy, cz])
-        hole = trimesh.creation.cylinder(radius=d / 2, height=thickness_mm + 2)
-        hole.apply_translation([cx, cy, cz])
-        ring = None
-        for eng in ("manifold", None):
-            try:
-                kw = {"engine": eng} if eng else {}
-                ring = trimesh.boolean.difference([outer, hole], **kw)
-                if ring is not None and not ring.is_empty:
-                    break
-            except Exception:  # noqa: BLE001
-                continue
-        if ring is not None and not ring.is_empty:
+        from bambu_auto.services.mesh.addons import _keyring_ring
+
+        ring = _keyring_ring(parts[0][0], hole_d=3.0, wall=2.0)
+        if ring is not None:
             for eng in ("manifold", None):
                 try:
                     kw = {"engine": eng} if eng else {}

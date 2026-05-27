@@ -134,37 +134,57 @@ def add_nfc_cavity(stl_in: Path, stl_out: Path,
                              clearance_d=0.0, clearance_h=0.2)
 
 
-def add_keyring_tab(stl_in: Path, stl_out: Path,
-                    hole_d: float = 5.0, wall: float = 2.5) -> dict:
-    """캐릭터 상단에 고리 탭(구멍 뚫린 링)을 '덧붙임'. 캐릭터 몸통은
-    온전하게 두고 고리만 위로 돌출 → 미관 양호. 반환 {ok, method}."""
+def _keyring_ring(mesh, hole_d: float = 3.0, wall: float = 2.0):
+    """캐릭터 메쉬의 '상단에서 재질이 가장 많은 지점'에 고리(구멍 뚫린 링)를
+    깊게 겹쳐 부착하도록 위치시킨 ring 메쉬 반환. (중앙 빈공간 부착 방지)"""
+    import numpy as np
     import trimesh
 
-    mesh = trimesh.load(stl_in, force="mesh")
+    v = mesh.vertices
     bmin, bmax = mesh.bounds
-    cx = (bmin[0] + bmax[0]) / 2
     cz = (bmin[2] + bmax[2]) / 2
-    thick = float(bmax[2] - bmin[2])
+    height = bmax[1] - bmin[1]
     r = hole_d / 2 + wall
-    overlap = min(3.0, r)                 # 패널과 겹쳐 확실히 융합
-    cy = bmax[1] + r - overlap            # 대부분 위로 돌출
-    outer = trimesh.creation.cylinder(radius=r, height=thick)
-    outer.apply_translation([cx, cy, cz])
-    hole = trimesh.creation.cylinder(radius=hole_d / 2, height=thick + 2)
-    hole.apply_translation([cx, cy, cz])
 
-    ring = None
+    # 상단 밴드(위 12%)에서 x 히스토그램 피크 → 재질 많은 부착 x
+    band = v[v[:, 1] >= bmax[1] - max(0.12 * height, r)]
+    if len(band) == 0:
+        band = v
+    hist, edges = np.histogram(band[:, 0], bins=24)
+    bi = int(hist.argmax())
+    attach_x = (edges[bi] + edges[bi + 1]) / 2
+    # 그 x 컬럼 부근의 실제 상단 y (표면)
+    near = v[np.abs(v[:, 0] - attach_x) <= r]
+    local_top = float(near[:, 1].max()) if len(near) else float(bmax[1])
+    embed = min(r * 1.4, 4.5)            # 본체에 깊게 박아 자연스럽게 융합
+    cy = local_top - embed + r
+
+    outer = trimesh.creation.cylinder(radius=r, height=max(bmax[2] - bmin[2], 1))
+    outer.apply_translation([attach_x, cy, cz])
+    hole = trimesh.creation.cylinder(radius=hole_d / 2,
+                                     height=(bmax[2] - bmin[2]) + 2)
+    hole.apply_translation([attach_x, cy, cz])
     for eng in ("manifold", None):
         try:
             kw = {"engine": eng} if eng else {}
             ring = trimesh.boolean.difference([outer, hole], **kw)
             if ring is not None and not ring.is_empty:
-                break
+                return ring
         except Exception:  # noqa: BLE001
             continue
-    if ring is None or ring.is_empty:
-        return {"ok": False, "method": "ring_failed"}
+    return None
 
+
+def add_keyring_tab(stl_in: Path, stl_out: Path,
+                    hole_d: float = 3.0, wall: float = 2.0) -> dict:
+    """캐릭터 상단(재질 많은 지점)에 고리 탭을 깊게 겹쳐 '추가'. 캐릭터
+    몸통은 온전, 고리가 자연스럽게 이어짐. 반환 {ok, method}."""
+    import trimesh
+
+    mesh = trimesh.load(stl_in, force="mesh")
+    ring = _keyring_ring(mesh, hole_d, wall)
+    if ring is None:
+        return {"ok": False, "method": "ring_failed"}
     for eng in ("manifold", None):
         try:
             kw = {"engine": eng} if eng else {}
@@ -174,7 +194,6 @@ def add_keyring_tab(stl_in: Path, stl_out: Path,
                 return {"ok": True, "method": "keyring_tab"}
         except Exception:  # noqa: BLE001
             continue
-    # union 실패 시 concat 폴백 (겹쳐 있어 슬라이서가 한 몸으로 인식)
     try:
         trimesh.util.concatenate([mesh, ring]).export(stl_out)
         return {"ok": True, "method": "keyring_tab(concat)"}
