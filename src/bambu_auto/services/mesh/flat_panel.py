@@ -102,11 +102,14 @@ def build_multicolor(
     thickness_mm: float = 3.5,
     n_colors: int = 4,
     feature: dict | None = None,
+    inlay_mm: float = 0.8,
 ) -> list[str]:
-    """전경 색을 k-means로 분석해 색 영역별 파트를 마스크에서 직접 압출.
-    색상별 STL(_c1..) + 컬러 GLB/OBJ + palette.json 생성. 팔레트 hex 반환.
+    """단단한 베이스 판(전체 실루엣) + 그 위에 깨끗한 색 영역을 얇게 올린
+    '단일' 컬러 오브젝트 생성. 흩어지지 않고 견고하며 출력 가능.
 
-    feature: {"kind":"hole"} 또는 {"kind":"cavity","d":..,"h":..} → 각 파트에 적용.
+    - 컬러 3MF/GLB/OBJ: 베이스+인레이를 하나로 묶은 컬러 오브젝트
+    - palette.json: 추천 색
+    feature: {"kind":"hole"} | {"kind":"cavity","d":,"h":} → 최종 형상에 적용
     """
     import json
 
@@ -118,116 +121,126 @@ def build_multicolor(
     img = Image.open(image_path).convert("RGBA")
     arr = np.array(img)
     alpha = arr[:, :, 3]
-    rgb = arr[:, :, :3]
     gray = np.array(img.convert("L"))
     sil = (gray < 245) if int(alpha.min()) == 255 else (alpha > 128)
     if not sil.any():
         return []
+    # 잡티 줄이려 약한 블러 후 색 분석
+    rgb = cv2.medianBlur(arr[:, :, :3], 5)
 
     H, W = sil.shape
     scale = size_mm / max(H, W)
+    sil_area = int(sil.sum())
+    min_area_px = max(60, int(sil_area * 0.01))  # 1% 미만 색조각 제거
 
-    # 전경 픽셀만으로 대표색 추출 (배경 제외 → 탁한 팔레트 방지)
-    fg = rgb[sil].astype(float)
-    centers, _ = _kmeans(fg, n_colors)
-    if len(centers) == 0:
-        return []
-    # 거의 같은 색 병합 (perceptual 거리 < 28)
+    # 전경 대표색 (빈도순 정렬: 가장 많은 색 = 베이스)
+    # 거친 색 히스토그램: 전경 색을 ~40 단위로 양자화 후 빈도 상위 distinct N개.
+    # k-means가 큰 영역에 쏠려 작은 색을 놓치는 문제 회피 (색면 일러스트에 정확).
+    fg = rgb[sil].astype(int)
+    q = np.clip((fg // 40) * 40 + 20, 0, 255)
+    keys, cnts = np.unique(q.reshape(-1, 3), axis=0, return_counts=True)
+    bo = np.argsort(-cnts)
     keep: list = []
-    for c in centers:
-        if all(np.sqrt(((c - k) ** 2).sum()) > 28 for k in keep):
+    for i in bo:
+        c = keys[i].astype(float)
+        if all(np.sqrt(((c - k) ** 2).sum()) > 45 for k in keep):
             keep.append(c)
+        if len(keep) >= n_colors:
+            break
+    if not keep:
+        return []
     palette = np.array(keep)
 
-    # 전체 픽셀을 팔레트 최근접으로 라벨
     flat_rgb = rgb.reshape(-1, 3).astype(float)
     lab = np.argmin(((flat_rgb[:, None, :] - palette[None, :, :]) ** 2).sum(2),
                     axis=1).reshape(H, W)
+    counts = [int(((lab == i) & sil).sum()) for i in range(len(palette))]
+    order = sorted(range(len(palette)), key=lambda i: -counts[i])  # 베이스=최다
 
-    # 전체 실루엣 bounds (feature 위치 계산용) — 실루엣 압출로 산출
-    sil_polys = _mask_to_polygons((sil.astype("uint8")) * 255, scale)
-    if not sil_polys:
+    def clean(mask):
+        m = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, np.ones((5, 5), np.uint8))
+        m = cv2.morphologyEx(m, cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
+        nlab, lbl, stats, _ = cv2.connectedComponentsWithStats(m, 8)
+        out = np.zeros_like(m)
+        for k in range(1, nlab):
+            if stats[k, cv2.CC_STAT_AREA] >= min_area_px:
+                out[lbl == k] = 255
+        return out
+
+    # 베이스: 전체 실루엣(단단한 판), 색 = 최다색
+    base_polys = _mask_to_polygons((sil.astype("uint8")) * 255, scale)
+    if not base_polys:
         return []
-    base = _polygons_to_mesh(sil_polys, thickness_mm)
+    base = _polygons_to_mesh(base_polys, thickness_mm)
     if base is None:
         return []
-    bmin, bmax = base.bounds
+    base_color = tuple(int(x) for x in palette[order[0]])
 
+    bmin, bmax = base.bounds
+    palette_hex = ["#%02x%02x%02x" % base_color]
+    parts = [(base, base_color)]
+
+    # 인레이: 나머지 색을 베이스 윗면에 얇게 (깨끗한 마스크만)
+    for idx in order[1:]:
+        mask = ((lab == idx) & sil).astype("uint8") * 255
+        mask = clean(mask)
+        if int(mask.max()) == 0:
+            continue
+        polys = _mask_to_polygons(mask, scale)
+        if not polys:
+            continue
+        inlay = _polygons_to_mesh(polys, inlay_mm)
+        if inlay is None:
+            continue
+        inlay.apply_translation([0, 0, thickness_mm - 0.01])  # 윗면에 올림
+        col = tuple(int(x) for x in palette[idx])
+        parts.append((inlay, col))
+        palette_hex.append("#%02x%02x%02x" % col)
+
+    # feature(구멍/공동) 적용: 베이스에만
     def feat_cyl():
         if not feature:
             return None
         cx = (bmin[0] + bmax[0]) / 2
         if feature.get("kind") == "hole":
             d = 5.0
-            top_y = bmax[1] - 4.0 - d / 2
-            cyl = trimesh.creation.cylinder(radius=d / 2,
-                                            height=thickness_mm + 2)
-            cyl.apply_translation([cx, top_y, (bmin[2] + bmax[2]) / 2])
+            cyl = trimesh.creation.cylinder(radius=d / 2, height=thickness_mm + 2)
+            cyl.apply_translation([cx, bmax[1] - 4.0 - d / 2,
+                                   (bmin[2] + bmax[2]) / 2])
             return cyl
         if feature.get("kind") == "cavity":
             d = float(feature.get("d", 5)) + 0.4
             h = float(feature.get("h", 2)) + 0.2
-            cy = (bmin[1] + bmax[1]) / 2
             cyl = trimesh.creation.cylinder(radius=d / 2, height=h)
-            cyl.apply_translation([cx, cy, bmin[2] + h / 2 - 0.05])
+            cyl.apply_translation([cx, (bmin[1] + bmax[1]) / 2,
+                                   bmin[2] + h / 2 - 0.05])
             return cyl
         return None
 
     fcyl = feat_cyl()
-
-    def sub_feat(part):
-        if fcyl is None:
-            return part
+    if fcyl is not None:
         for eng in ("manifold", None):
             try:
                 kw = {"engine": eng} if eng else {}
-                out = trimesh.boolean.difference([part, fcyl.copy()], **kw)
-                if out is not None and not out.is_empty:
-                    return out
+                cut = trimesh.boolean.difference([parts[0][0], fcyl], **kw)
+                if cut is not None and not cut.is_empty:
+                    parts[0] = (cut, parts[0][1])
+                    break
             except Exception:  # noqa: BLE001
                 continue
-        return part
 
-    palette_hex: list[str] = []
-    combined = []
-    for i, color in enumerate(palette):
-        mask_i = ((lab == i) & sil).astype("uint8") * 255
-        if int(mask_i.max()) == 0:
-            continue
-        # 노이즈 정리(작은 점 제거)
-        mask_i = cv2.morphologyEx(mask_i, cv2.MORPH_OPEN,
-                                  np.ones((3, 3), np.uint8))
-        polys = _mask_to_polygons(mask_i, scale)
-        if not polys:
-            continue
-        part = _polygons_to_mesh(polys, thickness_mm)
-        if part is None:
-            continue
-        part = sub_feat(part)
-        rgbc = tuple(int(x) for x in color)
-        n = len(palette_hex) + 1
-        part.visual = trimesh.visual.ColorVisuals(
-            face_colors=np.tile([*rgbc, 255], (len(part.faces), 1)))
-        part.export(ddir / f"{stem}_c{n}.stl")
-        combined.append(part)
-        palette_hex.append("#%02x%02x%02x" % rgbc)
-
-    if not combined:
-        return []
-    merged = trimesh.util.concatenate(combined)
+    # 색을 입혀 하나의 오브젝트로 합침 (흩어짐 방지)
+    colored = []
+    for mesh, col in parts:
+        mesh.visual = trimesh.visual.ColorVisuals(
+            face_colors=np.tile([*col, 255], (len(mesh.faces), 1)))
+        colored.append(mesh)
+    merged = trimesh.util.concatenate(colored)
     merged.export(ddir / f"{stem}.glb")
     merged.export(ddir / f"{stem}.obj")
-
-    # Bambu Studio용 단일 컬러 3MF — 색 파트를 별도 오브젝트로 묶음.
-    # 열면 색이 보이고, AMS 4색 배정 후 바로 출력 가능.
     try:
-        scene = trimesh.Scene()
-        for n, part in enumerate(combined, 1):
-            scene.add_geometry(part, geom_name=f"color{n}")
-        scene.export(ddir / f"{stem}.color.3mf")
+        merged.export(ddir / f"{stem}.color.3mf")
     except Exception:  # noqa: BLE001
         pass
-
-    (ddir / f"{stem}.palette.json").write_text(
-        json.dumps({"colors": palette_hex}))
+    (ddir / f"{stem}.palette.json").write_text(json.dumps({"colors": palette_hex}))
     return palette_hex
