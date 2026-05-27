@@ -317,7 +317,9 @@ async function refresh(){const j=await (await fetch('/api/jobs')).json();
  const rows=j.jobs.filter(x=>(x.track||'3d')===TRACK);
  document.getElementById('empty').style.display=rows.length?'none':'block';
  for(const x of rows){
-  const links=[];if(x.has_gcode)links.push('<a href="/api/download/'+x.id+'">3MF</a>');
+  const links=[];
+  if(x.color3mf)links.push('<a href="/api/color3mf/'+x.id+'" title="Bambu Studio에서 열어 4색 배정→출력" style="background:#dcfce7;color:#15803d;padding:2px 7px;border-radius:5px">🎨 컬러 3MF</a>');
+  if(x.has_gcode)links.push('<a href="/api/download/'+x.id+'">3MF(단색)</a>');
   for(const f of (x.model_formats||[]))links.push('<a href="/api/model/'+x.id+'/'+f+'">'+f+'</a>');
   for(let i=1;i<=(x.color_parts||0);i++)links.push('<a href="/api/colorpart/'+x.id+'/'+i+'" title="색상 파트 '+i+'">C'+i+'</a>');
   let dl=links.length?links.join('<span class="sep">·</span>'):'<span class="msg">—</span>';
@@ -597,7 +599,8 @@ def create_app(cfg: AppConfig) -> FastAPI:
                 except Exception:  # noqa: BLE001
                     pal = []
             parts = len(list(md.glob("*_c*.stl")))
-            return {"palette": pal, "parts": parts}
+            has_3mf = bool(list(md.glob("*.color.3mf")))
+            return {"palette": pal, "parts": parts, "color3mf": has_3mf}
 
         # 작업별 소비 크레딧: 실측(잔액차) 우선, 없으면 견적(committed 합)
         with db.connect() as conn:
@@ -638,6 +641,7 @@ def create_app(cfg: AppConfig) -> FastAPI:
                 "track": pl.get("track", "3d"),  # 미태깅 기존작업 = 3D 세션
                 "palette": ci["palette"],
                 "color_parts": ci["parts"],
+                "color3mf": ci.get("color3mf", False),
             }
         return {"jobs": [jobrow(r) for r in rows]}
 
@@ -706,6 +710,15 @@ def create_app(cfg: AppConfig) -> FastAPI:
         if not hits:
             raise HTTPException(404, "색상 파트 없음")
         return FileResponse(hits[0], filename=f"{job_id[:8]}_c{n}.stl",
+                            media_type="application/octet-stream")
+
+    @app.get("/api/color3mf/{job_id}")
+    def color3mf(job_id: str) -> FileResponse:
+        md = assets_dir / job_id / "download"
+        hits = sorted(md.glob("*.color.3mf")) if md.exists() else []
+        if not hits:
+            raise HTTPException(404, "컬러 3MF 없음")
+        return FileResponse(hits[0], filename=f"{job_id[:8]}_color.3mf",
                             media_type="application/octet-stream")
 
     @app.get("/api/download/{job_id}")

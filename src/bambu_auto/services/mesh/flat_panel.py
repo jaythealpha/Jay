@@ -214,9 +214,20 @@ def build_multicolor(
 
     if not combined:
         return []
-    scene = trimesh.util.concatenate(combined)
-    scene.export(ddir / f"{stem}.glb")
-    scene.export(ddir / f"{stem}.obj")
+    merged = trimesh.util.concatenate(combined)
+    merged.export(ddir / f"{stem}.glb")
+    merged.export(ddir / f"{stem}.obj")
+
+    # Bambu Studio용 단일 컬러 3MF — 색 파트를 별도 오브젝트로 묶음.
+    # 열면 색이 보이고, AMS 4색 배정 후 바로 출력 가능.
+    try:
+        scene = trimesh.Scene()
+        for n, part in enumerate(combined, 1):
+            scene.add_geometry(part, geom_name=f"color{n}")
+        scene.export(ddir / f"{stem}.color.3mf")
+    except Exception:  # noqa: BLE001
+        pass
+
     (ddir / f"{stem}.palette.json").write_text(
         json.dumps({"colors": palette_hex}))
     return palette_hex
