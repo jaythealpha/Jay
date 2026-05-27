@@ -426,86 +426,47 @@ class Pipeline:
                 except Exception:  # noqa: BLE001
                     continue
 
-            # 평면 제품: 원본 이미지를 윗면에 컬러 텍스처로 입혀 GLB/OBJ 재출력
-            # → 단색이라 뭔지 모르던 문제 해소 (컬러 미리보기/AMS용).
-            if (job.source_payload or {}).get("flat"):
-                if self._apply_flat_multicolor(mesh, work, ddir, stem):
-                    done.append("glb(4색)")
+            # 평면 제품: 전경 색 분석(k-means)으로 색 영역별 파트를 직접
+            # 압출 → 원본에 가까운 4색 멀티컬러 (단색/뭉개짐 문제 해소).
+            payload = job.source_payload or {}
+            if payload.get("flat"):
+                pal = self._build_flat_multicolor(job, work, ddir, stem)
+                if pal:
+                    done.append(f"glb(4색:{len(pal)})")
             self._notify(f"  포맷 변환: {', '.join(done) or '실패'}")
         except Exception as e:  # noqa: BLE001
             self._notify(f"  ⚠ 포맷 변환 건너뜀: {e}")
 
-    def _apply_flat_multicolor(self, mesh, work: Path, ddir: Path, stem: str,
-                               n_colors: int = 4) -> bool:
-        """원본 이미지를 n색으로 양자화 → 컬러 GLB/OBJ(정점색) + 색상별
-        STL 파트(AMS 조립용) + 팔레트 json 생성. 동일 프린터(AMS) 4색 출력용."""
+    def _build_flat_multicolor(self, job: Job, work: Path, ddir: Path,
+                               stem: str) -> list:
+        """평면 제품을 전경 색 분석 기반 멀티컬러로 빌드 (flat_panel.build_multicolor).
+        addon에 따라 키링 구멍/자석 공동을 각 색 파트에 적용. 팔레트 반환."""
         try:
-            import json
+            from bambu_auto.services.mesh.flat_panel import build_multicolor
 
-            import numpy as np
-            import trimesh
-            from PIL import Image
-
+            payload = job.source_payload or {}
             src = work / "source"
             imgs = sorted(src.rglob("input*")) if src.exists() else []
             if not imgs:
-                return False
-            img = Image.open(imgs[-1]).convert("RGB")
-            q = np.array(img.quantize(colors=n_colors,
-                                      method=Image.Quantize.MEDIANCUT)
-                         .convert("RGB"))
-            H, W = q.shape[:2]
+                return []
+            addon = payload.get("addon")
+            feature = None
+            if addon == "keyring":
+                feature = {"kind": "hole"}
+            elif addon == "magnet":
+                d, h = self._parse_magnet_size(payload.get("magnet_size", "5x2"))
+                feature = {"kind": "cavity", "d": d, "h": h}
+            elif addon == "nfc":
+                feature = {"kind": "cavity", "d": 27.0, "h": 1.0}
+            return build_multicolor(
+                imgs[-1], ddir, stem,
+                size_mm=float(payload.get("flat_size_mm") or 50),
+                thickness_mm=float(payload.get("flat_thickness_mm") or 3.5),
+                n_colors=4, feature=feature)
+        except Exception as e:  # noqa: BLE001
+            self._notify(f"  ⚠ 멀티컬러 건너뜀: {e}")
+            return []
 
-            # 팔레트(고유색)
-            uniq = np.unique(q.reshape(-1, 3), axis=0)[:n_colors]
-            palette = [tuple(int(c) for c in u) for u in uniq]
-
-            # 색 정확도 향상: 평면 메쉬가 성기면 정점색이 거침 → 세분화
-            cm0 = mesh.copy()
-            for _ in range(4):
-                if len(cm0.faces) > 60000:
-                    break
-                try:
-                    cm0 = cm0.subdivide()
-                except Exception:  # noqa: BLE001
-                    break
-            mesh = cm0
-
-            # 각 정점을 XY로 이미지에 투영 → 정점색
-            bmin, bmax = mesh.bounds
-            dx = (bmax[0] - bmin[0]) or 1.0
-            dy = (bmax[1] - bmin[1]) or 1.0
-            v = mesh.vertices
-            px = np.clip(((v[:, 0] - bmin[0]) / dx * (W - 1)).astype(int), 0, W - 1)
-            py = np.clip(((1 - (v[:, 1] - bmin[1]) / dy) * (H - 1)).astype(int), 0, H - 1)
-            vc = q[py, px]  # Nx3
-            cm = mesh.copy()
-            cm.visual = trimesh.visual.ColorVisuals(
-                vertex_colors=np.column_stack([vc, np.full(len(vc), 255)]))
-            cm.export(ddir / f"{stem}.glb")
-            cm.export(ddir / f"{stem}.obj")
-
-            # 정점→팔레트 인덱스(최근접), 면→다수결 인덱스 → 색상별 파트 STL
-            pal = np.array(palette)
-            vidx = np.argmin(((vc[:, None, :] - pal[None, :, :]) ** 2).sum(2), axis=1)
-            faces = mesh.faces
-            fidx = np.array([np.bincount(vidx[f], minlength=len(pal)).argmax()
-                             for f in faces])
-            for i in range(len(pal)):
-                fl = np.where(fidx == i)[0]
-                if len(fl) == 0:
-                    continue
-                try:
-                    part = mesh.submesh([fl], append=True)
-                    part.export(ddir / f"{stem}_c{i + 1}.stl")
-                except Exception:  # noqa: BLE001
-                    continue
-
-            (ddir / f"{stem}.palette.json").write_text(json.dumps(
-                {"colors": ["#%02x%02x%02x" % c for c in palette]}))
-            return True
-        except Exception:  # noqa: BLE001
-            return False
 
     def _route(self, job: Job, report: MeshReport) -> None:
         ctx = RouteContext(material=job.material,
