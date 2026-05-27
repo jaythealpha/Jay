@@ -169,36 +169,59 @@ def _keyring_ring(mesh, hole_d: float = 3.0, wall: float = 2.0):
             kw = {"engine": eng} if eng else {}
             ring = trimesh.boolean.difference([outer, hole], **kw)
             if ring is not None and not ring.is_empty:
-                return ring
+                return ring, hole          # hole도 반환 → 부착 후 깔끔히 관통
         except Exception:  # noqa: BLE001
             continue
-    return None
+    return None, None
+
+
+def attach_keyring(mesh, hole_d: float = 3.0, wall: float = 2.0):
+    """mesh에 고리 탭을 union하고, 고리 구멍을 전체에 관통(캐릭터 솔기 제거).
+    반환: (결과 mesh | None, method str)."""
+    import trimesh
+
+    ring, hole = _keyring_ring(mesh, hole_d, wall)
+    if ring is None:
+        return None, "ring_failed"
+    out = None
+    for eng in ("manifold", None):
+        try:
+            kw = {"engine": eng} if eng else {}
+            u = trimesh.boolean.union([mesh, ring], **kw)
+            if u is not None and not u.is_empty:
+                out = u
+                break
+        except Exception:  # noqa: BLE001
+            continue
+    if out is None:
+        out = trimesh.util.concatenate([mesh, ring])
+        method = "keyring_tab(concat)"
+    else:
+        method = "keyring_tab"
+    # 고리 구멍을 전체 관통 (구멍 안에 비치던 캐릭터 솔기 제거)
+    for eng in ("manifold", None):
+        try:
+            kw = {"engine": eng} if eng else {}
+            cut = trimesh.boolean.difference([out, hole], **kw)
+            if cut is not None and not cut.is_empty:
+                out = cut
+                break
+        except Exception:  # noqa: BLE001
+            continue
+    return out, method
 
 
 def add_keyring_tab(stl_in: Path, stl_out: Path,
                     hole_d: float = 3.0, wall: float = 2.0) -> dict:
-    """캐릭터 상단(재질 많은 지점)에 고리 탭을 깊게 겹쳐 '추가'. 캐릭터
-    몸통은 온전, 고리가 자연스럽게 이어짐. 반환 {ok, method}."""
+    """캐릭터 상단(재질 많은 지점)에 고리 탭을 깊게 겹쳐 '추가' + 구멍 관통."""
     import trimesh
 
     mesh = trimesh.load(stl_in, force="mesh")
-    ring = _keyring_ring(mesh, hole_d, wall)
-    if ring is None:
-        return {"ok": False, "method": "ring_failed"}
-    for eng in ("manifold", None):
-        try:
-            kw = {"engine": eng} if eng else {}
-            out = trimesh.boolean.union([mesh, ring], **kw)
-            if out is not None and not out.is_empty:
-                out.export(stl_out)
-                return {"ok": True, "method": "keyring_tab"}
-        except Exception:  # noqa: BLE001
-            continue
-    try:
-        trimesh.util.concatenate([mesh, ring]).export(stl_out)
-        return {"ok": True, "method": "keyring_tab(concat)"}
-    except Exception:  # noqa: BLE001
-        return {"ok": False, "method": "union_failed"}
+    out, method = attach_keyring(mesh, hole_d, wall)
+    if out is None:
+        return {"ok": False, "method": method}
+    out.export(stl_out)
+    return {"ok": True, "method": method}
 
 
 ADDONS = {

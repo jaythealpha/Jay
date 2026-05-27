@@ -318,7 +318,8 @@ async function refresh(){const j=await (await fetch('/api/jobs')).json();
  document.getElementById('empty').style.display=rows.length?'none':'block';
  for(const x of rows){
   const links=[];
-  if(x.color3mf)links.push('<a href="/api/color3mf/'+x.id+'" title="Bambu Studio에서 열어 4색 배정→출력" style="background:#dcfce7;color:#15803d;padding:2px 7px;border-radius:5px">🎨 컬러 3MF</a>');
+  if(x.bambu3mf)links.push('<a href="/api/bambu3mf/'+x.id+'" title="Bambu/Orca Studio에서 열면 색마다 필라멘트(익스트루더)가 배정됨 → AMS에 팔레트 색 끼우고 바로 출력" style="background:#16a34a;color:#fff;padding:2px 7px;border-radius:5px;font-weight:600">🎨 Bambu 멀티컬러 3MF</a>');
+  if(x.color3mf)links.push('<a href="/api/color3mf/'+x.id+'" title="미리보기용 컬러 3MF(필라멘트 미배정)" style="background:#dcfce7;color:#15803d;padding:2px 7px;border-radius:5px">컬러 3MF(미리보기)</a>');
   if(x.has_gcode)links.push('<a href="/api/download/'+x.id+'">3MF(단색)</a>');
   for(const f of (x.model_formats||[]))links.push('<a href="/api/model/'+x.id+'/'+f+'">'+f+'</a>');
   for(let i=1;i<=(x.color_parts||0);i++)links.push('<a href="/api/colorpart/'+x.id+'/'+i+'" title="색상 파트 '+i+'">C'+i+'</a>');
@@ -600,7 +601,9 @@ def create_app(cfg: AppConfig) -> FastAPI:
                     pal = []
             parts = len(list(md.glob("*_c*.stl")))
             has_3mf = bool(list(md.glob("*.color.3mf")))
-            return {"palette": pal, "parts": parts, "color3mf": has_3mf}
+            has_bambu = bool(list(md.glob("*.bambu.3mf")))
+            return {"palette": pal, "parts": parts, "color3mf": has_3mf,
+                    "bambu3mf": has_bambu}
 
         # 작업별 소비 크레딧: 실측(잔액차) 우선, 없으면 견적(committed 합)
         with db.connect() as conn:
@@ -642,6 +645,7 @@ def create_app(cfg: AppConfig) -> FastAPI:
                 "palette": ci["palette"],
                 "color_parts": ci["parts"],
                 "color3mf": ci.get("color3mf", False),
+                "bambu3mf": ci.get("bambu3mf", False),
             }
         return {"jobs": [jobrow(r) for r in rows]}
 
@@ -719,6 +723,15 @@ def create_app(cfg: AppConfig) -> FastAPI:
         if not hits:
             raise HTTPException(404, "컬러 3MF 없음")
         return FileResponse(hits[0], filename=f"{job_id[:8]}_color.3mf",
+                            media_type="application/octet-stream")
+
+    @app.get("/api/bambu3mf/{job_id}")
+    def bambu3mf(job_id: str) -> FileResponse:
+        md = assets_dir / job_id / "download"
+        hits = sorted(md.glob("*.bambu.3mf")) if md.exists() else []
+        if not hits:
+            raise HTTPException(404, "Bambu 3MF 없음")
+        return FileResponse(hits[0], filename=f"{job_id[:8]}_bambu.3mf",
                             media_type="application/octet-stream")
 
     @app.get("/api/download/{job_id}")

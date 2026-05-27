@@ -12,6 +12,17 @@ from pathlib import Path
 from bambu_auto.services.mesh.branding import _mask_to_polygons, _polygons_to_mesh
 
 
+def _fill_holes(mask):
+    """실루엣 내부 구멍 채움 (외곽선만 채워 솔리드화). cv2 uint8 mask 입력."""
+    import cv2
+    import numpy as np
+
+    out = np.zeros_like(mask)
+    cnts, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    cv2.drawContours(out, cnts, -1, 255, thickness=cv2.FILLED)
+    return out
+
+
 def make_flat_panel(
     image_path: Path, out_stl: Path, *,
     size_mm: float = 50.0,
@@ -34,7 +45,7 @@ def make_flat_panel(
         sil = gray < 245
     else:
         sil = alpha > 128
-    sil_mask = (sil.astype("uint8")) * 255
+    sil_mask = _fill_holes((sil.astype("uint8")) * 255)  # 내부 구멍 채움
     if int(sil_mask.max()) == 0:
         return {"ok": False, "method": "empty_silhouette"}
 
@@ -167,8 +178,8 @@ def build_multicolor(
                 out[lbl == k] = 255
         return out
 
-    # 베이스: 전체 실루엣(단단한 판), 색 = 최다색
-    base_polys = _mask_to_polygons((sil.astype("uint8")) * 255, scale)
+    # 베이스: 전체 실루엣(내부 구멍 채워 솔리드), 색 = 최다색
+    base_polys = _mask_to_polygons(_fill_holes((sil.astype("uint8")) * 255), scale)
     if not base_polys:
         return []
     base = _polygons_to_mesh(base_polys, thickness_mm)
@@ -200,19 +211,11 @@ def build_multicolor(
     # feature 적용: 키링은 베이스에 고리 탭 '추가'(캐릭터 온전), 공동은 차감
     cx = (bmin[0] + bmax[0]) / 2
     if feature and feature.get("kind") == "hole":
-        from bambu_auto.services.mesh.addons import _keyring_ring
+        from bambu_auto.services.mesh.addons import attach_keyring
 
-        ring = _keyring_ring(parts[0][0], hole_d=3.0, wall=2.0)
-        if ring is not None:
-            for eng in ("manifold", None):
-                try:
-                    kw = {"engine": eng} if eng else {}
-                    u = trimesh.boolean.union([parts[0][0], ring], **kw)
-                    if u is not None and not u.is_empty:
-                        parts[0] = (u, parts[0][1])
-                        break
-                except Exception:  # noqa: BLE001
-                    continue
+        out, _ = attach_keyring(parts[0][0], hole_d=3.0, wall=2.0)
+        if out is not None:
+            parts[0] = (out, parts[0][1])
     elif feature and feature.get("kind") == "cavity":
         d = float(feature.get("d", 5)) + 0.4
         h = float(feature.get("h", 2)) + 0.2
@@ -229,7 +232,7 @@ def build_multicolor(
             except Exception:  # noqa: BLE001
                 continue
 
-    # 색을 입혀 하나의 오브젝트로 합침 (흩어짐 방지)
+    # 색을 입혀 하나의 오브젝트로 합침 (미리보기 GLB/OBJ — 흩어짐 방지)
     colored = []
     for mesh, col in parts:
         mesh.visual = trimesh.visual.ColorVisuals(
@@ -242,5 +245,20 @@ def build_multicolor(
         merged.export(ddir / f"{stem}.color.3mf")
     except Exception:  # noqa: BLE001
         pass
-    (ddir / f"{stem}.palette.json").write_text(json.dumps({"colors": palette_hex}))
+
+    # Bambu/Orca 호환 멀티컬러 3MF: 파트별 익스트루더 배정(실제 다색 출력)
+    try:
+        from bambu_auto.services.mesh.bambu3mf import write_bambu_multicolor_3mf
+
+        write_bambu_multicolor_3mf([m for m, _ in parts],
+                                   ddir / f"{stem}.bambu.3mf")
+    except Exception:  # noqa: BLE001
+        pass
+
+    # palette.json: 익스트루더(필라멘트) 번호 → 색 매핑 (1번=베이스)
+    (ddir / f"{stem}.palette.json").write_text(json.dumps({
+        "colors": palette_hex,
+        "filament_map": [{"extruder": i + 1, "hex": h}
+                         for i, h in enumerate(palette_hex)],
+    }))
     return palette_hex
