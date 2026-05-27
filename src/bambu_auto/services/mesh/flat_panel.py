@@ -197,32 +197,46 @@ def build_multicolor(
         parts.append((inlay, col))
         palette_hex.append("#%02x%02x%02x" % col)
 
-    # feature(구멍/공동) 적용: 베이스에만
-    def feat_cyl():
-        if not feature:
-            return None
-        cx = (bmin[0] + bmax[0]) / 2
-        if feature.get("kind") == "hole":
-            d = 5.0
-            cyl = trimesh.creation.cylinder(radius=d / 2, height=thickness_mm + 2)
-            cyl.apply_translation([cx, bmax[1] - 4.0 - d / 2,
-                                   (bmin[2] + bmax[2]) / 2])
-            return cyl
-        if feature.get("kind") == "cavity":
-            d = float(feature.get("d", 5)) + 0.4
-            h = float(feature.get("h", 2)) + 0.2
-            cyl = trimesh.creation.cylinder(radius=d / 2, height=h)
-            cyl.apply_translation([cx, (bmin[1] + bmax[1]) / 2,
-                                   bmin[2] + h / 2 - 0.05])
-            return cyl
-        return None
-
-    fcyl = feat_cyl()
-    if fcyl is not None:
+    # feature 적용: 키링은 베이스에 고리 탭 '추가'(캐릭터 온전), 공동은 차감
+    cx = (bmin[0] + bmax[0]) / 2
+    cz = (bmin[2] + bmax[2]) / 2
+    if feature and feature.get("kind") == "hole":
+        d = 5.0
+        r = d / 2 + 2.5
+        cy = bmax[1] + r - min(3.0, r)
+        outer = trimesh.creation.cylinder(radius=r, height=thickness_mm)
+        outer.apply_translation([cx, cy, cz])
+        hole = trimesh.creation.cylinder(radius=d / 2, height=thickness_mm + 2)
+        hole.apply_translation([cx, cy, cz])
+        ring = None
         for eng in ("manifold", None):
             try:
                 kw = {"engine": eng} if eng else {}
-                cut = trimesh.boolean.difference([parts[0][0], fcyl], **kw)
+                ring = trimesh.boolean.difference([outer, hole], **kw)
+                if ring is not None and not ring.is_empty:
+                    break
+            except Exception:  # noqa: BLE001
+                continue
+        if ring is not None and not ring.is_empty:
+            for eng in ("manifold", None):
+                try:
+                    kw = {"engine": eng} if eng else {}
+                    u = trimesh.boolean.union([parts[0][0], ring], **kw)
+                    if u is not None and not u.is_empty:
+                        parts[0] = (u, parts[0][1])
+                        break
+                except Exception:  # noqa: BLE001
+                    continue
+    elif feature and feature.get("kind") == "cavity":
+        d = float(feature.get("d", 5)) + 0.4
+        h = float(feature.get("h", 2)) + 0.2
+        cyl = trimesh.creation.cylinder(radius=d / 2, height=h)
+        cyl.apply_translation([cx, (bmin[1] + bmax[1]) / 2,
+                               bmin[2] + h / 2 - 0.05])
+        for eng in ("manifold", None):
+            try:
+                kw = {"engine": eng} if eng else {}
+                cut = trimesh.boolean.difference([parts[0][0], cyl], **kw)
                 if cut is not None and not cut.is_empty:
                     parts[0] = (cut, parts[0][1])
                     break

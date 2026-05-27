@@ -134,29 +134,52 @@ def add_nfc_cavity(stl_in: Path, stl_out: Path,
                              clearance_d=0.0, clearance_h=0.2)
 
 
-def add_keyring_hole(stl_in: Path, stl_out: Path,
-                     hole_d: float = 5.0, edge_margin: float = 4.0) -> dict:
-    """평면 패널 상단 가장자리에 키링용 관통 구멍. 3D 토러스 고리와 달리
-    납작한 태그에 적합. 반환 {ok, method}."""
+def add_keyring_tab(stl_in: Path, stl_out: Path,
+                    hole_d: float = 5.0, wall: float = 2.5) -> dict:
+    """캐릭터 상단에 고리 탭(구멍 뚫린 링)을 '덧붙임'. 캐릭터 몸통은
+    온전하게 두고 고리만 위로 돌출 → 미관 양호. 반환 {ok, method}."""
     import trimesh
 
     mesh = trimesh.load(stl_in, force="mesh")
     bmin, bmax = mesh.bounds
     cx = (bmin[0] + bmax[0]) / 2
-    top_y = bmax[1] - edge_margin - hole_d / 2  # 상단 가장자리 근처
+    cz = (bmin[2] + bmax[2]) / 2
     thick = float(bmax[2] - bmin[2])
-    cyl = trimesh.creation.cylinder(radius=hole_d / 2, height=thick + 2)
-    cyl.apply_translation([cx, top_y, (bmin[2] + bmax[2]) / 2])
-    for engine in ("manifold", None):
+    r = hole_d / 2 + wall
+    overlap = min(3.0, r)                 # 패널과 겹쳐 확실히 융합
+    cy = bmax[1] + r - overlap            # 대부분 위로 돌출
+    outer = trimesh.creation.cylinder(radius=r, height=thick)
+    outer.apply_translation([cx, cy, cz])
+    hole = trimesh.creation.cylinder(radius=hole_d / 2, height=thick + 2)
+    hole.apply_translation([cx, cy, cz])
+
+    ring = None
+    for eng in ("manifold", None):
         try:
-            kw = {"engine": engine} if engine else {}
-            out = trimesh.boolean.difference([mesh, cyl], **kw)
-            if out is not None and not out.is_empty:
-                out.export(stl_out)
-                return {"ok": True, "method": "keyring_hole"}
+            kw = {"engine": eng} if eng else {}
+            ring = trimesh.boolean.difference([outer, hole], **kw)
+            if ring is not None and not ring.is_empty:
+                break
         except Exception:  # noqa: BLE001
             continue
-    return {"ok": False, "method": "boolean_failed"}
+    if ring is None or ring.is_empty:
+        return {"ok": False, "method": "ring_failed"}
+
+    for eng in ("manifold", None):
+        try:
+            kw = {"engine": eng} if eng else {}
+            out = trimesh.boolean.union([mesh, ring], **kw)
+            if out is not None and not out.is_empty:
+                out.export(stl_out)
+                return {"ok": True, "method": "keyring_tab"}
+        except Exception:  # noqa: BLE001
+            continue
+    # union 실패 시 concat 폴백 (겹쳐 있어 슬라이서가 한 몸으로 인식)
+    try:
+        trimesh.util.concatenate([mesh, ring]).export(stl_out)
+        return {"ok": True, "method": "keyring_tab(concat)"}
+    except Exception:  # noqa: BLE001
+        return {"ok": False, "method": "union_failed"}
 
 
 ADDONS = {

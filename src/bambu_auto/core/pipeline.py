@@ -350,7 +350,7 @@ class Pipeline:
                 method = r["method"] if r["ok"] else ""
                 cavity_top_z = r["top_z"]
             elif addon == "keyring":
-                r = A.add_keyring_hole(Path(report.path), out)
+                r = A.add_keyring_tab(Path(report.path), out)
                 method = r["method"] if r["ok"] else ""
         except Exception as e:  # noqa: BLE001
             self._notify(f"  ⚠ {label} 오류: {e}")
@@ -365,7 +365,8 @@ class Pipeline:
             extra = f" (자동 일시정지 Z={cavity_top_z:.1f}mm)" if cavity_top_z else ""
             tag = {"union": "union(완전결합)", "subtract": "subtract(공동)",
                    "concat": "concat(인접배치)",
-                   "keyring_hole": "구멍"}.get(method, method)
+                   "keyring_tab": "고리 탭",
+                   "keyring_tab(concat)": "고리 탭"}.get(method, method)
             self._notify(f"  ✓ {label} — {tag}{extra}")
         else:
             self._notify(f"  ⚠ {label} 실패 — 원본으로 진행")
