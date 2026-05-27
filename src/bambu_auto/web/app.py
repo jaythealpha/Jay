@@ -319,7 +319,10 @@ async function refresh(){const j=await (await fetch('/api/jobs')).json();
  for(const x of rows){
   const links=[];if(x.has_gcode)links.push('<a href="/api/download/'+x.id+'">3MF</a>');
   for(const f of (x.model_formats||[]))links.push('<a href="/api/model/'+x.id+'/'+f+'">'+f+'</a>');
-  const dl=links.length?links.join('<span class="sep">·</span>'):'<span class="msg">—</span>';
+  for(let i=1;i<=(x.color_parts||0);i++)links.push('<a href="/api/colorpart/'+x.id+'/'+i+'" title="색상 파트 '+i+'">C'+i+'</a>');
+  let dl=links.length?links.join('<span class="sep">·</span>'):'<span class="msg">—</span>';
+  if((x.palette||[]).length){const sw=x.palette.map(c=>'<span style="display:inline-block;width:11px;height:11px;border-radius:2px;border:1px solid #ccc;background:'+c+'"></span>').join(' ');
+   dl+='<div style="margin-top:3px">'+sw+'</div>';}
   const m=(x.message||'').replace(/"/g,'&quot;');
   const th='<img src="/api/thumb/'+x.id+'" class="thumb" onerror="this.style.visibility=\'hidden\'">';
   const ck=SEL.has(x.id)?' checked':'';
@@ -582,6 +585,20 @@ def create_app(cfg: AppConfig) -> FastAPI:
                            (".glb", ".obj", ".stl", ".ply")})
             return fmts
 
+        def color_info(job_id: str) -> dict:
+            md = data_dir / "assets" / job_id / "download"
+            if not md.exists():
+                return {"palette": [], "parts": 0}
+            pal: list[str] = []
+            pj = list(md.glob("*.palette.json"))
+            if pj:
+                try:
+                    pal = json.loads(pj[0].read_text()).get("colors", [])
+                except Exception:  # noqa: BLE001
+                    pal = []
+            parts = len(list(md.glob("*_c*.stl")))
+            return {"palette": pal, "parts": parts}
+
         # 작업별 소비 크레딧: 실측(잔액차) 우선, 없으면 견적(committed 합)
         with db.connect() as conn:
             est = conn.execute(
@@ -606,6 +623,7 @@ def create_app(cfg: AppConfig) -> FastAPI:
                 pl = json.loads(r["source_payload"] or "{}")
             except Exception:  # noqa: BLE001
                 pl = {}
+            ci = color_info(r["id"])
             return {
                 "id": r["id"], "state": r["state"], "material": r["material"],
                 "printer": r["target_printer"],
@@ -618,6 +636,8 @@ def create_app(cfg: AppConfig) -> FastAPI:
                 "credits": cval,
                 "credits_actual": is_actual,
                 "track": pl.get("track", "3d"),  # 미태깅 기존작업 = 3D 세션
+                "palette": ci["palette"],
+                "color_parts": ci["parts"],
             }
         return {"jobs": [jobrow(r) for r in rows]}
 
@@ -677,6 +697,15 @@ def create_app(cfg: AppConfig) -> FastAPI:
         if not hits:
             raise HTTPException(404, f"{fmt} 파일 없음")
         return FileResponse(hits[0], filename=f"{job_id[:8]}.{fmt}",
+                            media_type="application/octet-stream")
+
+    @app.get("/api/colorpart/{job_id}/{n}")
+    def color_part(job_id: str, n: int) -> FileResponse:
+        md = assets_dir / job_id / "download"
+        hits = sorted(md.glob(f"*_c{n}.stl")) if md.exists() else []
+        if not hits:
+            raise HTTPException(404, "색상 파트 없음")
+        return FileResponse(hits[0], filename=f"{job_id[:8]}_c{n}.stl",
                             media_type="application/octet-stream")
 
     @app.get("/api/download/{job_id}")

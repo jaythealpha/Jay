@@ -428,16 +428,19 @@ class Pipeline:
             # 평면 제품: 원본 이미지를 윗면에 컬러 텍스처로 입혀 GLB/OBJ 재출력
             # → 단색이라 뭔지 모르던 문제 해소 (컬러 미리보기/AMS용).
             if (job.source_payload or {}).get("flat"):
-                if self._apply_flat_texture(mesh, work, ddir, stem):
-                    done.append("glb(컬러)")
+                if self._apply_flat_multicolor(mesh, work, ddir, stem):
+                    done.append("glb(4색)")
             self._notify(f"  포맷 변환: {', '.join(done) or '실패'}")
         except Exception as e:  # noqa: BLE001
             self._notify(f"  ⚠ 포맷 변환 건너뜀: {e}")
 
-    def _apply_flat_texture(self, mesh, work: Path, ddir: Path, stem: str) -> bool:
-        """평면 메쉬 윗면에 원본 이미지를 평면투영 UV 텍스처로 입혀
-        컬러 GLB/OBJ 저장. 성공 시 True."""
+    def _apply_flat_multicolor(self, mesh, work: Path, ddir: Path, stem: str,
+                               n_colors: int = 4) -> bool:
+        """원본 이미지를 n색으로 양자화 → 컬러 GLB/OBJ(정점색) + 색상별
+        STL 파트(AMS 조립용) + 팔레트 json 생성. 동일 프린터(AMS) 4색 출력용."""
         try:
+            import json
+
             import numpy as np
             import trimesh
             from PIL import Image
@@ -446,17 +449,59 @@ class Pipeline:
             imgs = sorted(src.rglob("input*")) if src.exists() else []
             if not imgs:
                 return False
-            img = Image.open(imgs[-1]).convert("RGBA")  # 배경제거본 우선(나중 생성)
+            img = Image.open(imgs[-1]).convert("RGB")
+            q = np.array(img.quantize(colors=n_colors,
+                                      method=Image.Quantize.MEDIANCUT)
+                         .convert("RGB"))
+            H, W = q.shape[:2]
+
+            # 팔레트(고유색)
+            uniq = np.unique(q.reshape(-1, 3), axis=0)[:n_colors]
+            palette = [tuple(int(c) for c in u) for u in uniq]
+
+            # 색 정확도 향상: 평면 메쉬가 성기면 정점색이 거침 → 세분화
+            cm0 = mesh.copy()
+            for _ in range(4):
+                if len(cm0.faces) > 60000:
+                    break
+                try:
+                    cm0 = cm0.subdivide()
+                except Exception:  # noqa: BLE001
+                    break
+            mesh = cm0
+
+            # 각 정점을 XY로 이미지에 투영 → 정점색
             bmin, bmax = mesh.bounds
             dx = (bmax[0] - bmin[0]) or 1.0
             dy = (bmax[1] - bmin[1]) or 1.0
             v = mesh.vertices
-            uv = np.column_stack([(v[:, 0] - bmin[0]) / dx,
-                                  (v[:, 1] - bmin[1]) / dy])
-            tex = mesh.copy()
-            tex.visual = trimesh.visual.TextureVisuals(uv=uv, image=img)
-            tex.export(ddir / f"{stem}.glb")
-            tex.export(ddir / f"{stem}.obj")
+            px = np.clip(((v[:, 0] - bmin[0]) / dx * (W - 1)).astype(int), 0, W - 1)
+            py = np.clip(((1 - (v[:, 1] - bmin[1]) / dy) * (H - 1)).astype(int), 0, H - 1)
+            vc = q[py, px]  # Nx3
+            cm = mesh.copy()
+            cm.visual = trimesh.visual.ColorVisuals(
+                vertex_colors=np.column_stack([vc, np.full(len(vc), 255)]))
+            cm.export(ddir / f"{stem}.glb")
+            cm.export(ddir / f"{stem}.obj")
+
+            # 정점→팔레트 인덱스(최근접), 면→다수결 인덱스 → 색상별 파트 STL
+            pal = np.array(palette)
+            vidx = np.argmin(((vc[:, None, :] - pal[None, :, :]) ** 2).sum(2), axis=1)
+            faces = mesh.faces
+            fidx = np.array([np.bincount(vidx[f], minlength=len(pal)).argmax()
+                             for f in faces])
+            for i in range(len(pal)):
+                fl = np.where(fidx == i)[0]
+                if len(fl) == 0:
+                    continue
+                try:
+                    part = mesh.submesh([fl], append=True)
+                    part.export(ddir / f"{stem}_c{i + 1}.stl")
+                except Exception:  # noqa: BLE001
+                    continue
+
+            (ddir / f"{stem}.palette.json").write_text(json.dumps(
+                {"colors": ["#%02x%02x%02x" % c for c in palette]}))
             return True
         except Exception:  # noqa: BLE001
             return False
