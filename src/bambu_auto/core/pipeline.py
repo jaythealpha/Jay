@@ -363,8 +363,9 @@ class Pipeline:
                 job.source_payload = payload
             self.repo.save(job)
             extra = f" (자동 일시정지 Z={cavity_top_z:.1f}mm)" if cavity_top_z else ""
-            tag = "union(완전결합)" if method == "union" else \
-                  "subtract(공동)" if method == "subtract" else "concat(인접배치)"
+            tag = {"union": "union(완전결합)", "subtract": "subtract(공동)",
+                   "concat": "concat(인접배치)",
+                   "keyring_hole": "구멍"}.get(method, method)
             self._notify(f"  ✓ {label} — {tag}{extra}")
         else:
             self._notify(f"  ⚠ {label} 실패 — 원본으로 진행")
