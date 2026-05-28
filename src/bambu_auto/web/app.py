@@ -156,7 +156,8 @@ INDEX_HTML = r"""<!doctype html>
         <option value="stand">받침대</option>
         <option value="keychain">열쇠고리(3D 입체고리)</option>
         <option value="keycap">키캡 (기계식 키보드 MX)</option>
-      </select></div>
+      </select>
+      <span id="addonHint" class="msg" style="display:none">색 키캡은 '텍스처(컬러)' 필요 — 자동 켜짐</span></div>
   </div>
   <div class="opts" style="margin-top:10px">
     <label><input id="bg" type="checkbox" checked> 배경·인물 제거</label>
@@ -274,6 +275,10 @@ async function upFiles(input,store,msgId){
   const j=await r.json();UP[store]=(UP[store]||[]).concat(j.paths||[]);
   document.getElementById(msgId).textContent=UP[store].length+'개 첨부됨';
  }catch(e){document.getElementById(msgId).textContent='업로드 실패: '+e;}}
+document.getElementById('addon').addEventListener('change',function(){
+ const kc=this.value==='keycap';
+ document.getElementById('addonHint').style.display=kc?'inline':'none';
+ if(kc)document.getElementById('tex').checked=true;});
 async function submit3d(){const s=srcs('src').concat(UP.up3d);
  if(!s.length){alert('URL 입력 또는 파일 첨부');return;}
  if(MODE==='multiview'&&s.length>4){alert('멀티뷰 최대 4장');return;}

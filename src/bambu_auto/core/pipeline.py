@@ -309,7 +309,9 @@ class Pipeline:
 
         # 키캡: 모델을 MX 키캡 위에 얹음 (별도 처리)
         if addon == "keycap":
-            from bambu_auto.services.mesh.keycap import make_keycap
+            from bambu_auto.services.mesh.keycap import (
+                make_keycap, make_keycap_multicolor,
+            )
 
             self._notify("  키캡 생성 중 (MX 스템 + 토퍼)…")
             out = work / "repaired" / f"{Path(report.path).stem}_keycap.stl"
@@ -324,6 +326,10 @@ class Pipeline:
                 self._notify("  ✓ 키캡 생성 완료 (MX 호환)")
             else:
                 self._notify(f"  ⚠ 키캡 실패({r.get('method')}) — 원본 진행")
+
+            # 멀티컬러: 텍스처가 있는 원본(GLB)에서 색 추출 → Bambu 3MF.
+            # 단색 STL(report.path)은 슬라이싱용으로 유지, 색 파일은 별도 산출.
+            self._keycap_multicolor(job, work, make_keycap_multicolor)
             return
 
         from bambu_auto.services.mesh import addons as A
@@ -370,6 +376,33 @@ class Pipeline:
             self._notify(f"  ✓ {label} — {tag}{extra}")
         else:
             self._notify(f"  ⚠ {label} 실패 — 원본으로 진행")
+
+    def _keycap_multicolor(self, job: Job, work: Path, fn) -> None:
+        """키캡 토퍼의 텍스처 색으로 Bambu 멀티컬러 3MF 생성 (실패해도 무시).
+        텍스처가 박힌 GLB가 색의 원천 — 슬라이싱용 STL은 이미 색이 없음."""
+        model_dir = work / "model"
+        glbs = sorted(model_dir.glob("*.glb"),
+                      key=lambda p: p.stat().st_size, reverse=True)
+        if not glbs:
+            self._notify("  ⚠ 키캡 멀티컬러 건너뜀: 텍스처 GLB 없음 "
+                         "(생성 시 '텍스처' 옵션 필요)")
+            return
+        ddir = work / "download"
+        stem = job.id[:8]
+        try:
+            r = fn(glbs[0], ddir, stem)
+        except Exception as e:  # noqa: BLE001
+            r = {"ok": False, "method": f"err:{e}"}
+        if r.get("ok"):
+            cols = r.get("colors") or []
+            self._notify(f"  ✓ 키캡 멀티컬러 3MF — {len(cols)}색 "
+                         f"{' '.join(cols)}")
+        elif r.get("method") == "no_color":
+            self._notify("  ⚠ 키캡 멀티컬러 건너뜀: 토퍼에 색 없음 "
+                         "(Meshy 텍스처/재텍스처 필요)")
+        else:
+            self._notify(f"  ⚠ 키캡 멀티컬러 실패({r.get('method')}) "
+                         "— 단색으로 진행")
 
     @staticmethod
     def _parse_magnet_size(s: str) -> tuple[float, float]:

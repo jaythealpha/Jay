@@ -28,16 +28,11 @@ def _boolean(op: str, meshes: list):
     return None
 
 
-def make_keycap(
-    model_stl: Path, out_stl: Path, *,
-    top_mm: float = 18.0,
-    height_mm: float = 9.0,
-    wall_mm: float = 1.6,
-    top_thickness_mm: float = 2.0,
-    stem_height_mm: float = 4.0,
-    topper_mm: float = 14.0,
-) -> dict:
-    """모델을 MX 키캡 위에 얹어 인쇄용 키캡 생성. 반환 {ok, method}."""
+def _build_cap_base(
+    top_mm: float, height_mm: float, wall_mm: float,
+    top_thickness_mm: float, stem_height_mm: float,
+):
+    """속이 빈 키캡 본체 + MX 십자 스템. 반환 (cap, inner_h) 또는 (None, reason)."""
     import trimesh
 
     # 1) 외곽 본체 (바닥 z=0)
@@ -51,24 +46,29 @@ def make_keycap(
     inner.apply_translation((0, 0, inner_h / 2 - 0.01))
     cap = _boolean("difference", [body, inner])
     if cap is None:
-        return {"ok": False, "method": "hollow_failed"}
+        return None, "hollow_failed"
 
     # 3) MX 십자 스템 (천장에서 아래로 돌출)
     a = trimesh.creation.box((4.1, 1.35, stem_height_mm))
     b = trimesh.creation.box((1.35, 4.1, stem_height_mm))
     stem = _boolean("union", [a, b])
     if stem is None:
-        return {"ok": False, "method": "stem_failed"}
+        return None, "stem_failed"
     # 스템 윗면이 내부 천장(inner_h)에 닿고 아래로 stem_height 만큼
     stem.apply_translation((0, 0, inner_h - stem_height_mm / 2 + 0.01))
     cap = _boolean("union", [cap, stem])
     if cap is None:
-        return {"ok": False, "method": "stem_union_failed"}
+        return None, "stem_union_failed"
+    return cap, inner_h
 
-    # 4) 토퍼: 모델을 키캡 윗면 크기에 맞춰 축소 후 윗면(z=height_mm)에 배치
-    model = trimesh.load(model_stl, force="mesh")
+
+def _load_topper(model_path: Path, topper_mm: float, height_mm: float):
+    """토퍼 모델 로드 → 키캡 윗면 크기에 맞춰 축소 후 윗면에 배치. visual 보존."""
+    import trimesh
+
+    model = trimesh.load(model_path, force="mesh")
     if model.is_empty:
-        return {"ok": False, "method": "empty_model"}
+        return None
     ext = model.extents
     longest_xy = max(float(ext[0]), float(ext[1]))
     if longest_xy > 0:
@@ -78,9 +78,197 @@ def make_keycap(
     mcy = (mb[0][1] + mb[1][1]) / 2
     # 토퍼 바닥을 키캡 윗면에 살짝 겹치게 (융합)
     model.apply_translation((-mcx, -mcy, height_mm - mb[0][2] - 0.3))
+    return model
+
+
+def make_keycap(
+    model_stl: Path, out_stl: Path, *,
+    top_mm: float = 18.0,
+    height_mm: float = 9.0,
+    wall_mm: float = 1.6,
+    top_thickness_mm: float = 2.0,
+    stem_height_mm: float = 4.0,
+    topper_mm: float = 14.0,
+) -> dict:
+    """모델을 MX 키캡 위에 얹어 인쇄용 키캡 생성. 반환 {ok, method}."""
+    cap, inner_h = _build_cap_base(
+        top_mm, height_mm, wall_mm, top_thickness_mm, stem_height_mm)
+    if cap is None:
+        return {"ok": False, "method": inner_h}
+
+    model = _load_topper(model_stl, topper_mm, height_mm)
+    if model is None:
+        return {"ok": False, "method": "empty_model"}
 
     out = _boolean("union", [cap, model])
     if out is None:
         return {"ok": False, "method": "topper_union_failed"}
     out.export(out_stl)
     return {"ok": True, "method": "keycap"}
+
+
+def _topper_face_colors(mesh):
+    """토퍼 메쉬에서 면(face)별 RGB(uint8) 추출. 색 정보가 없으면 None.
+
+    텍스처(TextureVisuals)는 to_color()로 정점색 변환 후 면 평균.
+    단색/무색이면(분산 거의 0) None → 멀티컬러 불가로 처리.
+    """
+    import numpy as np
+
+    vis = getattr(mesh, "visual", None)
+    if vis is None or len(mesh.faces) == 0:
+        return None
+    cv = vis
+    try:
+        if hasattr(vis, "to_color"):
+            cv = vis.to_color()
+    except Exception:  # noqa: BLE001
+        cv = vis
+
+    fc = getattr(cv, "face_colors", None)
+    if fc is not None and len(fc) == len(mesh.faces):
+        arr = np.asarray(fc)[:, :3].astype(float)
+        if arr.std() > 3:
+            return arr.astype(int)
+    vc = getattr(cv, "vertex_colors", None)
+    if vc is not None and len(vc) == len(mesh.vertices):
+        vca = np.asarray(vc)[:, :3].astype(float)
+        fcol = vca[mesh.faces].mean(axis=1)
+        if fcol.std() > 3:
+            return fcol.astype(int)
+    return None
+
+
+def make_keycap_multicolor(
+    model_path: Path, ddir: Path, stem: str, *,
+    top_mm: float = 18.0,
+    height_mm: float = 9.0,
+    wall_mm: float = 1.6,
+    top_thickness_mm: float = 2.0,
+    stem_height_mm: float = 4.0,
+    topper_mm: float = 14.0,
+    n_colors: int = 4,
+) -> dict:
+    """텍스처가 있는 토퍼로 멀티컬러 키캡 산출물 생성.
+
+    토퍼 면색을 k-means로 n_colors개로 군집 → 베이스(키캡 본체+스템)는
+    최다 색(extruder 1)에 합치고, 나머지 색 영역을 extruder 2..N 파트로.
+    산출(ddir):
+      - {stem}.bambu.3mf : Bambu/Orca 멀티컬러 (파트별 익스트루더)
+      - {stem}.color.3mf : 정점색 입힌 미리보기
+      - {stem}_c{n}.stl  : 색 파트별 STL
+      - {stem}.palette.json : 익스트루더↔색 매핑
+    반환 {ok, method, colors}.
+    """
+    import json
+
+    import numpy as np
+    import trimesh
+
+    from bambu_auto.services.mesh.bambu3mf import write_bambu_multicolor_3mf
+
+    cap, inner_h = _build_cap_base(
+        top_mm, height_mm, wall_mm, top_thickness_mm, stem_height_mm)
+    if cap is None:
+        return {"ok": False, "method": inner_h}
+
+    topper = _load_topper(model_path, topper_mm, height_mm)
+    if topper is None:
+        return {"ok": False, "method": "empty_model"}
+
+    face_colors = _topper_face_colors(topper)
+    if face_colors is None:
+        return {"ok": False, "method": "no_color"}
+
+    # 대표색 추출: 면색을 ~40 단위로 양자화 후 빈도 상위 distinct N개.
+    # 각 면을 최근접 대표색에 스냅 → 경계 혼색이 새 색을 만들지 않음
+    # (flat_panel.build_multicolor와 동일 철학).
+    k = max(2, min(int(n_colors), 8))
+    fc = face_colors.astype(int)
+    q = np.clip((fc // 40) * 40 + 20, 0, 255)
+    keys, cnts = np.unique(q.reshape(-1, 3), axis=0, return_counts=True)
+    keep: list = []
+    for i in np.argsort(-cnts):
+        c = keys[i].astype(float)
+        if all(float(np.sqrt(((c - kk) ** 2).sum())) > 45 for kk in keep):
+            keep.append(c)
+        if len(keep) >= k:
+            break
+    if not keep:
+        return {"ok": False, "method": "no_palette"}
+    palette = np.array(keep)
+
+    def _assign(pal):
+        return np.argmin(
+            ((fc[:, None, :] - pal[None, :, :]) ** 2).sum(2), axis=1)
+
+    labels = _assign(palette)
+    # 비중 작은 색(<4%)은 버리고 남은 주요색으로 재스냅 (잡색/경계 혼색 제거)
+    n_faces = len(fc)
+    shares = np.array([(labels == i).sum() / n_faces
+                       for i in range(len(palette))])
+    keep_idx = [i for i in range(len(palette)) if shares[i] >= 0.04]
+    if len(keep_idx) < 2:
+        keep_idx = list(np.argsort(-shares)[:2])
+    if len(keep_idx) < len(palette):
+        palette = palette[keep_idx]
+        labels = _assign(palette)
+
+    # 면적(면 수) 내림차순 → 최다 색이 베이스(extruder 1)
+    used = sorted((i for i in range(len(palette)) if (labels == i).any()),
+                  key=lambda i: -int((labels == i).sum()))
+
+    ddir = Path(ddir)
+    ddir.mkdir(parents=True, exist_ok=True)
+
+    parts: list = []          # 익스트루더 순서대로 (mesh, color)
+    palette_hex: list[str] = []
+    for rank, ci in enumerate(used):
+        fidx = np.where(labels == ci)[0]
+        if len(fidx) == 0:
+            continue
+        sub = topper.submesh([fidx], append=True, repair=False)
+        col = tuple(int(x) for x in palette[ci])
+        if rank == 0:
+            # 베이스(키캡 본체+스템)를 최다 색 토퍼 영역과 한 파트로
+            sub = trimesh.util.concatenate([cap, sub])
+        parts.append((sub, col))
+        palette_hex.append("#%02x%02x%02x" % col)
+
+    if not parts:
+        return {"ok": False, "method": "no_parts"}
+
+    # 색 파트별 STL (다운로드/검수용)
+    for i, (mesh, _col) in enumerate(parts, start=1):
+        try:
+            mesh.export(ddir / f"{stem}_c{i}.stl")
+        except Exception:  # noqa: BLE001
+            pass
+
+    # 정점색 미리보기 (.color.3mf / glb)
+    try:
+        colored = []
+        for mesh, col in parts:
+            m = mesh.copy()
+            m.visual = trimesh.visual.ColorVisuals(
+                face_colors=np.tile([*col, 255], (len(m.faces), 1)))
+            colored.append(m)
+        merged = trimesh.util.concatenate(colored)
+        merged.export(ddir / f"{stem}.color.3mf")
+        merged.export(ddir / f"{stem}.glb")
+    except Exception:  # noqa: BLE001
+        pass
+
+    # Bambu/Orca 멀티컬러 3MF (파트별 익스트루더)
+    try:
+        write_bambu_multicolor_3mf([m for m, _ in parts],
+                                   ddir / f"{stem}.bambu.3mf")
+    except Exception:  # noqa: BLE001
+        pass
+
+    (ddir / f"{stem}.palette.json").write_text(json.dumps({
+        "colors": palette_hex,
+        "filament_map": [{"extruder": i + 1, "hex": h}
+                         for i, h in enumerate(palette_hex)],
+    }))
+    return {"ok": True, "method": "keycap_multicolor", "colors": palette_hex}
