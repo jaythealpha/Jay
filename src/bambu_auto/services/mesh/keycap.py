@@ -272,3 +272,67 @@ def make_keycap_multicolor(
                          for i, h in enumerate(palette_hex)],
     }))
     return {"ok": True, "method": "keycap_multicolor", "colors": palette_hex}
+
+
+def fit_mx_socket(
+    model_stl: Path, out_stl: Path, *,
+    target_u_mm: float = 18.0,
+    uniform_scale: bool = True,
+    post_d_mm: float = 5.5,
+    cross_len_mm: float = 4.1,
+    cross_w_mm: float = 1.35,
+    socket_depth_mm: float = 4.0,
+) -> dict:
+    """이미 '키캡 형태'인 모델(예: Meshy 생성)을 1u 크기로 스케일하고
+    바닥 중앙에 규격 Cherry MX 암(female) 십자 소켓을 새로 차감한다.
+
+    Meshy가 붙인 부정확한 소켓은 규격 솔리드 기둥(Ø5.5)으로 덮어 무력화한 뒤
+    그 기둥에 규격 십자(+) 구멍을 파서 실제 스위치에 장착되게 만든다.
+    소켓 치수는 모델 크기와 무관한 절대 규격이라 스케일하지 않는다.
+    반환 {ok, method, scale, base_mm, height_mm}."""
+    import trimesh
+
+    mesh = trimesh.load(model_stl, force="mesh")
+    if mesh.is_empty:
+        return {"ok": False, "method": "empty_model"}
+
+    # 1) 1u 크기로 스케일 (footprint = 긴 XY 변 → target). 소켓은 그대로.
+    ext = mesh.extents
+    base = max(float(ext[0]), float(ext[1]))
+    scale = (target_u_mm / base) if base > 0 else 1.0
+    mesh.apply_scale(scale if uniform_scale else [scale, scale, 1.0])
+
+    bmin, bmax = mesh.bounds
+    cx = (bmin[0] + bmax[0]) / 2
+    cy = (bmin[1] + bmax[1]) / 2
+    z0 = float(bmin[2])  # 바닥(스위치가 들어오는 개구부)
+    cap_h = float(bmax[2] - bmin[2])
+
+    # 2) 규격 기둥(Ø post_d)을 바닥~천장 근처까지 union → Meshy 부정확 소켓을
+    #    덮고 캡 천장과 확실히 연결(끊김 방지). 캡 내부에 숨으므로 외관 무영향.
+    post_h = max(socket_depth_mm + 1.5, cap_h - 1.5)
+    post = trimesh.creation.cylinder(radius=post_d_mm / 2, height=post_h)
+    post.apply_translation([cx, cy, z0 + post_h / 2])
+    capped = _boolean("union", [mesh, post]) or mesh
+
+    # 3) 규격 십자(+) 암 소켓을 바닥(z0)에서 위로 socket_depth 만큼 차감
+    depth = socket_depth_mm
+    a = trimesh.creation.box((cross_len_mm, cross_w_mm, depth + 0.4))
+    b = trimesh.creation.box((cross_w_mm, cross_len_mm, depth + 0.4))
+    cross = _boolean("union", [a, b])
+    if cross is None:
+        return {"ok": False, "method": "cross_failed"}
+    # 바닥 면에서 열려 위로 depth (아래로 0.2 더 내려 깔끔히 관통)
+    cross.apply_translation([cx, cy, z0 + depth / 2 - 0.2])
+    out = _boolean("difference", [capped, cross])
+    if out is None:
+        return {"ok": False, "method": "socket_cut_failed"}
+
+    out.export(out_stl)
+    nb = out.bounds
+    return {
+        "ok": True, "method": "mx_socket",
+        "scale": round(float(scale), 3),
+        "base_mm": round(float(max(nb[1][0] - nb[0][0], nb[1][1] - nb[0][1])), 2),
+        "height_mm": round(float(nb[1][2] - nb[0][2]), 2),
+    }

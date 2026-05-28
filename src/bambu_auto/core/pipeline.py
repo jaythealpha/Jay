@@ -304,7 +304,8 @@ class Pipeline:
         """부착(키링/받침/키캡) 또는 공동(자석/NFC). 실패해도 원본 유지."""
         payload = job.source_payload or {}
         addon = payload.get("addon")
-        if addon not in ("keychain", "stand", "magnet", "nfc", "keycap", "keyring"):
+        if addon not in ("keychain", "stand", "magnet", "nfc", "keycap",
+                         "keycap_fit", "keyring"):
             return
 
         # 키캡: 모델을 MX 키캡 위에 얹음 (별도 처리)
@@ -330,6 +331,27 @@ class Pipeline:
             # 멀티컬러: 텍스처가 있는 원본(GLB)에서 색 추출 → Bambu 3MF.
             # 단색 STL(report.path)은 슬라이싱용으로 유지, 색 파일은 별도 산출.
             self._keycap_multicolor(job, work, make_keycap_multicolor)
+            return
+
+        # 키캡 소켓 보정: 이미 키캡 형태인 모델을 1u로 스케일 + 규격 MX 소켓 차감
+        if addon == "keycap_fit":
+            from bambu_auto.services.mesh.keycap import fit_mx_socket
+
+            self._notify("  키캡 소켓 보정 중 (1u 스케일 + 규격 MX 암 소켓)…")
+            out = work / "repaired" / f"{Path(report.path).stem}_mxfit.stl"
+            try:
+                r = fit_mx_socket(Path(report.path), out)
+            except Exception as e:  # noqa: BLE001
+                r = {"ok": False, "method": f"err:{e}"}
+            if r.get("ok") and out.exists():
+                report.path = out
+                job.repaired_path = str(out)
+                self.repo.save(job)
+                self._notify(
+                    f"  ✓ MX 소켓 보정 — 배율 {r.get('scale')}×, "
+                    f"캡 {r.get('base_mm')}mm / 높이 {r.get('height_mm')}mm")
+            else:
+                self._notify(f"  ⚠ 소켓 보정 실패({r.get('method')}) — 원본 진행")
             return
 
         from bambu_auto.services.mesh import addons as A

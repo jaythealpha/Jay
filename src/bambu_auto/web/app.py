@@ -155,7 +155,8 @@ INDEX_HTML = r"""<!doctype html>
         <option value="">없음</option>
         <option value="stand">받침대</option>
         <option value="keychain">열쇠고리(3D 입체고리)</option>
-        <option value="keycap">키캡 (기계식 키보드 MX)</option>
+        <option value="keycap">키캡 만들기 (아트만 있는 모델 → MX 캡에 얹음)</option>
+        <option value="keycap_fit">키캡 소켓 보정 (이미 키캡 형태 → 1u·규격 MX 소켓)</option>
       </select>
       <span id="addonHint" class="msg" style="display:none">색 키캡은 '텍스처(컬러)' 필요 — 자동 켜짐</span></div>
   </div>
@@ -499,7 +500,8 @@ def create_app(cfg: AppConfig) -> FastAPI:
                 extras["flat"] = True
                 extras["flat_size_mm"] = float(req.flat_size_mm)
                 extras["flat_thickness_mm"] = float(req.flat_thickness_mm)
-            if req.addon in ("keychain", "stand", "magnet", "nfc", "keycap", "keyring"):
+            if req.addon in ("keychain", "stand", "magnet", "nfc", "keycap",
+                             "keycap_fit", "keyring"):
                 extras["addon"] = req.addon
                 if req.addon == "magnet":
                     extras["magnet_size"] = req.magnet_size
@@ -594,8 +596,10 @@ def create_app(cfg: AppConfig) -> FastAPI:
             if addon:
                 label = {"keychain": "키링", "stand": "받침",
                          "magnet": f"자석{pl.get('magnet_size','')}",
-                         "nfc": "NFC", "keycap": "키캡"}.get(addon, addon)
-                mark = "✓" if done and f"_{addon}" in rp else ("?" if done else "·")
+                         "nfc": "NFC", "keycap": "키캡",
+                         "keycap_fit": "키캡소켓"}.get(addon, addon)
+                suffix = {"keycap_fit": "_mxfit"}.get(addon, f"_{addon}")
+                mark = "✓" if done and suffix in rp else ("?" if done else "·")
                 chips.append(f"{mark} {label}")
             if pl.get("brand_text") or pl.get("brand_icon"):
                 what = pl.get("brand_text") or pl.get("brand_icon")
