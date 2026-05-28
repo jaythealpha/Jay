@@ -111,7 +111,7 @@ INDEX_HTML = r"""<!doctype html>
  a:hover{text-decoration:underline}
  .empty{color:var(--mut);text-align:center;padding:28px 0;font-size:13px}
 </style></head><body>
-<h1>Bambu Auto</h1>
+<h1>Bambu Auto <span id="ver" style="font-size:11px;font-weight:400;color:#9ca3af"></span></h1>
 <p class="sub">이미지/텍스트 → 3D 모델 또는 기능 제품(마그넷·NFC·키링) · 본인 Meshy 키</p>
 
 <div class="card" style="padding:12px 18px">
@@ -360,6 +360,8 @@ async function del(id){if(!confirm('삭제할까요?'))return;await fetch('/api/
 document.getElementById('key').value=localStorage.getItem('meshy_key')||'';
 fetch('/api/config').then(r=>r.json()).then(c=>{if(c.byo_required)
  document.getElementById('keyMsg').textContent='⚠ 본인 Meshy 키 입력 필수 (외부 배포 모드)';});
+fetch('/api/version').then(r=>r.json()).then(v=>{
+ document.getElementById('ver').textContent='build '+(v.version||'?')+' · '+(v.started||'');});
 loadPrinters();refresh();setInterval(refresh,3000);onProductChange();
 </script></body></html>"""
 
@@ -420,6 +422,28 @@ def create_app(cfg: AppConfig) -> FastAPI:
     @app.get("/api/config")
     def webconfig() -> dict:
         return {"byo_required": cfg.settings.web.byo_required}
+
+    # 실행 중인 서버의 코드 버전 — 화면 헤더에 표시해 'git pull 후 미재시작'을
+    # 즉시 식별. 표시 SHA != `git rev-parse --short HEAD` 면 서버가 옛 코드.
+    import datetime
+    import subprocess
+
+    def _git_sha() -> str:
+        try:
+            out = subprocess.run(
+                ["git", "rev-parse", "--short", "HEAD"],
+                cwd=Path(__file__).resolve().parent, capture_output=True,
+                text=True, timeout=2)
+            return out.stdout.strip() or "unknown"
+        except Exception:  # noqa: BLE001
+            return "unknown"
+
+    _server_version = {"version": _git_sha(),
+                       "started": datetime.datetime.now().strftime("%m-%d %H:%M")}
+
+    @app.get("/api/version")
+    def version() -> dict:
+        return _server_version
 
     upload_dir = Path(cfg.settings.storage.data_dir) / "uploads"
 
