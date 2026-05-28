@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>요기보 | 눕기만 해도 보상받는 무중력 휴식 — 30일 무료 체험</title>
+<meta name="description" content="하루 30분, 몸을 무중력에. 매일의 휴식이 요기 포인트가 되는 요기보 클럽. 지금 30일 홈트라이얼 무료 체험 시작." />
+<style>
+  :root{
+    --ink:#15233b;          /* deep navy */
+    --ink-soft:#3a4a66;
+    --cream:#fbf6ee;        /* warm cream bg */
+    --paper:#ffffff;
+    --lime:#9ee84a;         /* yogibo lime */
+    --lime-deep:#6fbf1f;
+    --coral:#ff6a5e;        /* warm coral accent */
+    --coral-deep:#e8483b;
+    --gold:#ffb547;
+    --muted:#7b8aa3;
+    --line:#e7ddcd;
+    --radius:22px;
+    --shadow:0 18px 50px rgba(21,35,59,.12);
+    --shadow-sm:0 8px 24px rgba(21,35,59,.08);
+    font-synthesis:none;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,-apple-system,sans-serif;
+    color:var(--ink);background:var(--cream);line-height:1.6;
+    -webkit-font-smoothing:antialiased;overflow-x:hidden;
+  }
+  img{max-width:100%;display:block}
+  a{color:inherit;text-decoration:none}
+  .wrap{width:min(1120px,92vw);margin-inline:auto}
+  .btn{
+    display:inline-flex;align-items:center;gap:.5em;cursor:pointer;border:none;
+    font-weight:800;font-size:1.05rem;padding:1rem 1.9rem;border-radius:999px;
+    transition:transform .15s ease,box-shadow .15s ease;font-family:inherit;
+  }
+  .btn-primary{background:var(--coral);color:#fff;box-shadow:0 10px 26px rgba(232,72,59,.35)}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 16px 34px rgba(232,72,59,.45)}
+  .btn-lime{background:var(--lime);color:var(--ink);box-shadow:0 10px 26px rgba(111,191,31,.35)}
+  .btn-lime:hover{transform:translateY(-2px)}
+  .btn-ghost{background:transparent;color:var(--ink);border:2px solid var(--ink)}
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:.5em;font-weight:800;letter-spacing:.04em;
+    font-size:.82rem;text-transform:uppercase;color:var(--coral-deep);
+    background:rgba(255,106,94,.12);padding:.4em .9em;border-radius:999px;
+  }
+  h1,h2,h3{line-height:1.18;letter-spacing:-.02em}
+  section{padding:clamp(56px,8vw,104px) 0}
+  .center{text-align:center}
+
+  /* ---------- top announcement / urgency bar (T7 scarcity) ---------- */
+  .topbar{background:var(--ink);color:#fff;font-size:.92rem;font-weight:600;text-align:center;padding:.6rem 1rem}
+  .topbar b{color:var(--lime)}
+  #count{font-variant-numeric:tabular-nums;color:var(--gold);font-weight:800}
+
+  /* ---------- nav ---------- */
+  nav{position:sticky;top:0;z-index:50;background:rgba(251,246,238,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .nav-in{display:flex;align-items:center;justify-content:space-between;padding:.9rem 0}
+  .logo{font-weight:900;font-size:1.4rem;letter-spacing:-.03em}
+  .logo span{color:var(--lime-deep)}
+  .nav-links{display:flex;gap:1.6rem;font-weight:700;font-size:.95rem;color:var(--ink-soft)}
+  .nav-links a:hover{color:var(--coral-deep)}
+  .nav-cta{padding:.6rem 1.2rem;font-size:.92rem}
+  @media(max-width:760px){.nav-links{display:none}}
+
+  /* ---------- hero (T1 + T4) ---------- */
+  .hero{position:relative;overflow:hidden;padding-top:clamp(40px,6vw,72px)}
+  .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center}
+  .hero h1{font-size:clamp(2.3rem,5.2vw,3.9rem);font-weight:900;margin:.6rem 0 1rem}
+  .hero h1 em{font-style:normal;color:var(--coral-deep);position:relative;white-space:nowrap}
+  .hero h1 em::after{content:"";position:absolute;left:0;right:0;bottom:.08em;height:.28em;background:var(--lime);z-index:-1;border-radius:4px}
+  .hero p.lead{font-size:1.18rem;color:var(--ink-soft);max-width:32ch;margin-bottom:1.8rem}
+  .hero-cta{display:flex;gap:.9rem;flex-wrap:wrap;align-items:center}
+  .hero-note{font-size:.88rem;color:var(--muted);margin-top:1rem;display:flex;gap:.4em;align-items:center}
+  .hero-visual{
+    aspect-ratio:1/1;border-radius:36px;position:relative;
+    background:
+      radial-gradient(120% 120% at 70% 20%, #c6f08a 0%, #9ee84a 35%, #6fbf1f 100%);
+    box-shadow:var(--shadow);display:grid;place-items:center;
+  }
+  .hero-blob{position:absolute;border-radius:50%;filter:blur(4px);opacity:.55}
+  .hero-emoji{font-size:clamp(6rem,15vw,11rem);filter:drop-shadow(0 18px 24px rgba(21,35,59,.25))}
+  .hero-chip{
+    position:absolute;background:#fff;border-radius:16px;box-shadow:var(--shadow-sm);
+    padding:.7rem .95rem;font-weight:800;font-size:.9rem;display:flex;gap:.55em;align-items:center;
+  }
+  .hero-chip small{display:block;color:var(--muted);font-weight:600;font-size:.74rem}
+  .chip-1{top:6%;left:-4%}
+  .chip-2{bottom:8%;right:-3%}
+  .chip-3{bottom:-3%;left:18%}
+  @media(max-width:860px){
+    .hero-grid{grid-template-columns:1fr;gap:36px}
+    .hero p.lead{max-width:none}
+    .hero-visual{max-width:380px;margin-inline:auto}
+    .chip-1{left:0}.chip-2{right:0}
+  }
+
+  /* ---------- trust bar (T5 social proof) ---------- */
+  .trust{background:var(--ink);color:#fff}
+  .trust-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;text-align:center}
+  .trust .num{font-size:clamp(1.8rem,3.6vw,2.6rem);font-weight:900;color:var(--lime)}
+  .trust .lbl{font-size:.92rem;color:#b9c4d6;margin-top:.2rem}
+  .trust .stars{color:var(--gold)}
+  @media(max-width:680px){.trust-grid{grid-template-columns:repeat(2,1fr);gap:28px}}
+
+  /* ---------- pain → promise ---------- */
+  .promise .eyebrow{margin-bottom:1rem}
+  .promise h2{font-size:clamp(1.9rem,4vw,2.8rem);font-weight:900;max-width:18ch}
+  .promise .sub{color:var(--ink-soft);font-size:1.1rem;margin-top:1rem;max-width:54ch}
+  .pain-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:2.6rem}
+  .pcard{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:1.6rem;box-shadow:var(--shadow-sm)}
+  .pcard .ic{font-size:1.8rem}
+  .pcard h3{font-size:1.15rem;margin:.6rem 0 .4rem}
+  .pcard p{color:var(--ink-soft);font-size:.96rem}
+  @media(max-width:760px){.pain-cards{grid-template-columns:1fr}}
+
+  /* ---------- 일상의 수익화 / 챌린지 (T2 + T3 + T6) ---------- */
+  .reward{background:linear-gradient(180deg,#fff 0%, #fffdf7 100%);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .reward-grid{display:grid;grid-template-columns:.95fr 1.05fr;gap:48px;align-items:center}
+  .reward h2{font-size:clamp(1.9rem,4vw,2.7rem);font-weight:900}
+  .reward h2 .hl{color:var(--lime-deep)}
+  .reward .sub{color:var(--ink-soft);font-size:1.08rem;margin:1rem 0 1.6rem;max-width:44ch}
+  .steps{list-style:none;display:grid;gap:1rem}
+  .steps li{display:flex;gap:1rem;align-items:flex-start}
+  .steps .n{flex:none;width:38px;height:38px;border-radius:50%;background:var(--lime);color:var(--ink);font-weight:900;display:grid;place-items:center}
+  .steps b{font-size:1.05rem}
+  .steps p{color:var(--ink-soft);font-size:.95rem}
+  /* challenge calendar card */
+  .cal-card{background:var(--paper);border-radius:28px;box-shadow:var(--shadow);padding:1.8rem;border:1px solid var(--line)}
+  .cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
+  .cal-head h3{font-size:1.15rem}
+  .cal-head .pts{background:var(--coral);color:#fff;font-weight:800;font-size:.85rem;padding:.35em .8em;border-radius:999px}
+  .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:7px}
+  .cal .day{aspect-ratio:1/1;border-radius:11px;background:#f1ece1;display:grid;place-items:center;font-size:.85rem;font-weight:700;color:var(--muted)}
+  .cal .day.done{background:var(--lime);color:var(--ink)}
+  .cal .day.today{outline:3px solid var(--coral);background:#fff;color:var(--coral-deep)}
+  .cal-foot{margin-top:1.1rem;font-size:.9rem;color:var(--ink-soft);display:flex;justify-content:space-between;align-items:center}
+  .cal-foot b{color:var(--lime-deep)}
+  @media(max-width:860px){.reward-grid{grid-template-columns:1fr;gap:36px}}
+
+  /* ---------- 홈트라이얼 / 체험단 (T7) ---------- */
+  .trial .eyebrow{margin-bottom:1rem}
+  .trial-band{
+    background:radial-gradient(120% 140% at 15% 0%, #ff8276 0%, #ff6a5e 45%, #e8483b 100%);
+    color:#fff;border-radius:32px;padding:clamp(2rem,5vw,3.4rem);box-shadow:var(--shadow);
+    display:grid;grid-template-columns:1.2fr .8fr;gap:36px;align-items:center;
+  }
+  .trial-band h2{font-size:clamp(1.8rem,4vw,2.6rem);font-weight:900}
+  .trial-band p{margin-top:.9rem;font-size:1.06rem;opacity:.95;max-width:42ch}
+  .trial-list{list-style:none;margin-top:1.4rem;display:grid;gap:.6rem}
+  .trial-list li{display:flex;gap:.6em;align-items:center;font-weight:600}
+  .trial-list .ck{background:#fff;color:var(--coral-deep);width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:.8rem;font-weight:900;flex:none}
+  .trial-card{background:#fff;color:var(--ink);border-radius:22px;padding:1.8rem;text-align:center}
+  .trial-card .big{font-size:3.2rem;font-weight:900;color:var(--coral-deep);line-height:1}
+  .trial-card .cap{color:var(--muted);font-weight:700;margin-top:.3rem}
+  .trial-card .btn{margin-top:1.2rem;width:100%}
+  .trial-card small{display:block;color:var(--muted);margin-top:.7rem;font-size:.8rem}
+  @media(max-width:760px){.trial-band{grid-template-columns:1fr}}
+
+  /* ---------- 후기 (T5 community / UGC) ---------- */
+  .ugc h2{font-size:clamp(1.9rem,4vw,2.7rem);font-weight:900;text-align:center}
+  .ugc .sub{text-align:center;color:var(--ink-soft);margin:.8rem auto 2.6rem;max-width:48ch}
+  .review-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .rcard{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:1.5rem;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:.8rem}
+  .rcard .stars{color:var(--gold);font-size:.95rem}
+  .rcard p{font-size:.98rem}
+  .rcard .who{display:flex;align-items:center;gap:.7rem;margin-top:auto}
+  .rcard .av{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-size:1.2rem;background:linear-gradient(135deg,#c6f08a,#9ee84a)}
+  .rcard .who b{font-size:.92rem}
+  .rcard .who small{display:block;color:var(--muted);font-size:.78rem}
+  @media(max-width:860px){.review-grid{grid-template-columns:1fr}}
+
+  /* ---------- offer / price framing ---------- */
+  .offer{background:var(--ink);color:#fff}
+  .offer-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}
+  .offer h2{font-size:clamp(1.9rem,4vw,2.7rem);font-weight:900}
+  .offer .sub{color:#b9c4d6;margin-top:1rem;font-size:1.06rem;max-width:42ch}
+  .offer-list{list-style:none;margin-top:1.6rem;display:grid;gap:.9rem}
+  .offer-list li{display:flex;gap:.7em;align-items:center;font-size:1.02rem}
+  .offer-list .ic{color:var(--lime);font-weight:900}
+  .price-card{background:#fff;color:var(--ink);border-radius:28px;padding:2rem;text-align:center;box-shadow:var(--shadow)}
+  .price-card .tag{display:inline-block;background:var(--lime);color:var(--ink);font-weight:800;font-size:.82rem;padding:.3em .9em;border-radius:999px}
+  .price-card .was{color:var(--muted);text-decoration:line-through;margin-top:1rem}
+  .price-card .now{font-size:2.8rem;font-weight:900}
+  .price-card .now small{font-size:1rem;color:var(--ink-soft);font-weight:700}
+  .price-card .mo{color:var(--coral-deep);font-weight:800;margin-top:.3rem}
+  .price-card .btn{margin-top:1.4rem;width:100%}
+  .price-card .guar{margin-top:.9rem;font-size:.82rem;color:var(--muted)}
+  @media(max-width:760px){.offer-grid{grid-template-columns:1fr;gap:32px}}
+
+  /* ---------- FAQ ---------- */
+  .faq h2{font-size:clamp(1.8rem,4vw,2.5rem);font-weight:900;text-align:center;margin-bottom:2rem}
+  .acc{max-width:760px;margin-inline:auto;display:grid;gap:.8rem}
+  .acc details{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:0 1.3rem;box-shadow:var(--shadow-sm)}
+  .acc summary{list-style:none;cursor:pointer;font-weight:800;padding:1.1rem 0;display:flex;justify-content:space-between;align-items:center}
+  .acc summary::-webkit-details-marker{display:none}
+  .acc summary::after{content:"+";font-size:1.4rem;color:var(--coral-deep);font-weight:800}
+  .acc details[open] summary::after{content:"–"}
+  .acc p{padding:0 0 1.2rem;color:var(--ink-soft)}
+
+  /* ---------- final CTA ---------- */
+  .final{background:linear-gradient(180deg,#fffdf7,#fbf6ee);text-align:center}
+  .final h2{font-size:clamp(2rem,5vw,3.2rem);font-weight:900;max-width:16ch;margin:0 auto 1rem}
+  .final h2 .hl{color:var(--coral-deep)}
+  .final p{color:var(--ink-soft);font-size:1.12rem;margin-bottom:1.8rem}
+  .final .btn{font-size:1.15rem;padding:1.15rem 2.4rem}
+  .final .timer{margin-top:1.4rem;font-weight:700;color:var(--ink-soft)}
+  .final .timer b{color:var(--coral-deep)}
+
+  /* ---------- footer ---------- */
+  footer{background:var(--ink);color:#9fb0c9;font-size:.88rem;padding:2.4rem 0}
+  .foot-in{display:flex;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+  footer .logo{color:#fff;font-size:1.2rem}
+  footer a{color:#9fb0c9}
+  footer a:hover{color:var(--lime)}
+
+  /* ---------- sticky mobile CTA (T6 always-on conversion) ---------- */
+  .sticky{
+    position:fixed;left:0;right:0;bottom:0;z-index:60;background:#fff;border-top:1px solid var(--line);
+    box-shadow:0 -8px 24px rgba(21,35,59,.1);padding:.7rem 4vw;display:none;
+    align-items:center;justify-content:space-between;gap:1rem;
+  }
+  .sticky .p{font-weight:900}.sticky .p small{display:block;color:var(--muted);font-weight:600;font-size:.74rem}
+  .sticky .btn{padding:.8rem 1.4rem;font-size:.95rem}
+  @media(max-width:760px){.sticky{display:flex} body{padding-bottom:80px}}
+</style>
+</head>
+<body>
+
+<!-- ===== URGENCY TOPBAR (히로인스 T7: 한정/마감 압박) ===== -->
+<div class="topbar">
+  이번 주 <b>요기보 클럽 30일 무료 체험</b> 선착순 마감까지 &nbsp;<span id="count">--:--:--</span>
+</div>
+
+<!-- ===== NAV ===== -->
+<nav>
+  <div class="wrap nav-in">
+    <div class="logo">Yogi<span>bo</span></div>
+    <div class="nav-links">
+      <a href="#challenge">요기 타임 챌린지</a>
+      <a href="#trial">30일 체험</a>
+      <a href="#reviews">후기</a>
+      <a href="#offer">가격</a>
+    </div>
+    <a href="#offer" class="btn btn-primary nav-cta">무료로 시작하기</a>
+  </div>
+</nav>
+
+<!-- ===== HERO (T1 타겟 배타성 + T4 감성 응원) ===== -->
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow">🛋️ 요기보 클럽 멤버 전용 혜택</span>
+      <h1>지친 당신을 위한,<br><em>눕기만 해도</em> 보상받는 휴식</h1>
+      <p class="lead">하루 30분, 몸을 무중력에. 매일의 쉼이 <b>요기 포인트</b>가 되는 회복 루틴을 지금 시작하세요.</p>
+      <div class="hero-cta">
+        <a href="#offer" class="btn btn-primary">30일 무료 체험 시작 →</a>
+        <a href="#challenge" class="btn btn-ghost">챌린지 둘러보기</a>
+      </div>
+      <div class="hero-note">✔ 집에서 30일 써보고 결정 · 마음에 안 들면 무료 반품</div>
+    </div>
+    <div>
+      <div class="hero-visual">
+        <div class="hero-emoji">🛋️</div>
+        <div class="hero-chip chip-1">🔥 <span>오늘 누적 챌린지<small>12,840명 휴식 인증</small></span></div>
+        <div class="hero-chip chip-2">⭐ <span>4.9 / 5.0<small>실사용 후기 8,200+</small></span></div>
+        <div class="hero-chip chip-3">+50P <span>오늘의 휴식 적립<small>요기 포인트</small></span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ===== TRUST BAR (T5 소셜프루프) ===== -->
+<section class="trust" style="padding:44px 0">
+  <div class="wrap trust-grid">
+    <div><div class="num">38만+</div><div class="lbl">요기보 클럽 멤버</div></div>
+    <div><div class="num stars">★ 4.9</div><div class="lbl">실사용 평균 평점</div></div>
+    <div><div class="num">92%</div><div class="lbl">체험 후 구매 만족</div></div>
+    <div><div class="num">25%</div><div class="lbl">커버 재구매율</div></div>
+  </div>
+</section>
+
+<!-- ===== PAIN → PROMISE ===== -->
+<section class="promise wrap">
+  <span class="eyebrow">왜 요기보일까요?</span>
+  <h2>쉬어도 쉰 것 같지 않은 당신에게.</h2>
+  <p class="sub">딱딱한 소파, 불편한 의자, 자도 개운하지 않은 하루. 요기보는 몸을 감싸 무중력처럼 받쳐주는 회복 도구입니다.</p>
+  <div class="pain-cards">
+    <div class="pcard"><div class="ic">🪑</div><h3>소파는 허리가 배긴다</h3><p>요기보는 5,000만 개의 비즈가 몸의 곡선을 그대로 받쳐 압력을 분산합니다.</p></div>
+    <div class="pcard"><div class="ic">😮‍💨</div><h3>쉴 곳이 마땅찮다</h3><p>거실·침실·홈오피스 어디든 옮겨 나만의 무중력 라운지로. 1인 가구 소형 평형도 OK.</p></div>
+    <div class="pcard"><div class="ic">💸</div><h3>비싸서 망설여진다</h3><p>30일 무료 체험 후 결제 + 무이자 12개월. 부담 없이 먼저 누워보세요.</p></div>
+  </div>
+</section>
+
+<!-- ===== 일상의 수익화 + 챌린지 (T2 일상 수익화 / T3 게이미피케이션 / T6 습관 루프) ===== -->
+<section class="reward" id="challenge">
+  <div class="wrap reward-grid">
+    <div>
+      <span class="eyebrow">🎯 요기 타임 챌린지</span>
+      <h2>누워서 쉬기만 해도<br><span class="hl">포인트가 쌓입니다.</span></h2>
+      <p class="sub">새로 뭘 할 필요 없어요. 이미 하고 있는 '휴식'을 인증만 하면 요기 포인트가 적립됩니다.</p>
+      <ul class="steps">
+        <li><span class="n">1</span><div><b>하루 30분 무중력 휴식</b><p>요기보에 누워 30분, 몸의 긴장을 풀어주세요.</p></div></li>
+        <li><span class="n">2</span><div><b>앱에서 '오늘의 휴식' 인증</b><p>사진 한 장이면 끝. 매일 +50P 적립.</p></div></li>
+        <li><span class="n">3</span><div><b>포인트로 커버 교체·네이버페이 전환</b><p>모은 포인트로 새 커버, 할인, 현금성 리워드까지.</p></div></li>
+      </ul>
+    </div>
+    <div>
+      <div class="cal-card">
+        <div class="cal-head">
+          <h3>5월 나의 회복 캘린더</h3>
+          <span class="pts">＋850P</span>
+        </div>
+        <div class="cal" id="cal"></div>
+        <div class="cal-foot">
+          <span>17일 연속 휴식 인증 🔥</span>
+          <span><b>다음 보상까지 150P</b></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 30일 홈트라이얼 / 체험단 (T7 고캐시백 체험단) ===== -->
+<section class="trial wrap" id="trial">
+  <span class="eyebrow">📦 30일 홈트라이얼 + 체험단</span>
+  <div class="trial-band">
+    <div>
+      <h2>일단 집으로 받아서<br>30일 동안 누워보세요.</h2>
+      <p>매장 한 번 앉아보는 걸로는 모릅니다. 우리 집 거실에서, 내 몸으로, 30일 충분히 써본 뒤 결정하세요.</p>
+      <ul class="trial-list">
+        <li><span class="ck">✓</span> 30일 무료 체험 · 마음에 안 들면 무료 반품</li>
+        <li><span class="ck">✓</span> 체험단 선정 시 구매가 최대 <b>80% 캐시백</b></li>
+        <li><span class="ck">✓</span> 후기 작성하면 커버 1종 무료 증정</li>
+      </ul>
+    </div>
+    <div class="trial-card">
+      <div class="cap">지금 체험 신청 시</div>
+      <div class="big">0원</div>
+      <div class="cap">으로 먼저 시작</div>
+      <a href="#offer" class="btn btn-primary">무료 체험 신청 →</a>
+      <small>결제는 30일 체험 이후에만 진행됩니다</small>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 후기 (T5 커뮤니티 소셜프루프 / UGC) ===== -->
+<section class="ugc wrap" id="reviews">
+  <h2>요기보 클럽 멤버들의 진짜 후기</h2>
+  <p class="sub">매일 휴식을 인증하는 38만 멤버들이 직접 남긴 이야기예요.</p>
+  <div class="review-grid">
+    <div class="rcard">
+      <div class="stars">★★★★★</div>
+      <p>"퇴근하고 요기보에 눕는 30분이 하루 중 제일 행복해요. 인증하면 포인트까지 쌓이니까 진짜 매일 하게 돼요."</p>
+      <div class="who"><div class="av">🧑‍💻</div><div><b>재택러 지현</b><small>17일 연속 인증 중</small></div></div>
+    </div>
+    <div class="rcard">
+      <div class="stars">★★★★★</div>
+      <p>"허리 배기던 소파 치우고 요기보로 바꿨어요. 아이도 저도 여기서만 뒹굴어요. 커버 빨 수 있는 것도 대만족."</p>
+      <div class="who"><div class="av">👩‍👧</div><div><b>두 아이 엄마 수진</b><small>요기보 Max 사용</small></div></div>
+    </div>
+    <div class="rcard">
+      <div class="stars">★★★★★</div>
+      <p>"30일 체험으로 받아서 반품하려다 못 보냈어요 ㅋㅋ 결국 체험단 캐시백까지 받고 정식 구매. 후회 0."</p>
+      <div class="who"><div class="av">🧑</div><div><b>1인 가구 동훈</b><small>체험 → 구매 전환</small></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== OFFER / 가격 프레이밍 ===== -->
+<section class="offer" id="offer">
+  <div class="wrap offer-grid">
+    <div>
+      <span class="eyebrow">🎁 클럽 런칭 한정 오퍼</span>
+      <h2>부담은 0으로,<br>회복은 매일.</h2>
+      <p class="sub">가격이 망설여졌다면, 요기보 클럽은 진입장벽을 모두 없앴습니다.</p>
+      <ul class="offer-list">
+        <li><span class="ic">✓</span> 30일 무료 체험 후 결제</li>
+        <li><span class="ic">✓</span> 무이자 12개월 할부 기본 제공</li>
+        <li><span class="ic">✓</span> 커버 구독 — 계절마다 새 커버로 교체</li>
+        <li><span class="ic">✓</span> 매일 휴식 인증 → 요기 포인트 적립</li>
+        <li><span class="ic">✓</span> 클럽 멤버 커버·신상품 20% 선할인</li>
+      </ul>
+    </div>
+    <div>
+      <div class="price-card">
+        <span class="tag">런칭 한정 · 선착순</span>
+        <div class="was">정가 459,000원</div>
+        <div class="now">379,000<small>원</small></div>
+        <div class="mo">무이자 12개월 · 월 31,583원</div>
+        <a href="#" class="btn btn-primary" onclick="alert('신청 폼/구매 페이지로 연결하세요');return false;">지금 30일 무료로 시작 →</a>
+        <div class="guar">🛡️ 30일 무료 반품 보장 · 결제는 체험 후에만</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FAQ ===== -->
+<section class="faq wrap">
+  <h2>자주 묻는 질문</h2>
+  <div class="acc">
+    <details open><summary>정말 30일 동안 무료로 써볼 수 있나요?</summary><p>네. 신청하면 집으로 배송되고, 30일간 충분히 사용한 뒤 결정하시면 됩니다. 마음에 들지 않으면 무료로 반품 수거해 드립니다.</p></details>
+    <details><summary>요기 포인트는 어떻게 적립하고 쓰나요?</summary><p>앱에서 매일 '오늘의 휴식'을 인증하면 +50P가 적립됩니다. 모은 포인트는 커버 교체, 클럽 할인, 네이버페이 등 현금성 리워드로 전환할 수 있어요.</p></details>
+    <details><summary>체험단 캐시백 조건이 궁금해요.</summary><p>체험단으로 선정되면 정식 구매 전환 시 구매가의 최대 80%를 캐시백으로 돌려드립니다. 후기 작성 시 커버 1종도 무료 증정됩니다.</p></details>
+    <details><summary>원룸/소형 평수에도 괜찮을까요?</summary><p>코리아 핏 소형 라인(Mini)부터 패밀리 사이즈(Max)까지 있습니다. 신청 시 공간 크기를 알려주시면 맞춤 사이즈를 추천해 드려요.</p></details>
+    <details><summary>커버 세탁이 되나요? 반려동물도 괜찮나요?</summary><p>모든 커버는 분리 세탁이 가능하며, 방수·항균 펫 커버 라인도 있습니다. 발톱 저항 원단으로 반려가정에서도 안심하고 쓰실 수 있어요.</p></details>
+  </div>
+</section>
+
+<!-- ===== FINAL CTA ===== -->
+<section class="final">
+  <div class="wrap">
+    <h2>오늘도 애쓴 당신,<br><span class="hl">이제 제대로 쉴 차례.</span></h2>
+    <p>지금 신청하면 0원으로 30일, 매일 포인트까지 함께 시작됩니다.</p>
+    <a href="#offer" class="btn btn-primary">30일 무료 체험 시작하기 →</a>
+    <div class="timer">선착순 마감까지 <b id="count2">--:--:--</b> 남음</div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <div class="wrap foot-in">
+    <div>
+      <div class="logo">Yogi<span style="color:var(--lime)">bo</span></div>
+      <p style="margin-top:.5rem;max-width:40ch">하루 30분, 몸을 무중력에. 요기보 클럽과 함께하는 일상 회복 루틴.</p>
+    </div>
+    <div style="display:flex;gap:1.4rem;align-items:flex-start">
+      <a href="#challenge">챌린지</a><a href="#trial">체험</a><a href="#reviews">후기</a><a href="#offer">가격</a>
+    </div>
+  </div>
+  <div class="wrap" style="margin-top:1.4rem;opacity:.6;font-size:.78rem">© 2026 Yogibo Korea (예시 랜딩페이지). 본 페이지는 마케팅 데모로, 수치·후기는 예시입니다.</div>
+</footer>
+
+<!-- ===== STICKY MOBILE CTA (T6) ===== -->
+<div class="sticky">
+  <div class="p">0원 30일 체험<small>결제는 체험 후</small></div>
+  <a href="#offer" class="btn btn-primary">무료 시작 →</a>
+</div>
+
+<script>
+  // 챌린지 캘린더 렌더 (T6 습관 루프 시각화)
+  (function(){
+    const cal=document.getElementById('cal'); if(!cal)return;
+    const today=17, done=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16];
+    for(let d=1;d<=30;d++){
+      const el=document.createElement('div');
+      el.className='day'+(done.includes(d)?' done':'')+(d===today?' today':'');
+      el.textContent=d;
+      cal.appendChild(el);
+    }
+  })();
+
+  // 마감 카운트다운 (T7 긴급성) — 자정까지 남은 시간
+  (function(){
+    const a=document.getElementById('count'), b=document.getElementById('count2');
+    function tick(){
+      const now=new Date(), end=new Date(now); end.setHours(23,59,59,0);
+      let s=Math.max(0,Math.floor((end-now)/1000));
+      const h=String(Math.floor(s/3600)).padStart(2,'0');
+      const m=String(Math.floor(s%3600/60)).padStart(2,'0');
+      const ss=String(s%60).padStart(2,'0');
+      const t=`${h}:${m}:${ss}`;
+      if(a)a.textContent=t; if(b)b.textContent=t;
+    }
+    tick(); setInterval(tick,1000);
+  })();
+</script>
+</body>
+</html>
