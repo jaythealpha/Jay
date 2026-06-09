@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mates 화풍 프리셋 레퍼런스</title>
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 24px; }
+    .style-list { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); }
+    .style-card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+    .style-card h3 { margin: 0 0 6px; font-size: 15px; }
+    .style-card .en { color: var(--muted); font-size: 11px; margin-bottom: 8px; }
+    .style-card pre {
+      background: #f6f4ed;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 12px;
+      white-space: pre-wrap;
+      margin: 6px 0;
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    }
+    .style-card .neg { color: #aa4a4a; }
+    .copy-btn {
+      font-size: 11px;
+      padding: 4px 10px;
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-right: 4px;
+    }
+    .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <a href="../" style="text-decoration:none;color:inherit"><span class="brand-mark">◆</span></a>
+        <div>
+          <h1>화풍 프리셋 레퍼런스</h1>
+          <p class="brand-sub">20 종 이미지 생성 스타일과 영문 프롬프트 조각</p>
+        </div>
+      </div>
+      <div><a href="../" style="font-size:13px;color:var(--accent)">← 대시보드</a></div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div id="list" class="style-list" aria-live="polite"></div>
+  </main>
+
+  <script>
+    function escapeHtml(s){return String(s==null?"":s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
+
+    async function init(){
+      const r = await fetch("../../mates-generator/styles.json");
+      const d = await r.json();
+      const list = document.getElementById("list");
+      list.innerHTML = d.styles.map(s => `
+        <article class="style-card">
+          <h3>${escapeHtml(s.name_ko)}</h3>
+          <div class="en">${escapeHtml(s.name_en)} · <code>${escapeHtml(s.id)}</code></div>
+          <div><button class="copy-btn" data-copy="${escapeHtml(s.prompt)}">positive 복사</button>${s.negative?`<button class="copy-btn" data-copy="${escapeHtml(s.negative)}">negative 복사</button>`:""}</div>
+          <pre>${escapeHtml(s.prompt)}</pre>
+          ${s.negative?`<pre class="neg">negative: ${escapeHtml(s.negative)}</pre>`:""}
+        </article>
+      `).join("");
+      list.querySelectorAll(".copy-btn").forEach(b => b.addEventListener("click", async () => {
+        try { await navigator.clipboard.writeText(b.dataset.copy); const t=b.textContent; b.textContent="복사됨 ✓"; setTimeout(()=>b.textContent=t, 1200); }
+        catch { alert("복사 실패"); }
+      }));
+    }
+    init();
+  </script>
+</body>
+</html>

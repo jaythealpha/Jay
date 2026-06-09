@@ -201,6 +201,9 @@ async function openDetail(p) {
       body.innerHTML =
         (p.description ? `<p style="color:var(--ink-soft);margin-top:0">${escapeHtml(p.description)}</p>` : "") +
         `<div class="md">${html}</div>`;
+      if (p.section) {
+        requestAnimationFrame(() => scrollToHeading(body, p.section));
+      }
     } catch (err) {
       body.innerHTML = `<p style="color:var(--muted)">마크다운을 불러오지 못했습니다: ${escapeHtml(String(err))}</p>`;
     }
@@ -220,6 +223,20 @@ async function openDetail(p) {
     body.innerHTML = p.description
       ? `<p>${escapeHtml(p.description)}</p>`
       : `<p style="color:var(--muted)">미리보기를 지원하지 않는 타입입니다.</p>`;
+  }
+}
+
+function scrollToHeading(container, needle) {
+  const target = needle.trim().toLowerCase();
+  const headings = container.querySelectorAll(".md h1, .md h2, .md h3, .md h4");
+  for (const h of headings) {
+    if (h.textContent.trim().toLowerCase().includes(target)) {
+      h.style.background = "var(--accent-soft)";
+      h.style.padding = "4px 8px";
+      h.style.borderRadius = "6px";
+      h.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
   }
 }
 

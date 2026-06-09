@@ -25,12 +25,48 @@ python3 -m http.server 8000
    - `webapp` 타입: iframe 으로 임베드, "새 탭에서 실행" 버튼 제공
    - 직접 링크: `https://…/dashboard/#project=<id>` 로 특정 작업 바로 열기
 
-## 등록된 작업
+## 등록된 작업 (15건)
 
-| 작업 | 분류 | 타입 | 경로 |
-| --- | --- | --- | --- |
-| Yogibo 한국 시장 10배 확대 전략안 | 전략 / 사업기획 | markdown | `../yogibo-korea-10x-strategy.md` |
-| Yogibo Mates 이미지 프롬프트 생성기 | 도구 / 크리에이티브 | webapp | `../mates-generator/index.html` |
+| 작업 | 분류 | 타입 |
+| --- | --- | --- |
+| Yogibo 한국 시장 10배 확대 전략안 (전문) | 전략 / 사업기획 | markdown |
+| ① 시장 진단 | 전략 / 섹션 바로가기 | markdown § |
+| ② 3·3·3 성장 엔진 프레임워크 | 전략 / 섹션 바로가기 | markdown § |
+| ③ 10배 성장 시나리오 산식 | 전략 / 섹션 바로가기 | markdown § |
+| ④ 세부 전략 9개 과제 | 전략 / 섹션 바로가기 | markdown § |
+| ⑤ 3개년 로드맵 | 전략 / 섹션 바로가기 | markdown § |
+| ⑥ 90일 즉시 실행 액션 | 전략 / 섹션 바로가기 | markdown § |
+| Yogibo Mates 이미지 프롬프트 생성기 | 도구 / 크리에이티브 | webapp |
+| Mates 캐릭터 데이터베이스 뷰 | 도구 / 데이터 탐색 | webapp |
+| 화풍 프리셋 레퍼런스 | 도구 / 데이터 탐색 | webapp |
+| 세션 커밋 타임라인 | 메타 / 활동 로그 | webapp |
+| characters.json 원본 | 데이터 / JSON | data |
+| styles.json 원본 | 데이터 / JSON | data |
+| Mates Generator README | 문서 / 가이드 | markdown |
+| Dashboard README | 문서 / 가이드 | markdown |
+
+> § 표시는 같은 문서의 특정 섹션으로 자동 스크롤되는 섹션 바로가기 카드입니다.
+
+## 보조 뷰 페이지
+
+`dashboard/views/` 에 단독 실행 가능한 보조 페이지가 들어 있어, 대시보드 없이도
+직접 열 수 있습니다.
+
+| 페이지 | 설명 |
+| --- | --- |
+| `views/characters.html` | 24종 메이트 캐릭터 카드 그리드 (검색·팔레트 스와치) |
+| `views/styles.html` | 20종 화풍 프리셋 + 즉시 복사 버튼 |
+| `views/commits.html` | `commits.json` 기반 커밋 타임라인 |
+
+## 커밋 로그 갱신
+
+`commits.html` 은 `dashboard/commits.json` 스냅샷을 읽습니다. 새 커밋을 반영하려면:
+
+```bash
+git log --pretty=format:'{"hash":"%h","date":"%ad","subject":"%s","author":"%an"}' --date=iso \
+  | python3 -c 'import sys,json; print(json.dumps({"commits":[json.loads(l) for l in sys.stdin if l.strip()]},ensure_ascii=False,indent=2))' \
+  > dashboard/commits.json
+```
 
 ## 새 작업 추가하기
 

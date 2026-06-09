@@ -1,0 +1,22 @@
+{
+  "commits": [
+    {
+      "hash": "39439a7",
+      "date": "2026-05-14 02:23:26 +0000",
+      "subject": "feat: 세션 산출물을 모아보는 웹 대시보드 추가",
+      "author": "Claude"
+    },
+    {
+      "hash": "7c4b464",
+      "date": "2026-05-07 11:25:38 +0000",
+      "subject": "feat: Yogibo Mates 캐릭터 이미지 프롬프트 생성기 추가",
+      "author": "Claude"
+    },
+    {
+      "hash": "9529157",
+      "date": "2026-04-20 23:37:07 +0000",
+      "subject": "docs: 요기보 한국 시장 매출 10배 확대 전략안 추가",
+      "author": "Claude"
+    }
+  ]
+}
