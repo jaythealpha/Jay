@@ -3,285 +3,200 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>YOGIBO ZOOLA SUMMER — 2026 7월 프로모션 통합 리포트</title>
+<title>YOGIBO SUMMER FESTA 2026 — 7월 프로모션 기획안 (데이터 재정립)</title>
 <style>
-  :root{
-    --cobalt:#1b4dd1;--cobalt-dark:#12309a;--mint:#2ec5c1;--mint-soft:#d6f5f3;
+  :root{--cobalt:#1b4dd1;--cobalt-dark:#12309a;--mint:#2ec5c1;--mint-soft:#d6f5f3;
     --sand:#f4ede1;--coral:#ff6b5b;--gold:#e0a23b;--ink:#15243b;--muted:#5b6b82;
-    --line:#e3e8f0;--card:#ffffff;--bg:#f5f8fc;
-  }
-  *{box-sizing:border-box;}
-  html{scroll-behavior:smooth;}
+    --line:#e3e8f0;--card:#fff;--bg:#f5f8fc;--red:#d9483b;--green:#0f8e5a;}
+  *{box-sizing:border-box;}html{scroll-behavior:smooth;}
   body{margin:0;font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
     color:var(--ink);background:var(--bg);line-height:1.6;-webkit-font-smoothing:antialiased;}
-  a{color:var(--cobalt);}
-  .wrap{max-width:1080px;margin:0 auto;padding:0 22px;}
-
-  header.hero{background:linear-gradient(135deg,var(--cobalt) 0%,var(--cobalt-dark) 45%,#0c1f6b 100%);
-    color:#fff;padding:64px 0 56px;position:relative;overflow:hidden;}
-  header.hero::after{content:"";position:absolute;right:-120px;top:-120px;width:420px;height:420px;border-radius:50%;
-    background:radial-gradient(circle,rgba(46,197,193,.55),transparent 70%);}
-  header.hero::before{content:"";position:absolute;left:-90px;bottom:-140px;width:360px;height:360px;border-radius:50%;
-    background:radial-gradient(circle,rgba(255,107,91,.35),transparent 70%);}
-  .badge{display:inline-block;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35);
-    padding:6px 14px;border-radius:999px;font-size:13px;letter-spacing:.04em;margin-bottom:18px;}
-  header.hero h1{font-size:46px;line-height:1.12;margin:0 0 10px;font-weight:800;letter-spacing:-.02em;}
-  header.hero .sub{font-size:19px;opacity:.92;font-weight:500;}
-  header.hero .slogan{margin-top:16px;font-size:15px;opacity:.8;font-style:italic;}
-  .hero-meta{margin-top:26px;display:flex;flex-wrap:wrap;gap:10px;}
+  a{color:var(--cobalt);}.wrap{max-width:1120px;margin:0 auto;padding:0 22px;}
+  header.hero{background:linear-gradient(135deg,var(--cobalt) 0%,var(--cobalt-dark) 45%,#0c1f6b 100%);color:#fff;padding:62px 0 54px;position:relative;overflow:hidden;}
+  header.hero::after{content:"";position:absolute;right:-120px;top:-120px;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(46,197,193,.5),transparent 70%);}
+  header.hero::before{content:"";position:absolute;left:-90px;bottom:-150px;width:360px;height:360px;border-radius:50%;background:radial-gradient(circle,rgba(255,107,91,.32),transparent 70%);}
+  .badge{display:inline-block;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35);padding:6px 14px;border-radius:999px;font-size:13px;margin-bottom:16px;}
+  header.hero h1{font-size:44px;line-height:1.12;margin:0 0 10px;font-weight:800;letter-spacing:-.02em;}
+  header.hero .sub{font-size:18px;opacity:.92;font-weight:500;}
+  header.hero .slogan{margin-top:14px;font-size:15px;opacity:.8;font-style:italic;}
+  .hero-meta{margin-top:24px;display:flex;flex-wrap:wrap;gap:10px;}
   .hero-meta span{background:rgba(255,255,255,.12);padding:7px 13px;border-radius:8px;font-size:13px;}
-
-  nav.toc{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);}
-  nav.toc .wrap{display:flex;gap:6px;flex-wrap:wrap;padding:11px 22px;}
-  nav.toc a{text-decoration:none;color:var(--muted);font-size:14px;font-weight:600;padding:7px 13px;border-radius:8px;}
+  nav.toc{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.93);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);}
+  nav.toc .wrap{display:flex;gap:5px;flex-wrap:wrap;padding:11px 22px;}
+  nav.toc a{text-decoration:none;color:var(--muted);font-size:13.5px;font-weight:600;padding:7px 12px;border-radius:8px;}
   nav.toc a:hover{background:var(--mint-soft);color:var(--cobalt-dark);}
-
-  section{padding:52px 0 8px;}
+  section{padding:50px 0 6px;}
   .section-tag{color:var(--mint);font-weight:800;font-size:13px;letter-spacing:.12em;text-transform:uppercase;}
-  h2.title{font-size:30px;margin:6px 0 4px;font-weight:800;letter-spacing:-.02em;}
-  .lead{color:var(--muted);font-size:16px;margin:0 0 26px;}
-
-  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;box-shadow:0 6px 22px rgba(20,40,80,.05);}
-  .grid{display:grid;gap:18px;}
-  .g2{grid-template-columns:1fr 1fr;}.g3{grid-template-columns:repeat(3,1fr);}.g4{grid-template-columns:repeat(4,1fr);}
-  @media(max-width:820px){.g2,.g3,.g4{grid-template-columns:1fr;}header.hero h1{font-size:34px;}}
-
-  .stat{background:linear-gradient(160deg,#fff,#f3f8ff);border:1px solid var(--line);border-radius:14px;padding:18px 16px;text-align:center;}
-  .stat .num{font-size:30px;font-weight:800;color:var(--cobalt);letter-spacing:-.02em;}
-  .stat .lab{font-size:13px;color:var(--muted);margin-top:4px;}
-
-  table{width:100%;border-collapse:collapse;font-size:14px;}
-  th,td{text-align:left;padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:top;}
-  th{background:var(--mint-soft);color:var(--cobalt-dark);font-weight:700;font-size:13px;}
+  h2.title{font-size:29px;margin:6px 0 4px;font-weight:800;letter-spacing:-.02em;}
+  .lead{color:var(--muted);font-size:16px;margin:0 0 24px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;box-shadow:0 6px 22px rgba(20,40,80,.05);}
+  .grid{display:grid;gap:16px;}.g2{grid-template-columns:1fr 1fr;}.g3{grid-template-columns:repeat(3,1fr);}.g4{grid-template-columns:repeat(4,1fr);}
+  @media(max-width:860px){.g2,.g3,.g4{grid-template-columns:1fr;}header.hero h1{font-size:33px;}}
+  .stat{background:linear-gradient(160deg,#fff,#f3f8ff);border:1px solid var(--line);border-radius:14px;padding:16px;text-align:center;}
+  .stat .num{font-size:27px;font-weight:800;color:var(--cobalt);letter-spacing:-.02em;}
+  .stat .num.dn{color:var(--red);}.stat .num.up{color:var(--green);}
+  .stat .lab{font-size:12.5px;color:var(--muted);margin-top:4px;}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  th,td{text-align:left;padding:10px 11px;border-bottom:1px solid var(--line);vertical-align:top;}
+  th{background:var(--mint-soft);color:var(--cobalt-dark);font-weight:700;font-size:12.5px;}
   tr:last-child td{border-bottom:none;}
+  td.r,th.r{text-align:right;}
+  .dn{color:var(--red);font-weight:700;}.up{color:var(--green);font-weight:700;}
   .pill{display:inline-block;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:700;}
-  .p-conv{background:#e7f0ff;color:var(--cobalt-dark);}
-  .p-aware{background:#fff0ed;color:#c23b2c;}
-  .p-retarget{background:var(--mint-soft);color:#0f7a76;}
-
-  .embed{position:relative;width:100%;aspect-ratio:16/9;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 8px 30px rgba(20,40,80,.12);}
-  .embed iframe{position:absolute;inset:0;width:100%;height:100%;border:0;}
-  .btn{display:inline-block;background:var(--cobalt);color:#fff;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:10px;margin-top:14px;font-size:15px;}
-  .btn:hover{background:var(--cobalt-dark);}
-  .btn.ghost{background:#fff;color:var(--cobalt);border:1.5px solid var(--cobalt);}
-
-  .creative{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 6px 22px rgba(20,40,80,.06);}
-  .creative img{width:100%;display:block;background:var(--sand);object-fit:cover;}
-  .creative .meta{padding:16px 18px;}
-  .creative .meta h4{margin:0 0 6px;font-size:17px;}
-  .creative .meta p{margin:0;color:var(--muted);font-size:13.5px;}
-  .copytag{display:inline-block;background:var(--sand);border:1px dashed #d7c9b0;border-radius:8px;padding:6px 10px;margin:6px 6px 0 0;font-size:12.5px;color:#7a5b2b;}
-
-  .offer-tier{border-radius:16px;padding:22px;color:#fff;position:relative;overflow:hidden;}
-  .offer-tier h3{margin:8px 0 6px;font-size:34px;font-weight:800;}
-  .offer-tier .nm{font-weight:700;font-size:15px;opacity:.95;}
-  .offer-tier ul{margin:10px 0 0;padding-left:18px;font-size:13.5px;opacity:.96;}
-  .t-base{background:linear-gradient(150deg,#1b4dd1,#12309a);}
-  .t-hero{background:linear-gradient(150deg,#ff6b5b,#e0413a);}
-  .t-cover{background:linear-gradient(150deg,#2ec5c1,#0f8e8a);}
-  .t-up{background:linear-gradient(150deg,#e0a23b,#b9791e);}
-
-  .funnel{display:flex;flex-wrap:wrap;align-items:stretch;gap:10px;margin-top:6px;}
-  .funnel .step{flex:1;min-width:160px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;position:relative;}
-  .funnel .step b{color:var(--cobalt-dark);}
-  .funnel .arrow{display:flex;align-items:center;color:var(--muted);font-size:22px;}
-  @media(max-width:820px){.funnel .arrow{display:none;}}
-
-  .week{margin-bottom:22px;}
+  .p-conv{background:#e7f0ff;color:var(--cobalt-dark);}.p-aware{background:#fff0ed;color:#c23b2c;}.p-retarget{background:var(--mint-soft);color:#0f7a76;}.p-ip{background:#fef0d8;color:#a5701a;}
+  .note{background:#fffaf0;border:1px solid #f0e2c4;border-radius:12px;padding:14px 16px;font-size:13.5px;color:#7a5b2b;margin-top:14px;}
+  .note.blue{background:#eef4ff;border-color:#cfdcff;color:#234;}
+  ul.clean{margin:8px 0 0;padding-left:18px;}ul.clean li{margin:5px 0;}
+  .princ{display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-bottom:1px dashed var(--line);}
+  .princ:last-child{border-bottom:none;}
+  .princ .n{flex:0 0 38px;height:38px;border-radius:10px;background:var(--cobalt);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;}
+  .princ b{font-size:15.5px;}
+  .offer-tier{border-radius:14px;padding:18px;color:#fff;}
+  .offer-tier h3{margin:6px 0 4px;font-size:30px;font-weight:800;}
+  .offer-tier .nm{font-weight:700;font-size:14px;opacity:.95;}
+  .offer-tier ul{margin:8px 0 0;padding-left:17px;font-size:13px;opacity:.96;}
+  .t-base{background:linear-gradient(150deg,#1b4dd1,#12309a);}.t-prem{background:linear-gradient(150deg,#ff6b5b,#e0413a);}
+  .t-cover{background:linear-gradient(150deg,#2ec5c1,#0f8e8a);}.t-ip{background:linear-gradient(150deg,#e0a23b,#b9791e);}
   .week-head{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
   .week-head .wk{background:var(--cobalt);color:#fff;font-weight:800;border-radius:8px;padding:6px 12px;font-size:13px;}
   .week-head .th{font-weight:700;font-size:16px;}.week-head .dt{color:var(--muted);font-size:13px;}
-  .legend{display:flex;gap:14px;flex-wrap:wrap;margin:0 0 18px;font-size:13px;color:var(--muted);}
-  .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:middle;}
-  .palette{display:flex;gap:0;border-radius:12px;overflow:hidden;border:1px solid var(--line);}
-  .palette div{flex:1;height:64px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px;font-size:11px;color:rgba(255,255,255,.95);font-weight:600;}
-
-  footer{margin-top:40px;padding:30px 0 60px;color:var(--muted);font-size:13px;text-align:center;border-top:1px solid var(--line);}
-  .note{background:#fffaf0;border:1px solid #f0e2c4;border-radius:12px;padding:14px 16px;font-size:13.5px;color:#7a5b2b;margin-top:14px;}
-  ul.clean{margin:8px 0 0;padding-left:18px;}ul.clean li{margin:4px 0;}
-  .fn{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;}
-  .fn .chip{background:var(--mint-soft);color:#0f7a76;border-radius:999px;padding:6px 13px;font-size:13px;font-weight:600;}
+  .brief{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px;}
+  .brief h4{margin:0 0 6px;}
+  .brief .ref{font-size:12.5px;color:var(--muted);}
+  .copytag{display:inline-block;background:var(--sand);border:1px dashed #d7c9b0;border-radius:8px;padding:5px 9px;margin:6px 6px 0 0;font-size:12px;color:#7a5b2b;}
+  footer{margin-top:38px;padding:28px 0 60px;color:var(--muted);font-size:13px;text-align:center;border-top:1px solid var(--line);}
+  .tag{display:inline-block;background:var(--sand);color:#7a5b2b;border-radius:6px;padding:2px 7px;font-size:11.5px;margin-left:6px;}
 </style>
 </head>
 <body>
 
 <header class="hero">
   <div class="wrap">
-    <span class="badge">🌊 YOGIBO ZOOLA · 2026 JULY CAMPAIGN</span>
-    <h1>YOGIBO ZOOLA SUMMER</h1>
-    <div class="sub">2026년 7월 프로모션 통합 기획 리포트 · 줄라(기능성) 시리즈</div>
-    <div class="slogan">"물가에서도, 어디서든" — Built for Summer, Made to Last</div>
+    <span class="badge">🎉 YOGIBO SUMMER FESTA · 2026 7월 (데이터 재정립판)</span>
+    <h1>YOGIBO SUMMER FESTA 2026</h1>
+    <div class="sub">It's Summer Time! — 9주년 애니버서리 여름 페스타 기획안</div>
+    <div class="slogan">"여름, 가장 시원한 휴식" · 광폭 애니버서리 × 프리미엄·캐릭터 히어로 × 줄라 기능성</div>
     <div class="hero-meta">
-      <span>📊 데이터: Meta Ads (2024.06–2026.06)</span>
-      <span>🎯 목표 ROAS 13+ / 구매 160건+</span>
-      <span>💰 제안 집행 ₩4.0M</span>
-      <span>🛟 핵심상품: 프리미엄 플러스</span>
+      <span>📊 실측: 2024·2025 7월 판매현황 + Meta Ads(24.06–26.06)</span>
+      <span>🎯 매출 회복 YoY +0% 이상 / 온라인 비중 50%+</span>
+      <span>🛟 히어로: 슬림·맥스 프리미엄 · 카카오프렌즈</span>
     </div>
   </div>
 </header>
 
 <nav class="toc">
   <div class="wrap">
-    <a href="#why">데이터 근거</a>
-    <a href="#concept">컨셉(줄라)</a>
-    <a href="#deck">기획서</a>
-    <a href="#offer">할인·업셀</a>
-    <a href="#creative">광고 소재</a>
-    <a href="#calendar">콘텐츠 캘린더</a>
+    <a href="#analysis">실측 분석</a>
+    <a href="#winners">통한 것/안 통한 것</a>
+    <a href="#direction">방향 재정립</a>
+    <a href="#offer">할인 구조</a>
+    <a href="#calendar">위클리 캘린더</a>
+    <a href="#creative">소재 브리프</a>
     <a href="#budget">예산·KPI</a>
   </div>
 </nav>
 
-<!-- WHY -->
-<section id="why">
+<!-- ANALYSIS -->
+<section id="analysis">
   <div class="wrap">
-    <div class="section-tag">Why July</div>
-    <h2 class="title">데이터가 가리키는 7월 — 검증된 강세월</h2>
-    <p class="lead">최근 2년 Meta 광고 분석상 7월은 봄·블랙프라이데이 다음가는 안정적 전환 대목입니다. 여기에 <b>기능성(줄라) × 여름 아웃도어</b> 메시지를 결합합니다.</p>
+    <div class="section-tag">Fact Check · 실측 매출</div>
+    <h2 class="title">2024 vs 2025 7월, 무슨 일이 있었나</h2>
+    <p class="lead">결론부터: <b>광폭 애니버서리(2024)</b>가 <b>줄라 집중 + 분산(2025)</b>보다 매출이 컸습니다. 2025년은 전년 대비 역성장했고, 줄라 카테고리는 가장 크게 빠졌습니다.</p>
     <div class="grid g4">
-      <div class="stat"><div class="num">10.62</div><div class="lab">2024년 7월 ROAS</div></div>
-      <div class="stat"><div class="num">13.94</div><div class="lab">2025년 7월 ROAS</div></div>
-      <div class="stat"><div class="num">154 / 144</div><div class="lab">7월 구매건수 (24·25)</div></div>
-      <div class="stat"><div class="num">26.42</div><div class="lab">신규 캠페인 데뷔 ROAS(25.7)</div></div>
+      <div class="stat"><div class="num dn">−14.9%</div><div class="lab">총매출 YoY (₩620M→₩528M)</div></div>
+      <div class="stat"><div class="num dn">−23%</div><div class="lab">오프라인 매출</div></div>
+      <div class="stat"><div class="num up">+6%</div><div class="lab">온라인 매출 (비중 43%)</div></div>
+      <div class="stat"><div class="num dn">−40%</div><div class="lab">줄라(Zoola) 카테고리</div></div>
     </div>
-    <div class="note"><b>승리 공식:</b> 「전환 목적 + 컬렉션(다이내믹) 소재 + 신규/리타겟 분리」 구조가 ROAS 13~48로 압도적. 트래픽_단일(조회)은 2년간 ₩13.2M·ROAS 0.95로 비효율 → <b>7월 플랜 제외</b>, 전환으로 흡수.</div>
+
+    <div class="grid g2" style="margin-top:18px;">
+      <div class="card" style="padding:0;overflow:hidden;">
+        <table>
+          <tr><th>채널</th><th class="r">2024.07</th><th class="r">2025.07</th><th class="r">YoY</th></tr>
+          <tr><td>오프라인</td><td class="r">370.0M</td><td class="r">283.8M</td><td class="r dn">−23%</td></tr>
+          <tr><td>온라인</td><td class="r">216.8M</td><td class="r">229.0M</td><td class="r up">+6%</td></tr>
+          <tr><td>B2B</td><td class="r">29.4M</td><td class="r">3.5M</td><td class="r dn">−88%</td></tr>
+          <tr><td>CS / 기타</td><td class="r">3.8M</td><td class="r">11.6M</td><td class="r up">+205%</td></tr>
+          <tr><td><b>합계</b></td><td class="r"><b>620.0M</b></td><td class="r"><b>527.9M</b></td><td class="r dn"><b>−14.9%</b></td></tr>
+        </table>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <table>
+          <tr><th>카테고리</th><th class="r">25비중</th><th class="r">YoY</th></tr>
+          <tr><td>소파/빈백 본체</td><td class="r">37.5%</td><td class="r dn">−9%</td></tr>
+          <tr><td>수면/바디(롤·베개)</td><td class="r">22.0%</td><td class="r dn">−18%</td></tr>
+          <tr><td>커버</td><td class="r">8.5%</td><td class="r dn">−14%</td></tr>
+          <tr><td>줄라(Zoola)</td><td class="r">7.1%</td><td class="r dn">−40%</td></tr>
+          <tr><td>캐릭터 IP</td><td class="r">5.4%</td><td class="r dn">−13%</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="note"><b>줄라 −40%의 진짜 이유:</b> 단일 SKU <b>줄라 드롭 프로</b>가 2024년 ₩20.1M(112개) → 2025년 <b>₩0</b>(단종/품절). 이 한 품목이 줄라 감소액의 대부분. 즉 줄라 하락은 '수요 붕괴'보다 <b>핵심 SKU 공급 공백</b> 영향이 큼 → 2026엔 재고 확보가 선행 조건.</div>
   </div>
 </section>
 
-<!-- CONCEPT -->
-<section id="concept">
+<!-- WINNERS -->
+<section id="winners">
   <div class="wrap">
-    <div class="section-tag">Concept Shift</div>
-    <h2 class="title">컨셉: 줄라(Zoola) — 기능성으로 완성하는 여름</h2>
-    <p class="lead">실내 홈캉스에서 한 발 더 나아가, <b>물가·테라스·캠핑 어디서든 쓰는 기능성 라운지</b>로 포지셔닝합니다. 여름 시즌성과 가장 잘 맞는 라인업입니다.</p>
+    <div class="section-tag">Signal</div>
+    <h2 class="title">2025년에 통한 것 vs 안 통한 것</h2>
+    <p class="lead">역성장 속에서도 또렷한 성장 신호가 있었습니다. 2026 히어로는 여기서 결정합니다.</p>
     <div class="grid g2">
       <div class="card">
-        <b>줄라(Zoola)의 기능성 셀링포인트</b>
-        <div class="fn">
-          <span class="chip">💧 발수·방수</span>
-          <span class="chip">☀️ 자외선·색바램 방지</span>
-          <span class="chip">🪨 야외 내구성</span>
-          <span class="chip">🧼 쉬운 세탁·관리</span>
-          <span class="chip">🏖️ 물놀이·아웃도어 친화</span>
-        </div>
-        <p style="color:var(--muted);font-size:13.5px;margin-top:14px;">메시지 축: "여름 내내, 밖에서도 망가지지 않는 휴식." 기능 = 구매 정당화, 여름 = 타이밍.</p>
+        <b style="color:var(--green);">✅ 통한 것 (성장 히어로)</b>
+        <ul class="clean">
+          <li><b>슬림 프리미엄</b> +₩34.8M (₩3.2M→₩37.9M, <b>+1104%</b>) — 2025 최대 성장·1위 품목. '프리미엄 위크(슬림)'·오프라인 슬림 25~28% 효과.</li>
+          <li><b>카카오프렌즈 드롭</b> +₩10.4M (<b>+356%</b>) — 캐릭터 IP 위크 적중.</li>
+          <li><b>팟 프리미엄 플러스</b> +₩6.1M · <b>드롭/미니 프리미엄</b> 동반 성장 — 프리미엄 업셀 먹힘.</li>
+          <li><b>트레이보 엑스</b> +₩4.0M — '개학 컨셉(소파+트레이보)' 온라인 세트 효과.</li>
+          <li><b>온라인 채널 +6%</b> — 전용 세트(여행/개학)가 성장 견인.</li>
+        </ul>
       </div>
       <div class="card">
-        <b>핵심 상품 구조</b>
+        <b style="color:var(--red);">⚠️ 안 통한 것 (하락 주범)</b>
         <ul class="clean">
-          <li><b>프리미엄 플러스</b> — 최고가 플래그십, <b>히어로 딜(최대 20%)</b>로 어트랙션</li>
-          <li>줄라 시리즈 전 라인 — 기본 10% 할인으로 폭넓은 진입</li>
-          <li>기능성 커버(쿨링·방수) — 단독 20%, 업셀·재구매 핵심</li>
+          <li><b>줄라 드롭 프로</b> −₩20.1M (단종/품절) — 단일 최대 손실.</li>
+          <li><b>오프라인 −23%</b> · <b>B2B −88%</b> — 삼성라이온즈 연계에도 7월 B2B 매출 전환 실패.</li>
+          <li><b>라운저·메가문필로우·미디·맥스·피라미드</b> 등 스테디셀러 동반 하락 (각 −7~10M).</li>
+          <li><b>모듀 소파(베이스/탑)</b> 사실상 소멸 (−₩14M) — SKU 정리 영향.</li>
+          <li>줄라를 '캠페인 전체 주인공'으로 세웠으나 카테고리는 −40%.</li>
         </ul>
-        <p style="color:var(--muted);font-size:13px;margin-top:8px;">※ 상품 라인업·정확한 가격/판가는 yogibo.kr 줄라 시리즈 기준으로 최종 확정 필요.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- DECK -->
-<section id="deck">
+<!-- DIRECTION -->
+<section id="direction">
   <div class="wrap">
-    <div class="section-tag">Deliverable 1 · Slide Deck</div>
-    <h2 class="title">미팅 공유용 기획서 (Gamma 슬라이드)</h2>
-    <p class="lead">경영진·마케팅팀 공유용 발표 자료입니다. (초기 버전은 실내 컨셉 기준 — 줄라 컨셉/신할인 구조는 본 리포트가 최신본입니다.)</p>
-    <div class="embed">
-      <iframe src="https://gamma.app/embed/hsqns20qjcnj6am" title="YOGIBO 기획서"></iframe>
+    <div class="section-tag">Re-Direction</div>
+    <h2 class="title">2026 7월 방향 재정립 (6원칙)</h2>
+    <p class="lead">데이터 + "이전(광폭) 안이 더 낫다"는 판단을 결합 → <b>광폭 애니버서리 페스타로 회귀하되, 할인율은 현실(검증)값으로, 히어로는 데이터로</b> 정합니다.</p>
+    <div class="card">
+      <div class="princ"><div class="n">1</div><div><b>광폭 애니버서리 포맷으로 회귀</b><br><span style="color:var(--muted);">2024식 '전 제품 페스타 + 위클리 로테이션'이 2025 줄라 집중보다 매출 우위(₩620M&gt;₩528M). 줄라는 캠페인 전체가 아닌 '여름 기능성 서브테마'로 배치.</span></div></div>
+      <div class="princ"><div class="n">2</div><div><b>히어로 재정의: 프리미엄 × 캐릭터 IP</b><br><span style="color:var(--muted);">슬림 프리미엄(+1104%)·맥스 프리미엄·카카오프렌즈를 메인 소재로. 줄라 단독 히어로 폐기.</span></div></div>
+      <div class="princ"><div class="n">3</div><div><b>할인율 현실화(검증값 채택)</b><br><span style="color:var(--muted);">전 제품 10% / 위클리 프리미엄 픽 15% / 커버 최대 30% / 오프라인 슬림 25~28% / 온라인 세트 ~22%. (앞서 제안한 임의 20% 폐기)</span></div></div>
+      <div class="princ"><div class="n">4</div><div><b>온라인 퍼스트</b><br><span style="color:var(--muted);">유일한 성장 채널(+6%, 비중 43%→50%+ 목표). 온라인 전용 세트(여행·개학·꿀잠) 확대. 오프라인은 매장 회원전환(와블러 QR) 강화.</span></div></div>
+      <div class="princ"><div class="n">5</div><div><b>핵심 SKU 재고 선확보</b><br><span style="color:var(--muted);">줄라 드롭 프로 등 전년 베스트의 품절 공백(−₩20M) 재발 방지. 위클리 픽 품목 재고를 사전 점검.</span></div></div>
+      <div class="princ"><div class="n">6</div><div><b>검증된 전환 장치 유지</b><br><span style="color:var(--muted);">쇼핑기프트 5천원 적립(마케팅 수신동의 수집) · 포토리뷰 이벤트 · 카톡친구 배송비 · 이프두 IP 추가 5% 쿠폰 · B2B 견적창. Meta는 전환+컬렉션+신규/리타겟 분리 구조 유지(ROAS 13+).</span></div></div>
     </div>
-    <a class="btn" href="https://gamma.app/docs/hsqns20qjcnj6am" target="_blank" rel="noopener">▶ 슬라이드 전체 열기 (Gamma)</a>
-    <a class="btn ghost" href="https://gamma.app/docs/hsqns20qjcnj6am" target="_blank" rel="noopener">✎ Gamma에서 편집</a>
   </div>
 </section>
 
 <!-- OFFER -->
 <section id="offer">
   <div class="wrap">
-    <div class="section-tag">Promotion Strategy</div>
-    <h2 class="title">할인·업셀 구조 (개정안)</h2>
-    <p class="lead">'프리미엄 플러스 20%'를 미끼상품으로 시선을 모으고, 전 라인 10%로 진입 문턱을 낮추며, 커버 20% + 업셀로 객단가를 올립니다.</p>
+    <div class="section-tag">Promotion Structure</div>
+    <h2 class="title">할인·오퍼 구조 (현실 검증값)</h2>
+    <p class="lead">2024·2025 실집행 할인 체계를 계승하여 위계를 단순·명확화했습니다.</p>
     <div class="grid g4">
-      <div class="offer-tier t-base">
-        <div class="nm">① 줄라 전 라인</div><h3>10%<small style="font-size:16px;"> OFF</small></h3>
-        <ul><li>줄라 시리즈 전 제품</li><li>폭넓은 신규 진입 유도</li></ul>
-      </div>
-      <div class="offer-tier t-hero">
-        <div class="nm">② 프리미엄 플러스 (최고가)</div><h3>최대 20%</h3>
-        <ul><li>플래그십 히어로 딜</li><li>광고·랜딩 메인 미끼상품</li></ul>
-      </div>
-      <div class="offer-tier t-cover">
-        <div class="nm">③ 기능성 커버</div><h3>20%<small style="font-size:16px;"> OFF</small></h3>
-        <ul><li>쿨링·방수 커버 단독</li><li>업셀/재구매 핵심</li></ul>
-      </div>
-      <div class="offer-tier t-up">
-        <div class="nm">④ 업셀링 (NEW)</div><h3>+α</h3>
-        <ul><li>프리미엄 플러스 구매 시</li><li>10% 제품 추가구성 혜택</li></ul>
-      </div>
+      <div class="offer-tier t-base"><div class="nm">Everyday Festa</div><h3>10%</h3><ul><li>전 제품 + 무료배송</li><li>폭넓은 진입</li></ul></div>
+      <div class="offer-tier t-prem"><div class="nm">Weekly Premium Pick</div><h3>15%</h3><ul><li>주차별 프리미엄/+ 큐레이션</li><li>슬림·미니·프라임·드롭 로테이션</li></ul></div>
+      <div class="offer-tier t-cover"><div class="nm">기능성 커버</div><h3>최대 30%</h3><ul><li>쿨링·방수·에디션 커버</li><li>업셀·재구매 핵심</li></ul></div>
+      <div class="offer-tier t-ip"><div class="nm">Collector's Week (IP)</div><h3>15%<span style="font-size:13px;">+α</span></h3><ul><li>카카오·디즈니·스타워즈</li><li>이프두 추가 5% 쿠폰</li></ul></div>
     </div>
-
-    <h3 style="margin:30px 0 10px;">업셀링 동선 — "프리미엄 플러스를 사면 더 커지는 장바구니"</h3>
-    <div class="funnel">
-      <div class="step"><b>STEP 1.</b><br>프리미엄 플러스 <b>최대 20%</b>로 유입·구매 결정</div>
-      <div class="arrow">→</div>
-      <div class="step"><b>STEP 2.</b><br>장바구니/상세에 <b>10% 할인 제품</b>(추가 빈백·소품)을 "함께 담으면 혜택"으로 추천</div>
-      <div class="arrow">→</div>
-      <div class="step"><b>STEP 3.</b><br>여기에 <b>기능성 커버 20%</b> 묶음 제안 → 세트 완성, 객단가↑</div>
-    </div>
-    <div class="note"><b>업셀 메시지 예시:</b> "가장 큰 줄라엔, 여벌 커버 하나쯤" · "프리미엄 플러스 고객님께만, 함께 담으면 10% 더" · "세트로 완성하면 배송도 무료".</div>
-
-    <h3 style="margin:32px 0 12px;">디자인 컨셉</h3>
-    <div class="grid g2">
-      <div class="card">
-        <b>컬러 팔레트</b>
-        <div class="palette" style="margin-top:12px;">
-          <div style="background:#1b4dd1;">Cobalt</div>
-          <div style="background:#2ec5c1;">Mint</div>
-          <div style="background:#f4ede1;color:#8a7a5c;">Sand</div>
-          <div style="background:#ff6b5b;">Coral</div>
-        </div>
-        <p style="color:var(--muted);font-size:13.5px;margin-top:12px;">물·수면 반사 + 야외 햇살 질감으로 '기능성·청량감'을 시각화. 물가·테라스·캠핑 등 아웃도어 컷 중심.</p>
-      </div>
-      <div class="card">
-        <b>레이아웃 & 톤</b>
-        <ul class="clean">
-          <li>좌측 제품(줄라) 클로즈업 + 우측 오퍼 배지</li>
-          <li>배지 위계: <b>프리미엄 플러스 20%</b> > 전라인 10% > 커버 20%</li>
-          <li>기능 아이콘(방수·자외선·내구) 노출로 신뢰 강화</li>
-          <li>카피 톤: "물가에서도, 어디서든" / "여름 내내 안 망가지는 휴식"</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- CREATIVE -->
-<section id="creative">
-  <div class="wrap">
-    <div class="section-tag">Deliverable 2 · Ad Creatives</div>
-    <h2 class="title">광고 소재 — 줄라(기능성) 제품 기준</h2>
-    <p class="lead">컨셉을 줄라 시리즈로 변경함에 따라, 아래 실제 제품컷을 소재 베이스로 사용합니다. (AI 마감 시안은 크레딧 충전 후 줄라 컨셉으로 재생성 예정.)</p>
-    <div class="grid g2">
-      <div class="creative">
-        <img src="https://yogibo.kr/web/product/small/202311/f3d83fba57287023d78fca1e5a5fa842.jpg" alt="줄라 시리즈 제품컷" style="aspect-ratio:1/1;" />
-        <div class="meta">
-          <h4>① 제품 베이스 — 줄라 시리즈 (yogibo.kr)</h4>
-          <p>전달주신 기능성 제품컷. 여기에 오퍼 배지(프리미엄 플러스 20% / 전라인 10% / 커버 20%)와 기능 아이콘을 합성해 마감합니다.</p>
-          <span class="copytag">메인카피: 물가에서도, 어디서든</span>
-          <span class="copytag">CTA: 프리미엄 플러스 20% 받기</span>
-        </div>
-      </div>
-      <div class="creative">
-        <div class="meta" style="padding:22px;">
-          <h4>② 제작 예정 소재 라인업 (줄라 컨셉)</h4>
-          <ul class="clean">
-            <li><b>히어로 딜 정적컷</b> — 프리미엄 플러스 + "최대 20%" 배지</li>
-            <li><b>기능 강조 영상(6~10s)</b> — 물 뿌려도 끄떡없는 발수 클로즈업</li>
-            <li><b>업셀 캐러셀</b> — "프리미엄 플러스 + 커버 세트"</li>
-            <li><b>UGC/아웃도어</b> — 테라스·캠핑·물가 라이프스타일 컷</li>
-            <li><b>시나리오 컷</b> — "밖은 32도, 줄라 위는 휴양지"</li>
-          </ul>
-          <div class="note" style="margin-top:14px;">현재 Higgsfield 잔액 1.04 크레딧 → 이미지 2 / 영상 22.5 크레딧 필요. 충전 시 위 라인업을 일괄 생성합니다.</div>
-        </div>
-      </div>
+    <div class="note blue" style="margin-top:16px;">
+      <b>추가 장치</b> · <b>Shopping Gift</b>: 5만원↑ 구매 시 5천원 즉시적립(수신동의 수집) · <b>업셀</b>: 프리미엄(슬림/맥스) 구매 시 커버·서포트 묶음 제안 · <b>온라인 전용 세트</b>: 여름 여행세트(냅X+코지보) ~22%, 개학 세트(소파+트레이보X) · <b>오프라인</b>: 슬림 P 25% / P+ 28%, 매장 와블러 QR 회원전환.
     </div>
   </div>
 </section>
@@ -289,71 +204,67 @@
 <!-- CALENDAR -->
 <section id="calendar">
   <div class="wrap">
-    <div class="section-tag">Deliverable 3 · Content Calendar</div>
-    <h2 class="title">상세 콘텐츠 캘린더 (2026.07 / 4주)</h2>
-    <p class="lead">주차 테마 × 채널(피드·릴스·스토리/카카오/Meta/CRM)별 콘텐츠·카피·오퍼. 신할인(10%/프리미엄플러스 20%/커버 20%/업셀)을 반영했습니다.</p>
-    <div class="legend">
-      <span><span class="dot" style="background:#1b4dd1;"></span>전환 광고</span>
-      <span><span class="dot" style="background:#2ec5c1;"></span>오가닉(SNS)</span>
-      <span><span class="dot" style="background:#ff6b5b;"></span>CRM(알림·이메일)</span>
-      <span><span class="dot" style="background:#8a7a5c;"></span>인지도</span>
+    <div class="section-tag">Weekly Rotation</div>
+    <h2 class="title">위클리 캘린더 (2026.07 페스타)</h2>
+    <p class="lead">2025 '프리미엄 위크 + 콜렉터스 위크' 구조를 계승하되, 데이터 히어로(슬림 프리미엄·카카오) 순서를 앞당겼습니다. (기간은 9주년 일정 확정 시 조정)</p>
+    <div class="card" style="padding:0;overflow:hidden;">
+    <table>
+      <tr><th style="width:110px;">주차</th><th>프리미엄 위크 (15%)</th><th>콜렉터스 위크 (IP 15%+5%)</th><th>온라인 특가</th><th style="width:150px;">광고/CRM 포커스</th></tr>
+      <tr><td><b>W1</b> 7/3~7/9<br><span class="tag">OPEN</span></td><td><b>슬림 프리미엄</b> (데이터 1위 선두 배치)</td><td>카카오프렌즈 (드롭/슬림)</td><td>여름 여행세트(냅X+코지보) ~22%</td><td>전환_신규 + 쇼핑기프트 오픈</td></tr>
+      <tr><td><b>W2</b> 7/10~7/16</td><td>미니 / 프라임 프리미엄</td><td>디즈니 (미니버블/미키)</td><td>단품 15%(냅·코지보·지퍼롤)</td><td>업셀(커버·서포트) 리타겟</td></tr>
+      <tr><td><b>W3</b> 7/17~7/23<br><span class="tag">PEAK</span></td><td>맥스 프리미엄 / 드롭</td><td>스타워즈 (슬림/드롭)</td><td>개학세트(소파+트레이보X)</td><td>아웃도어 UGC + 줄라 기능 서브테마</td></tr>
+      <tr><td><b>W4</b> 7/24~7/31<br><span class="tag">FINALE</span></td><td>앵콜: 인기 프리미엄 재오픈</td><td>IP 앵콜(카카오/디즈니)</td><td>꿀잠템 15%(롤·문필로우·코지보)</td><td>앵콜 48h 플래시 + 막판 전환</td></tr>
+    </table>
     </div>
+    <div class="note">줄라(기능성)는 W3 '여름 피크'에 <b>물놀이·아웃도어 서브테마</b>로 배치(발수·자외선·내구 소구). 단, 줄라 드롭 프로 등 핵심 SKU 재고 확보가 전제. B2B(삼성라이온즈 요기보패밀리존)는 상시 배너+견적창으로 상시 운영, 7월 매출 KPI에서는 분리.</div>
+  </div>
+</section>
 
-    <div class="week">
-      <div class="week-head"><span class="wk">WEEK 1</span><span class="th">오픈 & 기능성 후킹</span><span class="dt">7/1(수)–7/7(화)</span></div>
-      <div class="card" style="padding:0;overflow:hidden;">
-      <table>
-        <tr><th style="width:90px;">날짜</th><th style="width:130px;">채널</th><th>콘텐츠 / 카피</th><th style="width:160px;">오퍼·CTA</th></tr>
-        <tr><td>7/1 (수)<br><b>OPEN</b></td><td><span class="dot" style="background:#1b4dd1;"></span>Meta 전환<br><span class="dot" style="background:#ff6b5b;"></span>알림</td><td>시즌 오픈. 줄라 히어로 소재 게시 + 푸시 "물가에서도, 어디서든 — 프리미엄 플러스 최대 20%"</td><td>프리미엄 플러스 20%<br>전라인 10%</td></tr>
-        <tr><td>7/2 (목)</td><td><span class="dot" style="background:#2ec5c1;"></span>릴스</td><td>기능 강조 영상 — 물 뿌려도 끄떡없는 발수 클로즈업(6s)</td><td>프로필 링크 → 줄라 기획전</td></tr>
-        <tr><td>7/3 (금)</td><td><span class="dot" style="background:#1b4dd1;"></span>Meta 전환<br><span class="dot" style="background:#2ec5c1;"></span>피드</td><td>다이내믹 컬렉션 캐러셀 "물가·테라스·캠핑, 어디든 줄라" 집행</td><td>줄라 전라인 10%</td></tr>
-        <tr><td>7/5 (일)</td><td><span class="dot" style="background:#2ec5c1;"></span>스토리</td><td>주말 아웃도어 무드 + 투표("올여름 줄라 어디서 쓸래?")</td><td>스와이프업 CTA</td></tr>
-        <tr><td>7/7 (화)</td><td><span class="dot" style="background:#ff6b5b;"></span>이메일</td><td>"기능성 커버 20%는 한정 수량" 리마인드</td><td>커버 20%</td></tr>
-      </table>
+<!-- CREATIVE -->
+<section id="creative">
+  <div class="wrap">
+    <div class="section-tag">Creative Brief</div>
+    <h2 class="title">광고 소재 제작 브리프 (yogibo.kr / yogibo.jp 기준)</h2>
+    <p class="lead">데이터 히어로 중심으로 소재를 재정의했습니다. 아래 브리프대로 제작합니다. <b>실제 제품컷은 yogibo.kr·yogibo.jp의 해당 SKU 이미지를 베이스로</b> 하고 오퍼 배지·기능 아이콘을 합성합니다.</p>
+    <div class="grid g3">
+      <div class="brief">
+        <h4>① 메인 — 슬림 프리미엄</h4>
+        <p class="ref">참고: yogibo.kr 슬림 프리미엄 / yogibo.jp Slim Premium 제품컷</p>
+        <p style="font-size:13px;color:var(--muted);">밝은 여름 거실·창가, 코발트/민트/샌드 톤. "Weekly Premium Pick 15%" 배지. 2025 최대 성장 품목을 페스타 얼굴로.</p>
+        <span class="copytag">올여름 1등 프리미엄</span><span class="copytag">CTA: 슬림 프리미엄 15%</span>
+      </div>
+      <div class="brief">
+        <h4>② IP — 카카오프렌즈</h4>
+        <p class="ref">참고: yogibo.kr 카카오프렌즈 빈백 상세컷</p>
+        <p style="font-size:13px;color:var(--muted);">캐릭터 친화 팝 컬러, 즐거운 무드. "Collector's Week +5% 쿠폰" 배지. 체류 고객 이프두 쿠폰 연계.</p>
+        <span class="copytag">한정 캐릭터 위크</span><span class="copytag">CTA: 추가 5% 받기</span>
+      </div>
+      <div class="brief">
+        <h4>③ 기능성 — 줄라(여름 서브테마)</h4>
+        <p class="ref">참고: yogibo.kr 줄라 시리즈 제품컷 (제공 이미지 포함)</p>
+        <p style="font-size:13px;color:var(--muted);">물가·테라스 아웃도어, 물방울·발수 클로즈업. "물가에서도, 어디서든". 기능 아이콘(발수·자외선·내구).</p>
+        <span class="copytag">여름 내내 안 망가지는 휴식</span><span class="copytag">CTA: 줄라 보러가기</span>
+      </div>
+      <div class="brief">
+        <h4>④ 업셀 — 프리미엄+커버 세트</h4>
+        <p class="ref">참고: 맥스/슬림 프리미엄 + 커버 조합컷</p>
+        <p style="font-size:13px;color:var(--muted);">"본체 + 커버 세트" 묶음, 커버 최대 30% 강조. 객단가 상승 동선.</p>
+        <span class="copytag">세트로 완성하면 커버 30%</span>
+      </div>
+      <div class="brief">
+        <h4>⑤ 온라인 세트 — 여행/개학</h4>
+        <p class="ref">참고: 냅X·코지보 / 소파·트레이보X</p>
+        <p style="font-size:13px;color:var(--muted);">여행세트 ~22%, 개학세트. 온라인 전용·성장 채널 소구.</p>
+        <span class="copytag">온라인 단독 특가</span>
+      </div>
+      <div class="brief">
+        <h4>⑥ 기능 영상(6~10s)</h4>
+        <p class="ref">참고: 슬림 프리미엄 안김 + 줄라 발수</p>
+        <p style="font-size:13px;color:var(--muted);">첫 3초 후크(프리미엄 안김/물 튕김). 9:16 릴스·스토리. seedance 권장.</p>
+        <span class="copytag">인지도·신규 도달</span>
       </div>
     </div>
-
-    <div class="week">
-      <div class="week-head"><span class="wk">WEEK 2</span><span class="th">프리미엄 플러스 × 업셀 푸시</span><span class="dt">7/8(수)–7/14(화)</span></div>
-      <div class="card" style="padding:0;overflow:hidden;">
-      <table>
-        <tr><th style="width:90px;">날짜</th><th style="width:130px;">채널</th><th>콘텐츠 / 카피</th><th style="width:160px;">오퍼·CTA</th></tr>
-        <tr><td>7/8 (수)</td><td><span class="dot" style="background:#1b4dd1;"></span>Meta 전환</td><td>프리미엄 플러스 히어로 딜 소재 집행 "가장 큰 줄라, 지금 최대 20%"</td><td>프리미엄 플러스 20%</td></tr>
-        <tr><td>7/9 (목)</td><td><span class="dot" style="background:#2ec5c1;"></span>피드</td><td>업셀 캐러셀 "프리미엄 플러스 + 커버" 세트 구성 제안</td><td>구매 시 10% 제품 추가혜택</td></tr>
-        <tr><td>7/10 (금)</td><td><span class="dot" style="background:#1b4dd1;"></span>리타겟</td><td>장바구니 이탈자 리타겟 — "담아둔 프리미엄 플러스, 커버까지 더 싸게"</td><td>업셀 + 커버 20%</td></tr>
-        <tr><td>7/12 (일)</td><td><span class="dot" style="background:#2ec5c1;"></span>릴스</td><td>"프리미엄 플러스 한 대로 가족이 다 눕는다" 사이즈 비교 릴스</td><td>히어로 딜 CTA</td></tr>
-        <tr><td>7/14 (화)</td><td><span class="dot" style="background:#ff6b5b;"></span>카카오</td><td>기존 구매 6개월+ 고객 친구톡 — "여벌 커버/추가 구성 제안"</td><td>업셀 전용 쿠폰</td></tr>
-      </table>
-      </div>
-    </div>
-
-    <div class="week">
-      <div class="week-head"><span class="wk">WEEK 3</span><span class="th">휴가 피크 · 아웃도어 UGC</span><span class="dt">7/15(수)–7/21(화)</span></div>
-      <div class="card" style="padding:0;overflow:hidden;">
-      <table>
-        <tr><th style="width:90px;">날짜</th><th style="width:130px;">채널</th><th>콘텐츠 / 카피</th><th style="width:160px;">오퍼·CTA</th></tr>
-        <tr><td>7/15 (수)</td><td><span class="dot" style="background:#8a7a5c;"></span>인지도 영상</td><td>"밖은 32도, 줄라 위는 휴양지" 아웃도어 시나리오 도달 캠페인</td><td>도달·조회 KPI</td></tr>
-        <tr><td>7/16 (목)</td><td><span class="dot" style="background:#2ec5c1;"></span>피드/UGC</td><td>물가·테라스·캠핑 실고객 후기 리포스트(별점·기능 후기 자막)</td><td>리뷰 이벤트</td></tr>
-        <tr><td>7/18 (금)</td><td><span class="dot" style="background:#1b4dd1;"></span>Meta 전환</td><td>UGC형 소재를 리타겟 신뢰 보강용으로 추가 집행</td><td>전환 CTA</td></tr>
-        <tr><td>7/19 (일)</td><td><span class="dot" style="background:#2ec5c1;"></span>스토리</td><td>장마철에도 끄떡없는 발수 기능 강조 + 투표 리마인드</td><td>스와이프업</td></tr>
-        <tr><td>7/21 (화)</td><td><span class="dot" style="background:#ff6b5b;"></span>알림</td><td>"프리미엄 플러스 20% 마감 임박" 푸시</td><td>히어로 딜 D-7</td></tr>
-      </table>
-      </div>
-    </div>
-
-    <div class="week">
-      <div class="week-head"><span class="wk">WEEK 4</span><span class="th">앵콜 플래시 · 막판 전환</span><span class="dt">7/22(수)–7/31(금)</span></div>
-      <div class="card" style="padding:0;overflow:hidden;">
-      <table>
-        <tr><th style="width:90px;">날짜</th><th style="width:130px;">채널</th><th>콘텐츠 / 카피</th><th style="width:160px;">오퍼·CTA</th></tr>
-        <tr><td>7/24 (금)</td><td><span class="dot" style="background:#2ec5c1;"></span>릴스</td><td>"7월 인기 줄라 TOP3" — 재고 소진 압박</td><td>품절임박 안내</td></tr>
-        <tr><td>7/27 (월)</td><td><span class="dot" style="background:#ff6b5b;"></span>전채널 CRM</td><td><b>앵콜 48시간 예고</b> — 이메일+카톡+푸시 동시</td><td>D-1 티저</td></tr>
-        <tr><td>7/29 (수)<br><b>FLASH</b></td><td><span class="dot" style="background:#1b4dd1;"></span>Meta 전환</td><td><b>앵콜 48시간 ON</b> — 프리미엄 플러스 20% + 커버 20% 전면 재노출</td><td>히어로 딜 재개(48h)</td></tr>
-        <tr><td>7/30 (목)</td><td><span class="dot" style="background:#1b4dd1;"></span>리타겟</td><td>전체 방문자 막판 푸시 "오늘 밤 종료" + 업셀 리마인드</td><td>타이머 카운트다운</td></tr>
-        <tr><td>7/31 (금)<br><b>END</b></td><td><span class="dot" style="background:#ff6b5b;"></span>알림</td><td>"오늘 자정 종료" 라스트콜 + 다음 시즌 예고</td><td>마감 D-DAY</td></tr>
-      </table>
-      </div>
-    </div>
+    <div class="note">⚠️ 현재 Higgsfield 잔액 1.04 크레딧 → 이미지 2 / 영상 22.5 크레딧 필요로 즉시 생성 불가. 또한 본 실행환경은 yogibo.kr/jp 직접 접근이 네트워크 정책상 차단됩니다. <b>크레딧 충전 + 참고 제품컷(URL/파일) 공유</b> 시 위 6종을 일괄 마감하겠습니다.</div>
   </div>
 </section>
 
@@ -361,32 +272,33 @@
 <section id="budget">
   <div class="wrap">
     <div class="section-tag">Budget & KPI</div>
-    <h2 class="title">캠페인 구조 · 예산 · 목표</h2>
-    <p class="lead">총 제안 집행 ₩4.0M(2024년 7월 수준). 프리미엄 플러스 히어로 딜을 전환 캠페인 메인 소재로 운용.</p>
-    <div class="card" style="padding:0;overflow:hidden;margin-bottom:18px;">
+    <h2 class="title">Meta 예산 구조 · 목표</h2>
+    <p class="lead">총 제안 집행 ₩4.0M. 전환 캠페인 메인 소재를 '슬림/맥스 프리미엄 + 카카오 IP'로 운용.</p>
+    <div class="card" style="padding:0;overflow:hidden;margin-bottom:16px;">
     <table>
-      <tr><th>캠페인</th><th>목적</th><th>비중</th><th>예산</th><th>메인 소재/오퍼</th><th>기대 ROAS</th></tr>
-      <tr><td>7월_전환_줄라(신규)</td><td><span class="pill p-conv">전환</span></td><td>40%</td><td>₩1.6M</td><td>프리미엄 플러스 20% + 전라인 10%</td><td><b>14~26</b></td></tr>
-      <tr><td>7월_전환_줄라(기존·리타겟)</td><td><span class="pill p-retarget">전환</span></td><td>35%</td><td>₩1.4M</td><td>업셀(커버 20%)·장바구니 회수</td><td><b>13~20</b></td></tr>
-      <tr><td>7월_전환_업셀세트</td><td><span class="pill p-conv">전환</span></td><td>15%</td><td>₩0.6M</td><td>프리미엄 플러스 + 커버 세트</td><td>10+</td></tr>
-      <tr><td>7월_인지도(기능영상)</td><td><span class="pill p-aware">인지도</span></td><td>10%</td><td>₩0.4M</td><td>발수·아웃도어 기능 영상</td><td>KPI=도달·조회</td></tr>
+      <tr><th>캠페인</th><th>목적</th><th class="r">비중</th><th class="r">예산</th><th>메인 소재</th><th class="r">기대 ROAS</th></tr>
+      <tr><td>7월_전환_프리미엄(신규)</td><td><span class="pill p-conv">전환</span></td><td class="r">35%</td><td class="r">₩1.4M</td><td>슬림·맥스 프리미엄 15%</td><td class="r"><b>14~26</b></td></tr>
+      <tr><td>7월_전환_IP_콜렉터스</td><td><span class="pill p-ip">전환</span></td><td class="r">20%</td><td class="r">₩0.8M</td><td>카카오/디즈니 IP +쿠폰</td><td class="r">12~18</td></tr>
+      <tr><td>7월_전환_리타겟_업셀</td><td><span class="pill p-retarget">전환</span></td><td class="r">25%</td><td class="r">₩1.0M</td><td>커버·서포트 세트·장바구니</td><td class="r"><b>13~20</b></td></tr>
+      <tr><td>7월_전환_온라인세트</td><td><span class="pill p-conv">전환</span></td><td class="r">10%</td><td class="r">₩0.4M</td><td>여행/개학 세트</td><td class="r">10+</td></tr>
+      <tr><td>7월_인지도(기능영상)</td><td><span class="pill p-aware">인지도</span></td><td class="r">10%</td><td class="r">₩0.4M</td><td>프리미엄 안김·줄라 발수</td><td class="r">KPI=도달</td></tr>
     </table>
     </div>
     <div class="grid g4">
-      <div class="stat"><div class="num">160+</div><div class="lab">목표 구매건수 (전년 +5%)</div></div>
-      <div class="stat"><div class="num">13+</div><div class="lab">목표 ROAS</div></div>
-      <div class="stat"><div class="num">50%+</div><div class="lab">신규 매출 비중</div></div>
-      <div class="stat"><div class="num">+15%</div><div class="lab">객단가 (업셀·세트)</div></div>
+      <div class="stat"><div class="num up">≥ ₩620M</div><div class="lab">7월 매출 목표 (2024 수준 회복)</div></div>
+      <div class="stat"><div class="num">13+</div><div class="lab">Meta ROAS</div></div>
+      <div class="stat"><div class="num">50%+</div><div class="lab">온라인 매출 비중</div></div>
+      <div class="stat"><div class="num up">+15%</div><div class="lab">객단가 (프리미엄·세트 업셀)</div></div>
     </div>
   </div>
 </section>
 
 <footer>
   <div class="wrap">
-    <p><b>YOGIBO ZOOLA SUMMER</b> — 2026년 7월 프로모션 통합 리포트(개정판)<br>
-    데이터 기반: Meta Ads (act_29989992, HUB_요기보코리아) · 분석기간 2024.06–2026.06<br>
-    컨셉: 줄라(기능성) 시리즈 · 할인: 전라인 10% / 프리미엄 플러스 최대 20% / 커버 20% / 프리미엄 플러스 구매 시 업셀<br>
-    <span style="opacity:.7;">※ 제품 라인업·판가·정확한 할인 적용 SKU는 yogibo.kr 줄라 시리즈 기준 최종 확정 필요. 광고 마감 시안·영상은 크레딧 충전 후 재생성.</span></p>
+    <p><b>YOGIBO SUMMER FESTA 2026</b> — 7월 프로모션 기획안 (데이터 재정립판)<br>
+    실측 기반: 2024·2025 7월 판매현황(품목별) + Meta Ads(act_29989992) 2024.06–2026.06<br>
+    방향: 광폭 애니버서리 회귀 · 히어로=프리미엄(슬림/맥스)×카카오 IP · 줄라=여름 기능성 서브테마 · 할인 현실화(10/15/커버30) · 온라인 퍼스트<br>
+    <span style="opacity:.7;">※ 제품 라인업·판가·줄라 핵심 SKU 재고는 yogibo.kr/jp 기준 최종 확정 필요. 소재·영상은 크레딧 충전 후 생성.</span></p>
   </div>
 </footer>
 
