@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>직장인 생존기: 월급날까지 버텨라!</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #12141d;
+    --card: #1d2030;
+    --card-light: #272b40;
+    --accent: #ffd166;
+    --green: #06d6a0;
+    --red: #ef476f;
+    --blue: #4cc9f0;
+    --text: #eef0f6;
+    --muted: #9aa0b5;
+  }
+
+  body {
+    font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+
+  #app {
+    width: 100%;
+    max-width: 560px;
+  }
+
+  .screen { animation: fadeIn .35s ease; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── 타이틀 화면 ───────────────────────── */
+  .title-screen {
+    text-align: center;
+    background: var(--card);
+    border-radius: 20px;
+    padding: 48px 28px;
+    box-shadow: 0 12px 40px rgba(0,0,0,.45);
+  }
+  .title-emoji { font-size: 64px; }
+  .title-screen h1 {
+    font-size: 28px;
+    margin: 18px 0 6px;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+  .title-screen .subtitle {
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.7;
+    margin-bottom: 28px;
+  }
+  .rules {
+    background: var(--card-light);
+    border-radius: 12px;
+    padding: 16px 20px;
+    text-align: left;
+    font-size: 14px;
+    line-height: 2;
+    color: var(--text);
+    margin-bottom: 28px;
+  }
+  .rules b { color: var(--accent); }
+  .best-record {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  /* ── 공통 버튼 ─────────────────────────── */
+  button {
+    font-family: inherit;
+    cursor: pointer;
+    border: none;
+    border-radius: 12px;
+    transition: transform .12s ease, filter .12s ease;
+  }
+  button:hover  { transform: translateY(-2px); filter: brightness(1.1); }
+  button:active { transform: translateY(0); }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #ffd166, #ff9e44);
+    color: #1d2030;
+    font-size: 18px;
+    font-weight: 700;
+    padding: 14px 44px;
+    box-shadow: 0 6px 18px rgba(255, 158, 68, .35);
+  }
+
+  /* ── 게임 헤더 (요일/시간/스탯) ────────── */
+  .hud {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 16px 20px;
+    margin-bottom: 14px;
+    box-shadow: 0 6px 24px rgba(0,0,0,.35);
+  }
+  .hud-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .day-badge {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--accent);
+  }
+  .time-badge {
+    font-size: 13px;
+    color: var(--muted);
+    background: var(--card-light);
+    padding: 4px 12px;
+    border-radius: 99px;
+  }
+  .week-track {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .week-track span {
+    flex: 1;
+    text-align: center;
+    font-size: 12px;
+    padding: 5px 0;
+    border-radius: 8px;
+    background: var(--card-light);
+    color: var(--muted);
+  }
+  .week-track span.done   { background: #2a4a3e; color: var(--green); }
+  .week-track span.today  { background: var(--accent); color: #1d2030; font-weight: 700; }
+
+  .stat { margin-bottom: 10px; }
+  .stat:last-child { margin-bottom: 0; }
+  .stat-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+  .stat-label .val { color: var(--muted); }
+  .bar {
+    height: 10px;
+    background: var(--card-light);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width .5s ease, background .5s ease;
+  }
+  .bar-fill.mental { background: linear-gradient(90deg, #06d6a0, #4cc9f0); }
+  .bar-fill.hp     { background: linear-gradient(90deg, #ffd166, #ff9e44); }
+  .bar-fill.rep    { background: linear-gradient(90deg, #c77dff, #4cc9f0); }
+  .bar-fill.low    { background: var(--red) !important; animation: pulse 1s infinite; }
+  @keyframes pulse { 50% { opacity: .55; } }
+
+  /* ── 이벤트 카드 ───────────────────────── */
+  .event-card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 26px 24px;
+    box-shadow: 0 6px 24px rgba(0,0,0,.35);
+  }
+  .event-slot {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--blue);
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+  }
+  .event-text {
+    font-size: 17px;
+    line-height: 1.75;
+    margin-bottom: 22px;
+    white-space: pre-line;
+  }
+  .choices { display: flex; flex-direction: column; gap: 10px; }
+  .choice-btn {
+    background: var(--card-light);
+    color: var(--text);
+    text-align: left;
+    font-size: 15px;
+    line-height: 1.5;
+    padding: 14px 16px;
+    border: 1px solid #343a55;
+  }
+  .choice-btn:hover { border-color: var(--accent); }
+  .choice-btn .num {
+    display: inline-block;
+    width: 22px; height: 22px;
+    line-height: 22px;
+    text-align: center;
+    background: var(--accent);
+    color: #1d2030;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 800;
+    margin-right: 10px;
+  }
+
+  /* ── 결과 표시 ─────────────────────────── */
+  .result-text {
+    font-size: 16px;
+    line-height: 1.8;
+    margin-bottom: 16px;
+    white-space: pre-line;
+  }
+  .deltas {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 22px;
+  }
+  .delta {
+    font-size: 13px;
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: 99px;
+    background: var(--card-light);
+  }
+  .delta.up   { color: var(--green); }
+  .delta.down { color: var(--red); }
+  .btn-next {
+    background: var(--blue);
+    color: #12141d;
+    font-weight: 700;
+    font-size: 15px;
+    padding: 12px 32px;
+    width: 100%;
+  }
+
+  /* ── 엔딩 화면 ─────────────────────────── */
+  .ending-screen {
+    text-align: center;
+    background: var(--card);
+    border-radius: 20px;
+    padding: 44px 28px;
+    box-shadow: 0 12px 40px rgba(0,0,0,.45);
+  }
+  .ending-emoji { font-size: 72px; animation: bounce .8s ease; }
+  @keyframes bounce {
+    0%   { transform: scale(.3); }
+    60%  { transform: scale(1.15); }
+    100% { transform: scale(1); }
+  }
+  .ending-title {
+    font-size: 26px;
+    font-weight: 800;
+    margin: 16px 0 10px;
+    color: var(--accent);
+  }
+  .ending-desc {
+    font-size: 15px;
+    line-height: 1.8;
+    color: var(--muted);
+    margin-bottom: 24px;
+    white-space: pre-line;
+  }
+  .score-box {
+    background: var(--card-light);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 14px;
+  }
+  .score-box .label { font-size: 13px; color: var(--muted); }
+  .score-box .score { font-size: 38px; font-weight: 800; color: var(--green); }
+  .score-box .title-earned { font-size: 16px; font-weight: 700; color: var(--blue); margin-top: 6px; }
+  .new-record { color: var(--accent); font-size: 13px; font-weight: 700; margin-bottom: 14px; }
+
+  .footer-tip {
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 14px;
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+"use strict";
+
+/* ══════════════════════════════════════════════════════════
+   직장인 생존기: 월급날까지 버텨라!
+   월~금 5일간 멘탈/체력/평판을 지키며 월급날에 도달하는 게임
+   ══════════════════════════════════════════════════════════ */
+
+const DAYS  = ["월", "화", "수", "목", "금"];
+const SLOTS = ["출근길", "오전 업무", "점심시간", "오후 업무", "퇴근 시간"];
+const SLOT_TIMES = ["08:30", "10:00", "12:30", "15:00", "18:00"];
+
+const STAT_META = {
+  mental: { name: "멘탈",     emoji: "🧠", cls: "mental" },
+  hp:     { name: "체력",     emoji: "⚡", cls: "hp" },
+  rep:    { name: "사회생활", emoji: "🤝", cls: "rep" },
+};
+
+/* ── 이벤트 데이터 ──────────────────────────────────────────
+   slot: 0 출근길 / 1 오전 / 2 점심 / 3 오후 / 4 퇴근
+   choice: { t: 선택지, d: {mental, hp, rep}, r: 결과 텍스트 } */
+const EVENTS = [
+
+  /* ───── 출근길 ───── */
+  { slot: 0, text: "🚇 지하철 문이 열리자마자 인파가 쏟아진다.\n오늘도 2호선은 만원. 숨 쉴 공간조차 없다.",
+    choices: [
+      { t: "이 악물고 비집고 들어간다", d: { hp: -10, mental: -5 },
+        r: "낯선 사람의 겨드랑이와 함께한 40분.\n출근 전에 이미 하루치 에너지를 다 썼다." },
+      { t: "다음 열차를 기다린다", d: { mental: 5, rep: -8 },
+        r: "여유롭게 탔지만 5분 지각.\n부장님의 시계 보는 눈빛이 등에 꽂힌다." },
+      { t: "그냥 택시를 탄다", d: { mental: 8, hp: 3, rep: 2 },
+        r: "쾌적한 출근! 하지만 택시비 18,000원...\n오늘 점심은 편의점 삼각김밥 확정이다." },
+    ]},
+  { slot: 0, text: "⏰ 눈을 떴는데 알람이 안 울렸다.\n현재 시각 8시 10분. 회사까지 50분 거리.",
+    choices: [
+      { t: "씻지도 못하고 전력질주", d: { hp: -12, rep: 5 },
+        r: "기적적으로 정시 도착!\n하지만 거울 속 내 모습은... 보지 말자." },
+      { t: "\"몸이 안 좋아서 30분 늦습니다\" 문자", d: { mental: -5, rep: -5 },
+        r: "거짓말의 대가로 양심이 콕콕 쑤신다.\n부장님 답장: \"ㅇㅋ\" ...2글자가 왜 이리 무섭지." },
+      { t: "이왕 늦은 거 여유롭게 준비한다", d: { mental: 6, rep: -12 },
+        r: "샤워도 하고 머리도 했다. 단정하게 1시간 지각.\n사무실 공기가 시베리아다." },
+    ]},
+  { slot: 0, text: "☔ 갑자기 쏟아지는 폭우. 우산이 없다.\n편의점 우산은 9,000원이다.",
+    choices: [
+      { t: "9,000원 우산을 산다", d: { mental: -3, rep: 2 },
+        r: "집에 똑같은 비닐우산이 7개 있는데 8개가 됐다.\n그래도 뽀송하게 도착." },
+      { t: "그냥 뛴다", d: { hp: -8, mental: -5 },
+        r: "물에 빠진 생쥐 꼴로 도착.\n동기가 묻는다. \"샤워하고 왔어?\" ...웃기냐." },
+      { t: "비 그칠 때까지 카페에서 대기", d: { mental: 8, rep: -8 },
+        r: "따뜻한 라떼와 함께하는 평화로운 아침.\n단, 30분 지각이라는 작은 문제가 있다." },
+    ]},
+  { slot: 0, text: "🐶 월요일 아침, 침대에서 몸이 떨어지지 않는다.\n'아... 회사 가기 싫다'는 생각이 머리를 가득 채운다.",
+    choices: [
+      { t: "'월급... 월급...' 주문을 외우며 일어난다", d: { mental: -3, rep: 3 },
+        r: "통장에 스쳐 갈 월급을 생각하며 좀비처럼 기상.\n프로 직장인의 자세다." },
+      { t: "5분만 더... (스누즈 3연타)", d: { hp: 5, rep: -6 },
+        r: "5분이 25분이 되는 마법.\n아침밥은 포기했지만 꿀잠은 챙겼다." },
+      { t: "로또 당첨 상상으로 현실도피", d: { mental: 7, hp: -2 },
+        r: "사직서를 던지는 상상만으로 행복해졌다.\n상상 속에서 이미 3번 퇴사했다." },
+    ]},
+  { slot: 0, text: "🚗 버스에서 마침내 자리가 났다!\n그 순간, 어르신 한 분이 타셨다.",
+    choices: [
+      { t: "당연히 양보한다", d: { hp: -5, mental: 6, rep: 3 },
+        r: "\"고마워요 총각/아가씨~\"\n다리는 아프지만 마음은 따뜻하다. 오늘 운세 좋을 듯." },
+      { t: "자는 척한다", d: { mental: -8, hp: 5 },
+        r: "눈을 감았지만 마음이 불편하다.\n내릴 때까지 눈을 못 떴다. 목만 아프다." },
+    ]},
+  { slot: 0, text: "📱 출근길 단톡방에 부장님 메시지.\n\"오늘 아침 회의 8시 반으로 당깁니다^^\"\n현재 시각 8시 20분.",
+    choices: [
+      { t: "\"네! 가고 있습니다!\" (전력질주)", d: { hp: -10, rep: 6 },
+        r: "헐떡이며 도착하니 부장님 왈,\n\"회의 9시로 다시 미뤄졌어~\" ...실화냐." },
+      { t: "메시지 못 본 척한다", d: { mental: 3, rep: -7 },
+        r: "\"김대리 톡 안 봤어?\" \"아 지하철이라 신호가...\"\n읽음 표시는 이미 떠 있었다. 들켰다." },
+    ]},
+
+  /* ───── 오전 업무 ───── */
+  { slot: 1, text: "📊 부장님이 부른다.\n\"어제 말한 보고서, 오늘 점심 전까지 가능하지?\"\n어제 그런 말을 들은 기억이 전혀 없다.",
+    choices: [
+      { t: "\"네, 알겠습니다!\" (영혼 갈아넣기)", d: { hp: -12, mental: -8, rep: 8 },
+        r: "2시간 만에 보고서 완성. 나는 천재인가.\n부장님: \"음, 폰트가 좀 별로네.\" ...하..." },
+      { t: "\"어제 말씀 안 하셨는데요?\" (팩트 체크)", d: { mental: 5, rep: -10 },
+        r: "사무실에 정적이 흐른다.\n맞는 말이 항상 옳은 말은 아니라는 걸 배웠다." },
+      { t: "\"네! 근데 어떤 보고서 말씀이실까요?\"", d: { mental: -3, rep: 3 },
+        r: "공손한 되물음의 기술.\n부장님도 사실 뭘 시켰는지 기억 못 하는 눈치다." },
+    ]},
+  { slot: 1, text: "💻 모니터를 보는 척하며 멍때린 지 20분째.\n갑자기 뒤에서 인기척이 느껴진다.",
+    choices: [
+      { t: "황급히 엑셀 창을 띄운다", d: { mental: -5, rep: 2 },
+        r: "Alt+Tab 신공 발동! 빈 엑셀이지만 일하는 각도다.\n심장이 벌렁거리지만 위기는 넘겼다." },
+      { t: "당당하게 기지개를 켠다", d: { mental: 5, rep: -3 },
+        r: "\"잠깐 생각 정리 중이었습니다.\"\n뻔뻔함도 실력이다. 부장님이 갸웃하며 지나간다." },
+    ]},
+  { slot: 1, text: "📧 메일함에 'RE:RE:RE:RE:RE: 긴급' 제목의 메일.\n참조에 임원 3명이 걸려 있다.",
+    choices: [
+      { t: "정독하고 정성껏 회신한다", d: { hp: -8, rep: 7 },
+        r: "30분간 메일 하나에 영혼을 담았다.\n돌아온 답장: \"넵\" ...내 30분 돌려줘." },
+      { t: "\"확인했습니다\"만 보낸다", d: { mental: 3, rep: -3 },
+        r: "효율의 화신. 하지만 5분 뒤 전화가 온다.\n\"메일 확인했으면 의견을 줘야지~\"" },
+      { t: "옆자리 동기에게 떠넘긴다", d: { mental: 6, hp: 3, rep: -6 },
+        r: "\"이거 네 담당 아니야?\" 동기의 눈빛이 싸늘하다.\n오늘 점심은 내가 사야 할 것 같다." },
+    ]},
+  { slot: 1, text: "🖨️ 프린터가 또 말썽이다. 용지 걸림 7번째.\n10분 뒤 회의인데 자료 30부를 뽑아야 한다.",
+    choices: [
+      { t: "프린터와 맨손 격투를 벌인다", d: { hp: -7, mental: -7, rep: 5 },
+        r: "토너 가루를 뒤집어쓰며 승리했다.\n손은 까매졌지만 자료는 지켰다. 오늘의 MVP." },
+      { t: "총무팀에 SOS를 친다", d: { rep: -2, mental: 2 },
+        r: "총무팀: \"그거 토너 갈면 돼요\" (1초 만에 해결)\n...나는 30분을 싸웠는데." },
+      { t: "\"자료는 화면 공유로 하시죠!\" (기지 발휘)", d: { mental: 5, rep: 4 },
+        r: "위기를 페이퍼리스 혁신으로 포장했다.\n부장님: \"오~ 요즘 친구다워\" 칭찬인가?" },
+    ]},
+  { slot: 1, text: "🗣️ 회의가 1시간째. 결론은 \"다음 회의에서 정하자\".\n그리고 누군가 말했다. \"근데 이거 원점에서 다시 보죠.\"",
+    choices: [
+      { t: "조용히 영혼을 분리한다", d: { mental: -6, hp: -3 },
+        r: "몸은 회의실에, 영혼은 퇴근길에.\n회의록엔 '참석'으로 기록됐으니 됐다." },
+      { t: "\"제가 정리해서 공유드릴게요\" (총대)", d: { hp: -8, rep: 9 },
+        r: "회의가 즉시 끝났다! 모두가 날 영웅처럼 본다.\n물론 일은 내 몫이 됐지만..." },
+      { t: "\"원점이 정확히 어디일까요?\" (소신 발언)", d: { mental: 6, rep: -5 },
+        r: "3초의 정적 후 부장님이 헛기침을 한다.\n회의가 30분 연장됐다. 내 탓이란다." },
+    ]},
+  { slot: 1, text: "🤧 옆자리 과장님이 기침을 하며 출근했다.\n\"감기 기운이 좀 있네~ 별거 아냐~\"\n별거 같아 보이는데요.",
+    choices: [
+      { t: "슬쩍 마스크를 쓴다", d: { hp: 4, rep: -2 },
+        r: "과장님이 서운한 눈빛을 보낸다.\n\"나 코로나 아니야~\" 네, 근데 감기도 싫어요." },
+      { t: "\"몸도 안 좋으신데 들어가세요!\" (선의)", d: { mental: 3, rep: 5 },
+        r: "\"역시 김대리밖에 없다\"며 진짜 조퇴했다.\n과장님 업무가 내 책상으로 순간이동했다." },
+    ]},
+
+  /* ───── 점심시간 ───── */
+  { slot: 2, text: "🍚 \"오늘 뭐 먹지?\"\n직장인 최대 난제의 시간이 돌아왔다.",
+    choices: [
+      { t: "부장님 따라 국밥집행", d: { mental: -5, rep: 7 },
+        r: "\"역시 밥은 한식이지!\" 17분 만에 식사 종료.\n낮은 자존감과 높은 평판을 맞바꿨다." },
+      { t: "동기들과 새로 생긴 파스타집", d: { mental: 8, hp: 3, rep: -2 },
+        r: "부장님 흉도 보고 맛있는 것도 먹고.\n점심시간이 유일한 힐링이다." },
+      { t: "혼밥하며 유튜브 시청", d: { mental: 10, rep: -5 },
+        r: "완벽한 혼자만의 시간.\n\"김대리는 요즘 따로 먹네?\" 소문이 도는 건 덤." },
+    ]},
+  { slot: 2, text: "☕ 식후 커피 타임. 후배가 묻는다.\n\"선배는 왜 항상 아아만 드세요?\"",
+    choices: [
+      { t: "\"얼죽아는 신념이야\" (영하 10도에도 아아)", d: { mental: 5 },
+        r: "한국 직장인의 피에는 아이스 아메리카노가 흐른다.\n오늘도 수혈 완료." },
+      { t: "오늘은 달달한 바닐라라떼 도전", d: { mental: 7, hp: 4 },
+        r: "당 충전 완료! 세상이 아름다워 보인다.\n물론 30분 후 혈당 스파이크와 함께 졸음이..." },
+      { t: "커피값 아끼려 탕비실 믹스커피", d: { hp: 2, mental: 2 },
+        r: "맥심 모카골드의 안정적인 맛.\n어른의 맛이다. 4,500원 절약 성공." },
+    ]},
+  { slot: 2, text: "💤 점심을 먹고 나니 쏟아지는 졸음.\n점심시간이 20분 남았다.",
+    choices: [
+      { t: "책상에 엎드려 쪽잠", d: { hp: 10, rep: -3 },
+        r: "꿀맛 같은 15분. 팔에 자국이 남았지만\n오후를 버틸 힘을 얻었다." },
+      { t: "회사 주변 산책", d: { hp: 5, mental: 6 },
+        r: "햇빛을 쬐니 살 것 같다.\n식물에게 광합성이 필요하듯 직장인에겐 산책이 필요하다." },
+      { t: "참고 미리 일 시작", d: { hp: -8, rep: 6 },
+        r: "부지런한 모습에 부장님이 흐뭇해한다.\n하지만 오후 3시, 의식이 3번 끊겼다." },
+    ]},
+  { slot: 2, text: "💸 월급날까지 일주일. 통장 잔고 32,000원.\n점심 약속이 잡혔다. 1인당 15,000원 마라탕집.",
+    choices: [
+      { t: "\"나 오늘 도시락 싸왔어~\" (긴축재정)", d: { mental: -4, hp: 2 },
+        r: "편의점 김밥을 도시락이라 우겼다.\n창밖으로 마라탕 먹으러 가는 동기들이 보인다." },
+      { t: "그래도 간다 (욜로)", d: { mental: 8, hp: 3 },
+        r: "마라탕은 진리다. 잔고는 17,000원이 됐지만\n행복은 잔고 순이 아니다. ...맞겠지?" },
+    ]},
+  { slot: 2, text: "🎂 \"오늘 박과장님 생일이래! 점심에 다 같이 케이크 사러 가자~\"\n박과장님과 별로 안 친하다. 1/N 12,000원.",
+    choices: [
+      { t: "흔쾌히 참여한다", d: { rep: 6, mental: -3 },
+        r: "단체 생일 축하 노래까지 완창했다.\n박과장님이 내 이름을 처음으로 불러줬다. \"고마워, 김... 대리?\"" },
+      { t: "\"저 점심 약속이 있어서...\" (회피)", d: { mental: 4, rep: -5 },
+        r: "회사 앞 카페에 숨어 혼자 커피를 마셨다.\n자유에는 약간의 눈치라는 대가가 따른다." },
+    ]},
+
+  /* ───── 오후 업무 ───── */
+  { slot: 3, text: "📉 오후 3시. 인류가 가장 무기력해지는 시간.\n눈꺼풀이 지구 중력의 3배를 받고 있다.",
+    choices: [
+      { t: "초강력 에너지드링크 투입", d: { hp: -5, mental: 3, rep: 3 },
+        r: "심장이 두근두근. 각성 성공!\n오늘 밤 잠은 포기해야겠지만 지금은 살았다." },
+      { t: "화장실에서 5분 명상(=쪽잠)", d: { hp: 6, rep: -2 },
+        r: "변기에 앉아 꾸벅꾸벅.\n직장인의 진짜 휴게실은 화장실 칸이다." },
+      { t: "정신력으로 버틴다", d: { hp: -7, mental: -5 },
+        r: "모니터 글자가 춤을 춘다.\n방금 같은 문장을 8번 읽었다." },
+    ]},
+  { slot: 3, text: "🔥 거래처에서 전화가 왔다.\n\"저번에 보내주신 견적서, 금액이 잘못된 것 같은데요?\"\n확인해 보니... 0이 하나 빠졌다.",
+    choices: [
+      { t: "즉시 정정하고 사과한다", d: { mental: -8, rep: 5 },
+        r: "\"빠른 인정과 사과\"는 사회생활의 정석.\n거래처: \"솔직하시네요. 괜찮습니다~\" 휴..." },
+      { t: "일단 부장님께 보고부터", d: { mental: -5, rep: 2 },
+        r: "부장님: \"그러게 왜 실수를 해~\" (해결책 없음)\n결국 내가 수습했다. 보고는 왜 한 걸까." },
+      { t: "\"시스템 오류였나 봅니다\" (책임 전가)", d: { mental: -10, rep: -5 },
+        r: "거짓말은 또 다른 거짓말을 부른다.\nIT팀에서 연락이 왔다. \"시스템 정상인데요?\"" },
+    ]},
+  { slot: 3, text: "👔 부장님이 다가와 어깨에 손을 올린다.\n\"김대리~ 우리 때는 말이야, 야근이 훈장이었어.\"\n20분째 라떼 타임이 이어지고 있다.",
+    choices: [
+      { t: "\"와 정말요? 대단하시네요!\" (리액션 장인)", d: { mental: -7, rep: 8 },
+        r: "영혼 없는 리액션 17연타.\n부장님 기분은 최고조, 내 영혼은 가출했다." },
+      { t: "\"부장님, 저 4시까지 마감이 있어서...\"", d: { mental: 4, rep: -4 },
+        r: "\"어, 그래... 일해야지...\"\n뒤통수에서 서운함의 레이저가 느껴진다." },
+      { t: "고개만 끄덕이며 일 계속하기 (멀티태스킹)", d: { hp: -4, rep: 2 },
+        r: "\"네~\" \"우와~\" \"진짜요~\" 3종 세트 자동 재생.\n몸이 기억하는 생존 스킬이다." },
+    ]},
+  { slot: 3, text: "💬 단톡방에 부장님의 아재개그가 올라왔다.\n\"인도에서 비가 내리면? 인도네시아~ ㅋㅋㅋ\"\n아무도 답이 없다. 5분째.",
+    choices: [
+      { t: "\"ㅋㅋㅋㅋㅋ 부장님 최고\" (총대 메기)", d: { mental: -5, rep: 7 },
+        r: "내 답장을 시작으로 'ㅋㅋ' 행렬이 이어졌다.\n팀의 평화를 지킨 숨은 영웅이다." },
+      { t: "이모티콘 하나로 무마", d: { rep: 2, mental: -2 },
+        r: "엄지척 이모티콘. 최소한의 성의, 최대한의 효율.\n직장인 처세술의 정수다." },
+      { t: "끝까지 침묵한다", d: { mental: 3, rep: -4 },
+        r: "읽씹의 죄책감이 밀려온다.\n부장님이 지나가며 한마디. \"요즘 단톡방이 조용~하네?\"" },
+    ]},
+  { slot: 3, text: "🆕 신입사원이 쭈뼛쭈뼛 다가온다.\n\"선배님... 이거 어떻게 하는지 여쭤봐도 될까요?\"\n내 일도 산더미인데.",
+    choices: [
+      { t: "하던 일 멈추고 차근차근 알려준다", d: { hp: -6, mental: 4, rep: 6 },
+        r: "신입의 눈이 반짝인다. \"선배님 최고예요!\"\n내가 신입일 때 받고 싶었던 친절을 줬다." },
+      { t: "\"구글에 검색해 봐\" (자립 교육)", d: { mental: 2, rep: -4 },
+        r: "신입이 시무룩하게 돌아간다.\n10분 뒤 부장님께 같은 걸 물어보고 있다. 아차." },
+      { t: "\"30분 뒤에 알려줄게!\" (일정 조율)", d: { rep: 3, hp: -3 },
+        r: "내 일을 끝내고 제대로 알려줬다.\n어른의 시간 관리란 이런 것이다." },
+    ]},
+  { slot: 3, text: "📋 갑자기 전사 공지가 떴다.\n\"금일 17시, 전 직원 대상 깜짝 워크숍 아이디어 회의\"\n퇴근 1시간 전에 이러기 있나요.",
+    choices: [
+      { t: "\"팀워크 등산 어떨까요?\" (아무말 대잔치)", d: { mental: -3, rep: 4 },
+        r: "임원진이 고개를 끄덕인다. 아뿔싸.\n진짜 등산을 가게 생겼다. 동료들의 원망 어린 눈빛." },
+      { t: "조용히 존재감을 지운다", d: { mental: 2, rep: -2 },
+        r: "투명인간 스킬 발동.\n지목당하지 않고 무사히 회의 종료. 프로 직장인이다." },
+    ]},
+
+  /* ───── 퇴근 시간 ───── */
+  { slot: 4, text: "🕕 오후 6시 정각. 칼퇴의 기회!\n하지만 부장님이 아직 자리에 계신다.\n사무실엔 묘한 눈치 게임이 흐른다.",
+    choices: [
+      { t: "\"먼저 들어가 보겠습니다!\" (당당 칼퇴)", d: { mental: 10, hp: 5, rep: -6 },
+        r: "뒤통수가 따갑지만 발걸음은 가볍다.\n칼퇴는 권리다. 죄가 아니다. ...아닐 거야." },
+      { t: "부장님 퇴근까지 대기", d: { mental: -8, hp: -6, rep: 6 },
+        r: "1시간 동안 의미 없는 마우스 클릭.\n부장님 퇴근 후 3초 만에 사무실이 텅 비었다." },
+      { t: "\"외근 다녀오겠습니다\" (위장 탈출)", d: { mental: 6, rep: -3 },
+        r: "가방을 들고 당당하게 퇴장.\n외근지는 우리 집 소파다. 완전 범죄... 일까?" },
+    ]},
+  { slot: 4, text: "🍻 부장님: \"오늘 다 같이 한잔 어때? 간단하게~\"\n부장님의 '간단하게'는 3차까지를 의미한다.",
+    choices: [
+      { t: "\"좋습니다!\" (회식 풀코스)", d: { hp: -15, mental: -5, rep: 10 },
+        r: "노래방에서 부장님과 듀엣까지 완료.\n막차를 놓쳤지만 부장님의 신뢰를 얻었다. ...얻은 거 맞나?" },
+      { t: "\"1차만 참석하겠습니다\" (협상의 달인)", d: { hp: -6, rep: 4 },
+        r: "삼겹살만 먹고 깔끔하게 퇴장.\n프로 직장인의 회식 출구 전략이다." },
+      { t: "\"선약이 있어서요...\" (필살기)", d: { mental: 5, rep: -7 },
+        r: "선약은 내 침대와의 약속이다.\n부장님: \"김대리는 요즘 약속이 참 많아~\"" },
+    ]},
+  { slot: 4, text: "💼 퇴근 5분 전, 부장님이 다가온다.\n\"김대리, 미안한데 이것만 오늘 중으로 부탁해~\"\n견적상 3시간짜리 업무다.",
+    choices: [
+      { t: "\"네...\" (야근 확정)", d: { hp: -14, mental: -10, rep: 8 },
+        r: "텅 빈 사무실, 야식은 편의점 컵라면.\n창밖의 야경이 슬프도록 아름답다." },
+      { t: "\"내일 오전까지 드려도 될까요?\" (협상)", d: { rep: 3, mental: -2 },
+        r: "부장님: \"어... 그래 그럼.\"\n어차피 내일 봐도 되는 일이었다. 협상은 시도하는 자의 것." },
+      { t: "\"오늘 부모님 제사라...\" (가족 찬스)", d: { mental: -6, rep: -4 },
+        r: "탈출엔 성공했지만 한 달 안에 같은 핑계를 쓴 적이 있다.\n부장님이 갸웃거린다. \"지난달에도...?\"" },
+    ]},
+  { slot: 4, text: "🏃 칼퇴 성공! 지하철역으로 향하는 길.\n헬스장 가방이 어깨에서 묵직하게 존재감을 알린다.\n3개월째 회비만 내는 중이다.",
+    choices: [
+      { t: "오늘은 진짜 운동 간다", d: { hp: 10, mental: 5 },
+        r: "30분 러닝 완료! 샤워 후 개운함이란.\n기부 천사에서 회원으로 승격하는 순간이다." },
+      { t: "치킨에 맥주가 날 부른다", d: { mental: 10, hp: -4 },
+        r: "치킨은 살 안 쪄요. 살은 내가 쪄요.\n오늘의 행복을 내일의 나에게 청구했다." },
+      { t: "집 가서 바로 눕는다", d: { hp: 8, mental: 3 },
+        r: "침대와 한 몸이 되는 의식.\n누워서 보는 휴대폰이 세상에서 제일 달다." },
+    ]},
+  { slot: 4, text: "📱 퇴근길 지하철. 회사 단톡방이 울린다.\n부장님: \"아까 그 건, 내일 아침에 얘기 좀 합시다\"\n'그 건'이 뭔지 전혀 모르겠다. 불안하다.",
+    choices: [
+      { t: "\"네! 어떤 건일까요?\" (즉시 확인)", d: { mental: -4, rep: 4 },
+        r: "부장님: \"내일 얘기하자니까~^^\"\n그놈의 ^^ 때문에 밤새 잠을 설치게 생겼다." },
+      { t: "퇴근 후엔 답하지 않는다 (워라밸 사수)", d: { mental: 6, rep: -3 },
+        r: "퇴근 후 연락 차단은 신성한 권리다.\n다만 내일 아침까지 궁금함은 내 몫이다." },
+    ]},
+  { slot: 4, text: "🌙 모처럼 집에 일찍 도착했다.\n저녁 7시. 자유시간이 통째로 주어졌다!",
+    choices: [
+      { t: "자기계발 (인강 듣기)", d: { hp: -4, mental: 4, rep: 3 },
+        r: "갓생 1일차. 미래의 나를 위한 투자다.\n물론 10분 만에 졸기 시작했지만 시도가 중요하다." },
+      { t: "넷플릭스 정주행", d: { mental: 9, hp: -3 },
+        r: "\"한 편만 더...\"가 5편이 됐다.\n새벽 1시, 내일의 나야 미안해." },
+      { t: "일찍 잔다 (수면이 최고의 보약)", d: { hp: 14, mental: 3 },
+        r: "밤 10시 취침이라는 전설을 달성했다.\n내일 아침의 내가 오늘의 나에게 감사할 것이다." },
+    ]},
+];
+
+/* ── 칭호 테이블 (최종 점수 기준) ── */
+const TITLES = [
+  { min: 270, t: "전설의 직장인 🏆" },
+  { min: 230, t: "워라밸 마스터 ⚖️" },
+  { min: 190, t: "프로 월급루팡 🦹" },
+  { min: 150, t: "버티기의 달인 🪨" },
+  { min: 100, t: "월급의 노예 ⛓️" },
+  { min: 0,   t: "이번 생은 직장인 😇" },
+];
+
+/* ── 게임 상태 ── */
+let S = null;
+
+function newState() {
+  return {
+    day: 0,          // 0~4 (월~금)
+    slot: 0,         // 0~4
+    mental: 70,
+    hp: 70,
+    rep: 60,
+    used: new Set(), // 사용한 이벤트 인덱스
+    current: null,   // 현재 이벤트
+  };
+}
+
+const app = document.getElementById("app");
+const clamp = (v) => Math.max(0, Math.min(100, v));
+const bestKey = "office-survivor-best";
+
+/* ── 타이틀 화면 ── */
+function showTitle() {
+  const best = localStorage.getItem(bestKey);
+  app.innerHTML = `
+    <div class="screen title-screen">
+      <div class="title-emoji">🏢</div>
+      <h1>직장인 생존기</h1>
+      <div class="subtitle">월요일 출근부터 금요일 퇴근까지<br>당신의 일주일을 무사히 버텨내세요!</div>
+      <div class="rules">
+        🧠 <b>멘탈</b> — 바닥나면 홧김에 사직서를 던집니다<br>
+        ⚡ <b>체력</b> — 바닥나면 번아웃으로 쓰러집니다<br>
+        🤝 <b>사회생활</b> — 바닥나면 면담실로 불려갑니다<br>
+        💰 금요일 퇴근까지 버티면 <b>월급날</b>이 옵니다!
+      </div>
+      ${best ? `<div class="best-record">🏅 최고 기록: ${best}점</div>` : ""}
+      <button class="btn-primary" onclick="startGame()">출근하기</button>
+      <div class="footer-tip">선택지는 키보드 1, 2, 3으로도 고를 수 있어요</div>
+    </div>`;
+}
+
+function startGame() {
+  S = newState();
+  nextEvent();
+}
+
+/* ── 이벤트 선택 ── */
+function pickEvent() {
+  const pool = EVENTS
+    .map((e, i) => ({ e, i }))
+    .filter(({ e, i }) => e.slot === S.slot && !S.used.has(i));
+  if (pool.length === 0) {
+    // 풀이 비면 같은 슬롯 전체에서 재사용
+    const all = EVENTS.map((e, i) => ({ e, i })).filter(({ e }) => e.slot === S.slot);
+    return all[Math.floor(Math.random() * all.length)];
+  }
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function nextEvent() {
+  const picked = pickEvent();
+  S.used.add(picked.i);
+  S.current = picked.e;
+  renderEvent();
+}
+
+/* ── HUD 렌더 ── */
+function hudHTML() {
+  const week = DAYS.map((d, i) => {
+    const cls = i < S.day ? "done" : i === S.day ? "today" : "";
+    return `<span class="${cls}">${d}</span>`;
+  }).join("");
+
+  const bars = Object.entries(STAT_META).map(([key, m]) => {
+    const v = S[key];
+    const low = v <= 25 ? "low" : "";
+    return `
+      <div class="stat">
+        <div class="stat-label">
+          <span>${m.emoji} ${m.name}</span><span class="val">${v}/100</span>
+        </div>
+        <div class="bar"><div class="bar-fill ${m.cls} ${low}" style="width:${v}%"></div></div>
+      </div>`;
+  }).join("");
+
+  return `
+    <div class="hud">
+      <div class="hud-top">
+        <span class="day-badge">${DAYS[S.day]}요일</span>
+        <span class="time-badge">🕐 ${SLOT_TIMES[S.slot]} · ${SLOTS[S.slot]}</span>
+      </div>
+      <div class="week-track">${week}</div>
+      ${bars}
+    </div>`;
+}
+
+/* ── 이벤트 화면 ── */
+function renderEvent() {
+  const ev = S.current;
+  const choices = ev.choices.map((c, i) => `
+    <button class="choice-btn" onclick="choose(${i})">
+      <span class="num">${i + 1}</span>${c.t}
+    </button>`).join("");
+
+  app.innerHTML = `
+    <div class="screen">
+      ${hudHTML()}
+      <div class="event-card">
+        <div class="event-slot">${SLOTS[S.slot].toUpperCase()}</div>
+        <div class="event-text">${ev.text}</div>
+        <div class="choices">${choices}</div>
+      </div>
+    </div>`;
+}
+
+/* ── 선택 처리 ── */
+function choose(idx) {
+  const c = S.current.choices[idx];
+  const deltas = [];
+  for (const [key, m] of Object.entries(STAT_META)) {
+    const d = c.d[key] || 0;
+    if (d !== 0) {
+      S[key] = clamp(S[key] + d);
+      deltas.push(`<span class="delta ${d > 0 ? "up" : "down"}">${m.emoji} ${m.name} ${d > 0 ? "+" : ""}${d}</span>`);
+    }
+  }
+
+  app.innerHTML = `
+    <div class="screen">
+      ${hudHTML()}
+      <div class="event-card">
+        <div class="event-slot">결과</div>
+        <div class="result-text">${c.r}</div>
+        <div class="deltas">${deltas.join("") || '<span class="delta">변화 없음</span>'}</div>
+        <button class="btn-next" onclick="advance()">계속하기 →</button>
+      </div>
+    </div>`;
+}
+
+/* ── 진행 / 게임오버 판정 ── */
+function advance() {
+  if (S.mental <= 0) return showEnding("burst");
+  if (S.hp <= 0)     return showEnding("burnout");
+  if (S.rep <= 0)    return showEnding("fired");
+
+  S.slot++;
+  if (S.slot >= SLOTS.length) {
+    S.slot = 0;
+    S.day++;
+    if (S.day >= DAYS.length) return showEnding("payday");
+  }
+  nextEvent();
+}
+
+/* ── 엔딩 ── */
+function showEnding(type) {
+  const score = S.mental + S.hp + S.rep;
+  const survived = type === "payday";
+
+  const endings = {
+    burst: {
+      emoji: "📄", title: "멘탈 붕괴 퇴사",
+      desc: "더는 참을 수 없었다.\n품속의 사직서가 부장님 책상 위로 날아갔다.\n\"그동안 감사했습니다!\"\n\n...3초간 짜릿했고, 카드값 알림과 함께 현실로 돌아왔다.",
+    },
+    burnout: {
+      emoji: "🏥", title: "번아웃 — 강제 휴식",
+      desc: "몸이 먼저 파업을 선언했다.\n눈을 떠 보니 링거를 맞고 있다.\n\n의사: \"과로입니다. 푹 쉬세요.\"\n부장님 문자: \"몸조리 잘하고~ 보고서는 메일로 부탁해^^\"",
+    },
+    fired: {
+      emoji: "🚪", title: "면담실로 오세요",
+      desc: "인사팀에서 호출이 왔다.\n\"요즘 팀 분위기에 대해 얘기 좀 할까요?\"\n\n사회생활도 실력이라는 걸\n뼈저리게 배운 한 주였다.",
+    },
+    payday: {
+      emoji: "💰", title: "월급날 생존 성공!",
+      desc: "금요일 오후 6시, 무사히 한 주를 버텨냈다.\n그리고 도착한 문자 한 통.\n\n[입금] 급여 ***원\n\n통장을 스쳐 가는 월급마저 아름다운 밤이다.\n다음 주도... 버텨보자.",
+    },
+  };
+
+  // 고득점 생존 시 특별 엔딩
+  let e = endings[type];
+  if (survived && score >= 240) {
+    e = {
+      emoji: "👑", title: "이달의 우수사원",
+      desc: "멘탈, 체력, 사회생활 모두 지켜낸 완벽한 한 주!\n부장님: \"김대리, 자네 같은 인재는 처음이야.\"\n\n...라는 칭찬과 함께 일이 2배로 늘었다.\n유능함의 저주란 이런 것이다.",
+    };
+  }
+
+  const title = survived
+    ? TITLES.find(x => score >= x.min).t
+    : "중도 하차 😵";
+
+  let recordHTML = "";
+  if (survived) {
+    const best = Number(localStorage.getItem(bestKey) || 0);
+    if (score > best) {
+      localStorage.setItem(bestKey, String(score));
+      recordHTML = `<div class="new-record">🎉 신기록 달성!</div>`;
+    }
+  }
+
+  app.innerHTML = `
+    <div class="screen ending-screen">
+      <div class="ending-emoji">${e.emoji}</div>
+      <div class="ending-title">${e.title}</div>
+      <div class="ending-desc">${e.desc}</div>
+      <div class="score-box">
+        <div class="label">최종 점수 (멘탈+체력+사회생활)</div>
+        <div class="score">${score}점</div>
+        <div class="title-earned">칭호: ${title}</div>
+      </div>
+      ${recordHTML}
+      <button class="btn-primary" onclick="startGame()">다시 출근하기</button>
+      <div class="footer-tip">버티는 모든 직장인을 응원합니다 🙌</div>
+    </div>`;
+}
+
+/* ── 키보드 입력 (1/2/3 선택, Enter 진행) ── */
+document.addEventListener("keydown", (ev) => {
+  if (ev.key >= "1" && ev.key <= "3") {
+    const btns = document.querySelectorAll(".choice-btn");
+    const i = Number(ev.key) - 1;
+    if (btns[i]) btns[i].click();
+  } else if (ev.key === "Enter") {
+    const next = document.querySelector(".btn-next") || document.querySelector(".btn-primary");
+    if (next) next.click();
+  }
+});
+
+showTitle();
+</script>
+</body>
+</html>
