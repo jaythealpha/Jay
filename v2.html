@@ -82,8 +82,8 @@
 <div id="wrap">
   <canvas id="game" width="480" height="270"></canvas>
   <div id="hint">
-    <b>점프</b>: 스페이스/↑ (2단 점프) · <b>슬라이드</b>: ↓ 꾹 · <b>주말 게임</b>: ←→ 이동 · <b>P</b> 일시정지 · <b>M</b> 음소거<br>
-    아슬아슬하게 피하면 <b>니어미스 보너스</b>, 커피 연속 획득은 <b>콤보</b>! 누적 수익으로 <b>승진</b>하세요 · <a href="./index.html">📖 텍스트 버전(v1)</a>
+    <b>점프</b>: 스페이스/↑ (2단, 레드불 효과 중 3단) · <b>슬라이드</b>: ↓ 꾹 · <b>주말 게임</b>: ←→ · <b>P</b> 일시정지 · <b>M</b> 음소거<br>
+    하루 8시간 근무, 수입은 <b>직급별 시급</b>으로! 퇴근 전 야근 장애물에 부딪히면 <b>느려집니다</b> · <a href="./index.html">📖 텍스트 버전(v1)</a>
   </div>
 </div>
 <div id="btn-slide" class="touch-btn">⬇ 슬라이드</div>
@@ -95,7 +95,7 @@
 
 /* ══════════════════════════════════════════════════════════
    직장인 러너: 출근 대작전 — 16비트 픽셀 아트 무한 러너 (v2)
-   승진 메타 / 업적 / 콤보 / 니어미스 / 랜덤 이벤트 / 주말 보너스
+   시급 경제(최저시급×직급) / 야근 러시 / 레드불 / 승진 메타 / 업적
    ══════════════════════════════════════════════════════════ */
 
 const cvs = document.getElementById("game");
@@ -103,29 +103,33 @@ const ctx = cvs.getContext("2d");
 const W = cvs.width, H = cvs.height;
 const GROUND = 226;
 const DAYS = ["월", "화", "수", "목", "금"];
-const DAY_LEN = 500;
+const DAY_LEN = 500;                  // 하루 거리(m) = 8시간 근무
+const WORK_HOURS = 8;
+const MIN_WAGE = 10320;               // 2026년 최저시급(원)
+const RUSH_START = 0.7;               // 하루의 70% 지점부터 퇴근 전 야근 러시
 const GAME_URL = "https://jaythealpha.github.io/Jay/v2.html";
 const LS = {
-  best: "office-runner-best",
-  total: "office-runner-total",      // 누적 수익 (승진용)
-  coffee: "office-runner-coffee",    // 누적 커피
+  best: "office-runner-best2",        // 시급 경제 개편으로 키 갱신
+  total: "office-runner-total2",
+  coffee: "office-runner-coffee",
   ach: "office-runner-ach",
   played: "office-runner-played",
   muted: "office-runner-muted",
 };
 
-/* ── 승진 직급 테이블 (누적 수익 기준) ───────────────────── */
+/* ── 승진 직급 테이블: 누적 수익 기준 + 시급 배수 ─────────
+   하루 완주(인턴) ≈ 8.2만원, 한 주 ≈ 50만원 수준으로 설계 */
 const RANKS = [
-  { name: "인턴",   emoji: "🐣", need: 0 },
-  { name: "사원",   emoji: "🧑‍💼", need: 3000 },
-  { name: "주임",   emoji: "📎", need: 8000 },
-  { name: "대리",   emoji: "💼", need: 20000 },
-  { name: "과장",   emoji: "📊", need: 45000 },
-  { name: "차장",   emoji: "🗂️", need: 90000 },
-  { name: "부장",   emoji: "👔", need: 160000 },
-  { name: "이사",   emoji: "🪑", need: 280000 },
-  { name: "사장",   emoji: "🏢", need: 500000 },
-  { name: "회장",   emoji: "👑", need: 1000000 },
+  { name: "인턴", emoji: "🐣", need: 0,          wage: 1.0 },
+  { name: "사원", emoji: "🧑‍💼", need: 300000,    wage: 1.15 },
+  { name: "주임", emoji: "📎", need: 800000,     wage: 1.3 },
+  { name: "대리", emoji: "💼", need: 1800000,    wage: 1.5 },
+  { name: "과장", emoji: "📊", need: 4000000,    wage: 1.8 },
+  { name: "차장", emoji: "🗂️", need: 8000000,    wage: 2.2 },
+  { name: "부장", emoji: "👔", need: 15000000,   wage: 2.7 },
+  { name: "이사", emoji: "🪑", need: 28000000,   wage: 3.3 },
+  { name: "사장", emoji: "🏢", need: 50000000,   wage: 4.0 },
+  { name: "회장", emoji: "👑", need: 100000000,  wage: 5.0 },
 ];
 function rankFor(earn) {
   let idx = 0;
@@ -133,17 +137,22 @@ function rankFor(earn) {
   return idx;
 }
 
-/* ── 업적 ───────────────────────────────────────────────── */
+/* ── 업적 (14종) ────────────────────────────────────────── */
 const ACH = [
-  { id: "first",   name: "첫 출근",       desc: "기념비적인 첫 출근" },
-  { id: "kaltoe",  name: "칼퇴의 맛",     desc: "첫 주말 보너스 진입" },
-  { id: "coffee50",name: "카페인 중독",   desc: "누적 커피 50잔" },
-  { id: "combo10", name: "콤보 장인",     desc: "커피 콤보 x10 달성" },
-  { id: "near10",  name: "아찔한 인생",   desc: "한 판에 니어미스 10회" },
-  { id: "rich",    name: "월급루팡",      desc: "한 판에 10,000원 벌기" },
-  { id: "week2",   name: "2주차 생존자",  desc: "2주차 월요일 도달" },
-  { id: "wk800",   name: "완벽한 주말",   desc: "주말 수익 +800원 이상" },
-  { id: "boost3",  name: "퇴근 본능",     desc: "한 판에 에너지드링크 3개" },
+  { id: "first",    name: "첫 출근",        desc: "기념비적인 첫 출근" },
+  { id: "kaltoe",   name: "칼퇴의 맛",      desc: "첫 주말 보너스 진입" },
+  { id: "coffee50", name: "카페인 중독",    desc: "누적 커피 50잔" },
+  { id: "combo10",  name: "콤보 장인",      desc: "커피 콤보 x10 달성" },
+  { id: "near10",   name: "아찔한 인생",    desc: "한 판에 니어미스 10회" },
+  { id: "rich",     name: "월급루팡",       desc: "한 판에 50만원 벌기" },
+  { id: "week2",    name: "2주차 생존자",   desc: "2주차 월요일 도달" },
+  { id: "wk800",    name: "완벽한 주말",    desc: "주말 수익 +2만원 이상" },
+  { id: "boost3",   name: "퇴근 본능",      desc: "한 판에 에너지드링크 3개" },
+  { id: "redbull",  name: "날개를 달았다",  desc: "레드불 첫 획득" },
+  { id: "notonight",name: "정시 퇴근의 꿈", desc: "야근 장애물 무피해로 하루 완주" },
+  { id: "promo1",   name: "시급 인상!",     desc: "첫 승진 달성" },
+  { id: "week3",    name: "워커홀릭",       desc: "3주차 도달" },
+  { id: "ceo",      name: "사장님 픽",      desc: "사장님 시찰을 무피해로 통과" },
 ];
 let achState = {};
 try { achState = JSON.parse(localStorage.getItem(LS.ach) || "{}"); } catch (e) { achState = {}; }
@@ -163,6 +172,7 @@ const PAL = {
   W: "#f5f5f5", T: "#e94560", E: "#6b4f3a", F: "#54392a",
   G: "#101020", Y: "#ffd166", C: "#7a4a2b", M: "#c0c8e0",
   V: "#8a6fd8", N: "#3ee06f", P: "#ff9ebb", O: "#ff9e44",
+  U: "#4cc9f0",
 };
 
 function makeSprite(rows, scale = 2) {
@@ -296,6 +306,17 @@ const SPR = {
     ".NNNNNN.",
     "..KKKK..",
   ]),
+  redbull: makeSprite([
+    "....KKKK....",
+    "W...UUUU...W",
+    "WW.UUUUUU.WW",
+    ".W.UMWWMU.W.",
+    "...UWUUWU...",
+    "...UUUUUU...",
+    "...UUWWUU...",
+    "...UUUUUU...",
+    "....KKKK....",
+  ]),
   kakao: makeSprite([
     ".YYYYYYYYYYY.",
     "YYYYYYYYYYYYY",
@@ -304,6 +325,24 @@ const SPR = {
     ".YYYYYYYYYYY.",
     "...YY........",
     "..YY.........",
+  ]),
+  meeting: makeSprite([
+    ".WWWWWWWWWWWWW.",
+    "WWWWWWWWWWWWWWW",
+    "WWWWWWWWWWWWWWW",
+    "WWWWWWWWWWWWWWW",
+    ".WWWWWWWWWWWWW.",
+    "....WW.........",
+    "...WW..........",
+  ]),
+  phone: makeSprite([
+    ".KKK......KKK.",
+    ".KKKKKKKKKKKK.",
+    ".KK........KK.",
+    "....KKKKKK....",
+    "...KKKKKKKK...",
+    "...KWKWKWKK...",
+    "...KKKKKKKK...",
   ]),
   chicken: makeSprite([
     "...CCCCC..",
@@ -372,6 +411,7 @@ const SND = {
   },
   jump()  { this.tone(300, 0.15, "square", 0.05, 0, 300); },
   djump() { this.tone(420, 0.13, "square", 0.05, 0, 320); },
+  wing()  { [523, 784, 1047].forEach((f, i) => this.tone(f, 0.09, "triangle", 0.06, i * 0.05)); },
   coin()  { this.tone(880, 0.07, "square", 0.05); this.tone(1320, 0.12, "square", 0.05, 0.06); },
   combo(n){ this.tone(880 + Math.min(n, 12) * 60, 0.09, "square", 0.05); },
   near()  { this.tone(1200, 0.1, "sawtooth", 0.04, 0, 500); },
@@ -380,6 +420,8 @@ const SND = {
   heart() { [523, 660, 784].forEach((f, i) => this.tone(f, 0.12, "triangle", 0.07, i * 0.08)); },
   boost() { [440, 660, 880, 1320].forEach((f, i) => this.tone(f, 0.08, "sawtooth", 0.04, i * 0.05)); },
   hit()   { this.tone(160, 0.25, "sawtooth", 0.08, 0, -90); },
+  slow()  { this.tone(300, 0.3, "triangle", 0.08, 0, -200); },
+  ring()  { this.tone(1760, 0.05, "square", 0.03); this.tone(1760, 0.05, "square", 0.03, 0.08); },
   over()  { [392, 330, 262, 196, 147].forEach((f, i) => this.tone(f, 0.22, "triangle", 0.07, i * 0.14)); },
   day()   { this.tone(523, 0.1, "square", 0.05); this.tone(784, 0.15, "square", 0.05, 0.1); },
   bonus() { [523, 659, 784, 1047, 1319].forEach((f, i) => this.tone(f, 0.13, "square", 0.05, i * 0.09)); },
@@ -421,15 +463,21 @@ const QUIP = {
   dayStart: ["또 월요일이라니...", "겨우 화요일?", "수요일, 반환점!", "목요일... 거의 다 왔다", "금요일! 칼퇴 가즈아!"],
   hit: ["죄송합니다...", "멘탈이 흔들린다", "집에 가고 싶다", "퇴사 마렵다...", "이게 회사 생활이지..."],
   near: ["아찔했다...", "휴, 살았다", "심장 떨어질 뻔"],
+  rushIn: "퇴근 1시간 전... 일이 몰려온다!",
+  otHit: ["야근 확정이다...", "오늘도 늦겠네...", "집은 글렀다..."],
   coffee10: "카페인 수혈 완료!",
   pay: "월급이다!!",
   card: "...카드값 자동이체",
   energy: "퇴근 본능 발동!!",
+  redbull: "날개를 달았다!!",
   overtime: "야근 위기...! 버텨!!",
   escape: "칼퇴 성공!!!",
   monday: "다시 월요일...",
   bonusTime: "보너스 타임! 커피가 쏟아진다!",
   rush: "보고서 마감 임박!!",
+  phoneRush: "업체 전화가 폭주한다!!",
+  ceo: "사장님이 보고 계신다...!",
+  snack: "야식은 못 참지",
   wkKakao: "주말에 카톡이?!",
   wkLetter: "축의금 -10만...",
   wkChicken: "역시 치킨은 옳다",
@@ -441,19 +489,26 @@ const OVER_MSG = [
   "멘탈이 먼저 퇴근해버렸다...",
   "월요병에게 패배했다...",
 ];
+const OT_TYPES = ["report", "meeting", "phone"]; // 퇴근 전 야근 장애물
 
 /* ── 게임 상태 ───────────────────────────────────────────── */
-let state = "title";   // title | play | weekend | wkresult | over | pause
+let state = "title";
 let player, obstacles, items, particles, floats, toasts = [];
 let spawnT, itemT, dist, speed;
 let day, week, mult, hearts, coffee, score, payCount, flashT, dayMsgT, shakeT;
-let quip = null, boostT = 0, overtimeOn = false, overMsg = "";
+let quip = null, boostT = 0, wingsT = 0, slowT = 0, overtimeOn = false, overMsg = "";
 let combo = 0, comboT = 0, maxCombo = 0, nearMiss = 0, runCoffee = 0, runBoost = 0;
-let bonusT = 0, eventT = 10, rushN = 0, rushT = 0;
+let bonusT = 0, eventT = 10, rushN = 0, rushT = 0, rushType = "kakao";
+let ceoT = 0, ceoHit = false;
+let rushAnnounced = false, dayRushHit = false, daySawRush = false;
+let wage = MIN_WAGE, metaRankIdx = 0;
 let wk = null, wkResultT = 0;
 let tutT = 0;
 let promoted = false, promoRank = null;
 let lastTime = 0, animT = 0;
+
+function pf() { return ceoT > 0 ? 2 : 1; }  // 사장님 시찰: 점수 2배
+function gain(amount) { return Math.floor(amount * mult * pf()); }
 
 function reset() {
   player = { x: 70, y: GROUND, vy: 0, onGround: true, jumps: 0, sliding: false, inv: 0 };
@@ -462,9 +517,12 @@ function reset() {
   dist = 0; speed = 190;
   day = 0; week = 0; mult = 1; hearts = 3; coffee = 0; payCount = 0; score = 0;
   flashT = 0; dayMsgT = 1.6; shakeT = 0;
-  quip = null; boostT = 0; overtimeOn = false;
+  quip = null; boostT = 0; wingsT = 0; slowT = 0; overtimeOn = false;
   combo = 0; comboT = 0; maxCombo = 0; nearMiss = 0; runCoffee = 0; runBoost = 0;
-  bonusT = 0; eventT = 10; rushN = 0; rushT = 0;
+  bonusT = 0; eventT = 10; rushN = 0; rushT = 0; ceoT = 0; ceoHit = false;
+  rushAnnounced = false; dayRushHit = false; daySawRush = false;
+  metaRankIdx = rankFor(Number(localStorage.getItem(LS.total) || 0));
+  wage = Math.round(MIN_WAGE * RANKS[metaRankIdx].wage);
   wk = null; promoted = false; promoRank = null;
   say(QUIP.dayStart[0]);
 }
@@ -472,16 +530,27 @@ function say(txt, dur = 1.6) { quip = { txt, t: dur }; }
 function addFloat(x, y, txt, col = "#ffd166") {
   floats.push({ x, y, txt, col, t: 0, life: 1.1 });
 }
+function clockStr() {
+  // 09:00 출근 → 18:00 퇴근 (점심 포함 9시간 = 근무 8시간)
+  const prog = (dist % DAY_LEN) / DAY_LEN;
+  const mins = Math.floor(9 * 60 + prog * 9 * 60);
+  const h = Math.floor(mins / 60), m = mins % 60;
+  return String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0");
+}
 
 /* ── 입력 ────────────────────────────────────────────────── */
 const keys = {};
 function doJump() {
   if (state === "title" || state === "over") { startGame(); return; }
   if (state !== "play") return;
+  const maxJumps = wingsT > 0 ? 3 : 2;
+  const power = wingsT > 0 ? -510 : -480;
   if (player.onGround) {
-    player.vy = -480; player.onGround = false; player.jumps = 1; SND.jump(); buzz(10);
-  } else if (player.jumps < 2) {
-    player.vy = -430; player.jumps = 2; SND.djump(); buzz(10);
+    player.vy = power; player.onGround = false; player.jumps = 1; SND.jump(); buzz(10);
+  } else if (player.jumps < maxJumps) {
+    player.vy = power + 50; player.jumps++;
+    if (player.jumps >= 3) SND.wing(); else SND.djump();
+    buzz(10);
     for (let i = 0; i < 6; i++) particles.push(puff(player.x, player.y));
   }
 }
@@ -537,11 +606,10 @@ cvs.addEventListener("mousedown", () => { if (state === "title" || state === "ov
 btnShare.addEventListener("click", shareResult);
 
 function shareResult() {
-  const rIdx = rankFor(Number(localStorage.getItem(LS.total) || 0));
-  const r = RANKS[rIdx];
+  const r = RANKS[rankFor(Number(localStorage.getItem(LS.total) || 0))];
   const text =
     `🏃 직장인 러너: 출근 대작전\n` +
-    `${r.emoji} ${r.name} 김대리, ${Math.floor(score).toLocaleString()}원 벌고 번아웃!\n` +
+    `${r.emoji} ${r.name} 김대리(시급 ${wage.toLocaleString()}원), ${Math.floor(score).toLocaleString()}원 벌고 번아웃!\n` +
     `${Math.floor(dist)}m 출근 · ☕${coffee}잔 · 니어미스 ${nearMiss}회 · 최대 콤보 x${maxCombo}\n` +
     `너도 출근해 볼래? 👉 ${GAME_URL}`;
   if (navigator.share) {
@@ -568,8 +636,22 @@ function startGame() {
   SND.startBgm();
 }
 
-/* ── 장애물 / 아이템 (러너) ──────────────────────────────── */
+/* ── 장애물 / 아이템 ─────────────────────────────────────── */
+function dayProg() { return (dist % DAY_LEN) / DAY_LEN; }
+function inRushWindow() { return dayProg() > RUSH_START; }
+
 function spawnObstacle() {
+  // 퇴근 전 러시: 야근 장애물(보고서/회의 요청/업체 전화) 우선 등장
+  if (inRushWindow() && Math.random() < 0.5) {
+    const t = OT_TYPES[Math.floor(Math.random() * OT_TYPES.length)];
+    let o;
+    if (t === "report")       o = { type: "report",  w: 24, h: 36, ot: true };
+    else if (t === "meeting") o = { type: "meeting", w: 30, h: 16, ot: true, flyY: GROUND - 44 - Math.random() * 40, t: 0 };
+    else                      o = { type: "phone",   w: 26, h: 14, ot: true, ringT: 0 };
+    o.x = W + 30;
+    obstacles.push(o);
+    return;
+  }
   const r = Math.random();
   const kakaoOk = (day >= 1 || week > 0);
   let o;
@@ -584,21 +666,30 @@ function spawnObstacle() {
   o.x = W + 30;
   obstacles.push(o);
 }
-function spawnKakaoRush() {
-  obstacles.push({
-    type: "kakao", w: 26, h: 14, x: W + 30,
-    flyY: GROUND - 20 - Math.random() * 70, t: 0,
-  });
+function spawnRushProjectile() {
+  if (rushType === "phone") {
+    obstacles.push({ type: "phone", w: 26, h: 14, ot: true, ringT: 0, x: W + 30 });
+  } else {
+    obstacles.push({ type: "kakao", w: 26, h: 14, x: W + 30, flyY: GROUND - 20 - Math.random() * 70, t: 0 });
+  }
 }
 function spawnItem() {
   const roll = Math.random();
-  if (bonusT <= 0 && roll < 0.12 && payCount < Math.floor(dist / 400)) {
+  if (bonusT <= 0 && roll < 0.1 && payCount < Math.floor(dist / 400)) {
     items.push({ type: "pay", x: W + 20, y: GROUND - 70 - Math.random() * 40, w: 20, h: 14 });
     payCount++;
     return;
   }
-  if (bonusT <= 0 && roll < 0.2) {
+  if (bonusT <= 0 && roll < 0.16) {
     items.push({ type: "energy", x: W + 20, y: GROUND - 40 - Math.random() * 50, w: 16, h: 16 });
+    return;
+  }
+  if (bonusT <= 0 && roll < 0.22) {
+    items.push({ type: "redbull", x: W + 20, y: GROUND - 50 - Math.random() * 55, w: 18, h: 16 });
+    return;
+  }
+  if (overtimeOn && roll < 0.34) {     // 금요일 야근 중 야식 치킨
+    items.push({ type: "chick", x: W + 20, y: GROUND - 30 - Math.random() * 40, w: 20, h: 16 });
     return;
   }
   const n = 3 + Math.floor(Math.random() * 3);
@@ -623,7 +714,7 @@ function hitbox() {
 }
 function obstacleBox(o) {
   if (o.type === "banner") return { x: o.x, y: 0, w: o.w, h: GROUND - 24 };
-  if (o.type === "kakao")  return { x: o.x, y: o.flyY, w: o.w, h: o.h };
+  if (o.type === "kakao" || o.type === "meeting") return { x: o.x, y: o.flyY, w: o.w, h: o.h };
   return { x: o.x, y: GROUND - o.h, w: o.w, h: o.h };
 }
 function overlap(a, b) {
@@ -635,11 +726,18 @@ function expand(b, m) { return { x: b.x - m, y: b.y - m, w: b.w + m * 2, h: b.h 
 function updateRun(dt) {
   const boost = boostT > 0 ? 120 : 0;
   speed = Math.min(540, 190 + dist * 0.045) + boost;
-  dist += speed * dt / 10;
-  score += speed * dt / 10 * mult;
+  if (slowT > 0) { slowT -= dt; speed *= 0.65; }       // 야근 페널티: 느려짐
+  const meters = speed * dt / 10;
+  dist += meters;
+  // 기본 수입: 1m = 시급 × 8시간 / 500m (직급이 오르면 같은 거리도 더 번다)
+  score += meters * (wage * WORK_HOURS / DAY_LEN) * mult * pf();
   if (boostT > 0) {
     boostT -= dt;
     if (Math.random() < 0.5) particles.push(sparkle(player.x - 10, player.y - 14, "#3ee06f"));
+  }
+  if (wingsT > 0) {
+    wingsT -= dt;
+    if (Math.random() < 0.4) particles.push(sparkle(player.x - 12, player.y - 20, "#4cc9f0"));
   }
   if (comboT > 0) { comboT -= dt; if (comboT <= 0) combo = 0; }
   if (tutT > 0) tutT -= dt;
@@ -647,36 +745,57 @@ function updateRun(dt) {
   const dayIdx = Math.floor(dist / DAY_LEN);
   const newDay = dayIdx % 5, newWeek = Math.floor(dayIdx / 5);
   if (newWeek > week) {
+    checkNoOvertime();
     day = newDay; week = newWeek;
     mult = 1 + dayIdx * 0.15;
     if (week >= 1) unlock("week2");
+    if (week >= 2) unlock("week3");
     enterWeekend();
     return;
   }
   if (newDay !== day) {
+    checkNoOvertime();
     day = newDay;
     mult = 1 + dayIdx * 0.15;
     dayMsgT = 1.6; SND.day();
     say(QUIP.dayStart[day]);
   }
 
-  // 야근 위기 타임
-  const inOvertime = day === 4 && (dist % DAY_LEN) > DAY_LEN * 0.5;
+  // 퇴근 전 러시 안내 (매일 1회)
+  if (inRushWindow()) {
+    daySawRush = true;
+    if (!rushAnnounced) { rushAnnounced = true; say(QUIP.rushIn, 2); SND.warn(); }
+  }
+
+  // 금요일 야근 위기 (어두워짐)
+  const inOvertime = day === 4 && dayProg() > 0.5;
   if (inOvertime && !overtimeOn) { overtimeOn = true; say(QUIP.overtime, 2); SND.bad(); }
   if (!inOvertime) overtimeOn = false;
 
-  // 랜덤 이벤트 (보너스 타임 / 보고서 마감 러시)
+  // 랜덤 이벤트
   if (bonusT > 0) bonusT -= dt;
+  if (ceoT > 0) {
+    ceoT -= dt;
+    if (ceoT <= 0 && !ceoHit) unlock("ceo");
+  }
   if (rushN > 0) {
     rushT -= dt;
-    if (rushT <= 0) { spawnKakaoRush(); rushN--; rushT = 0.55; }
+    if (rushT <= 0) { spawnRushProjectile(); rushN--; rushT = 0.55; }
   }
   eventT -= dt;
-  if (eventT <= 0 && !overtimeOn && bonusT <= 0 && rushN <= 0 && tutT <= 0) {
-    if (Math.random() < 0.5) {
+  if (eventT <= 0 && !overtimeOn && bonusT <= 0 && rushN <= 0 && ceoT <= 0 && tutT <= 0) {
+    const r = Math.random();
+    if (r < 0.3) {
       bonusT = 5; say(QUIP.bonusTime, 2); SND.bonus();
-    } else if (day >= 1 || week > 0) {
-      rushN = 3; rushT = 1.0; say(QUIP.rush, 2); SND.warn(); shakeT = 0.2;
+    } else if (r < 0.55 && (day >= 1 || week > 0)) {
+      rushN = 3; rushT = 1.0; rushType = "kakao";
+      say(QUIP.rush, 2); SND.warn(); shakeT = 0.2;
+    } else if (r < 0.75 && (day >= 1 || week > 0)) {
+      rushN = 3; rushT = 1.0; rushType = "phone";
+      say(QUIP.phoneRush, 2); SND.ring(); shakeT = 0.2;
+    } else {
+      ceoT = 10; ceoHit = false;
+      say(QUIP.ceo, 2); SND.warn();
     }
     eventT = 14 + Math.random() * 10;
   }
@@ -696,13 +815,14 @@ function updateRun(dt) {
   }
   if (player.inv > 0) player.inv -= dt;
 
-  // 스폰 (보너스 타임엔 장애물 없음, 초반엔 완화)
+  // 스폰
   spawnT -= dt;
   if (spawnT <= 0) {
     if (bonusT <= 0) spawnObstacle();
     const minGap = (140 + speed * 0.45) / speed;
     let gap = minGap + Math.random() * 0.85;
     if (overtimeOn) gap *= 0.72;
+    if (ceoT > 0) gap *= 0.85;
     if (dist < 200) gap *= 1.35;
     spawnT = gap;
   }
@@ -715,33 +835,48 @@ function updateRun(dt) {
   // 장애물 이동/충돌/니어미스
   const pb = hitbox();
   obstacles = obstacles.filter(o => {
-    if (o.type === "kakao") {
-      o.t += dt;
-      o.x -= (speed + 70) * dt;
-      o.flyY += Math.sin(o.t * 6) * 18 * dt;
+    if (o.type === "kakao" || o.type === "meeting") {
+      o.t = (o.t || 0) + dt;
+      o.x -= (speed + (o.type === "kakao" ? 70 : 30)) * dt;
+      o.flyY += Math.sin(o.t * (o.type === "kakao" ? 6 : 3.5)) * 18 * dt;
     } else {
       o.x -= speed * dt;
+    }
+    if (o.type === "phone") {
+      o.ringT = (o.ringT || 0) + dt;
+      if (o.ringT > 0.8) { o.ringT = 0; if (o.x < W && o.x > 0) SND.ring(); }
     }
     if (o.x + o.w < -40) return false;
 
     const ob = obstacleBox(o);
     if (player.inv <= 0 && boostT <= 0 && !o.hit && overlap(pb, ob)) {
       o.hit = true;
-      hearts--; player.inv = 1.5; flashT = 0.25; shakeT = 0.3;
-      combo = 0; comboT = 0;
-      SND.hit(); buzz(80);
-      say(QUIP.hit[Math.floor(Math.random() * QUIP.hit.length)]);
-      if (o.type === "kakao") addFloat(player.x, player.y - 44, "부장님: 어디야?", "#e94560");
-      if (hearts <= 0) { gameOver(); return true; }
+      ceoHit = true;
+      if (o.ot) {
+        // 야근 장애물: 하트 대신 슬로우 + 수입 차감
+        slowT = 5; dayRushHit = true;
+        const pen = gain(wage / 2);
+        score = Math.max(0, score - pen);
+        flashT = 0.15; shakeT = 0.2;
+        SND.slow(); buzz(50);
+        say(QUIP.otHit[Math.floor(Math.random() * QUIP.otHit.length)]);
+        addFloat(player.x + 8, player.y - 46, "야근 -" + pen.toLocaleString(), "#ff9e44");
+      } else {
+        hearts--; player.inv = 1.5; flashT = 0.25; shakeT = 0.3;
+        combo = 0; comboT = 0;
+        SND.hit(); buzz(80);
+        say(QUIP.hit[Math.floor(Math.random() * QUIP.hit.length)]);
+        if (o.type === "kakao") addFloat(player.x, player.y - 44, "부장님: 어디야?", "#e94560");
+        if (hearts <= 0) { gameOver(); return true; }
+      }
     }
-    // 니어미스: 스치듯 지나갔지만 충돌하지 않음
     if (!o.passed && !o.hit) {
       if (overlap(expand(pb, 9), ob)) o.close = true;
       if (ob.x + ob.w < pb.x) {
         o.passed = true;
         if (o.close && player.inv <= 0) {
           nearMiss++;
-          const pts = Math.floor(30 * mult);
+          const pts = gain(300);
           score += pts;
           addFloat(player.x + 12, player.y - 40, "아찔! +" + pts, "#4cc9f0");
           SND.near();
@@ -763,25 +898,28 @@ function updateRun(dt) {
         combo++; comboT = 3;
         if (combo > maxCombo) maxCombo = combo;
         if (combo >= 10) unlock("combo10");
-        const pts = Math.floor(10 * mult * (1 + Math.min(combo, 20) * 0.1));
+        const pts = gain(500 * (1 + Math.min(combo, 20) * 0.1));
         score += pts;
-        combo >= 3 ? SND.combo(combo) : SND.coin();
-        addFloat(it.x, it.y, "+" + pts + (combo >= 3 ? " x" + combo : ""));
+        if (combo >= 3) SND.combo(combo); else SND.coin();
+        addFloat(it.x, it.y, "+" + pts.toLocaleString() + (combo >= 3 ? " x" + combo : ""));
         for (let i = 0; i < 5; i++) particles.push(sparkle(it.x, it.y, "#ffd166"));
         if (coffee % 10 === 0 && hearts < 3) { hearts++; SND.heart(); say(QUIP.coffee10); }
         const totalCoffee = Number(localStorage.getItem(LS.coffee) || 0) + 1;
         localStorage.setItem(LS.coffee, String(totalCoffee));
         if (totalCoffee >= 50) unlock("coffee50");
       } else if (it.type === "pay") {
-        score += 150 * mult; SND.pay(); buzz([20, 30, 20]);
+        // 보너스 봉투 = 시급 1시간치... 절반은 카드값으로
+        const bonusAmt = gain(wage);
+        score += bonusAmt; SND.pay(); buzz([20, 30, 20]);
         say(QUIP.pay);
-        addFloat(it.x, it.y, "+" + Math.floor(150 * mult), "#06d6a0");
+        addFloat(it.x, it.y, "+" + bonusAmt.toLocaleString(), "#06d6a0");
         for (let i = 0; i < 10; i++) particles.push(sparkle(it.x, it.y, "#06d6a0"));
+        const cardAmt = Math.floor(bonusAmt / 2);
         setTimeout(() => {
           if (state !== "play") return;
-          score -= 75 * mult; SND.card();
+          score = Math.max(0, score - cardAmt); SND.card();
           say(QUIP.card);
-          addFloat(player.x + 10, player.y - 50, "카드값 -" + Math.floor(75 * mult), "#e94560");
+          addFloat(player.x + 10, player.y - 50, "카드값 -" + cardAmt.toLocaleString(), "#e94560");
         }, 700);
       } else if (it.type === "energy") {
         boostT = 4; runBoost++;
@@ -789,42 +927,62 @@ function updateRun(dt) {
         SND.boost(); buzz([15, 20, 15]);
         say(QUIP.energy);
         addFloat(it.x, it.y, "무적 질주!", "#3ee06f");
+      } else if (it.type === "redbull") {
+        wingsT = 6; slowT = 0;                       // 날개 + 야근 페널티 해제
+        unlock("redbull");
+        SND.wing(); buzz([15, 20, 15]);
+        say(QUIP.redbull);
+        addFloat(it.x, it.y, "3단 점프!", "#4cc9f0");
+        for (let i = 0; i < 8; i++) particles.push(sparkle(it.x, it.y, "#4cc9f0"));
+      } else if (it.type === "chick") {
+        const pts = gain(wage / 2);
+        score += pts;
+        SND.coin(); say(QUIP.snack);
+        addFloat(it.x, it.y, "야식 +" + pts.toLocaleString(), "#ff9e44");
       }
       return false;
     }
     return true;
   });
 
-  if (score >= 10000) unlock("rich");
+  if (score >= 500000) unlock("rich");
   updateFx(dt);
+}
+
+function checkNoOvertime() {
+  if (daySawRush && !dayRushHit) unlock("notonight");
+  daySawRush = false; dayRushHit = false; rushAnnounced = false;
 }
 
 /* ── 주말 보너스 ────────────────────────────────────────── */
 function enterWeekend() {
   state = "weekend";
   setButtons("wk");
-  score += 500 * mult;
-  wk = { t: 15, score: Math.floor(500 * mult), px: W / 2, items: [], spawnT: 0.3, intro: 2 };
+  const kal = gain(wage * 2);                        // 칼퇴 보너스 = 시급 2시간치
+  score += kal;
+  wk = { t: 15, score: kal, px: W / 2, items: [], spawnT: 0.3, intro: 2, kal };
   obstacles = []; items = [];
   SND.bonus(); buzz([30, 40, 30]);
   say(QUIP.escape, 2);
   unlock("kaltoe");
 }
 
-const WK_TYPES = [
-  { type: "chicken", spr: "chicken", good: true,  pts: 250,  msg: QUIP.wkChicken, w: 20, h: 16 },
-  { type: "zzz",     spr: null,      good: true,  pts: 150,  msg: QUIP.wkZzz,     w: 20, h: 14 },
-  { type: "kakao",   spr: "kakao",   good: false, pts: -200, msg: QUIP.wkKakao,   w: 26, h: 14 },
-  { type: "alarm",   spr: "alarm",   good: false, pts: -100, msg: null,           w: 20, h: 18 },
-  { type: "letter",  spr: "letter",  good: false, pts: -100, msg: QUIP.wkLetter,  w: 24, h: 14 },
-];
+function wkTypes() {
+  return [
+    { type: "chicken", spr: "chicken", good: true,  pts: wage / 2,  msg: QUIP.wkChicken, w: 20, h: 16 },
+    { type: "zzz",     spr: null,      good: true,  pts: wage / 4,  msg: QUIP.wkZzz,     w: 20, h: 14 },
+    { type: "kakao",   spr: "kakao",   good: false, pts: -wage / 2, msg: QUIP.wkKakao,   w: 26, h: 14 },
+    { type: "alarm",   spr: "alarm",   good: false, pts: -wage / 4, msg: null,           w: 20, h: 18 },
+    { type: "letter",  spr: "letter",  good: false, pts: -wage / 4, msg: QUIP.wkLetter,  w: 24, h: 14 },
+  ];
+}
 
 function updateWeekend(dt) {
   if (wk.intro > 0) { wk.intro -= dt; updateFx(dt); return; }
   wk.t -= dt;
   if (wk.t <= 0) {
     state = "wkresult"; wkResultT = 2.4;
-    if (wk.score >= 800) unlock("wk800");
+    if (wk.score >= 20000) unlock("wk800");
     SND.day();
     return;
   }
@@ -836,7 +994,7 @@ function updateWeekend(dt) {
   wk.spawnT -= dt;
   if (wk.spawnT <= 0) {
     const goodRoll = Math.random() < 0.55;
-    const pool = WK_TYPES.filter(t => t.good === goodRoll);
+    const pool = wkTypes().filter(t => t.good === goodRoll);
     const def = pool[Math.floor(Math.random() * pool.length)];
     wk.items.push({ def, x: 20 + Math.random() * (W - 40), y: -20,
                     vy: 110 + Math.random() * 90 + week * 12 });
@@ -849,8 +1007,8 @@ function updateWeekend(dt) {
     const box = { x: it.x - it.def.w / 2, y: it.y - it.def.h / 2, w: it.def.w, h: it.def.h };
     if (overlap(pbox, box)) {
       const pts = Math.floor(it.def.pts * mult);
-      score += pts; wk.score += pts;
-      addFloat(it.x, it.y - 10, (pts > 0 ? "+" : "") + pts, it.def.good ? "#06d6a0" : "#e94560");
+      score = Math.max(0, score + pts); wk.score += pts;
+      addFloat(it.x, it.y - 10, (pts > 0 ? "+" : "") + pts.toLocaleString(), it.def.good ? "#06d6a0" : "#e94560");
       if (it.def.good) {
         SND.coin();
         if (it.def.type === "zzz" && hearts < 3) { hearts++; SND.heart(); }
@@ -909,7 +1067,6 @@ function gameOver() {
   const earned = Math.max(0, Math.floor(score));
   const best = Number(localStorage.getItem(LS.best) || 0);
   if (earned > best) localStorage.setItem(LS.best, String(earned));
-  // 승진 판정 (누적 수익)
   const prevTotal = Number(localStorage.getItem(LS.total) || 0);
   const prevRank = rankFor(prevTotal);
   const newTotal = prevTotal + earned;
@@ -918,6 +1075,7 @@ function gameOver() {
   if (newRank > prevRank) {
     promoted = true;
     promoRank = RANKS[newRank];
+    unlock("promo1");
     setTimeout(() => SND.promo(), 600);
   }
   btnShare.style.display = "block";
@@ -991,6 +1149,30 @@ function drawObstacle(o) {
     }
     ctx.fillStyle = "#9aa0b5";
     ctx.fillRect(o.x + 4, GROUND - 11, o.w - 8, 1);
+  } else if (o.type === "report") {
+    // 긴급 보고서 탑 (높게 쌓임)
+    for (let i = 0; i < 9; i++) {
+      ctx.fillStyle = i % 2 ? "#e8e8f0" : "#f5f5f5";
+      ctx.fillRect(o.x + ((i % 3) - 1) * 2, GROUND - 4 - i * 4, o.w, 4);
+    }
+    ctx.fillStyle = "#e94560";
+    ctx.fillRect(o.x + 2, y + 2, 20, 9);
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 8px monospace";
+    ctx.fillText("긴급", o.x + 4, y + 10);
+  } else if (o.type === "meeting") {
+    ctx.drawImage(SPR.meeting, o.x, o.flyY);
+    ctx.fillStyle = "#20223a";
+    ctx.font = "bold 9px monospace";
+    ctx.fillText("회의?", o.x + 5, o.flyY + 11);
+  } else if (o.type === "phone") {
+    const shake = Math.sin(animT * 40) * 1.5;
+    ctx.drawImage(SPR.phone, o.x + shake, GROUND - 14);
+    if (Math.floor(animT * 6) % 2) {
+      ctx.fillStyle = "#ffd166";
+      ctx.font = "8px monospace";
+      ctx.fillText("따르릉!", o.x, GROUND - 18);
+    }
   } else if (o.type === "chair") {
     ctx.fillStyle = "#20223a";
     ctx.fillRect(o.x + 2, y, 6, 22);
@@ -1043,12 +1225,24 @@ function drawPlayer() {
     ctx.drawImage(SPR.run1, player.x - 26, player.y - 32);
     ctx.globalAlpha = 1;
   }
+  if (wingsT > 0) {
+    // 레드불 날개
+    ctx.fillStyle = "#4cc9f0";
+    const flap = Math.sin(animT * 16) * 3;
+    ctx.fillRect(player.x - 22, player.y - 24 + flap, 6, 3);
+    ctx.fillRect(player.x - 26, player.y - 22 + flap, 6, 3);
+  }
   let spr;
   if (player.sliding) spr = SPR.slide;
   else if (!player.onGround) spr = SPR.jump;
   else spr = Math.floor(animT * 10) % 2 ? SPR.run1 : SPR.run2;
   if (player.sliding) ctx.drawImage(spr, player.x - 16, GROUND - 20);
   else ctx.drawImage(spr, player.x - 16, player.y - 32);
+  if (slowT > 0) {
+    ctx.fillStyle = "#ff9e44";
+    ctx.font = "10px monospace";
+    ctx.fillText("🐌", player.x + 12, player.y - 30);
+  }
 }
 
 function drawQuip(px, py) {
@@ -1100,7 +1294,8 @@ function drawHud() {
   ctx.fillText(Math.floor(score).toLocaleString() + " 원", W - 10, 20);
   ctx.font = "10px monospace";
   ctx.fillStyle = "#9aa0b5";
-  ctx.fillText(Math.floor(dist) + "m  x" + mult.toFixed(2), W - 10, 33);
+  ctx.fillText("🕐 " + clockStr() + " · " + Math.floor(dist) + "m · x" + mult.toFixed(2), W - 10, 33);
+  ctx.fillText("시급 " + wage.toLocaleString() + "원", W - 10, 46);
   ctx.textAlign = "left";
   ctx.fillStyle = "#ffd166";
   ctx.font = "bold 11px monospace";
@@ -1113,10 +1308,21 @@ function drawHud() {
     ctx.font = "bold " + Math.min(16, 11 + combo) + "px monospace";
     ctx.fillText("콤보 x" + combo, 10, 64);
   }
+  let yExtra = 80;
   if (boostT > 0) {
     ctx.fillStyle = "#3ee06f";
     ctx.font = "bold 11px monospace";
-    ctx.fillText("⚡ " + boostT.toFixed(1) + "s", 10, 80);
+    ctx.fillText("⚡ " + boostT.toFixed(1) + "s", 10, yExtra); yExtra += 14;
+  }
+  if (wingsT > 0) {
+    ctx.fillStyle = "#4cc9f0";
+    ctx.font = "bold 11px monospace";
+    ctx.fillText("🪽 " + wingsT.toFixed(1) + "s", 10, yExtra); yExtra += 14;
+  }
+  if (slowT > 0) {
+    ctx.fillStyle = "#ff9e44";
+    ctx.font = "bold 11px monospace";
+    ctx.fillText("🐌 야근 페널티 " + slowT.toFixed(1) + "s", 10, yExtra); yExtra += 14;
   }
   if (bonusT > 0) {
     ctx.fillStyle = Math.floor(animT * 4) % 2 ? "#06d6a0" : "#ffd166";
@@ -1124,11 +1330,23 @@ function drawHud() {
     ctx.textAlign = "center";
     ctx.fillText("💰 보너스 타임 " + bonusT.toFixed(1) + "s", W / 2, 22);
     ctx.textAlign = "left";
+  } else if (ceoT > 0) {
+    ctx.fillStyle = Math.floor(animT * 4) % 2 ? "#ffd166" : "#fff";
+    ctx.font = "bold 12px monospace";
+    ctx.textAlign = "center";
+    ctx.fillText("👀 사장님 시찰 중 — 점수 2배! " + ceoT.toFixed(1) + "s", W / 2, 22);
+    ctx.textAlign = "left";
   } else if (overtimeOn) {
     ctx.fillStyle = Math.floor(animT * 4) % 2 ? "#e94560" : "#ff9e44";
     ctx.font = "bold 12px monospace";
     ctx.textAlign = "center";
     ctx.fillText("⚠ 야근 위기 타임 ⚠", W / 2, 22);
+    ctx.textAlign = "left";
+  } else if (inRushWindow() && state === "play") {
+    ctx.fillStyle = "#ff9e44";
+    ctx.font = "bold 11px monospace";
+    ctx.textAlign = "center";
+    ctx.fillText("🌆 퇴근 전 러시 — 야근 장애물 주의!", W / 2, 22);
     ctx.textAlign = "left";
   }
   if (dayMsgT > 0 && state === "play") {
@@ -1222,7 +1440,7 @@ function drawWeekend() {
     ctx.fillStyle = "#06d6a0";
     ctx.font = "bold 24px monospace";
     ctx.textAlign = "center";
-    ctx.fillText("칼퇴 성공! +" + Math.floor(500 * mult) + "원", W / 2, 130);
+    ctx.fillText("칼퇴 성공! +" + wk.kal.toLocaleString() + "원", W / 2, 130);
     ctx.fillStyle = "#ffd166";
     ctx.font = "bold 14px monospace";
     ctx.fillText("주말 보너스 스테이지!", W / 2, 156);
@@ -1245,7 +1463,7 @@ function drawRankProgress(y) {
     const prog = Math.min(1, (total - r.need) / span);
     ctx.fillStyle = "#9aa0b5";
     ctx.font = "10px monospace";
-    ctx.fillText(`${r.emoji} ${r.name} → ${next.emoji} ${next.name}까지 ${(next.need - total).toLocaleString()}원`, W / 2, y);
+    ctx.fillText(`${r.emoji} ${r.name}(시급 ${Math.round(MIN_WAGE * r.wage).toLocaleString()}원) → ${next.emoji} ${next.name}까지 ${(next.need - total).toLocaleString()}원`, W / 2, y);
     const bw = 180;
     ctx.fillStyle = "#272b40";
     ctx.fillRect(W / 2 - bw / 2, y + 5, bw, 7);
@@ -1287,7 +1505,11 @@ function render() {
 
   drawBg(false);
   items.forEach(it => {
-    const spr = it.type === "coffee" ? SPR.coffee : it.type === "pay" ? SPR.pay : SPR.energy;
+    const spr = it.type === "coffee" ? SPR.coffee
+              : it.type === "pay" ? SPR.pay
+              : it.type === "redbull" ? SPR.redbull
+              : it.type === "chick" ? SPR.chicken
+              : SPR.energy;
     ctx.drawImage(spr, it.x, it.y);
   });
   obstacles.forEach(drawObstacle);
@@ -1310,6 +1532,10 @@ function render() {
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, W, H);
   }
+  if (slowT > 0 && state === "play") {
+    ctx.fillStyle = "rgba(120,120,140,.12)";
+    ctx.fillRect(0, 0, W, H);
+  }
 
   drawHud();
   drawToasts();
@@ -1324,16 +1550,18 @@ function render() {
     const rIdx = rankFor(total);
     const achCount = Object.keys(achState).length;
     drawCenterPanel([
-      ["직장인 러너", 30, "#ffd166", 78],
-      ["─ 출근 대작전 ─", 13, "#4cc9f0", 100],
-      ["장애물은 점프, 현수막은 슬라이드, 카톡 폭탄 조심!", 11, "#c0c8e0", 128],
-      ["니어미스 보너스 · 커피 콤보 · 💰 보너스 타임 · 📋 마감 러시", 11, "#c0c8e0", 145],
-      ["금요일 야근을 버티면 🛌 주말 보너스 게임!", 11, "#ffd166", 162],
+      ["직장인 러너", 30, "#ffd166", 76],
+      ["─ 출근 대작전 ─", 13, "#4cc9f0", 98],
+      ["하루 8시간 근무, 수입은 직급별 시급으로!", 11, "#c0c8e0", 124],
+      ["퇴근 전 야근 장애물(보고서·회의·전화)에 맞으면 느려짐", 11, "#c0c8e0", 141],
+      ["☕ 커피 콤보 · ⚡ 무적 질주 · 🪽 레드불 3단 점프", 11, "#c0c8e0", 158],
+      ["금요일을 버티면 🛌 주말 보너스 게임!", 11, "#ffd166", 175],
     ], "▶ 스페이스 / 탭하여 출근 시작");
     ctx.textAlign = "center";
     ctx.fillStyle = "#c0c8e0";
     ctx.font = "bold 11px monospace";
-    ctx.fillText(`현재 직급: ${RANKS[rIdx].emoji} ${RANKS[rIdx].name} · 누적 수익 ${total.toLocaleString()}원 · 🏆 ${achCount}/${ACH.length}`, W / 2, 184);
+    const wageNow = Math.round(MIN_WAGE * RANKS[rIdx].wage);
+    ctx.fillText(`${RANKS[rIdx].emoji} ${RANKS[rIdx].name} (시급 ${wageNow.toLocaleString()}원) · 누적 ${total.toLocaleString()}원 · 🏆 ${achCount}/${ACH.length}`, W / 2, 195);
     const best = localStorage.getItem(LS.best);
     if (best) {
       ctx.fillStyle = "#6c7293";
@@ -1346,12 +1574,11 @@ function render() {
     const isBest = Math.floor(score) >= best && best > 0;
     if (promoted && promoRank) {
       drawCenterPanel([
-        ["🎉 승진!! 🎉", 26, "#ffd166", 80],
-        [promoRank.emoji + " " + promoRank.name + "(이)가 되었다!", 16, "#06d6a0", 108],
-        [Math.floor(score).toLocaleString() + "원 벌었다" + (isBest ? " ★신기록" : ""), 14, "#fff", 138],
-        [Math.floor(dist) + "m · ☕" + coffee + " · 아찔 " + nearMiss + "회 · 콤보 x" + maxCombo, 11, "#9aa0b5", 158],
+        ["🎉 승진!! 🎉", 26, "#ffd166", 78],
+        [promoRank.emoji + " " + promoRank.name + " (시급 " + Math.round(MIN_WAGE * promoRank.wage).toLocaleString() + "원)", 15, "#06d6a0", 106],
+        [Math.floor(score).toLocaleString() + "원 벌었다" + (isBest ? " ★신기록" : ""), 14, "#fff", 136],
+        [Math.floor(dist) + "m · ☕" + coffee + " · 아찔 " + nearMiss + "회 · 콤보 x" + maxCombo, 11, "#9aa0b5", 156],
       ], "▶ 스페이스 / 탭하여 재출근");
-      // 색종이
       for (let i = 0; i < 14; i++) {
         const cx = (i * 53 + animT * 40) % W;
         const cy = (i * 37 + animT * 60) % 70;
@@ -1360,13 +1587,13 @@ function render() {
       }
     } else {
       drawCenterPanel([
-        ["번아웃!", 30, "#e94560", 76],
-        [overMsg, 12, "#c0c8e0", 100],
-        [Math.floor(score).toLocaleString() + "원 벌었다" + (isBest ? " ★신기록!" : ""), 18, "#06d6a0", 130],
-        [Math.floor(dist) + "m 출근 · ☕" + coffee + "잔 · 아찔 " + nearMiss + "회 · 콤보 x" + maxCombo + " · " + (week + 1) + "주차", 10, "#9aa0b5", 150],
+        ["번아웃!", 30, "#e94560", 74],
+        [overMsg, 12, "#c0c8e0", 98],
+        [Math.floor(score).toLocaleString() + "원 벌었다" + (isBest ? " ★신기록!" : ""), 18, "#06d6a0", 128],
+        [Math.floor(dist) + "m 출근 · ☕" + coffee + "잔 · 아찔 " + nearMiss + "회 · 콤보 x" + maxCombo + " · " + (week + 1) + "주차", 10, "#9aa0b5", 148],
       ], "▶ 스페이스 / 탭하여 재출근");
     }
-    drawRankProgress(176);
+    drawRankProgress(174);
   } else if (state === "pause") {
     drawCenterPanel([["일시정지", 24, "#ffd166", 130], ["(몰래 쉬는 중)", 12, "#9aa0b5", 152]], "P 키로 복귀");
   }
