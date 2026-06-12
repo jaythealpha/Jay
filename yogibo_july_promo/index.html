@@ -89,6 +89,7 @@
     <a href="#stock">재고</a>
     <a href="#summer">1차 여름</a>
     <a href="#bday">2차 Yogibirthday</a>
+    <a href="#sim">매출 시뮬레이션</a>
     <a href="#budget">예산·KPI</a>
   </div>
 </nav>
@@ -258,6 +259,68 @@
       <div class="stat"><div class="num">QR 전환</div><div class="lab">체험 이탈객 회수 건수</div></div>
       <div class="stat"><div class="num">13+</div><div class="lab">Meta ROAS</div></div>
     </div>
+  </div>
+</section>
+
+<!-- SIMULATION -->
+<section id="sim">
+  <div class="wrap">
+    <div class="section-tag">Revenue Simulation</div>
+    <h2 class="title">매출·객단가 시뮬레이션 (재고 한도 반영)</h2>
+    <p class="lead">실측(2024 ₩620M·2025 ₩528M)과 재고(본품 가능수량)를 베이스로, 후크별 증분을 보수/기본/적극 3안으로 산정했습니다. <b>가정 기반 추정치</b>이며 가정값은 조정 가능합니다.</p>
+
+    <h3 style="margin:6px 0 10px;">① 공급 천장 — 판매 가능 본품 재고 가치</h3>
+    <div class="card" style="padding:0;overflow:hidden;">
+    <table>
+      <tr><th>모델</th><th class="r">본품 가능</th><th class="r">대표 ASP</th><th class="r">재고 가치</th></tr>
+      <tr><td>맥스</td><td class="r">1,588</td><td class="r">₩350,000</td><td class="r">₩555.8M</td></tr>
+      <tr><td>슬림</td><td class="r">1,729</td><td class="r">₩300,000</td><td class="r">₩518.7M</td></tr>
+      <tr><td>미디</td><td class="r">871</td><td class="r">₩200,000</td><td class="r">₩174.2M</td></tr>
+      <tr><td>라운저</td><td class="r">403</td><td class="r">₩380,000</td><td class="r">₩153.1M</td></tr>
+      <tr><td>서포트</td><td class="r">855</td><td class="r">₩160,000</td><td class="r">₩136.8M</td></tr>
+      <tr><td>미니</td><td class="r">804</td><td class="r">₩150,000</td><td class="r">₩120.6M</td></tr>
+      <tr><td>팟 · 피라미드 · 드롭</td><td class="r">1,023</td><td class="r">—</td><td class="r">₩219.7M</td></tr>
+      <tr><td><b>합계</b></td><td class="r"><b>≈ 7,273</b></td><td class="r"></td><td class="r"><b>≈ ₩1,879M</b></td></tr>
+    </table>
+    </div>
+    <div class="note blue">판매 가능 본품 재고 가치 ≈ <b>₩1,879M = 목표(₩620M)의 3.0배.</b> → <b>공급은 충분</b>, 관건은 '수요 창출(후크)'. 한정 SKU(팟·라운저·피라미드·드롭, 합 <b>1,426개</b>)는 <b>17 Flash 희소성 자원</b>으로 활용.</div>
+
+    <h3 style="margin:26px 0 10px;">② 객단가(AOV) 상승 설계</h3>
+    <div class="grid g4">
+      <div class="stat"><div class="num">₩110,000</div><div class="lab">베이스 객단가(가정)</div></div>
+      <div class="stat"><div class="num up">+8%</div><div class="lab">Gift Ladder(금액게이트)</div></div>
+      <div class="stat"><div class="num up">+5%</div><div class="lab">Birthday Combo(번들)</div></div>
+      <div class="stat"><div class="num">₩124,300</div><div class="lab">개선 객단가 (+13%)</div></div>
+    </div>
+
+    <h3 style="margin:26px 0 10px;">③ 매출 시나리오 (베이스 2025 ₩527.9M에 증분 적용)</h3>
+    <div class="card" style="padding:0;overflow:hidden;">
+    <table>
+      <tr><th>레버</th><th class="r">보수</th><th class="r">기본</th><th class="r">적극</th></tr>
+      <tr><td>광폭 페스타(트래픽·전환)</td><td class="r">+3%</td><td class="r">+6%</td><td class="r">+9%</td></tr>
+      <tr><td>Gift Ladder(객단가)</td><td class="r">+3%</td><td class="r">+5%</td><td class="r">+8%</td></tr>
+      <tr><td>Combo 번들(객단가)</td><td class="r">+2%</td><td class="r">+3%</td><td class="r">+5%</td></tr>
+      <tr><td>17 Flash(한정 전환)</td><td class="r">+2%</td><td class="r">+3%</td><td class="r">+5%</td></tr>
+      <tr><td><b>체험 이탈객 회수</b></td><td class="r">+3%</td><td class="r">+6%</td><td class="r">+10%</td></tr>
+      <tr><td><b>총 증분</b></td><td class="r"><b>+13%</b></td><td class="r"><b>+23%</b></td><td class="r"><b>+37%</b></td></tr>
+    </table>
+    </div>
+    <div class="grid g3" style="margin-top:14px;">
+      <div class="stat"><div class="lab" style="margin-bottom:4px;">보수안</div><div class="num">₩596.6M</div><div class="lab">2024 대비 −3.8%</div></div>
+      <div class="stat" style="border:2px solid var(--party);"><div class="lab" style="margin-bottom:4px;">기본안 (목표)</div><div class="num up">₩649.3M</div><div class="lab">2024 대비 +4.7%</div></div>
+      <div class="stat"><div class="lab" style="margin-bottom:4px;">적극안</div><div class="num up">₩723.3M</div><div class="lab">2024 대비 +16.6%</div></div>
+    </div>
+
+    <h3 style="margin:26px 0 10px;">④ 재고 타당성 검증 (기본안)</h3>
+    <div class="card">
+      <ul class="clean">
+        <li>기본안 목표 <b>₩649.3M</b> / 2025 대비 증분 <b>₩121.4M</b></li>
+        <li>개선 객단가 ₩124,300 기준 → 증분 주문 <b>≈ 977건</b></li>
+        <li>필요 본품 ≪ 재고 천장(슬림·맥스·미디·미니·서포트 합 <b>5,847개</b> + 커버 대량 입고) → <b>공급 OK</b></li>
+        <li>한정 SKU(1,426개)는 17 Flash로 '완판 = 마케팅 메시지'화</li>
+      </ul>
+    </div>
+    <div class="note"><b>가정(조정 가능):</b> 베이스 객단가 ₩110,000 · 베이스 매출=2025 실적 · 레버 증분은 추정. ASP는 표준등급 추정치. 실제 주문수·객단가·SKU별 판가 확정 시 정밀화. 레버는 완전 독립이 아니므로 합산 증분은 상한 성격(기본안 보수적 채택 권장).</div>
   </div>
 </section>
 
