@@ -59,7 +59,7 @@
   #btn-slide { left: 14px; }
   #btn-jump { right: 14px; }
   @media (pointer: coarse) { .touch-btn { display: flex; } }
-  #btn-share {
+  #btn-share, #btn-help {
     position: fixed;
     bottom: 18px;
     left: 50%;
@@ -76,6 +76,11 @@
     cursor: pointer;
     z-index: 6;
   }
+  #btn-help {
+    border-color: #ffd166;
+    background: rgba(255,209,102,.12);
+    color: #ffd166;
+  }
 </style>
 </head>
 <body>
@@ -89,6 +94,7 @@
 <div id="btn-slide" class="touch-btn">⬇ 슬라이드</div>
 <div id="btn-jump" class="touch-btn">⬆ 점프</div>
 <button id="btn-share">📤 결과 공유</button>
+<button id="btn-help">📖 게임 설명</button>
 
 <script>
 "use strict";
@@ -557,9 +563,16 @@ function doJump() {
 function setSlide(on) { if (state === "play") player.sliding = on && player.onGround; }
 
 document.addEventListener("keydown", (e) => {
+  if (state === "help") {
+    if (e.code === "Escape" || e.code === "KeyH") { state = "title"; }
+    else if (e.code === "ArrowLeft") { helpPage = Math.max(0, helpPage - 1); }
+    else if (e.code === "Space" || e.code === "Enter" || e.code === "ArrowRight") { e.preventDefault(); nextHelp(); }
+    return;
+  }
   if (e.code === "ArrowLeft" || e.code === "KeyA") { keys.left = true; }
   if (e.code === "ArrowRight" || e.code === "KeyD") { keys.right = true; }
   if (e.repeat) return;
+  if (e.code === "KeyH" && state === "title") { openHelp(); return; }
   if (e.code === "Space" || e.code === "ArrowUp" || e.code === "KeyW") { e.preventDefault(); doJump(); }
   if (e.code === "ArrowDown" || e.code === "KeyS") { e.preventDefault(); keys.slide = true; setSlide(true); }
   if (e.code === "KeyP" && (state === "play" || state === "pause")) state = state === "play" ? "pause" : "play";
@@ -595,6 +608,7 @@ btnSlide.addEventListener("touchend", (e) => {
 });
 cvs.addEventListener("touchstart", (e) => {
   e.preventDefault();
+  if (state === "help") { nextHelp(); return; }
   if (state === "weekend") {
     const r = cvs.getBoundingClientRect();
     const x = e.touches[0].clientX - r.left;
@@ -602,8 +616,61 @@ cvs.addEventListener("touchstart", (e) => {
   } else doJump();
 });
 cvs.addEventListener("touchend", (e) => { e.preventDefault(); keys.left = false; keys.right = false; });
-cvs.addEventListener("mousedown", () => { if (state === "title" || state === "over") startGame(); });
+cvs.addEventListener("mousedown", () => {
+  if (state === "help") { nextHelp(); return; }
+  if (state === "title" || state === "over") startGame();
+});
 btnShare.addEventListener("click", shareResult);
+
+/* ── 게임 설명 메뉴 ──────────────────────────────────────── */
+const btnHelp = document.getElementById("btn-help");
+let helpPage = 0;
+const HELP_PAGES = [
+  { title: "🎮 기본 조작", lines: [
+    "⬆ 스페이스/↑ : 점프 (공중에서 한 번 더 = 2단 점프)",
+    "🪽 레드불 효과 중에는 3단 점프까지 가능",
+    "⬇ ↓ 꾹 : 슬라이드 — 현수막·회의 요청 아래로 통과",
+    "←→ : 주말 보너스 게임에서 좌우 이동",
+    "P : 일시정지 · M : 음소거 · H : 게임 설명",
+    "",
+    "📱 모바일: 화면 탭 = 점프, 좌하단 버튼 = 슬라이드",
+    "    주말 게임은 화면 좌/우 터치로 이동",
+  ]},
+  { title: "☕ 아이템 & 장애물", lines: [
+    "☕ 커피 : +500원, 연속 획득 시 콤보 배율 상승",
+    "    10잔 모으면 멘탈(하트) 1칸 회복",
+    "⚡ 에너지드링크 : 4초 무적 질주",
+    "🪽 레드불 : 6초 날개(3단 점프) + 야근 페널티 해제",
+    "💰 보너스 봉투 : 시급 1시간치 (절반은 카드값…)",
+    "🍗 야식 치킨 : 금요일 야근 타임 한정",
+    "",
+    "💥 일반 장애물(서류·의자·부장님·현수막·카톡) : 멘탈 -1",
+    "🐌 야근 장애물(긴급 보고서·회의 요청·업체 전화) :",
+    "    5초간 속도 35% 감소 + 시급 30분치 차감",
+  ]},
+  { title: "💼 시스템", lines: [
+    "🕐 하루 500m = 8시간 근무 (09:00 → 18:00)",
+    "💰 수입 = 최저시급 10,320원 × 직급 배수",
+    "    누적 수익으로 승진 (🐣인턴 → 👑회장, 시급 인상)",
+    "🌆 매일 퇴근 1시간 전 야근 러시 — 야근 장애물 등장",
+    "🌙 금요일 후반 야근 위기 타임 (화면 어두워짐)",
+    "🛌 금요일 돌파 시 주말 보너스 게임 + 멘탈 회복",
+    "😱 니어미스(아슬아슬 회피) : +300원 보너스",
+    "🎲 이벤트: 💰보너스 타임 · 📋카톡 러시 · ☎전화 폭주",
+    "    👀사장님 시찰(10초간 점수 2배)",
+    "🏆 업적 14종 수집 · 기록은 브라우저에 저장",
+  ]},
+];
+function openHelp() { helpPage = 0; state = "help"; SND.coin(); }
+function nextHelp() {
+  if (helpPage < HELP_PAGES.length - 1) { helpPage++; SND.coin(); }
+  else { state = "title"; SND.coin(); }
+}
+btnHelp.addEventListener("click", openHelp);
+function syncDomButtons() {
+  const v = state === "title" ? "block" : "none";
+  if (btnHelp.style.display !== v) btnHelp.style.display = v;
+}
 
 function shareResult() {
   const r = RANKS[rankFor(Number(localStorage.getItem(LS.total) || 0))];
@@ -1400,6 +1467,32 @@ function drawCenterPanel(lines, sub) {
   ctx.textAlign = "left";
 }
 
+function drawHelp() {
+  ctx.fillStyle = "rgba(13,14,22,.92)";
+  ctx.fillRect(0, 0, W, H);
+  const pg = HELP_PAGES[helpPage];
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#ffd166";
+  ctx.font = "bold 17px monospace";
+  ctx.fillText(pg.title, W / 2, 34);
+  ctx.textAlign = "left";
+  ctx.font = "11px monospace";
+  pg.lines.forEach((ln, i) => {
+    ctx.fillStyle = ln.startsWith(" ") ? "#9aa0b5" : "#e8eaf2";
+    ctx.fillText(ln, 28, 58 + i * 17);
+  });
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#6c7293";
+  ctx.font = "10px monospace";
+  ctx.fillText((helpPage + 1) + " / " + HELP_PAGES.length + "  (← 이전)", W / 2, H - 26);
+  if (Math.floor(animT * 2) % 2) {
+    ctx.fillStyle = "#ffd166";
+    ctx.font = "bold 11px monospace";
+    ctx.fillText(helpPage < HELP_PAGES.length - 1 ? "▶ 탭 / 스페이스 : 다음 페이지" : "▶ 탭 / 스페이스 : 닫기", W / 2, H - 10);
+  }
+  ctx.textAlign = "left";
+}
+
 function drawWeekend() {
   drawBg(true);
   wk.items.forEach(it => {
@@ -1596,6 +1689,8 @@ function render() {
     drawRankProgress(174);
   } else if (state === "pause") {
     drawCenterPanel([["일시정지", 24, "#ffd166", 130], ["(몰래 쉬는 중)", 12, "#9aa0b5", 152]], "P 키로 복귀");
+  } else if (state === "help") {
+    drawHelp();
   }
 
   ctx.restore();
@@ -1616,6 +1711,7 @@ function loop(t) {
   lastTime = t;
   update(dt);
   render();
+  syncDomButtons();
   requestAnimationFrame(loop);
 }
 document.addEventListener("visibilitychange", () => {
