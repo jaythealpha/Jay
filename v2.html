@@ -65,8 +65,8 @@
 <div id="wrap">
   <canvas id="game" width="480" height="270"></canvas>
   <div id="hint">
-    <b>점프</b>: 스페이스/↑ (공중에서 한 번 더 = 2단 점프) · <b>슬라이드</b>: ↓ 꾹 · <b>일시정지</b>: P · <b>음소거</b>: M<br>
-    ☕ 커피 10잔 = 멘탈 회복 · 💰 월급봉투 = 보너스 · <a href="./index.html">📖 텍스트 버전(v1)으로 돌아가기</a>
+    <b>점프</b>: 스페이스/↑ (2단 점프) · <b>슬라이드</b>: ↓ 꾹 · <b>주말 게임</b>: ←→ 이동 · <b>P</b> 일시정지 · <b>M</b> 음소거<br>
+    ☕ 커피 10잔 = 멘탈 회복 · ⚡ 에너지드링크 = 무적 질주 · 금요일 야근 타임을 버티면 🛌 주말 보너스! · <a href="./index.html">📖 텍스트 버전(v1)</a>
   </div>
 </div>
 <div id="btn-slide" class="touch-btn">⬇ 슬라이드</div>
@@ -77,15 +77,16 @@
 
 /* ══════════════════════════════════════════════════════════
    직장인 러너: 출근 대작전 — 16비트 픽셀 아트 무한 러너 (v2)
-   외부 에셋 없음: 스프라이트는 픽셀맵, 사운드는 Web Audio 합성
+   + 카톡 폭탄 / 야근 위기 타임 / 스치는 월급 / 말풍선
+   + 주말 보너스 미니게임 "이불 밖은 위험해"
    ══════════════════════════════════════════════════════════ */
 
 const cvs = document.getElementById("game");
 const ctx = cvs.getContext("2d");
 const W = cvs.width, H = cvs.height;
-const GROUND = 226;                 // 바닥 윗면 y
+const GROUND = 226;
 const DAYS = ["월", "화", "수", "목", "금"];
-const GAME_URL = "https://jaythealpha.github.io/Jay/v2.html";
+const DAY_LEN = 500;                 // 하루 거리(m)
 const bestKey = "office-runner-best";
 
 /* ── 픽셀 스프라이트 ─────────────────────────────────────── */
@@ -93,6 +94,7 @@ const PAL = {
   K: "#20223a", S: "#f2c9a0", B: "#3d5a99", D: "#2d4377",
   W: "#f5f5f5", T: "#e94560", E: "#6b4f3a", F: "#54392a",
   G: "#101020", Y: "#ffd166", C: "#7a4a2b", M: "#c0c8e0",
+  V: "#8a6fd8", N: "#3ee06f", P: "#ff9ebb", O: "#ff9e44",
 };
 
 function makeSprite(rows, scale = 2) {
@@ -216,6 +218,64 @@ const SPR = {
     "YYYYWWYYYY",
     "YYYYYYYYYY",
   ]),
+  energy: makeSprite([
+    "..KKKK..",
+    "..NNNN..",
+    ".NNNNNN.",
+    ".NNWWNN.",
+    ".NNWKNN.",
+    ".NNNNNN.",
+    ".NNNNNN.",
+    "..KKKK..",
+  ]),
+  kakao: makeSprite([
+    ".YYYYYYYYYYY.",
+    "YYYYYYYYYYYYY",
+    "YYKYYKYYKYYYY",
+    "YYYYYYYYYYYYY",
+    ".YYYYYYYYYYY.",
+    "...YY........",
+    "..YY.........",
+  ]),
+  chicken: makeSprite([
+    "...CCCCC..",
+    "..CCCCCCC.",
+    ".CCCCCCCC.",
+    ".CCOCCCCC.",
+    "..CCCCCC..",
+    "....WWW...",
+    "...WWW....",
+    "..WW......",
+  ]),
+  alarm: makeSprite([
+    ".KK....KK.",
+    "K.MMMMMM.K",
+    ".MMMMMMMM.",
+    "MMMWWWWMMM",
+    "MMWWKWWWMM",
+    "MMWWWKWWMM",
+    "MMMWWWWMMM",
+    ".MMMMMMMM.",
+    "...K..K...",
+  ]),
+  letter: makeSprite([
+    "PPPPPPPPPPPP",
+    "PKPPPPPPPPKP",
+    "PPKPPPPPPKPP",
+    "PPPKKKKKKPPP",
+    "PPPPPPPPPPPP",
+    "PPPPTTPPPPPP",
+    "PPPPPPPPPPPP",
+  ]),
+  bed: makeSprite([
+    "....KKKK....VVVVVVVV....",
+    "...KSSSSK.VVVVVVVVVVVV..",
+    "...KSKSSKVVVVVVVVVVVVVV.",
+    "...KSSSSKVVVVVVVVVVVVVV.",
+    "....SSS.VVVVVVVVVVVVVVVV",
+    "........WWWWWWWWWWWWWWWW",
+    "........MMMMMMMMMMMMMMMM",
+  ]),
 };
 
 /* ── 8비트 사운드 (Web Audio 합성) ───────────────────────── */
@@ -246,23 +306,34 @@ const SND = {
   djump() { this.tone(420, 0.13, "square", 0.05, 0, 320); },
   coin()  { this.tone(880, 0.07, "square", 0.05); this.tone(1320, 0.12, "square", 0.05, 0.06); },
   pay()   { [660, 880, 1100, 1320].forEach((f, i) => this.tone(f, 0.1, "square", 0.05, i * 0.06)); },
+  card()  { [880, 660, 440].forEach((f, i) => this.tone(f, 0.1, "triangle", 0.06, i * 0.07)); },
   heart() { [523, 660, 784].forEach((f, i) => this.tone(f, 0.12, "triangle", 0.07, i * 0.08)); },
+  boost() { [440, 660, 880, 1320].forEach((f, i) => this.tone(f, 0.08, "sawtooth", 0.04, i * 0.05)); },
   hit()   { this.tone(160, 0.25, "sawtooth", 0.08, 0, -90); },
   over()  { [392, 330, 262, 196, 147].forEach((f, i) => this.tone(f, 0.22, "triangle", 0.07, i * 0.14)); },
   day()   { this.tone(523, 0.1, "square", 0.05); this.tone(784, 0.15, "square", 0.05, 0.1); },
-  /* 짧은 칩튠 BGM 루프 (16스텝) */
+  bonus() { [523, 659, 784, 1047, 1319].forEach((f, i) => this.tone(f, 0.13, "square", 0.05, i * 0.09)); },
+  bad()   { this.tone(220, 0.18, "sawtooth", 0.07, 0, -80); },
+  /* 칩튠 BGM (평일 16스텝 / 주말 16스텝) */
   MELODY: [523, 0, 659, 0, 784, 659, 523, 0, 587, 0, 698, 587, 523, 0, 440, 494],
   BASS:   [131, 131, 0, 131, 165, 165, 0, 165, 147, 147, 0, 147, 131, 165, 196, 165],
+  WK_MEL: [392, 0, 0, 440, 0, 0, 523, 0, 494, 0, 0, 440, 0, 0, 392, 0],
   startBgm() {
     if (this.bgmTimer) return;
     this.bgmStep = 0;
     this.bgmTimer = setInterval(() => {
-      if (this.muted || state !== "play") return;
-      const m = this.MELODY[this.bgmStep % 16];
-      const b = this.BASS[this.bgmStep % 16];
-      if (m) this.tone(m, 0.11, "square", 0.022);
-      if (b) this.tone(b, 0.13, "triangle", 0.05);
-      this.bgmStep++;
+      if (this.muted) return;
+      if (state === "play") {
+        const m = this.MELODY[this.bgmStep % 16];
+        const b = this.BASS[this.bgmStep % 16];
+        if (m) this.tone(m, 0.11, "square", 0.022);
+        if (b) this.tone(b, 0.13, "triangle", 0.05);
+        this.bgmStep++;
+      } else if (state === "weekend") {
+        const m = this.WK_MEL[this.bgmStep % 16];
+        if (m) this.tone(m, 0.22, "triangle", 0.05);
+        this.bgmStep++;
+      }
     }, 140);
   },
   stopBgm() { clearInterval(this.bgmTimer); this.bgmTimer = null; },
@@ -273,19 +344,51 @@ const SND = {
 };
 function buzz(p) { if (navigator.vibrate) navigator.vibrate(p); }
 
+/* ── 공감 대사 ───────────────────────────────────────────── */
+const QUIP = {
+  dayStart: ["또 월요일이라니...", "겨우 화요일?", "수요일, 반환점!", "목요일... 거의 다 왔다", "금요일! 칼퇴 가즈아!"],
+  hit: ["죄송합니다...", "멘탈이 흔들린다", "집에 가고 싶다", "퇴사 마렵다...", "이게 회사 생활이지..."],
+  coffee10: "카페인 수혈 완료!",
+  pay: "월급이다!!",
+  card: "...카드값 자동이체",
+  energy: "퇴근 본능 발동!!",
+  overtime: "야근 위기...! 버텨!!",
+  escape: "칼퇴 성공!!!",
+  monday: "다시 월요일...",
+  wkKakao: "주말에 카톡이?!",
+  wkLetter: "축의금 -10만...",
+  wkChicken: "역시 치킨은 옳다",
+  wkZzz: "꿀잠 충전",
+};
+const OVER_MSG = [
+  "부장님의 기에 눌려 쓰러졌다...",
+  "카페인이 부족했다...",
+  "멘탈이 먼저 퇴근해버렸다...",
+  "월요병에게 패배했다...",
+];
+
 /* ── 게임 상태 ───────────────────────────────────────────── */
-let state = "title";              // title | play | over | pause
-let player, obstacles, items, particles, spawnT, itemT, dist, speed;
+let state = "title";   // title | play | weekend | wkresult | over | pause
+let player, obstacles, items, particles, floats, spawnT, itemT, dist, speed;
 let day, week, mult, hearts, coffee, score, payCount, flashT, dayMsgT, shakeT;
+let quip = null, boostT = 0, overtimeOn = false, overMsg = "";
+let wk = null, wkResultT = 0;
 let lastTime = 0, animT = 0;
 
 function reset() {
-  player = { x: 70, y: GROUND, vy: 0, w: 22, h: 30, onGround: true, jumps: 0, sliding: false, inv: 0 };
-  obstacles = []; items = []; particles = [];
+  player = { x: 70, y: GROUND, vy: 0, onGround: true, jumps: 0, sliding: false, inv: 0 };
+  obstacles = []; items = []; particles = []; floats = [];
   spawnT = 1.2; itemT = 1.8;
   dist = 0; speed = 190;
   day = 0; week = 0; mult = 1; hearts = 3; coffee = 0; payCount = 0; score = 0;
   flashT = 0; dayMsgT = 1.6; shakeT = 0;
+  quip = null; boostT = 0; overtimeOn = false;
+  wk = null;
+  say(QUIP.dayStart[0]);
+}
+function say(txt, dur = 1.6) { quip = { txt, t: dur }; }
+function addFloat(x, y, txt, col = "#ffd166") {
+  floats.push({ x, y, txt, col, t: 0, life: 1.1 });
 }
 
 /* ── 입력 ────────────────────────────────────────────────── */
@@ -303,6 +406,8 @@ function doJump() {
 function setSlide(on) { if (state === "play") player.sliding = on && player.onGround; }
 
 document.addEventListener("keydown", (e) => {
+  if (e.code === "ArrowLeft" || e.code === "KeyA") { keys.left = true; }
+  if (e.code === "ArrowRight" || e.code === "KeyD") { keys.right = true; }
   if (e.repeat) return;
   if (e.code === "Space" || e.code === "ArrowUp" || e.code === "KeyW") { e.preventDefault(); doJump(); }
   if (e.code === "ArrowDown" || e.code === "KeyS") { e.preventDefault(); keys.slide = true; setSlide(true); }
@@ -312,43 +417,77 @@ document.addEventListener("keydown", (e) => {
 });
 document.addEventListener("keyup", (e) => {
   if (e.code === "ArrowDown" || e.code === "KeyS") { keys.slide = false; setSlide(false); }
+  if (e.code === "ArrowLeft" || e.code === "KeyA") keys.left = false;
+  if (e.code === "ArrowRight" || e.code === "KeyD") keys.right = false;
 });
 
 const btnJump = document.getElementById("btn-jump");
 const btnSlide = document.getElementById("btn-slide");
-btnJump.addEventListener("touchstart", (e) => { e.preventDefault(); doJump(); });
-btnSlide.addEventListener("touchstart", (e) => { e.preventDefault(); keys.slide = true; setSlide(true); });
-btnSlide.addEventListener("touchend", (e) => { e.preventDefault(); keys.slide = false; setSlide(false); });
-cvs.addEventListener("touchstart", (e) => { e.preventDefault(); doJump(); });
+function setButtons(mode) {
+  if (mode === "wk") { btnSlide.textContent = "◀ 이동"; btnJump.textContent = "이동 ▶"; }
+  else { btnSlide.textContent = "⬇ 슬라이드"; btnJump.textContent = "⬆ 점프"; }
+}
+btnJump.addEventListener("touchstart", (e) => {
+  e.preventDefault();
+  if (state === "weekend") keys.right = true; else doJump();
+});
+btnJump.addEventListener("touchend", (e) => { e.preventDefault(); keys.right = false; });
+btnSlide.addEventListener("touchstart", (e) => {
+  e.preventDefault();
+  if (state === "weekend") keys.left = true;
+  else { keys.slide = true; setSlide(true); }
+});
+btnSlide.addEventListener("touchend", (e) => {
+  e.preventDefault();
+  keys.left = false; keys.slide = false; setSlide(false);
+});
+cvs.addEventListener("touchstart", (e) => {
+  e.preventDefault();
+  if (state === "weekend") {
+    // 캔버스 좌/우 절반 터치로 이동
+    const r = cvs.getBoundingClientRect();
+    const x = e.touches[0].clientX - r.left;
+    if (x < r.width / 2) keys.left = true; else keys.right = true;
+  } else doJump();
+});
+cvs.addEventListener("touchend", (e) => { e.preventDefault(); keys.left = false; keys.right = false; });
 cvs.addEventListener("mousedown", () => { if (state === "title" || state === "over") startGame(); });
 
 function startGame() {
   reset();
   state = "play";
+  setButtons("run");
   SND.ensure();
   SND.startBgm();
 }
 
-/* ── 장애물 / 아이템 ─────────────────────────────────────── */
-// type: papers(점프) chair(점프) boss(점프) banner(슬라이드) spill(점프)
+/* ── 장애물 / 아이템 (러너) ──────────────────────────────── */
 function spawnObstacle() {
   const r = Math.random();
+  const kakaoOk = (day >= 1 || week > 0);                  // 화요일부터 카톡 폭탄
   let o;
-  if (r < 0.26)      o = { type: "papers", w: 22, h: 20 };
-  else if (r < 0.5)  o = { type: "chair",  w: 26, h: 34 };
-  else if (r < 0.68) o = { type: "boss",   w: 26, h: 40 };
-  else if (r < 0.88) o = { type: "banner", w: 30, h: 999 }; // 위에서 내려옴: 슬라이드 전용
+  if (kakaoOk && r < 0.18) {
+    o = { type: "kakao", w: 26, h: 14, flyY: GROUND - 34 - Math.random() * 50, t: 0 };
+  }
+  else if (r < 0.36) o = { type: "papers", w: 22, h: 20 };
+  else if (r < 0.56) o = { type: "chair",  w: 26, h: 34 };
+  else if (r < 0.72) o = { type: "boss",   w: 26, h: 40 };
+  else if (r < 0.9)  o = { type: "banner", w: 30, h: 999 };
   else               o = { type: "spill",  w: 34, h: 6 };
   o.x = W + 30;
   obstacles.push(o);
 }
 function spawnItem() {
-  if (Math.random() < 0.14 && payCount < Math.floor(dist / 400)) {
+  const roll = Math.random();
+  if (roll < 0.12 && payCount < Math.floor(dist / 400)) {
     items.push({ type: "pay", x: W + 20, y: GROUND - 70 - Math.random() * 40, w: 20, h: 14 });
     payCount++;
     return;
   }
-  // 커피 3~5개 아치형 배치
+  if (roll < 0.2) {
+    items.push({ type: "energy", x: W + 20, y: GROUND - 40 - Math.random() * 50, w: 16, h: 16 });
+    return;
+  }
   const n = 3 + Math.floor(Math.random() * 3);
   const baseY = GROUND - 26 - Math.random() * 64;
   for (let i = 0; i < n; i++) {
@@ -364,34 +503,51 @@ function sparkle(x, y, col) {
            life: 0.5, t: 0, col };
 }
 
-/* ── 업데이트 ───────────────────────────────────────────── */
+/* ── 충돌 ───────────────────────────────────────────────── */
 function hitbox() {
   if (player.sliding) return { x: player.x - 14, y: GROUND - 14, w: 30, h: 14 };
   return { x: player.x - 9, y: player.y - 28, w: 18, h: 28 };
 }
 function obstacleBox(o) {
-  if (o.type === "banner") return { x: o.x, y: 0, w: o.w, h: GROUND - 24 }; // 아래 24px 틈
+  if (o.type === "banner") return { x: o.x, y: 0, w: o.w, h: GROUND - 24 };
+  if (o.type === "kakao")  return { x: o.x, y: o.flyY, w: o.w, h: o.h };
   return { x: o.x, y: GROUND - o.h, w: o.w, h: o.h };
 }
 function overlap(a, b) {
   return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 }
 
-function update(dt) {
-  animT += dt;
-  if (state !== "play") return;
-
+/* ── 러너 업데이트 ──────────────────────────────────────── */
+function updateRun(dt) {
   // 속도/거리/요일
-  speed = Math.min(540, 190 + dist * 0.045);
-  dist += speed * dt / 10;            // 10px = 1m
+  const boost = boostT > 0 ? 120 : 0;
+  speed = Math.min(540, 190 + dist * 0.045) + boost;
+  dist += speed * dt / 10;
   score += speed * dt / 10 * mult;
-  const dayIdx = Math.floor(dist / 500);
+  if (boostT > 0) {
+    boostT -= dt;
+    if (Math.random() < 0.5) particles.push(sparkle(player.x - 10, player.y - 14, "#3ee06f"));
+  }
+
+  const dayIdx = Math.floor(dist / DAY_LEN);
   const newDay = dayIdx % 5, newWeek = Math.floor(dayIdx / 5);
-  if (newDay !== day || newWeek !== week) {
+  if (newWeek > week) {                       // 금요일 돌파 → 주말 보너스!
     day = newDay; week = newWeek;
     mult = 1 + dayIdx * 0.15;
-    dayMsgT = 1.6; SND.day();
+    enterWeekend();
+    return;
   }
+  if (newDay !== day) {
+    day = newDay;
+    mult = 1 + dayIdx * 0.15;
+    dayMsgT = 1.6; SND.day();
+    say(QUIP.dayStart[day]);
+  }
+
+  // 야근 위기 타임: 금요일 후반부
+  const inOvertime = day === 4 && (dist % DAY_LEN) > DAY_LEN * 0.5;
+  if (inOvertime && !overtimeOn) { overtimeOn = true; say(QUIP.overtime, 2); SND.bad(); }
+  if (!inOvertime) overtimeOn = false;
 
   // 플레이어 물리
   player.vy += 1500 * dt;
@@ -404,57 +560,176 @@ function update(dt) {
   }
   if (player.inv > 0) player.inv -= dt;
 
-  // 스폰
+  // 스폰 (야근 타임엔 빈도 증가)
   spawnT -= dt;
   if (spawnT <= 0) {
     spawnObstacle();
-    const minGap = (140 + speed * 0.45) / speed;          // 반응 거리 보장
-    spawnT = minGap + Math.random() * 0.85;
+    const minGap = (140 + speed * 0.45) / speed;
+    spawnT = (minGap + Math.random() * 0.85) * (overtimeOn ? 0.72 : 1);
   }
   itemT -= dt;
   if (itemT <= 0) { spawnItem(); itemT = 1.6 + Math.random() * 2.2; }
 
-  // 이동/충돌
+  // 장애물 이동/충돌
   const pb = hitbox();
   obstacles = obstacles.filter(o => {
-    o.x -= speed * dt;
+    if (o.type === "kakao") {
+      o.t += dt;
+      o.x -= (speed + 70) * dt;                       // 카톡은 더 빠르게 날아옴
+      o.flyY += Math.sin(o.t * 6) * 18 * dt;
+    } else {
+      o.x -= speed * dt;
+    }
     if (o.x + o.w < -40) return false;
-    if (player.inv <= 0 && overlap(pb, obstacleBox(o))) {
+    if (player.inv <= 0 && boostT <= 0 && overlap(pb, obstacleBox(o))) {
       hearts--; player.inv = 1.5; flashT = 0.25; shakeT = 0.3;
       SND.hit(); buzz(80);
-      if (hearts <= 0) gameOver();
+      say(QUIP.hit[Math.floor(Math.random() * QUIP.hit.length)]);
+      if (o.type === "kakao") addFloat(player.x, player.y - 44, "부장님: 어디야?", "#e94560");
+      if (hearts <= 0) { gameOver(); return true; }
     }
     return true;
   });
+
+  // 아이템
   items = items.filter(it => {
     it.x -= speed * dt;
     if (it.x + it.w < -20) return false;
     if (overlap(pb, it)) {
       if (it.type === "coffee") {
         coffee++; score += 10 * mult; SND.coin();
+        addFloat(it.x, it.y, "+" + Math.floor(10 * mult));
         for (let i = 0; i < 5; i++) particles.push(sparkle(it.x, it.y, "#ffd166"));
-        if (coffee % 10 === 0 && hearts < 3) { hearts++; SND.heart(); }
-      } else {
+        if (coffee % 10 === 0 && hearts < 3) { hearts++; SND.heart(); say(QUIP.coffee10); }
+      } else if (it.type === "pay") {
+        // 스치는 월급: +150 직후 카드값 자동이체로 절반 차감
         score += 150 * mult; SND.pay(); buzz([20, 30, 20]);
+        say(QUIP.pay);
+        addFloat(it.x, it.y, "+" + Math.floor(150 * mult), "#06d6a0");
         for (let i = 0; i < 10; i++) particles.push(sparkle(it.x, it.y, "#06d6a0"));
+        const px = it.x;
+        setTimeout(() => {
+          if (state !== "play") return;
+          score -= 75 * mult; SND.card();
+          say(QUIP.card);
+          addFloat(player.x + 10, player.y - 50, "카드값 -" + Math.floor(75 * mult), "#e94560");
+        }, 700);
+      } else if (it.type === "energy") {
+        boostT = 4; SND.boost(); buzz([15, 20, 15]);
+        say(QUIP.energy);
+        addFloat(it.x, it.y, "무적 질주!", "#3ee06f");
       }
       return false;
     }
     return true;
   });
 
+  updateFx(dt);
+}
+
+/* ── 주말 보너스: 이불 밖은 위험해 ──────────────────────── */
+function enterWeekend() {
+  state = "weekend";
+  setButtons("wk");
+  score += 500 * mult;                      // 칼퇴 보너스
+  wk = { t: 15, score: Math.floor(500 * mult), px: W / 2, items: [], spawnT: 0.3, intro: 2 };
+  obstacles = []; items = [];
+  SND.bonus(); buzz([30, 40, 30]);
+  say(QUIP.escape, 2);
+}
+
+const WK_TYPES = [
+  { type: "chicken", spr: "chicken", good: true,  pts: 250,  msg: QUIP.wkChicken, w: 20, h: 16 },
+  { type: "zzz",     spr: null,      good: true,  pts: 150,  msg: QUIP.wkZzz,     w: 20, h: 14 },
+  { type: "kakao",   spr: "kakao",   good: false, pts: -200, msg: QUIP.wkKakao,   w: 26, h: 14 },
+  { type: "alarm",   spr: "alarm",   good: false, pts: -100, msg: null,           w: 20, h: 18 },
+  { type: "letter",  spr: "letter",  good: false, pts: -100, msg: QUIP.wkLetter,  w: 24, h: 14 },
+];
+
+function updateWeekend(dt) {
+  if (wk.intro > 0) { wk.intro -= dt; updateFx(dt); return; }
+  wk.t -= dt;
+  if (wk.t <= 0) {
+    state = "wkresult"; wkResultT = 2.4;
+    SND.day();
+    return;
+  }
+  // 이동
+  const mv = 230 * dt;
+  if (keys.left) wk.px -= mv;
+  if (keys.right) wk.px += mv;
+  wk.px = Math.max(30, Math.min(W - 30, wk.px));
+
+  // 낙하물
+  wk.spawnT -= dt;
+  if (wk.spawnT <= 0) {
+    const goodRoll = Math.random() < 0.55;
+    const pool = WK_TYPES.filter(t => t.good === goodRoll);
+    const def = pool[Math.floor(Math.random() * pool.length)];
+    wk.items.push({ def, x: 20 + Math.random() * (W - 40), y: -20,
+                    vy: 110 + Math.random() * 90 + week * 12 });
+    wk.spawnT = 0.42 + Math.random() * 0.3;
+  }
+  const pbox = { x: wk.px - 24, y: GROUND - 16, w: 48, h: 16 };
+  wk.items = wk.items.filter(it => {
+    it.y += it.vy * dt;
+    if (it.y > GROUND + 10) return false;
+    const box = { x: it.x - it.def.w / 2, y: it.y - it.def.h / 2, w: it.def.w, h: it.def.h };
+    if (overlap(pbox, box)) {
+      const pts = Math.floor(it.def.pts * mult);
+      score += pts; wk.score += pts;
+      addFloat(it.x, it.y - 10, (pts > 0 ? "+" : "") + pts, it.def.good ? "#06d6a0" : "#e94560");
+      if (it.def.good) {
+        SND.coin();
+        if (it.def.type === "zzz" && hearts < 3) { hearts++; SND.heart(); }
+        for (let i = 0; i < 6; i++) particles.push(sparkle(it.x, it.y, "#ffd166"));
+      } else {
+        SND.bad(); shakeT = 0.25; buzz(60);
+      }
+      if (it.def.msg) say(it.def.msg, 1.2);
+      return false;
+    }
+    return true;
+  });
+  updateFx(dt);
+}
+
+function resumeRun() {
+  state = "play";
+  setButtons("run");
+  hearts = Math.min(3, hearts + 1);          // 주말에 충전된 멘탈
+  dayMsgT = 1.6;
+  say(QUIP.monday, 2);
+  SND.day();
+}
+
+/* ── 공통 이펙트 업데이트 ───────────────────────────────── */
+function updateFx(dt) {
   particles = particles.filter(p => {
     p.t += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 300 * dt;
     return p.t < p.life;
   });
-
+  floats = floats.filter(f => { f.t += dt; return f.t < f.life; });
   if (flashT > 0) flashT -= dt;
   if (dayMsgT > 0) dayMsgT -= dt;
   if (shakeT > 0) shakeT -= dt;
+  if (quip && (quip.t -= dt) <= 0) quip = null;
+}
+
+function update(dt) {
+  animT += dt;
+  if (state === "play") updateRun(dt);
+  else if (state === "weekend") updateWeekend(dt);
+  else if (state === "wkresult") {
+    updateFx(dt);
+    wkResultT -= dt;
+    if (wkResultT <= 0) resumeRun();
+  }
 }
 
 function gameOver() {
   state = "over";
+  overMsg = OVER_MSG[Math.floor(Math.random() * OVER_MSG.length)];
   SND.stopBgm(); SND.over(); buzz([100, 50, 100, 50, 200]);
   const best = Number(localStorage.getItem(bestKey) || 0);
   if (score > best) localStorage.setItem(bestKey, String(Math.floor(score)));
@@ -463,57 +738,59 @@ function gameOver() {
 /* ── 렌더링 ─────────────────────────────────────────────── */
 const DAY_TINT = ["#1a1d2e", "#1a2030", "#1d1a30", "#201a2e", "#241a28"];
 
-function drawBg() {
-  // 벽
-  ctx.fillStyle = DAY_TINT[day];
+function drawBg(weekendMode) {
+  ctx.fillStyle = weekendMode ? "#241a35" : DAY_TINT[day];
   ctx.fillRect(0, 0, W, GROUND);
-  // 창문 + 야경 (느린 패럴랙스)
-  const off1 = -(dist * 1.2) % 170;
+  const off1 = weekendMode ? 0 : -(dist * 1.2) % 170;
   for (let x = off1; x < W + 170; x += 170) {
     ctx.fillStyle = "#10121f";
     ctx.fillRect(x, 28, 90, 64);
-    ctx.fillStyle = "#0a1530";
+    ctx.fillStyle = weekendMode ? "#2a1f4a" : "#0a1530";
     ctx.fillRect(x + 4, 32, 82, 56);
-    // 도시 불빛
     ctx.fillStyle = "#ffd166";
     for (let i = 0; i < 8; i++) {
       const sx = x + 10 + ((i * 37) % 70), sy = 44 + ((i * 23) % 36);
       if ((i + Math.floor(x / 170)) % 3) ctx.fillRect(sx, sy, 3, 3);
     }
     ctx.fillStyle = "#2a2f4a";
-    ctx.fillRect(x + 42, 32, 4, 56); // 창틀
+    ctx.fillRect(x + 42, 32, 4, 56);
   }
-  // 포스터/시계 (중간 패럴랙스)
-  const off2 = -(dist * 3) % 420;
-  for (let x = off2; x < W + 420; x += 420) {
-    ctx.fillStyle = "#2d3250";
-    ctx.fillRect(x + 230, 40, 56, 38);
-    ctx.fillStyle = "#e94560";
-    ctx.fillRect(x + 234, 44, 48, 10);
-    ctx.fillStyle = "#9aa0b5";
-    ctx.font = "8px monospace";
-    ctx.fillText("야근은 셀프", x + 237, 68);
-    // 벽시계
-    ctx.fillStyle = "#c0c8e0";
-    ctx.beginPath(); ctx.arc(x + 330, 50, 10, 0, 7); ctx.fill();
-    ctx.strokeStyle = "#20223a";
-    ctx.beginPath(); ctx.moveTo(x + 330, 50); ctx.lineTo(x + 330, 43); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(x + 330, 50); ctx.lineTo(x + 335, 52); ctx.stroke();
-  }
-  // 책상 실루엣 (빠른 패럴랙스)
-  const off3 = -(dist * 6) % 260;
-  for (let x = off3; x < W + 260; x += 260) {
-    ctx.fillStyle = "#171a2c";
-    ctx.fillRect(x, GROUND - 56, 84, 56);
-    ctx.fillRect(x + 14, GROUND - 78, 34, 24);   // 모니터
-    ctx.fillStyle = "#243a63";
-    ctx.fillRect(x + 17, GROUND - 75, 28, 18);   // 화면
+  if (!weekendMode) {
+    const off2 = -(dist * 3) % 420;
+    for (let x = off2; x < W + 420; x += 420) {
+      ctx.fillStyle = "#2d3250";
+      ctx.fillRect(x + 230, 40, 56, 38);
+      ctx.fillStyle = "#e94560";
+      ctx.fillRect(x + 234, 44, 48, 10);
+      ctx.fillStyle = "#9aa0b5";
+      ctx.font = "8px monospace";
+      ctx.fillText("야근은 셀프", x + 237, 68);
+      ctx.fillStyle = "#c0c8e0";
+      ctx.beginPath(); ctx.arc(x + 330, 50, 10, 0, 7); ctx.fill();
+      ctx.strokeStyle = "#20223a";
+      ctx.beginPath(); ctx.moveTo(x + 330, 50); ctx.lineTo(x + 330, 43); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x + 330, 50); ctx.lineTo(x + 335, 52); ctx.stroke();
+    }
+    const off3 = -(dist * 6) % 260;
+    for (let x = off3; x < W + 260; x += 260) {
+      ctx.fillStyle = "#171a2c";
+      ctx.fillRect(x, GROUND - 56, 84, 56);
+      ctx.fillRect(x + 14, GROUND - 78, 34, 24);
+      ctx.fillStyle = "#243a63";
+      ctx.fillRect(x + 17, GROUND - 75, 28, 18);
+    }
+  } else {
+    // 주말: 집 안 — 달과 스탠드 조명
+    ctx.fillStyle = "#f5e6a0";
+    ctx.beginPath(); ctx.arc(70, 46, 12, 0, 7); ctx.fill();
+    ctx.fillStyle = "#241a35";
+    ctx.beginPath(); ctx.arc(75, 42, 11, 0, 7); ctx.fill();
   }
   // 바닥
-  ctx.fillStyle = "#242842";
+  ctx.fillStyle = weekendMode ? "#2d2348" : "#242842";
   ctx.fillRect(0, GROUND, W, H - GROUND);
-  ctx.fillStyle = "#1d2138";
-  const off4 = -(dist * 10) % 40;
+  ctx.fillStyle = weekendMode ? "#241c3a" : "#1d2138";
+  const off4 = weekendMode ? 0 : -(dist * 10) % 40;
   for (let x = off4; x < W + 40; x += 40) ctx.fillRect(x, GROUND, 20, H - GROUND);
   ctx.fillStyle = "#343a55";
   ctx.fillRect(0, GROUND, W, 2);
@@ -530,16 +807,15 @@ function drawObstacle(o) {
     ctx.fillRect(o.x + 4, GROUND - 11, o.w - 8, 1);
   } else if (o.type === "chair") {
     ctx.fillStyle = "#20223a";
-    ctx.fillRect(o.x + 2, y, 6, 22);              // 등받이
-    ctx.fillRect(o.x, y + 20, o.w, 6);            // 좌판
-    ctx.fillRect(o.x + o.w / 2 - 2, y + 26, 4, 5); // 기둥
-    ctx.fillRect(o.x + 2, GROUND - 3, o.w - 4, 3); // 바퀴대
+    ctx.fillRect(o.x + 2, y, 6, 22);
+    ctx.fillRect(o.x, y + 20, o.w, 6);
+    ctx.fillRect(o.x + o.w / 2 - 2, y + 26, 4, 5);
+    ctx.fillRect(o.x + 2, GROUND - 3, o.w - 4, 3);
     ctx.fillStyle = "#3d5a99";
     ctx.fillRect(o.x + 3, y + 2, 4, 18);
     ctx.fillRect(o.x + 1, y + 21, o.w - 2, 3);
   } else if (o.type === "boss") {
     ctx.drawImage(SPR.boss, o.x - 3, GROUND - 40);
-    // 머리 위 분노 표시
     if (Math.floor(animT * 4) % 2) {
       ctx.fillStyle = "#e94560";
       ctx.font = "10px monospace";
@@ -547,7 +823,7 @@ function drawObstacle(o) {
     }
   } else if (o.type === "banner") {
     ctx.fillStyle = "#5a4632";
-    ctx.fillRect(o.x + o.w / 2 - 1, 0, 2, 14);    // 줄
+    ctx.fillRect(o.x + o.w / 2 - 1, 0, 2, 14);
     ctx.fillStyle = "#e94560";
     ctx.fillRect(o.x, 14, o.w, GROUND - 24 - 14);
     ctx.fillStyle = "#fff";
@@ -566,11 +842,22 @@ function drawObstacle(o) {
     ctx.beginPath();
     ctx.ellipse(o.x + o.w / 2 - 4, GROUND - 1, o.w / 4, 2, 0, 0, 7);
     ctx.fill();
+  } else if (o.type === "kakao") {
+    ctx.drawImage(SPR.kakao, o.x, o.flyY);
+    // 꼬리 잔상
+    ctx.globalAlpha = 0.35;
+    ctx.drawImage(SPR.kakao, o.x + 10, o.flyY + 2);
+    ctx.globalAlpha = 1;
   }
 }
 
 function drawPlayer() {
-  if (player.inv > 0 && Math.floor(animT * 12) % 2) return; // 피격 점멸
+  if (player.inv > 0 && Math.floor(animT * 12) % 2) return;
+  if (boostT > 0) {                                   // 무적 잔상
+    ctx.globalAlpha = 0.3;
+    ctx.drawImage(SPR.run1, player.x - 26, player.y - 32);
+    ctx.globalAlpha = 1;
+  }
   let spr;
   if (player.sliding) spr = SPR.slide;
   else if (!player.onGround) spr = SPR.jump;
@@ -579,8 +866,21 @@ function drawPlayer() {
   else ctx.drawImage(spr, player.x - 16, player.y - 32);
 }
 
-function drawHud() {
-  // 하트
+function drawQuip(px, py) {
+  if (!quip) return;
+  ctx.font = "bold 10px monospace";
+  const w = ctx.measureText(quip.txt).width + 10;
+  const x = Math.max(4, Math.min(W - w - 4, px - w / 2));
+  const y = py;
+  ctx.globalAlpha = Math.min(1, quip.t * 3);
+  ctx.fillStyle = "#f5f5f5";
+  ctx.fillRect(x, y - 12, w, 15);
+  ctx.fillStyle = "#20223a";
+  ctx.fillText(quip.txt, x + 5, y - 1);
+  ctx.globalAlpha = 1;
+}
+
+function drawHearts() {
   for (let i = 0; i < 3; i++) {
     ctx.fillStyle = i < hearts ? "#e94560" : "#343a55";
     const hx = 10 + i * 16, hy = 10;
@@ -588,7 +888,10 @@ function drawHud() {
     ctx.fillRect(hx, hy + 4, 12, 4); ctx.fillRect(hx + 2, hy + 8, 8, 2);
     ctx.fillRect(hx + 4, hy + 10, 4, 2);
   }
-  // 점수/거리
+}
+
+function drawHud() {
+  drawHearts();
   ctx.fillStyle = "#fff";
   ctx.font = "bold 12px monospace";
   ctx.textAlign = "right";
@@ -597,24 +900,43 @@ function drawHud() {
   ctx.fillStyle = "#9aa0b5";
   ctx.fillText(Math.floor(dist) + "m  x" + mult.toFixed(2), W - 10, 33);
   ctx.textAlign = "left";
-  // 요일 + 커피
   ctx.fillStyle = "#ffd166";
   ctx.font = "bold 11px monospace";
   const wkTxt = week > 0 ? ` (${week + 1}주차)` : "";
   ctx.fillText(DAYS[day] + "요일" + wkTxt, 10, 33);
   ctx.fillStyle = "#c0c8e0";
   ctx.fillText("☕ " + (coffee % 10) + "/10", 10, 47);
-  // 요일 변경 안내
+  if (boostT > 0) {
+    ctx.fillStyle = "#3ee06f";
+    ctx.fillText("⚡ " + boostT.toFixed(1) + "s", 10, 61);
+  }
+  if (overtimeOn) {
+    ctx.fillStyle = Math.floor(animT * 4) % 2 ? "#e94560" : "#ff9e44";
+    ctx.font = "bold 12px monospace";
+    ctx.textAlign = "center";
+    ctx.fillText("⚠ 야근 위기 타임 ⚠", W / 2, 22);
+    ctx.textAlign = "left";
+  }
   if (dayMsgT > 0 && state === "play") {
     ctx.globalAlpha = Math.min(1, dayMsgT * 2);
     ctx.fillStyle = "#ffd166";
     ctx.font = "bold 18px monospace";
     ctx.textAlign = "center";
-    const msg = day === 4 ? "금요일! 조금만 더!" : (week > 0 && day === 0 ? "또 월요일..." : DAYS[day] + "요일 출근");
+    const msg = day === 4 ? "금요일! 야근만 피하면 주말이다!" : (week > 0 && day === 0 ? "또 월요일..." : DAYS[day] + "요일 출근");
     ctx.fillText(msg, W / 2, 80);
     ctx.textAlign = "left";
     ctx.globalAlpha = 1;
   }
+}
+
+function drawFloats() {
+  floats.forEach(f => {
+    ctx.globalAlpha = 1 - f.t / f.life;
+    ctx.fillStyle = f.col;
+    ctx.font = "bold 11px monospace";
+    ctx.fillText(f.txt, f.x, f.y - f.t * 30);
+    ctx.globalAlpha = 1;
+  });
 }
 
 function drawCenterPanel(lines, sub) {
@@ -634,20 +956,112 @@ function drawCenterPanel(lines, sub) {
   ctx.textAlign = "left";
 }
 
+function drawWeekend() {
+  drawBg(true);
+  // 낙하물
+  wk.items.forEach(it => {
+    if (it.def.spr) ctx.drawImage(SPR[it.def.spr], it.x - it.def.w / 2, it.y - it.def.h / 2);
+    else { // zzz
+      ctx.fillStyle = "#4cc9f0";
+      ctx.font = "bold 13px monospace";
+      ctx.fillText("Zzz", it.x - 10, it.y + 4);
+    }
+  });
+  // 이불 김대리
+  ctx.drawImage(SPR.bed, wk.px - 24, GROUND - 14);
+  drawQuip(wk.px, GROUND - 24);
+
+  drawHearts();
+  ctx.fillStyle = "#fff";
+  ctx.font = "bold 12px monospace";
+  ctx.textAlign = "right";
+  ctx.fillText(Math.floor(score).toLocaleString() + " 원", W - 10, 20);
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#ffd166";
+  ctx.font = "bold 14px monospace";
+  ctx.fillText("🛌 주말 보너스: 이불 밖은 위험해", W / 2, 46);
+  ctx.fillStyle = "#c0c8e0";
+  ctx.font = "11px monospace";
+  ctx.fillText("치킨·꿀잠은 받고, 업무 카톡·알람·청첩장은 피하세요!", W / 2, 62);
+  ctx.fillStyle = "#fff";
+  ctx.font = "bold 16px monospace";
+  ctx.fillText(Math.max(0, wk.t).toFixed(1) + "s", W / 2, 84);
+  ctx.fillStyle = wk.score >= 0 ? "#06d6a0" : "#e94560";
+  ctx.font = "bold 12px monospace";
+  ctx.fillText("주말 수익 " + (wk.score >= 0 ? "+" : "") + wk.score.toLocaleString() + "원", W / 2, 100);
+  ctx.textAlign = "left";
+
+  if (wk.intro > 0) {
+    ctx.globalAlpha = Math.min(1, wk.intro);
+    ctx.fillStyle = "rgba(13,14,22,.6)";
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = "#06d6a0";
+    ctx.font = "bold 24px monospace";
+    ctx.textAlign = "center";
+    ctx.fillText("칼퇴 성공! +" + Math.floor(500 * mult) + "원", W / 2, 130);
+    ctx.fillStyle = "#ffd166";
+    ctx.font = "bold 14px monospace";
+    ctx.fillText("주말 보너스 스테이지!", W / 2, 156);
+    ctx.fillStyle = "#c0c8e0";
+    ctx.font = "11px monospace";
+    ctx.fillText("← → 로 움직여서 받으세요", W / 2, 176);
+    ctx.textAlign = "left";
+    ctx.globalAlpha = 1;
+  }
+}
+
 function render() {
   ctx.save();
   if (shakeT > 0) ctx.translate((Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5);
 
-  drawBg();
-  items.forEach(it => ctx.drawImage(it.type === "coffee" ? SPR.coffee : SPR.pay, it.x, it.y));
+  if (state === "weekend" || state === "wkresult") {
+    drawWeekend();
+    drawFloats();
+    particles.forEach(p => {
+      ctx.globalAlpha = 1 - p.t / p.life;
+      ctx.fillStyle = p.col;
+      ctx.fillRect(p.x, p.y, 3, 3);
+      ctx.globalAlpha = 1;
+    });
+    if (state === "wkresult") {
+      drawCenterPanel([
+        ["주말 종료...", 22, "#ffd166", 110],
+        ["주말 수익: " + (wk.score >= 0 ? "+" : "") + wk.score.toLocaleString() + "원", 14, wk.score >= 0 ? "#06d6a0" : "#e94560", 140],
+        ["멘탈 +1 회복! 다시 출근이다...", 12, "#c0c8e0", 164],
+      ], null);
+    }
+    ctx.restore();
+    drawMuteTag();
+    return;
+  }
+
+  drawBg(false);
+  items.forEach(it => {
+    const spr = it.type === "coffee" ? SPR.coffee : it.type === "pay" ? SPR.pay : SPR.energy;
+    ctx.drawImage(spr, it.x, it.y);
+  });
   obstacles.forEach(drawObstacle);
   drawPlayer();
+  drawQuip(player.x, player.y - (player.sliding ? 24 : 36));
   particles.forEach(p => {
     ctx.globalAlpha = 1 - p.t / p.life;
     ctx.fillStyle = p.col;
     ctx.fillRect(p.x, p.y, 3, 3);
     ctx.globalAlpha = 1;
   });
+  drawFloats();
+
+  // 야근 위기 타임: 화면 어두워짐 + 비네팅
+  if (overtimeOn && state === "play") {
+    ctx.fillStyle = "rgba(5,5,20,.34)";
+    ctx.fillRect(0, 0, W, H);
+    const g = ctx.createRadialGradient(W / 2, H / 2, 90, W / 2, H / 2, 280);
+    g.addColorStop(0, "rgba(0,0,0,0)");
+    g.addColorStop(1, "rgba(10,0,20,.55)");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+  }
+
   drawHud();
 
   if (flashT > 0) {
@@ -657,10 +1071,11 @@ function render() {
 
   if (state === "title") {
     drawCenterPanel([
-      ["직장인 러너", 30, "#ffd166", 95],
-      ["─ 출근 대작전 ─", 13, "#4cc9f0", 118],
-      ["서류와 부장님을 뛰어넘고 현수막은 슬라이드!", 11, "#c0c8e0", 150],
-      ["커피 10잔마다 멘탈 회복, 월급봉투는 보너스", 11, "#c0c8e0", 167],
+      ["직장인 러너", 30, "#ffd166", 90],
+      ["─ 출근 대작전 ─", 13, "#4cc9f0", 113],
+      ["장애물은 점프, 현수막은 슬라이드, 카톡 폭탄 조심!", 11, "#c0c8e0", 143],
+      ["커피 10잔 = 멘탈 회복 · ⚡ 무적 질주 · 💰 스치는 월급", 11, "#c0c8e0", 160],
+      ["금요일 야근 타임을 버티면 🛌 주말 보너스 게임!", 11, "#ffd166", 177],
     ], "▶ 스페이스 / 탭하여 출근 시작");
     const best = localStorage.getItem(bestKey);
     if (best) {
@@ -674,21 +1089,25 @@ function render() {
     const best = Number(localStorage.getItem(bestKey) || 0);
     const isBest = Math.floor(score) >= best && best > 0;
     drawCenterPanel([
-      ["번아웃!", 30, "#e94560", 92],
-      ["오늘도 이렇게 쓰러지는구나...", 12, "#c0c8e0", 116],
-      [Math.floor(score).toLocaleString() + "원 벌었다", 18, "#06d6a0", 148],
-      [Math.floor(dist) + "m 출근 · ☕" + coffee + "잔" + (isBest ? "  ★신기록!" : ""), 11, "#9aa0b5", 168],
+      ["번아웃!", 30, "#e94560", 88],
+      [overMsg, 12, "#c0c8e0", 112],
+      [Math.floor(score).toLocaleString() + "원 벌었다", 18, "#06d6a0", 144],
+      [Math.floor(dist) + "m 출근 · ☕" + coffee + "잔 · " + (week + 1) + "주차" + (isBest ? "  ★신기록!" : ""), 11, "#9aa0b5", 164],
     ], "▶ 스페이스 / 탭하여 재출근");
   } else if (state === "pause") {
     drawCenterPanel([["일시정지", 24, "#ffd166", 130], ["(몰래 쉬는 중)", 12, "#9aa0b5", 152]], "P 키로 복귀");
   }
 
+  ctx.restore();
+  drawMuteTag();
+}
+
+function drawMuteTag() {
   if (SND.muted) {
     ctx.fillStyle = "#6c7293";
     ctx.font = "10px monospace";
     ctx.fillText("🔇 M", 10, H - 8);
   }
-  ctx.restore();
 }
 
 /* ── 메인 루프 ──────────────────────────────────────────── */
