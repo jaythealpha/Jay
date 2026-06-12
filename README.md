@@ -5,7 +5,19 @@
 
 ## 🎮 플레이하기
 
-**👉 [https://jaythealpha.github.io/Jay/](https://jaythealpha.github.io/Jay/)** (GitHub Pages)
+- **v1 (텍스트 어드벤처)** 👉 [https://jaythealpha.github.io/Jay/](https://jaythealpha.github.io/Jay/)
+- **v2 (16비트 아케이드 러너)** 👉 [https://jaythealpha.github.io/Jay/v2.html](https://jaythealpha.github.io/Jay/v2.html)
+
+### 🕹️ v2: 직장인 러너 — 출근 대작전
+
+16비트 픽셀 아트 무한 러너입니다 (외부 에셋 없음 — 스프라이트는 픽셀맵, BGM/효과음은 Web Audio 칩튠 합성).
+
+- **점프** (스페이스/↑, 2단 점프 가능)로 서류더미·사무용 의자·💢부장님·커피 자국을 뛰어넘으세요.
+- **슬라이드** (↓ 꾹)로 "회의중" 현수막 아래를 통과하세요.
+- ☕ 커피 10잔을 모으면 멘탈(하트) 회복, 💰 월급봉투는 큰 보너스.
+- 요일이 월→금으로 흐르고 주차가 넘어갈수록 속도와 점수 배율이 올라갑니다.
+- 멘탈 3개가 모두 닳으면 번아웃으로 게임 오버. 번 돈(점수)으로 기록을 경쟁하세요.
+- 모바일은 화면 탭(점프) + 좌하단 버튼(슬라이드)으로 조작합니다.
 
 또는 `index.html` 파일을 브라우저에서 열기만 하면 됩니다. 설치나 빌드가 필요 없습니다.
 

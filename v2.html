@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>직장인 러너: 출근 대작전 (16-bit)</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    height: 100%;
+    background: #0d0e16;
+    overflow: hidden;
+    font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  #wrap {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  canvas {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    background: #0d0e16;
+    box-shadow: 0 10px 50px rgba(0,0,0,.6);
+    border-radius: 6px;
+    max-width: 100vw;
+    max-height: 80vh;
+  }
+  #hint {
+    color: #6c7293;
+    font-size: 12px;
+    text-align: center;
+    line-height: 1.7;
+  }
+  #hint b { color: #ffd166; }
+  #hint a { color: #4cc9f0; text-decoration: none; }
+  .touch-btn {
+    position: fixed;
+    bottom: 14px;
+    width: 86px;
+    height: 64px;
+    border-radius: 14px;
+    background: rgba(255,255,255,.07);
+    border: 1px solid rgba(255,255,255,.18);
+    color: #eef0f6;
+    font-size: 14px;
+    font-weight: 700;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+  }
+  #btn-slide { left: 14px; }
+  #btn-jump { right: 14px; }
+  @media (pointer: coarse) { .touch-btn { display: flex; } }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="game" width="480" height="270"></canvas>
+  <div id="hint">
+    <b>점프</b>: 스페이스/↑ (공중에서 한 번 더 = 2단 점프) · <b>슬라이드</b>: ↓ 꾹 · <b>일시정지</b>: P · <b>음소거</b>: M<br>
+    ☕ 커피 10잔 = 멘탈 회복 · 💰 월급봉투 = 보너스 · <a href="./index.html">📖 텍스트 버전(v1)으로 돌아가기</a>
+  </div>
+</div>
+<div id="btn-slide" class="touch-btn">⬇ 슬라이드</div>
+<div id="btn-jump" class="touch-btn">⬆ 점프</div>
+
+<script>
+"use strict";
+
+/* ══════════════════════════════════════════════════════════
+   직장인 러너: 출근 대작전 — 16비트 픽셀 아트 무한 러너 (v2)
+   외부 에셋 없음: 스프라이트는 픽셀맵, 사운드는 Web Audio 합성
+   ══════════════════════════════════════════════════════════ */
+
+const cvs = document.getElementById("game");
+const ctx = cvs.getContext("2d");
+const W = cvs.width, H = cvs.height;
+const GROUND = 226;                 // 바닥 윗면 y
+const DAYS = ["월", "화", "수", "목", "금"];
+const GAME_URL = "https://jaythealpha.github.io/Jay/v2.html";
+const bestKey = "office-runner-best";
+
+/* ── 픽셀 스프라이트 ─────────────────────────────────────── */
+const PAL = {
+  K: "#20223a", S: "#f2c9a0", B: "#3d5a99", D: "#2d4377",
+  W: "#f5f5f5", T: "#e94560", E: "#6b4f3a", F: "#54392a",
+  G: "#101020", Y: "#ffd166", C: "#7a4a2b", M: "#c0c8e0",
+};
+
+function makeSprite(rows, scale = 2) {
+  const c = document.createElement("canvas");
+  c.width = rows[0].length * scale;
+  c.height = rows.length * scale;
+  const g = c.getContext("2d");
+  rows.forEach((row, y) => {
+    for (let x = 0; x < row.length; x++) {
+      const col = PAL[row[x]];
+      if (col) { g.fillStyle = col; g.fillRect(x * scale, y * scale, scale, scale); }
+    }
+  });
+  return c;
+}
+
+const SPR = {
+  run1: makeSprite([
+    "................",
+    ".....KKKKKK.....",
+    "....KKKKKKKK....",
+    "....KSSSSSSK....",
+    "....KSKSSKSK....",
+    "....KSSSSSSK....",
+    ".....SSSSSS.....",
+    "....BBBWWBBB....",
+    "...BBBWTTWBBB...",
+    "...BSBWTTWBSB...",
+    "...BBBWWWWBBB...",
+    "....BBBBBBBB....",
+    "....DDD..DDD....",
+    "...DDD....DDD...",
+    "..KKK......KKK..",
+    "................",
+  ]),
+  run2: makeSprite([
+    "................",
+    ".....KKKKKK.....",
+    "....KKKKKKKK....",
+    "....KSSSSSSK....",
+    "....KSKSSKSK....",
+    "....KSSSSSSK....",
+    ".....SSSSSS.....",
+    "....BBBWWBBB....",
+    "...BBBWTTWBBB...",
+    "...BSBWTTWBSB...",
+    "...BBBWWWWBBB...",
+    "....BBBBBBBB....",
+    "......DDDD......",
+    ".....DDD.DD.....",
+    ".....KK...KK....",
+    "................",
+  ]),
+  jump: makeSprite([
+    "................",
+    ".....KKKKKK.....",
+    "....KKKKKKKK....",
+    "....KSSSSSSK....",
+    "....KSKSSKSK....",
+    "....KSSSSSSK....",
+    ".....SSSSSS.....",
+    "....BBBWWBBB....",
+    "...BBBWTTWBBS...",
+    "...BSBWTTWBB....",
+    "...BBBWWWWBBB...",
+    "....BBBBBBBB....",
+    "....DDDDDDD.....",
+    "...DDD...DDD....",
+    "...KK.....KK....",
+    "................",
+  ]),
+  slide: makeSprite([
+    "................",
+    "....KKKK........",
+    "...KSSSSK.......",
+    "...KSKSSK..BBB..",
+    "...KSSSS.BBBBBB.",
+    "....SSS.BBWWBBDD",
+    "......BBBWTTBDDK",
+    ".....BBBBBBBDDK.",
+    "........DDDD....",
+    "................",
+  ]),
+  boss: makeSprite([
+    "................",
+    ".....KKKKKK.....",
+    "....KKKKKKKK....",
+    "....KSSSSSSK....",
+    "....KGGSSGGK....",
+    "....KSSSSSSK....",
+    "....KSKKKKSK....",
+    ".....SSSSSS.....",
+    "....EEEEEEEE....",
+    "...EEEWWWWEEE...",
+    "..EEEWWTTWWEEE..",
+    "..EEEWWTTWWEEE..",
+    "..EEEWWWWWWEEE..",
+    "..EE.WWWWWW.EE..",
+    "..SS.FFFFFF.SS..",
+    ".....FFFFFF.....",
+    ".....FF..FF.....",
+    ".....FF..FF.....",
+    "....KKK..KKK....",
+    "................",
+  ]),
+  coffee: makeSprite([
+    "..MMMM..",
+    ".MCCCCM.",
+    ".WWWWWW.",
+    ".WWWWWWM",
+    ".WWWWWWM",
+    "..WWWW..",
+    "..KKKK..",
+  ]),
+  pay: makeSprite([
+    "YYYYYYYYYY",
+    "YKYYYYYYKY",
+    "YYKYYYYKYY",
+    "YYYKKKKYYY",
+    "YYYYWWYYYY",
+    "YYYYWWYYYY",
+    "YYYYYYYYYY",
+  ]),
+};
+
+/* ── 8비트 사운드 (Web Audio 합성) ───────────────────────── */
+const SND = {
+  ctx: null,
+  muted: localStorage.getItem("office-runner-muted") === "1",
+  bgmTimer: null, bgmStep: 0,
+  ensure() {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    if (!this.ctx) this.ctx = new AC();
+    if (this.ctx.state === "suspended") this.ctx.resume();
+    return this.ctx;
+  },
+  tone(freq, dur, type = "square", vol = 0.06, when = 0, slide = 0) {
+    if (this.muted) return;
+    const a = this.ensure(); if (!a) return;
+    const o = a.createOscillator(), g = a.createGain();
+    const t = a.currentTime + when;
+    o.type = type; o.frequency.setValueAtTime(freq, t);
+    if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, freq + slide), t + dur);
+    g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    o.connect(g).connect(a.destination);
+    o.start(t); o.stop(t + dur);
+  },
+  jump()  { this.tone(300, 0.15, "square", 0.05, 0, 300); },
+  djump() { this.tone(420, 0.13, "square", 0.05, 0, 320); },
+  coin()  { this.tone(880, 0.07, "square", 0.05); this.tone(1320, 0.12, "square", 0.05, 0.06); },
+  pay()   { [660, 880, 1100, 1320].forEach((f, i) => this.tone(f, 0.1, "square", 0.05, i * 0.06)); },
+  heart() { [523, 660, 784].forEach((f, i) => this.tone(f, 0.12, "triangle", 0.07, i * 0.08)); },
+  hit()   { this.tone(160, 0.25, "sawtooth", 0.08, 0, -90); },
+  over()  { [392, 330, 262, 196, 147].forEach((f, i) => this.tone(f, 0.22, "triangle", 0.07, i * 0.14)); },
+  day()   { this.tone(523, 0.1, "square", 0.05); this.tone(784, 0.15, "square", 0.05, 0.1); },
+  /* 짧은 칩튠 BGM 루프 (16스텝) */
+  MELODY: [523, 0, 659, 0, 784, 659, 523, 0, 587, 0, 698, 587, 523, 0, 440, 494],
+  BASS:   [131, 131, 0, 131, 165, 165, 0, 165, 147, 147, 0, 147, 131, 165, 196, 165],
+  startBgm() {
+    if (this.bgmTimer) return;
+    this.bgmStep = 0;
+    this.bgmTimer = setInterval(() => {
+      if (this.muted || state !== "play") return;
+      const m = this.MELODY[this.bgmStep % 16];
+      const b = this.BASS[this.bgmStep % 16];
+      if (m) this.tone(m, 0.11, "square", 0.022);
+      if (b) this.tone(b, 0.13, "triangle", 0.05);
+      this.bgmStep++;
+    }, 140);
+  },
+  stopBgm() { clearInterval(this.bgmTimer); this.bgmTimer = null; },
+  toggle() {
+    this.muted = !this.muted;
+    localStorage.setItem("office-runner-muted", this.muted ? "1" : "0");
+  },
+};
+function buzz(p) { if (navigator.vibrate) navigator.vibrate(p); }
+
+/* ── 게임 상태 ───────────────────────────────────────────── */
+let state = "title";              // title | play | over | pause
+let player, obstacles, items, particles, spawnT, itemT, dist, speed;
+let day, week, mult, hearts, coffee, score, payCount, flashT, dayMsgT, shakeT;
+let lastTime = 0, animT = 0;
+
+function reset() {
+  player = { x: 70, y: GROUND, vy: 0, w: 22, h: 30, onGround: true, jumps: 0, sliding: false, inv: 0 };
+  obstacles = []; items = []; particles = [];
+  spawnT = 1.2; itemT = 1.8;
+  dist = 0; speed = 190;
+  day = 0; week = 0; mult = 1; hearts = 3; coffee = 0; payCount = 0; score = 0;
+  flashT = 0; dayMsgT = 1.6; shakeT = 0;
+}
+
+/* ── 입력 ────────────────────────────────────────────────── */
+const keys = {};
+function doJump() {
+  if (state === "title" || state === "over") { startGame(); return; }
+  if (state !== "play") return;
+  if (player.onGround) {
+    player.vy = -480; player.onGround = false; player.jumps = 1; SND.jump(); buzz(10);
+  } else if (player.jumps < 2) {
+    player.vy = -430; player.jumps = 2; SND.djump(); buzz(10);
+    for (let i = 0; i < 6; i++) particles.push(puff(player.x, player.y));
+  }
+}
+function setSlide(on) { if (state === "play") player.sliding = on && player.onGround; }
+
+document.addEventListener("keydown", (e) => {
+  if (e.repeat) return;
+  if (e.code === "Space" || e.code === "ArrowUp" || e.code === "KeyW") { e.preventDefault(); doJump(); }
+  if (e.code === "ArrowDown" || e.code === "KeyS") { e.preventDefault(); keys.slide = true; setSlide(true); }
+  if (e.code === "KeyP" && (state === "play" || state === "pause")) state = state === "play" ? "pause" : "play";
+  if (e.code === "KeyM") SND.toggle();
+  if (e.code === "Enter" && (state === "title" || state === "over")) startGame();
+});
+document.addEventListener("keyup", (e) => {
+  if (e.code === "ArrowDown" || e.code === "KeyS") { keys.slide = false; setSlide(false); }
+});
+
+const btnJump = document.getElementById("btn-jump");
+const btnSlide = document.getElementById("btn-slide");
+btnJump.addEventListener("touchstart", (e) => { e.preventDefault(); doJump(); });
+btnSlide.addEventListener("touchstart", (e) => { e.preventDefault(); keys.slide = true; setSlide(true); });
+btnSlide.addEventListener("touchend", (e) => { e.preventDefault(); keys.slide = false; setSlide(false); });
+cvs.addEventListener("touchstart", (e) => { e.preventDefault(); doJump(); });
+cvs.addEventListener("mousedown", () => { if (state === "title" || state === "over") startGame(); });
+
+function startGame() {
+  reset();
+  state = "play";
+  SND.ensure();
+  SND.startBgm();
+}
+
+/* ── 장애물 / 아이템 ─────────────────────────────────────── */
+// type: papers(점프) chair(점프) boss(점프) banner(슬라이드) spill(점프)
+function spawnObstacle() {
+  const r = Math.random();
+  let o;
+  if (r < 0.26)      o = { type: "papers", w: 22, h: 20 };
+  else if (r < 0.5)  o = { type: "chair",  w: 26, h: 34 };
+  else if (r < 0.68) o = { type: "boss",   w: 26, h: 40 };
+  else if (r < 0.88) o = { type: "banner", w: 30, h: 999 }; // 위에서 내려옴: 슬라이드 전용
+  else               o = { type: "spill",  w: 34, h: 6 };
+  o.x = W + 30;
+  obstacles.push(o);
+}
+function spawnItem() {
+  if (Math.random() < 0.14 && payCount < Math.floor(dist / 400)) {
+    items.push({ type: "pay", x: W + 20, y: GROUND - 70 - Math.random() * 40, w: 20, h: 14 });
+    payCount++;
+    return;
+  }
+  // 커피 3~5개 아치형 배치
+  const n = 3 + Math.floor(Math.random() * 3);
+  const baseY = GROUND - 26 - Math.random() * 64;
+  for (let i = 0; i < n; i++) {
+    items.push({ type: "coffee", x: W + 20 + i * 22, y: baseY - Math.sin((i / (n - 1)) * Math.PI) * 18, w: 16, h: 14 });
+  }
+}
+function puff(x, y) {
+  return { x, y, vx: -40 - Math.random() * 60, vy: -20 - Math.random() * 50,
+           life: 0.4 + Math.random() * 0.3, t: 0, col: "#9aa0b5" };
+}
+function sparkle(x, y, col) {
+  return { x, y, vx: (Math.random() - 0.5) * 120, vy: -60 - Math.random() * 80,
+           life: 0.5, t: 0, col };
+}
+
+/* ── 업데이트 ───────────────────────────────────────────── */
+function hitbox() {
+  if (player.sliding) return { x: player.x - 14, y: GROUND - 14, w: 30, h: 14 };
+  return { x: player.x - 9, y: player.y - 28, w: 18, h: 28 };
+}
+function obstacleBox(o) {
+  if (o.type === "banner") return { x: o.x, y: 0, w: o.w, h: GROUND - 24 }; // 아래 24px 틈
+  return { x: o.x, y: GROUND - o.h, w: o.w, h: o.h };
+}
+function overlap(a, b) {
+  return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+}
+
+function update(dt) {
+  animT += dt;
+  if (state !== "play") return;
+
+  // 속도/거리/요일
+  speed = Math.min(540, 190 + dist * 0.045);
+  dist += speed * dt / 10;            // 10px = 1m
+  score += speed * dt / 10 * mult;
+  const dayIdx = Math.floor(dist / 500);
+  const newDay = dayIdx % 5, newWeek = Math.floor(dayIdx / 5);
+  if (newDay !== day || newWeek !== week) {
+    day = newDay; week = newWeek;
+    mult = 1 + dayIdx * 0.15;
+    dayMsgT = 1.6; SND.day();
+  }
+
+  // 플레이어 물리
+  player.vy += 1500 * dt;
+  player.y += player.vy * dt;
+  if (player.y >= GROUND) {
+    player.y = GROUND; player.vy = 0;
+    if (!player.onGround) { player.onGround = true; player.jumps = 0; player.sliding = keys.slide; }
+  } else {
+    player.onGround = false; player.sliding = false;
+  }
+  if (player.inv > 0) player.inv -= dt;
+
+  // 스폰
+  spawnT -= dt;
+  if (spawnT <= 0) {
+    spawnObstacle();
+    const minGap = (140 + speed * 0.45) / speed;          // 반응 거리 보장
+    spawnT = minGap + Math.random() * 0.85;
+  }
+  itemT -= dt;
+  if (itemT <= 0) { spawnItem(); itemT = 1.6 + Math.random() * 2.2; }
+
+  // 이동/충돌
+  const pb = hitbox();
+  obstacles = obstacles.filter(o => {
+    o.x -= speed * dt;
+    if (o.x + o.w < -40) return false;
+    if (player.inv <= 0 && overlap(pb, obstacleBox(o))) {
+      hearts--; player.inv = 1.5; flashT = 0.25; shakeT = 0.3;
+      SND.hit(); buzz(80);
+      if (hearts <= 0) gameOver();
+    }
+    return true;
+  });
+  items = items.filter(it => {
+    it.x -= speed * dt;
+    if (it.x + it.w < -20) return false;
+    if (overlap(pb, it)) {
+      if (it.type === "coffee") {
+        coffee++; score += 10 * mult; SND.coin();
+        for (let i = 0; i < 5; i++) particles.push(sparkle(it.x, it.y, "#ffd166"));
+        if (coffee % 10 === 0 && hearts < 3) { hearts++; SND.heart(); }
+      } else {
+        score += 150 * mult; SND.pay(); buzz([20, 30, 20]);
+        for (let i = 0; i < 10; i++) particles.push(sparkle(it.x, it.y, "#06d6a0"));
+      }
+      return false;
+    }
+    return true;
+  });
+
+  particles = particles.filter(p => {
+    p.t += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 300 * dt;
+    return p.t < p.life;
+  });
+
+  if (flashT > 0) flashT -= dt;
+  if (dayMsgT > 0) dayMsgT -= dt;
+  if (shakeT > 0) shakeT -= dt;
+}
+
+function gameOver() {
+  state = "over";
+  SND.stopBgm(); SND.over(); buzz([100, 50, 100, 50, 200]);
+  const best = Number(localStorage.getItem(bestKey) || 0);
+  if (score > best) localStorage.setItem(bestKey, String(Math.floor(score)));
+}
+
+/* ── 렌더링 ─────────────────────────────────────────────── */
+const DAY_TINT = ["#1a1d2e", "#1a2030", "#1d1a30", "#201a2e", "#241a28"];
+
+function drawBg() {
+  // 벽
+  ctx.fillStyle = DAY_TINT[day];
+  ctx.fillRect(0, 0, W, GROUND);
+  // 창문 + 야경 (느린 패럴랙스)
+  const off1 = -(dist * 1.2) % 170;
+  for (let x = off1; x < W + 170; x += 170) {
+    ctx.fillStyle = "#10121f";
+    ctx.fillRect(x, 28, 90, 64);
+    ctx.fillStyle = "#0a1530";
+    ctx.fillRect(x + 4, 32, 82, 56);
+    // 도시 불빛
+    ctx.fillStyle = "#ffd166";
+    for (let i = 0; i < 8; i++) {
+      const sx = x + 10 + ((i * 37) % 70), sy = 44 + ((i * 23) % 36);
+      if ((i + Math.floor(x / 170)) % 3) ctx.fillRect(sx, sy, 3, 3);
+    }
+    ctx.fillStyle = "#2a2f4a";
+    ctx.fillRect(x + 42, 32, 4, 56); // 창틀
+  }
+  // 포스터/시계 (중간 패럴랙스)
+  const off2 = -(dist * 3) % 420;
+  for (let x = off2; x < W + 420; x += 420) {
+    ctx.fillStyle = "#2d3250";
+    ctx.fillRect(x + 230, 40, 56, 38);
+    ctx.fillStyle = "#e94560";
+    ctx.fillRect(x + 234, 44, 48, 10);
+    ctx.fillStyle = "#9aa0b5";
+    ctx.font = "8px monospace";
+    ctx.fillText("야근은 셀프", x + 237, 68);
+    // 벽시계
+    ctx.fillStyle = "#c0c8e0";
+    ctx.beginPath(); ctx.arc(x + 330, 50, 10, 0, 7); ctx.fill();
+    ctx.strokeStyle = "#20223a";
+    ctx.beginPath(); ctx.moveTo(x + 330, 50); ctx.lineTo(x + 330, 43); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x + 330, 50); ctx.lineTo(x + 335, 52); ctx.stroke();
+  }
+  // 책상 실루엣 (빠른 패럴랙스)
+  const off3 = -(dist * 6) % 260;
+  for (let x = off3; x < W + 260; x += 260) {
+    ctx.fillStyle = "#171a2c";
+    ctx.fillRect(x, GROUND - 56, 84, 56);
+    ctx.fillRect(x + 14, GROUND - 78, 34, 24);   // 모니터
+    ctx.fillStyle = "#243a63";
+    ctx.fillRect(x + 17, GROUND - 75, 28, 18);   // 화면
+  }
+  // 바닥
+  ctx.fillStyle = "#242842";
+  ctx.fillRect(0, GROUND, W, H - GROUND);
+  ctx.fillStyle = "#1d2138";
+  const off4 = -(dist * 10) % 40;
+  for (let x = off4; x < W + 40; x += 40) ctx.fillRect(x, GROUND, 20, H - GROUND);
+  ctx.fillStyle = "#343a55";
+  ctx.fillRect(0, GROUND, W, 2);
+}
+
+function drawObstacle(o) {
+  const y = GROUND - o.h;
+  if (o.type === "papers") {
+    for (let i = 0; i < 5; i++) {
+      ctx.fillStyle = i % 2 ? "#e8e8f0" : "#f5f5f5";
+      ctx.fillRect(o.x + (i % 2) * 2 - 1, GROUND - 4 - i * 4, o.w, 4);
+    }
+    ctx.fillStyle = "#9aa0b5";
+    ctx.fillRect(o.x + 4, GROUND - 11, o.w - 8, 1);
+  } else if (o.type === "chair") {
+    ctx.fillStyle = "#20223a";
+    ctx.fillRect(o.x + 2, y, 6, 22);              // 등받이
+    ctx.fillRect(o.x, y + 20, o.w, 6);            // 좌판
+    ctx.fillRect(o.x + o.w / 2 - 2, y + 26, 4, 5); // 기둥
+    ctx.fillRect(o.x + 2, GROUND - 3, o.w - 4, 3); // 바퀴대
+    ctx.fillStyle = "#3d5a99";
+    ctx.fillRect(o.x + 3, y + 2, 4, 18);
+    ctx.fillRect(o.x + 1, y + 21, o.w - 2, 3);
+  } else if (o.type === "boss") {
+    ctx.drawImage(SPR.boss, o.x - 3, GROUND - 40);
+    // 머리 위 분노 표시
+    if (Math.floor(animT * 4) % 2) {
+      ctx.fillStyle = "#e94560";
+      ctx.font = "10px monospace";
+      ctx.fillText("💢", o.x + 4, GROUND - 44);
+    }
+  } else if (o.type === "banner") {
+    ctx.fillStyle = "#5a4632";
+    ctx.fillRect(o.x + o.w / 2 - 1, 0, 2, 14);    // 줄
+    ctx.fillStyle = "#e94560";
+    ctx.fillRect(o.x, 14, o.w, GROUND - 24 - 14);
+    ctx.fillStyle = "#fff";
+    ctx.save();
+    ctx.translate(o.x + o.w / 2 + 4, 30);
+    ctx.rotate(Math.PI / 2);
+    ctx.font = "bold 11px monospace";
+    ctx.fillText("회의중", 0, 0);
+    ctx.restore();
+  } else if (o.type === "spill") {
+    ctx.fillStyle = "#7a4a2b";
+    ctx.beginPath();
+    ctx.ellipse(o.x + o.w / 2, GROUND, o.w / 2, 4, 0, 0, 7);
+    ctx.fill();
+    ctx.fillStyle = "#a06a3b";
+    ctx.beginPath();
+    ctx.ellipse(o.x + o.w / 2 - 4, GROUND - 1, o.w / 4, 2, 0, 0, 7);
+    ctx.fill();
+  }
+}
+
+function drawPlayer() {
+  if (player.inv > 0 && Math.floor(animT * 12) % 2) return; // 피격 점멸
+  let spr;
+  if (player.sliding) spr = SPR.slide;
+  else if (!player.onGround) spr = SPR.jump;
+  else spr = Math.floor(animT * 10) % 2 ? SPR.run1 : SPR.run2;
+  if (player.sliding) ctx.drawImage(spr, player.x - 16, GROUND - 20);
+  else ctx.drawImage(spr, player.x - 16, player.y - 32);
+}
+
+function drawHud() {
+  // 하트
+  for (let i = 0; i < 3; i++) {
+    ctx.fillStyle = i < hearts ? "#e94560" : "#343a55";
+    const hx = 10 + i * 16, hy = 10;
+    ctx.fillRect(hx, hy + 2, 4, 4); ctx.fillRect(hx + 8, hy + 2, 4, 4);
+    ctx.fillRect(hx, hy + 4, 12, 4); ctx.fillRect(hx + 2, hy + 8, 8, 2);
+    ctx.fillRect(hx + 4, hy + 10, 4, 2);
+  }
+  // 점수/거리
+  ctx.fillStyle = "#fff";
+  ctx.font = "bold 12px monospace";
+  ctx.textAlign = "right";
+  ctx.fillText(Math.floor(score).toLocaleString() + " 원", W - 10, 20);
+  ctx.font = "10px monospace";
+  ctx.fillStyle = "#9aa0b5";
+  ctx.fillText(Math.floor(dist) + "m  x" + mult.toFixed(2), W - 10, 33);
+  ctx.textAlign = "left";
+  // 요일 + 커피
+  ctx.fillStyle = "#ffd166";
+  ctx.font = "bold 11px monospace";
+  const wkTxt = week > 0 ? ` (${week + 1}주차)` : "";
+  ctx.fillText(DAYS[day] + "요일" + wkTxt, 10, 33);
+  ctx.fillStyle = "#c0c8e0";
+  ctx.fillText("☕ " + (coffee % 10) + "/10", 10, 47);
+  // 요일 변경 안내
+  if (dayMsgT > 0 && state === "play") {
+    ctx.globalAlpha = Math.min(1, dayMsgT * 2);
+    ctx.fillStyle = "#ffd166";
+    ctx.font = "bold 18px monospace";
+    ctx.textAlign = "center";
+    const msg = day === 4 ? "금요일! 조금만 더!" : (week > 0 && day === 0 ? "또 월요일..." : DAYS[day] + "요일 출근");
+    ctx.fillText(msg, W / 2, 80);
+    ctx.textAlign = "left";
+    ctx.globalAlpha = 1;
+  }
+}
+
+function drawCenterPanel(lines, sub) {
+  ctx.fillStyle = "rgba(13,14,22,.78)";
+  ctx.fillRect(0, 0, W, H);
+  ctx.textAlign = "center";
+  lines.forEach(([txt, size, col, dy]) => {
+    ctx.fillStyle = col;
+    ctx.font = `bold ${size}px monospace`;
+    ctx.fillText(txt, W / 2, dy);
+  });
+  if (sub && Math.floor(animT * 2) % 2) {
+    ctx.fillStyle = "#ffd166";
+    ctx.font = "bold 12px monospace";
+    ctx.fillText(sub, W / 2, 210);
+  }
+  ctx.textAlign = "left";
+}
+
+function render() {
+  ctx.save();
+  if (shakeT > 0) ctx.translate((Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5);
+
+  drawBg();
+  items.forEach(it => ctx.drawImage(it.type === "coffee" ? SPR.coffee : SPR.pay, it.x, it.y));
+  obstacles.forEach(drawObstacle);
+  drawPlayer();
+  particles.forEach(p => {
+    ctx.globalAlpha = 1 - p.t / p.life;
+    ctx.fillStyle = p.col;
+    ctx.fillRect(p.x, p.y, 3, 3);
+    ctx.globalAlpha = 1;
+  });
+  drawHud();
+
+  if (flashT > 0) {
+    ctx.fillStyle = `rgba(233,69,96,${flashT})`;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  if (state === "title") {
+    drawCenterPanel([
+      ["직장인 러너", 30, "#ffd166", 95],
+      ["─ 출근 대작전 ─", 13, "#4cc9f0", 118],
+      ["서류와 부장님을 뛰어넘고 현수막은 슬라이드!", 11, "#c0c8e0", 150],
+      ["커피 10잔마다 멘탈 회복, 월급봉투는 보너스", 11, "#c0c8e0", 167],
+    ], "▶ 스페이스 / 탭하여 출근 시작");
+    const best = localStorage.getItem(bestKey);
+    if (best) {
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#6c7293";
+      ctx.font = "11px monospace";
+      ctx.fillText("최고 기록: " + Number(best).toLocaleString() + "원", W / 2, 232);
+      ctx.textAlign = "left";
+    }
+  } else if (state === "over") {
+    const best = Number(localStorage.getItem(bestKey) || 0);
+    const isBest = Math.floor(score) >= best && best > 0;
+    drawCenterPanel([
+      ["번아웃!", 30, "#e94560", 92],
+      ["오늘도 이렇게 쓰러지는구나...", 12, "#c0c8e0", 116],
+      [Math.floor(score).toLocaleString() + "원 벌었다", 18, "#06d6a0", 148],
+      [Math.floor(dist) + "m 출근 · ☕" + coffee + "잔" + (isBest ? "  ★신기록!" : ""), 11, "#9aa0b5", 168],
+    ], "▶ 스페이스 / 탭하여 재출근");
+  } else if (state === "pause") {
+    drawCenterPanel([["일시정지", 24, "#ffd166", 130], ["(몰래 쉬는 중)", 12, "#9aa0b5", 152]], "P 키로 복귀");
+  }
+
+  if (SND.muted) {
+    ctx.fillStyle = "#6c7293";
+    ctx.font = "10px monospace";
+    ctx.fillText("🔇 M", 10, H - 8);
+  }
+  ctx.restore();
+}
+
+/* ── 메인 루프 ──────────────────────────────────────────── */
+function loop(t) {
+  const dt = Math.min(0.033, (t - lastTime) / 1000 || 0.016);
+  lastTime = t;
+  update(dt);
+  render();
+  requestAnimationFrame(loop);
+}
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden && state === "play") state = "pause";
+});
+
+reset();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

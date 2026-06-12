@@ -366,6 +366,21 @@
     font-size: 12px;
     margin-top: 14px;
   }
+
+  .v2-link {
+    display: block;
+    margin-top: 14px;
+    padding: 13px 16px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #4cc9f0, #c77dff);
+    color: #12141d;
+    font-size: 15px;
+    font-weight: 800;
+    text-decoration: none;
+    text-align: center;
+    transition: transform .12s ease, filter .12s ease;
+  }
+  .v2-link:hover { transform: translateY(-2px); filter: brightness(1.1); }
 </style>
 </head>
 <body>
@@ -909,6 +924,7 @@ function showTitle() {
       ${best ? `<div class="best-record">🏅 최고 기록: ${best}점</div>` : ""}
       <div class="rank-heading">직급을 선택하세요</div>
       <div class="rank-list">${rankCards}</div>
+      <a class="v2-link" href="./v2.html">🕹️ NEW! 16비트 아케이드 버전 플레이 →</a>
       <div class="footer-tip">선택지는 키보드 1, 2, 3으로도 고를 수 있어요</div>
     </div>`;
 }
