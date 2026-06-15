@@ -200,6 +200,42 @@ def test_routing_abs_goes_to_p2s(cfg: AppConfig) -> None:
     assert job.target_printer == "p2s"
 
 
+def test_cad_track_bypasses_meshy(
+    cfg: AppConfig, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """CAD 트랙: Meshy 호출 없이 Claude→build123d 경로로 STL을 만들고 슬라이싱까지."""
+    from bambu_auto.adapters.sources.cad_spec import CadSpecAdapter
+    from bambu_auto.services.cad import claude_cad
+
+    pipe, _ = _pipeline(cfg)
+
+    # Anthropic 키 강제 (실제 호출은 generate_part 모킹으로 막음)
+    cfg.secrets.anthropic_api_key = "sk-ant-fake"
+
+    def fake_generate_part(prompt, out_stl, api_key, **kw):
+        # 진짜 build123d로 실제 STL을 만든다 (mock의 효과 = Claude만 우회)
+        out_stl.parent.mkdir(parents=True, exist_ok=True)
+        code = ("from build123d import *\n"
+                "with BuildPart() as p:\n    Box(12, 12, 12)\n"
+                "result = p.part\n")
+        ok, err = claude_cad._execute_code(code, out_stl, timeout_sec=30)
+        return claude_cad.CadResult(
+            ok=ok, stl_path=out_stl if ok else None,
+            code=code, attempts=1, error=None if ok else err,
+            model="mocked",
+        )
+
+    monkeypatch.setattr(claude_cad, "generate_part", fake_generate_part)
+
+    job = Job(source_type=SourceType.CAD,
+              source_payload={"prompt": "box 12x12x12", "cad_model": "mocked"},
+              material="pla")
+    pipe.run(job, CadSpecAdapter("box 12x12x12"))
+    assert job.state == JobState.SLICED
+    assert pipe.meshy.calls == 0  # Meshy 호출 없음
+    assert job.model_path and Path(job.model_path).exists()
+
+
 def test_cache_hit_skips_meshy_call(cfg: AppConfig) -> None:
     pipe, repo = _pipeline(cfg)
     job1 = Job(source_type=SourceType.IMAGE, source_payload={"source": "x.png"},

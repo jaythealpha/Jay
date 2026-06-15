@@ -128,6 +128,7 @@ INDEX_HTML = r"""<!doctype html>
 <div class="seg" style="margin-bottom:4px">
   <button id="t3d" class="on" onclick="setTrack('3d')">① 3D 모델 (Meshy)</button>
   <button id="tfn" onclick="setTrack('func')">② 기능 제품 (마그넷·NFC·키링)</button>
+  <button id="tcad" onclick="setTrack('cad')">③ CAD (Claude·파라메트릭)</button>
 </div>
 
 <div id="form3d" class="card">
@@ -214,6 +215,39 @@ INDEX_HTML = r"""<!doctype html>
     <button id="goFn" onclick="submitFunc()">기능 제품 제작 (크레딧 0)</button>
   </div>
 </div>
+
+<div id="formCad" class="card" style="display:none">
+  <p class="msg" style="margin:0 0 10px">
+    <b>Claude 파라메트릭 CAD</b> — 자연어로 부품 설명 → 결정적 watertight STL.
+    키캡·홀더·박스·브래킷 등 <b>치수 중요한 부품</b>에 적합. Meshy 미사용·크레딧 0.
+  </p>
+  <label class="fld">스펙 (자연어, 영어/한글 모두 가능)</label>
+  <textarea id="cadPrompt" rows="4"
+    placeholder="예) 1u MX 호환 키캡, 상단에 'A' 음각 0.6mm, 모서리 R1.2mm"></textarea>
+  <label class="fld">치수 (선택, 한 줄에 key=value)</label>
+  <textarea id="cadParams" rows="3"
+    placeholder="cap_mm=18&#10;height_mm=8&#10;letter=A"></textarea>
+  <div class="grid" style="margin-top:8px">
+    <div><label class="fld">Claude 모델</label>
+      <select id="cadModel">
+        <option value="claude-sonnet-4-6" selected>Sonnet 4.6 (균형·권장)</option>
+        <option value="claude-opus-4-7">Opus 4.7 (정밀)</option>
+        <option value="claude-haiku-4-5-20251001">Haiku 4.5 (빠름·저비용)</option>
+      </select></div>
+    <div><label class="fld">최대 시도</label>
+      <select id="cadAttempts"><option value="2">2회</option>
+        <option value="3" selected>3회</option><option value="5">5회</option></select></div>
+    <div><label class="fld">재질</label>
+      <select id="cadMat"><option value="pla">PLA</option>
+        <option value="petg">PETG</option><option value="abs">ABS</option></select></div>
+    <div><label class="fld">프린터</label>
+      <select id="cadPrn"><option value="auto">자동</option></select></div>
+  </div>
+  <div class="bar">
+    <span id="msgCad" class="msg"></span>
+    <button id="goCad" onclick="submitCad()">CAD 생성 (크레딧 0)</button>
+  </div>
+</div>
 <div id="cred" class="msg" style="margin:0 4px 14px"></div>
 
 <div class="card">
@@ -237,8 +271,10 @@ let MODE='batch', TRACK='3d';
 function setTrack(t){TRACK=t;
  document.getElementById('t3d').className=t==='3d'?'on':'';
  document.getElementById('tfn').className=t==='func'?'on':'';
+ document.getElementById('tcad').className=t==='cad'?'on':'';
  document.getElementById('form3d').style.display=t==='3d'?'block':'none';
- document.getElementById('formFunc').style.display=t==='func'?'block':'none';refresh();}
+ document.getElementById('formFunc').style.display=t==='func'?'block':'none';
+ document.getElementById('formCad').style.display=t==='cad'?'block':'none';refresh();}
 function setMode(m){MODE=m;
  document.getElementById('mBatch').className=m==='batch'?'on':'';
  document.getElementById('mView').className=m==='multiview'?'on':'';
@@ -255,7 +291,7 @@ function onProductChange(){
  document.getElementById('fmagWrap').style.display=
   document.getElementById('product').value==='magnet'?'block':'none';}
 async function loadPrinters(){try{const p=await (await fetch('/api/printers')).json();
- for(const id of ['prn','fprn']){const s=document.getElementById(id);
+ for(const id of ['prn','fprn','cadPrn']){const s=document.getElementById(id);if(!s)continue;
   for(const n of p.printers){const o=document.createElement('option');o.value=n;o.textContent=n.toUpperCase();s.appendChild(o);}
   if([...s.options].some(o=>o.value==='a1'))s.value='a1';}}catch(e){}}
 function keyHdr(){const k=document.getElementById('key').value.trim();return k?{'X-Meshy-Key':k}:{};}
@@ -294,6 +330,20 @@ async function submit3d(){const s=srcs('src').concat(UP.up3d);
   meshy_key:document.getElementById('key').value.trim()},
   document.getElementById('msg3d'),document.getElementById('go3d'));
  UP.up3d=[];document.getElementById('up3dMsg').textContent='';}
+async function submitCad(){
+ const spec=document.getElementById('cadPrompt').value.trim();
+ if(!spec){alert('CAD 스펙(자연어)을 입력하세요');return;}
+ const params={};
+ for(const ln of document.getElementById('cadParams').value.split(/\n/)){
+  const s=ln.trim();if(!s||!s.includes('='))continue;
+  const [k,v]=s.split('=');const t=v.trim();
+  const num=parseFloat(t);params[k.trim()]=Number.isNaN(num)?t:num;}
+ await post({track:'cad',sources:[],cad_prompt:spec,cad_params:params,
+  cad_model:document.getElementById('cadModel').value,
+  cad_max_attempts:parseInt(document.getElementById('cadAttempts').value)||3,
+  material:document.getElementById('cadMat').value,
+  printer:document.getElementById('cadPrn').value},
+  document.getElementById('msgCad'),document.getElementById('goCad'));}
 async function submitFunc(){const s=srcs('fsrc').concat(UP.upFn);
  if(!s.length){alert('URL 입력 또는 파일 첨부');return;}
  if(s.length>20){alert('최대 20개');return;}
@@ -382,9 +432,14 @@ class RetextureReq(BaseModel):
 
 class SubmitReq(BaseModel):
     sources: list[str]
-    track: str = "3d"            # 3d=Meshy 3D / func=기능 제품(평면)
+    track: str = "3d"            # 3d=Meshy 3D / func=기능 제품(평면) / cad=Claude CAD
     product: str = "magnet"      # func일 때: magnet | nfc | keyring
     mode: str = "batch"          # batch=각 URL 별도 물체 / multiview=한 물체 다각도
+    # CAD 트랙 (track="cad")
+    cad_prompt: str = ""                       # 자연어 스펙
+    cad_params: dict[str, float | str] = {}    # 명시 치수 {"cap_mm": 18, ...}
+    cad_model: str = "claude-sonnet-4-6"
+    cad_max_attempts: int = 3
     material: str = "pla"
     printer: str = "auto"
     addon: str = ""              # "" | keychain | stand | magnet | nfc
@@ -471,10 +526,33 @@ def create_app(cfg: AppConfig) -> FastAPI:
 
     @app.post("/api/jobs")
     def submit(req: SubmitReq) -> dict:
+        printer = None if req.printer == "auto" else req.printer
+
+        # CAD 트랙: sources 불필요 (cad_prompt만 필요)
+        if req.track == "cad":
+            spec = (req.cad_prompt or "").strip()
+            if not spec:
+                raise HTTPException(400, "CAD 스펙(자연어)이 비어있음")
+            if not cfg.secrets.anthropic_api_key:
+                raise HTTPException(
+                    400,
+                    "서버에 ANTHROPIC_API_KEY가 설정되지 않음 — CAD 트랙 불가",
+                )
+            payload = {
+                "prompt": spec,
+                "cad_params": dict(req.cad_params or {}),
+                "cad_model": (req.cad_model or "claude-sonnet-4-6").strip(),
+                "cad_max_attempts": int(req.cad_max_attempts or 3),
+                "track": "cad",
+            }
+            job = Job(source_type=SourceType.CAD, source_payload=payload,
+                      material=req.material, target_printer=printer)
+            repo.save(job)
+            return {"ids": [job.id], "count": 1}
+
         srcs = [s.strip() for s in req.sources if s.strip()]
         if not srcs:
             raise HTTPException(400, "입력이 비어있음")
-        printer = None if req.printer == "auto" else req.printer
 
         # 외부 배포(BYO 필수) 모드: 3D 트랙(Meshy 사용)은 키 필수
         if (req.track == "3d" and cfg.settings.web.byo_required

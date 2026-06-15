@@ -71,9 +71,12 @@ class Pipeline:
                 self._notify("[1/4] Meshy 재텍스처 중…")
                 model_path = self._retexture(job, work)
             else:
-                self._notify("[1/5] 소스 준비 중 (이미지 다운로드)…")
+                self._notify("[1/5] 소스 준비 중…")
                 prepared = self._prepare(job, adapter, work)
-                self._notify("[2/5] Meshy 3D 생성 중 (1~5분 소요, 폴링)…")
+                if prepared.kind == "cad":
+                    self._notify("[2/5] Claude 파라메트릭 CAD 생성 중…")
+                else:
+                    self._notify("[2/5] Meshy 3D 생성 중 (1~5분 소요, 폴링)…")
                 model_path = self._generate(job, prepared, work)
             self._notify("[3/5] mesh 리페어 중…")
             report = self._repair(job, Path(model_path), work)
@@ -105,6 +108,11 @@ class Pipeline:
 
     def _generate(self, job: Job, prepared: PreparedSource, work: Path) -> str:
         payload = job.source_payload or {}
+
+        # CAD 트랙: Meshy 미사용 — Claude가 build123d 코드 생성·실행 → STL.
+        # 규격·기능 부품(키캡, 마운트, 박스 등)에 적합. 결과는 항상 watertight.
+        if prepared.kind == "cad":
+            return self._cad_generate(job, prepared, work)
 
         # 2D 평면 패널 모드: Meshy 미사용, 이미지 실루엣을 로컬에서 압출 (크레딧 0)
         if payload.get("flat") and prepared.image_paths:
@@ -219,6 +227,57 @@ class Pipeline:
             return int(b) if isinstance(b, (int, float)) else None
         except Exception:  # noqa: BLE001
             return None
+
+    def _cad_generate(self, job: Job, prepared: PreparedSource, work: Path) -> str:
+        """CAD 트랙: Claude → build123d 코드 → STL (Meshy 미사용)."""
+        from bambu_auto.services.cad.claude_cad import (
+            generate_part, write_artifacts,
+        )
+
+        api_key = self.cfg.secrets.anthropic_api_key
+        if not api_key:
+            self.repo.set_state(
+                job, JobState.FAILED_MESHY,
+                error="CAD 트랙: ANTHROPIC_API_KEY 누락",
+            )
+            raise ValueError(
+                "CAD 트랙은 ANTHROPIC_API_KEY 필요. .env에 키를 설정."
+            )
+
+        payload = job.source_payload or {}
+        model = (payload.get("cad_model") or "claude-sonnet-4-6").strip()
+        max_attempts = int(payload.get("cad_max_attempts") or 3)
+        timeout_sec = int(payload.get("cad_timeout_sec") or 60)
+
+        out = work / "model" / "cad.stl"
+        try:
+            result = generate_part(
+                prepared.prompt or "", out, api_key,
+                model=model, max_attempts=max_attempts,
+                timeout_sec=timeout_sec, on_progress=self._notify,
+            )
+        except Exception as e:
+            self.repo.set_state(
+                job, JobState.FAILED_MESHY, error=f"CAD 예외: {e}")
+            raise
+
+        # 생성 코드/메타를 항상 저장 (성공·실패 둘 다 — 디버깅/감사용)
+        try:
+            write_artifacts(result, work / "model")
+        except Exception:  # noqa: BLE001
+            pass
+
+        if not result.ok:
+            self.repo.set_state(
+                job, JobState.FAILED_MESHY,
+                error=f"CAD 실패({result.attempts}회): {result.error}",
+            )
+            raise ValueError(f"CAD 생성 실패: {result.error}")
+
+        job.model_path = str(out)
+        self.repo.set_actual_credits(job.id, 0)  # Meshy 크레딧 안 씀
+        self.repo.set_state(job, JobState.MESHY_COMPLETE)
+        return str(out)
 
     def _retexture(self, job: Job, work: Path) -> str:
         """기존 Meshy 작업에 새 텍스처를 입혀 컬러 모델 생성."""

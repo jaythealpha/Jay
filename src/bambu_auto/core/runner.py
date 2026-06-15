@@ -65,6 +65,12 @@ def run_job(
     elif job.source_type == SourceType.TEXT:
         from bambu_auto.adapters.sources.text import TextSourceAdapter
         adapter = TextSourceAdapter(job.source_payload["prompt"])
+    elif job.source_type == SourceType.CAD:
+        from bambu_auto.adapters.sources.cad_spec import CadSpecAdapter
+        adapter = CadSpecAdapter(
+            job.source_payload["prompt"],
+            params=job.source_payload.get("cad_params") or None,
+        )
     else:
         raise ValueError("지원하지 않는 소스 타입 (web은 추후)")
 

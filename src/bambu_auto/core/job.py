@@ -42,6 +42,7 @@ class SourceType(str, enum.Enum):
     MULTI_IMAGE = "multi_image"
     WEB_URL = "web_url"
     TEXT = "text"
+    CAD = "cad"
 
 
 class Job(BaseModel):

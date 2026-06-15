@@ -106,6 +106,22 @@ def doctor() -> None:
     else:
         ok(f"MESHY_API_KEY set ({key[:8]}…{key[-4:]})")
 
+    # Anthropic (CAD 트랙)
+    akey = cfg.secrets.anthropic_api_key
+    if not akey:
+        warn("ANTHROPIC_API_KEY 미설정 — CAD 트랙(파라메트릭) 사용 시 필수")
+    elif not akey.startswith("sk-ant-"):
+        warn(f"ANTHROPIC_API_KEY 형식 의심 (예상 sk-ant-…, got {akey[:6]!r})")
+    else:
+        ok(f"ANTHROPIC_API_KEY set ({akey[:10]}…{akey[-4:]})")
+
+    # CAD libs
+    try:
+        import build123d  # noqa: F401
+        ok("build123d (CAD 트랙) 사용 가능")
+    except ImportError:
+        warn("build123d 미설치 — `uv sync` 필요")
+
     # Printers
     for name, p in cfg.printers.printers.items():
         if p.host and p.access_code:
@@ -167,6 +183,68 @@ def _run_job(cfg: AppConfig, db: Database, job_id: str) -> None:
     console.print(f"[green]Done[/green] {job.id} -> {job.state.value}")
     if job.gcode_path:
         console.print(f"  G-code: {job.gcode_path}")
+
+
+@app.command()
+def cad(
+    spec: str = typer.Argument(..., help="자연어 CAD 스펙 (예: 'MX 1u 키캡, A 음각')"),
+    material: str = typer.Option("pla"),
+    quality: str = typer.Option("standard"),
+    printer: str = typer.Option("auto", help="auto | p2s | a1"),
+    run: bool = typer.Option(False, "--run", help="제출 후 즉시 파이프라인 실행"),
+    model: str = typer.Option(
+        "claude-sonnet-4-6", "--model",
+        help="Claude 모델 (claude-sonnet-4-6 권장, claude-opus-4-7 정밀)",
+    ),
+    param: list[str] = typer.Option(
+        [], "--param", "-p",
+        help="치수 key=value (반복 가능). 예: -p cap_mm=18 -p letter=A",
+    ),
+    max_attempts: int = typer.Option(3, "--attempts"),
+) -> None:
+    """CAD 트랙 작업 제출. Claude → build123d → STL → slice.
+
+    Meshy 미사용 → 크레딧 0. 키캡·마운트·박스 같은 규격 부품에 적합.
+    """
+    from bambu_auto.core.job import Job, SourceType
+    from bambu_auto.core.repository import JobRepository
+
+    cfg, db, _ = _bootstrap()
+    if not cfg.secrets.anthropic_api_key:
+        console.print(
+            "[red]ANTHROPIC_API_KEY 누락[/red] — .env에 키를 설정해야 CAD 트랙 사용 가능"
+        )
+        raise typer.Exit(1)
+
+    params: dict[str, str | float] = {}
+    for kv in param:
+        if "=" not in kv:
+            console.print(f"[yellow]⚠ --param 무시[/yellow] (key=value 형식 아님): {kv}")
+            continue
+        k, v = kv.split("=", 1)
+        try:
+            params[k.strip()] = float(v)
+        except ValueError:
+            params[k.strip()] = v.strip()
+
+    job = Job(
+        source_type=SourceType.CAD,
+        source_payload={
+            "prompt": spec,
+            "cad_params": params or None,
+            "cad_model": model,
+            "cad_max_attempts": max_attempts,
+        },
+        material=material,
+        quality=quality,
+        target_printer=None if printer == "auto" else printer,
+    )
+    JobRepository(db).save(job)
+    console.print(
+        f"[green]Queued[/green] CAD job {job.id} (model={model}, params={params or '-'})"
+    )
+    if run:
+        _run_job(cfg, db, job.id)
 
 
 @app.command()

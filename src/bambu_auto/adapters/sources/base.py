@@ -8,11 +8,12 @@ from typing import Protocol
 
 @dataclass
 class PreparedSource:
-    """Meshy에 넘길 준비가 끝난 입력.
+    """생성 단계로 넘길 준비가 끝난 입력.
 
-    - kind: 'image' | 'text'
+    - kind: 'image' | 'multi_image' | 'text' | 'cad'
     - image_paths: 로컬에 준비된 이미지 경로들 (image/multi_image 일 때)
-    - prompt: 텍스트 프롬프트 (text 일 때)
+    - prompt: 텍스트 프롬프트 (text/cad 일 때)
+    - cad_params: 자연어 외 명시 치수·옵션 (cad 일 때, 예 {"width_mm": 18})
     - input_hash: 캐시 dedup 키 (동일 입력 재처리 방지)
     """
 
@@ -20,6 +21,7 @@ class PreparedSource:
     input_hash: str
     image_paths: list[Path] | None = None
     prompt: str | None = None
+    cad_params: dict[str, float | int | str] | None = None
 
 
 class SourceAdapter(Protocol):
