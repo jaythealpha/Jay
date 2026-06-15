@@ -64,6 +64,8 @@ class PipelineConfig(BaseModel):
     human_review_gate: bool = True
     auto_repair: bool = True
     strict_mesh_check: bool = False   # True면 non-watertight 거부, False면 경고 후 진행
+    force_watertight: bool = True     # L1 리페어 실패 시 voxel-remesh로 강제 watertight
+    voxel_pitch_ratio: float = 0.01   # voxel 크기 = bbox_max × ratio (0.01=100³셀, 균형)
     target_size_mm: float = 80.0      # 모델 최대치수를 이 크기로 스케일 (Meshy는 스케일 무의미)
     use_remesh: bool = True           # 슬라이싱 전 Meshy remesh로 토폴로지 정리(실패율↓)
     default_material: str = "pla"

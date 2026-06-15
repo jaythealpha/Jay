@@ -5,12 +5,18 @@
     client = MeshyClient(api_key, config, guard)
     task_id = client.image_to_3d(job_id, image_url, with_texture=False)
     model_path = client.wait_and_download(task_id, dest_dir)
+
+응답 진단:
+    실패/대기 시 status_message, task_error.message, progress 를 함께 surface.
+    4xx는 응답 body의 message/error 필드를 우선 표시 → 사용자에게 의미있는 안내.
 """
 
 from __future__ import annotations
 
 import base64
+import json
 import time
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -27,6 +33,20 @@ class MeshyError(Exception):
 
 class MeshyTransientError(Exception):
     """일시적 실패 (네트워크, 5xx) — 재시도 대상."""
+
+
+def _extract_error_message(body_text: str) -> str:
+    """응답 body에서 사람이 읽을 메시지 추출. JSON이면 message/error/detail 우선."""
+    try:
+        data = json.loads(body_text)
+    except (json.JSONDecodeError, ValueError):
+        return body_text[:300]
+    if isinstance(data, dict):
+        for k in ("message", "error", "detail", "errors"):
+            v = data.get(k)
+            if v:
+                return str(v)[:300]
+    return body_text[:300]
 
 
 # Meshy 엔드포인트 (버전이 작업마다 다름 — 공식 docs 기준)
@@ -269,18 +289,43 @@ class MeshyClient:
         self,
         task_id: str,
         kind: str = "image-to-3d",
+        on_progress: Callable[[str], None] | None = None,
     ) -> dict[str, Any]:
-        """작업 완료까지 폴링. 타임아웃·실패 시 예외."""
+        """작업 완료까지 폴링. 타임아웃·실패 시 진단 메시지 포함 예외.
+
+        on_progress: 매 폴링마다 호출 (예: "  Meshy 35% (texturing)").
+        실패 응답의 task_error.message / status_message를 surface해서
+        '왜 실패했는지'를 사용자에게 노출.
+        """
         deadline = time.time() + self.config.poll_max_minutes * 60
+        last_progress = -1
         while time.time() < deadline:
             data = self.get_task(task_id, kind=kind)
             status = (data.get("status") or "").upper()
+            progress = data.get("progress")
+            if on_progress and isinstance(progress, (int, float)):
+                p = int(progress)
+                if p != last_progress:
+                    last_progress = p
+                    msg = data.get("status_message") or status.lower()
+                    on_progress(f"  Meshy {p}% ({msg})")
             if status in {"SUCCEEDED", "SUCCESS", "COMPLETED"}:
                 return data
             if status in {"FAILED", "CANCELED", "EXPIRED"}:
-                raise MeshyError(f"Task {task_id} ended with status={status}: {data}")
+                err_obj = data.get("task_error") or {}
+                err_msg = (
+                    (isinstance(err_obj, dict) and err_obj.get("message"))
+                    or data.get("status_message")
+                    or "no detail"
+                )
+                raise MeshyError(
+                    f"Meshy task {task_id} {status.lower()}: {err_msg}"
+                )
             time.sleep(self.config.poll_interval_sec)
-        raise MeshyError(f"Task {task_id} timed out after {self.config.poll_max_minutes} min")
+        raise MeshyError(
+            f"Meshy task {task_id} timed out after "
+            f"{self.config.poll_max_minutes} min (last status={last_progress}%)"
+        )
 
     def download_model(self, task_data: dict[str, Any], dest_dir: Path, prefer: str = "glb") -> Path:
         """완료된 작업에서 모델 파일 다운로드. prefer='glb'|'obj'|'stl'|'fbx'"""
@@ -335,8 +380,9 @@ class MeshyClient:
     def _raise_for_status(method: str, path: str, r: httpx.Response) -> None:
         if r.status_code < 400:
             return
-        snippet = r.text[:400]
-        msg = f"{method} {path} -> {r.status_code}: {snippet}"
+        # JSON body면 message/error/detail 우선 — 사용자 노출용 메시지 품질↑
+        readable = _extract_error_message(r.text)
+        msg = f"{method} {path} -> {r.status_code}: {readable}"
         if r.status_code >= 500:
             raise MeshyTransientError(msg)   # 재시도 가치 있음
         raise MeshyError(msg)                # 4xx — 재시도 무의미

@@ -34,7 +34,10 @@ class MeshyPort(Protocol):
                input_task_id: str) -> tuple[str, int]: ...
     def retexture(self, job_id: str, input_task_id: str,
                   prompt: str) -> tuple[str, int]: ...
-    def wait_for_completion(self, task_id: str, kind: str = "image-to-3d") -> dict: ...
+    def wait_for_completion(
+        self, task_id: str, kind: str = "image-to-3d",
+        on_progress: "Callable[[str], None] | None" = None,
+    ) -> dict: ...
     def download_model(self, task_data: dict, dest_dir: Path, prefer: str = "glb") -> Path: ...
     def download_all_models(self, task_data: dict, dest_dir: Path) -> dict: ...
     def balance(self) -> dict: ...
@@ -163,7 +166,8 @@ class Pipeline:
             job.meshy_task_id = task_id
             self.repo.set_state(job, JobState.MESHY_QUEUED)
 
-            data = self.meshy.wait_for_completion(task_id, kind=kind)
+            data = self.meshy.wait_for_completion(
+                task_id, kind=kind, on_progress=self._notify)
 
             # 리메시(옵션): 생성물 토폴로지 정리 → 비watertight 실패↓.
             # 매 작업마다 생성+리메시로 크레딧이 2배 → 작업별 토글 허용.
@@ -175,7 +179,8 @@ class Pipeline:
                     self._notify("  리메시 중 (토폴로지 정리)…")
                     rm_id, _ = self.meshy.remesh(
                         job.id, task_id, target_polycount=poly)
-                    data = self.meshy.wait_for_completion(rm_id, kind="remesh")
+                    data = self.meshy.wait_for_completion(
+                        rm_id, kind="remesh", on_progress=self._notify)
                 except Exception as e:  # noqa: BLE001
                     self._notify(f"  ⚠ 리메시 건너뜀: {e}")
 
@@ -225,7 +230,8 @@ class Pipeline:
             rt_id, _ = self.meshy.retexture(job.id, tid, prompt)
             job.meshy_task_id = rt_id
             self.repo.set_state(job, JobState.MESHY_QUEUED)
-            data = self.meshy.wait_for_completion(rt_id, kind="retexture")
+            data = self.meshy.wait_for_completion(
+                rt_id, kind="retexture", on_progress=self._notify)
             models = self.meshy.download_all_models(data, work / "model")
             model_path = (models.get("stl") or models.get("glb")
                           or next(iter(models.values())))
@@ -271,16 +277,30 @@ class Pipeline:
                 target = None
             else:
                 target = self.cfg.settings.pipeline.target_size_mm
-            report = repair_mesh(model_path, work / "repaired", scale_to_mm=target)
+            pcfg = self.cfg.settings.pipeline
+            report = repair_mesh(
+                model_path, work / "repaired",
+                scale_to_mm=target,
+                force_watertight=pcfg.force_watertight,
+                voxel_pitch_ratio=pcfg.voxel_pitch_ratio,
+            )
             job.repaired_path = str(report.path)
             self._notify(f"  스케일: 최대치수 → {report.max_dimension_mm:.0f}mm "
                          f"(목표 {target}mm)")
+            tag = report.method + (
+                f" genus={report.genus}" if report.manifold_ok else " (non-manifold)"
+            )
+            self._notify(
+                f"  리페어: {tag} · watertight={report.watertight} · "
+                f"tris={report.triangle_count}"
+            )
 
-            strict = self.cfg.settings.pipeline.strict_mesh_check
+            strict = pcfg.strict_mesh_check
             if strict and not report.printable:
                 raise ValueError(
                     f"엄격 모드: 출력 불가 (watertight={report.watertight}, "
-                    f"volume={report.volume_mm3:.1f}mm3). "
+                    f"manifold={report.manifold_ok}, "
+                    f"volume={report.volume_mm3:.1f}mm3, method={report.method}). "
                     f"settings.yaml의 pipeline.strict_mesh_check=false로 완화 가능."
                 )
             if not report.has_geometry:

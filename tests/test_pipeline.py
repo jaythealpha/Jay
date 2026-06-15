@@ -64,7 +64,9 @@ class FakeMeshy:
         self.retextured = True
         return ("task_fake_retex", 1)
 
-    def wait_for_completion(self, task_id, kind="image-to-3d"):
+    def wait_for_completion(self, task_id, kind="image-to-3d", on_progress=None):
+        if on_progress:
+            on_progress("  Meshy 100% (succeeded)")
         return {"id": task_id, "status": "SUCCEEDED",
                 "model_urls": {"stl": "https://example.com/m.stl"}}
 
