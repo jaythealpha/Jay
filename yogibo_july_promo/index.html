@@ -3,18 +3,18 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>YOGIBO 2026 7월 프로모션 — 담당자 원안 검토·보완판</title>
+<title>YOGIBO 2026 7월 프로모션 — 최종 확정안</title>
 <style>
   :root{--cobalt:#1b4dd1;--cobalt-dark:#12309a;--mint:#2ec5c1;--mint-soft:#d6f5f3;
     --sand:#f4ede1;--coral:#ff6b5b;--gold:#e0a23b;--ink:#15243b;--muted:#5b6b82;
-    --line:#e3e8f0;--card:#fff;--bg:#f5f8fc;--red:#d9483b;--green:#0f8e5a;--party:#ff4d9d;--amber:#b8860b;}
+    --line:#e3e8f0;--card:#fff;--bg:#f5f8fc;--red:#d9483b;--green:#0f8e5a;--party:#ff4d9d;}
   *{box-sizing:border-box;}html{scroll-behavior:smooth;}
   body{margin:0;font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:var(--bg);line-height:1.6;-webkit-font-smoothing:antialiased;}
   a{color:var(--cobalt);}.wrap{max-width:1140px;margin:0 auto;padding:0 22px;}
-  header.hero{background:linear-gradient(135deg,#1b4dd1 0%,#12309a 50%,#0c1f6b 100%);color:#fff;padding:54px 0 46px;position:relative;overflow:hidden;}
-  header.hero::after{content:"";position:absolute;right:-100px;top:-100px;width:380px;height:380px;border-radius:50%;background:radial-gradient(circle,rgba(46,197,193,.4),transparent 70%);}
+  header.hero{background:linear-gradient(135deg,#ff4d9d 0%,#7a3cff 48%,#1b4dd1 100%);color:#fff;padding:54px 0 46px;position:relative;overflow:hidden;}
+  header.hero::after{content:"🎂";position:absolute;right:36px;top:24px;font-size:110px;opacity:.16;}
   .badge{display:inline-block;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.4);padding:6px 14px;border-radius:999px;font-size:13px;margin-bottom:14px;}
-  header.hero h1{font-size:36px;line-height:1.16;margin:0 0 10px;font-weight:800;letter-spacing:-.02em;}
+  header.hero h1{font-size:37px;line-height:1.15;margin:0 0 10px;font-weight:800;letter-spacing:-.02em;}
   header.hero .sub{font-size:16.5px;opacity:.95;}
   .hero-meta{margin-top:18px;display:flex;flex-wrap:wrap;gap:9px;}
   .hero-meta span{background:rgba(255,255,255,.14);padding:6px 12px;border-radius:8px;font-size:12.5px;}
@@ -27,29 +27,32 @@
   h2.title{font-size:25px;margin:6px 0 4px;font-weight:800;letter-spacing:-.02em;}
   .lead{color:var(--muted);font-size:15.5px;margin:0 0 20px;}
   .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 6px 22px rgba(20,40,80,.05);}
-  .grid{display:grid;gap:15px;}.g2{grid-template-columns:1fr 1fr;}.g3{grid-template-columns:repeat(3,1fr);}
-  @media(max-width:860px){.g2,.g3{grid-template-columns:1fr;}header.hero h1{font-size:28px;}}
+  .grid{display:grid;gap:15px;}.g2{grid-template-columns:1fr 1fr;}.g3{grid-template-columns:repeat(3,1fr);}.g4{grid-template-columns:repeat(4,1fr);}
+  @media(max-width:880px){.g2,.g3,.g4{grid-template-columns:1fr;}header.hero h1{font-size:28px;}}
   table{width:100%;border-collapse:collapse;font-size:13.5px;}
   th,td{text-align:left;padding:9px 11px;border-bottom:1px solid var(--line);vertical-align:top;}
   th{background:var(--mint-soft);color:var(--cobalt-dark);font-weight:700;font-size:12.5px;}
   tr:last-child td{border-bottom:none;}td.c,th.c{text-align:center;}
-  .ok{color:var(--green);font-weight:700;}.no{color:var(--red);font-weight:700;}.amb{color:var(--amber);font-weight:700;}
+  .new{color:var(--green);font-weight:700;}
+  .chip{display:inline-block;background:var(--mint-soft);color:#0f7a76;border-radius:999px;padding:3px 9px;font-size:11.5px;font-weight:700;margin-left:6px;}
+  .chip.fix{background:#eafaf0;color:#0f8e5a;}
   .note{background:#fffaf0;border:1px solid #f0e2c4;border-radius:12px;padding:13px 15px;font-size:13.5px;color:#7a5b2b;margin-top:13px;}
-  .note.blue{background:#eef4ff;border-color:#cfdcff;color:#234;}
-  ul.clean{margin:8px 0 0;padding-left:18px;}ul.clean li{margin:5px 0;}
-  .chk{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px dashed var(--line);}
-  .chk:last-child{border-bottom:none;}.chk .i{flex:0 0 24px;font-size:17px;}
-  .fix{border-left:4px solid var(--red);background:#fff;border-radius:0 12px 12px 0;padding:14px 16px;margin-bottom:12px;border:1px solid var(--line);border-left:4px solid var(--red);}
-  .fix.amber{border-left-color:var(--amber);}
-  .fix h4{margin:0 0 4px;font-size:15.5px;}
-  .fix .issue{color:var(--muted);font-size:13.5px;}
-  .fix .rec{margin-top:7px;font-size:13.5px;}
-  .fix .rec b{color:var(--green);}
-  .pri{display:inline-block;background:var(--red);color:#fff;border-radius:6px;padding:2px 8px;font-size:11.5px;font-weight:800;margin-right:6px;}
-  .pri.p2{background:var(--amber);}.pri.p3{background:#7a8aa0;}
-  .matrix td{text-align:center;font-weight:700;}
-  .matrix .hd{background:var(--cobalt);color:#fff;}
-  .badge2{display:inline-block;background:var(--sand);color:#7a5b2b;border-radius:6px;padding:2px 8px;font-size:11.5px;margin-left:6px;}
+  .note.blue{background:#eef4ff;border-color:#cfdcff;color:#234;}.note.pink{background:#fff0f7;border-color:#ffcfe5;color:#8a2c5b;}
+  ul.clean{margin:6px 0 0;padding-left:18px;}ul.clean li{margin:4px 0;}
+  .phase{border-radius:16px;padding:18px 20px;color:#fff;margin-bottom:14px;}
+  .phase.summer{background:linear-gradient(150deg,#2ec5c1,#1b8fd1);}
+  .phase.bday{background:linear-gradient(150deg,#ff4d9d,#7a3cff);}
+  .phase h3{margin:0;font-size:22px;}.phase .dt{opacity:.93;font-weight:600;font-size:13.5px;}
+  .matrix td{text-align:center;font-weight:700;}.matrix .hd{background:var(--cobalt);color:#fff;}
+  .matrix .pk{background:#fff0f7;color:#c0297a;}
+  .ladder{display:flex;flex-wrap:wrap;gap:8px;}
+  .ladder .rung{flex:1;min-width:150px;background:#fff;border:1px solid var(--line);border-left:4px solid var(--party);border-radius:0 12px 12px 0;padding:12px 14px;font-size:13px;}
+  .ladder .rung b{color:var(--cobalt-dark);}
+  .o2o{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;}
+  .o2o .step{flex:1;min-width:150px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 13px;font-size:12.5px;}
+  .o2o .step b{color:var(--cobalt-dark);}.o2o .arrow{display:flex;align-items:center;color:var(--muted);font-size:20px;}
+  @media(max-width:880px){.o2o .arrow{display:none;}}
+  .both{display:inline-block;background:#eafaf0;color:#0f8e5a;border-radius:6px;padding:2px 8px;font-size:11.5px;font-weight:700;}
   footer{margin-top:34px;padding:26px 0 60px;color:var(--muted);font-size:13px;text-align:center;border-top:1px solid var(--line);}
 </style>
 </head>
@@ -57,174 +60,197 @@
 
 <header class="hero">
   <div class="wrap">
-    <span class="badge">📋 담당자 원안 검토·보완판 · 2년 실적/재고/트렌드 반영</span>
-    <h1>2026 7월 프로모션 검토 — 요기보 위크 × Yogibirthday</h1>
-    <div class="sub">담당자 원안의 적절성 평가 + 매출 관점 보완·수정 제안</div>
+    <span class="badge">✅ 최종 확정안 · 담당자 원안 + 보완 6건 반영</span>
+    <h1>2026 7월 프로모션 최종안 — 요기보 위크 × Happy Yogibirthday 10</h1>
+    <div class="sub">1차 여름(7/3~12) · 2차 주년(7/17~8/16) — 광폭 + 프리미엄/HRF 소진 + 객단가 후크 + 체험 회수</div>
     <div class="hero-meta">
-      <span>기준: 2024 ₩620M · 2025 ₩528M(−15%) · 6/9 재고</span>
-      <span>핵심 보완 6건 (우선순위화)</span>
+      <span>🎯 목표 ₩649M (2024 대비 +4.7%)</span>
+      <span>📈 객단가 +13%</span>
+      <span>🛒 혜택 온·오프 공통 · 매장=체험+판매</span>
     </div>
   </div>
 </header>
 
 <nav class="toc">
   <div class="wrap">
-    <a href="#plan">원안 요약</a>
-    <a href="#good">적절성(잘된 점)</a>
-    <a href="#fix">수정·보완</a>
-    <a href="#matrix">할인 매트릭스</a>
-    <a href="#action">우선순위 액션</a>
+    <a href="#summary">변경 요약</a>
+    <a href="#p1">1차 · 요기보 위크</a>
+    <a href="#p2">2차 · Yogibirthday 10</a>
+    <a href="#common">공통 운영</a>
+    <a href="#goal">목표·시뮬</a>
   </div>
 </nav>
 
-<!-- PLAN -->
-<section id="plan">
+<!-- SUMMARY -->
+<section id="summary">
   <div class="wrap">
-    <div class="section-tag">Draft Summary</div>
-    <h2 class="title">담당자 원안 요약</h2>
-    <div class="grid g2">
-      <div class="card">
-        <b>▷ 1차 · 요기보 위크 | 홈캉스</b> <span class="badge2">7/3(금)~7/12(일), 10일</span>
-        <ul class="clean">
-          <li>전 제품 10% / 프리미엄(HRF) 15% / 줄라 5% 추가쿠폰</li>
-          <li>회원가입: P·P+ 5% 추가쿠폰, 커버·리필비즈 20% 쿠폰(1년)</li>
-          <li>오프 설문 참여: P·P+ 5% 추가할인</li>
-          <li>온/오프 공통: 드롭 20%(전 충전재)·지퍼롤 20%</li>
-          <li>5만원↑ 무료배송 · ※HRF(비즈) 소진 목적</li>
-        </ul>
-      </div>
-      <div class="card">
-        <b>▷ 2차 · Happy Yogibirthday 10</b> <span class="badge2">7/17(금)~8/16(일)</span>
-        <ul class="clean">
-          <li>전 제품 10% / 프리미엄(HRF) 15% (1차와 동일 구조)</li>
-          <li>회원/설문 추가혜택 동일</li>
-          <li>이벤트 '내가 갖고 싶은 빈백은?'(선물 설문)→1위 추첨 3명(HRF비즈)→광복절 특가</li>
-          <li>주차 추가: 맥스 5%(7/17~31) → 서포트 5%(8/1~16)</li>
-          <li>5만원↑ 무료배송 · ※HRF 소진 목적</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- GOOD -->
-<section id="good">
-  <div class="wrap">
-    <div class="section-tag">Assessment</div>
-    <h2 class="title">적절성 평가 — 데이터에 잘 부합하는 점</h2>
-    <div class="card">
-      <div class="chk"><div class="i">✅</div><div><b>광폭(전 제품 10%) 베이스</b> — 2024 광폭 페스타(₩620M) &gt; 2025 줄라 집중(₩528M). 풀카탈로그 회귀는 정답.</div></div>
-      <div class="chk"><div class="i">✅</div><div><b>프리미엄 푸시 + HRF 비즈 소진</b> — 2025 슬림 프리미엄 <b>+1104%</b>(1위) 성장과 정합. 잉여 HRF를 프리미엄 판매로 소진하는 전략 타당.</div></div>
-      <div class="chk"><div class="i">✅</div><div><b>IP 위크 미운영</b> — 디즈니·스타워즈(루카스필름) 계약종료로 라이선스 IP 부재 → 본체·커버 집중은 현실 부합.</div></div>
-      <div class="chk"><div class="i">✅</div><div><b>줄라는 쿠폰(보조)로만</b> — 2025 줄라 단독 히어로가 카테고리 −40%(드롭프로 품절). 보조 배치는 학습 반영.</div></div>
-      <div class="chk"><div class="i">✅</div><div><b>회원가입 + 1년 커버/리필비즈 쿠폰</b> — CRM DB 확보 + 잉여 커버 소진 + 재구매 유도. 온라인(성장채널 +6%)과 정합.</div></div>
-      <div class="chk"><div class="i">✅</div><div><b>설문 이벤트 + 광복절 특가 연계</b> — 참여형 + 8/15~16 피날레 설계 양호.</div></div>
-      <div class="chk"><div class="i">✅</div><div><b>채널 차등(온=P 우대 / 오프=P+ 우대)</b> — 고가 P+의 오프라인 체험 전환을 노린 의도는 합리적(단, 아래 ①번 보완 필요).</div></div>
-    </div>
-  </div>
-</section>
-
-<!-- FIX -->
-<section id="fix">
-  <div class="wrap">
-    <div class="section-tag">Action Needed</div>
-    <h2 class="title">수정·보완 제안 (매출 관점)</h2>
-
-    <div class="fix">
-      <h4><span class="pri">1순위</span>온라인 P+ 할인 역전 (P 20% &gt; P+ 15%)</h4>
-      <div class="issue">온라인에서 최고가·고마진 <b>P+가 P보다 덜 할인(15% vs 20%)</b>. 소비자는 더 비싼 모델이 혜택이 적다고 느껴 <b>온라인 P+ 전환 위축</b>. 게다가 P+가 HRF를 가장 많이 함유 → <b>"HRF 소진" 목표와 정면 충돌.</b></div>
-      <div class="rec"><b>권장:</b> 온라인 P+를 최소 P와 동급(20%)으로, 또는 P+ 우대(예: 온 P+ 20~25%). HRF 소진이 목표라면 P+를 가장 깊게.</div>
-    </div>
-
-    <div class="fix">
-      <h4><span class="pri">2순위</span>1차 = 2차 할인 동일 → 카니발리제이션</h4>
-      <div class="issue">핵심 S/P/P+ 할인율이 1차·2차 동일(S10/P/P+). '주년(2차)'이 더 크게 느껴지지 않아 <b>1차에 미리 사거나 둘 다 평이</b>. 2025도 2단 분산으로 임팩트 희석 → −15%.</div>
-      <div class="rec"><b>권장:</b> 위계 차등. ①1차(홈캉스)는 살짝 얕게(예: 줄라/여름 소품 중심, P+ 오프 20%) → ②2차(주년)에 <b>'주년 전용 강한 후크'</b>(아래 3순위 Gift Ladder·경품·기간한정)를 더해 "주년이 가장 크다"를 각인.</div>
-    </div>
-
-    <div class="fix">
-      <h4><span class="pri">3순위</span>객단가(AOV) 장치 부재 — 너무 평이</h4>
-      <div class="issue">거의 <b>단일 % 할인</b>으로만 구성. 2024 매출 정점에는 '금액 게이트(80만↑ 5% 추가)'·번들 같은 <b>객단가 장치</b>가 있었음. 할인만으로는 매출 상승 폭 제한.</div>
-      <div class="rec"><b>권장(2차):</b> <b>Birthday Gift Ladder</b> 1개 추가 — 예) 10만↑ 적립·17만↑ 추가쿠폰·50만↑ 비즈/커버 증정. 또는 '본체+커버+서포트 콤보 특가'. <span class="amb">시뮬상 객단가 +13%(₩110k→₩124k), 매출 +5%p 기여.</span></div>
-    </div>
-
-    <div class="fix">
-      <h4><span class="pri">4순위</span>체험 이탈객 회수 동선 미흡</h4>
-      <div class="issue">오프라인 설문·회원가입은 DB는 모으나, <b>'앉아보고 그냥 나간 고객'의 온라인 전환 동선이 없음</b>. 오프라인 70% 트래픽의 최대 증분 기회 미활용.</div>
-      <div class="rec"><b>권장:</b> 매장 <b>QR '담아두기' + 48h 쿠폰(온·오프 사용) + Meta 리타겟</b>("오늘 앉아본 그 제품"). <span class="amb">시뮬상 +6%p(최대 단일 레버).</span></div>
-    </div>
-
-    <div class="fix amber">
-      <h4><span class="pri p2">보완</span>2차 위클리 단조 (맥스/서포트 2종, 5%)</h4>
-      <div class="issue">한 달에 추가할인 로테이션이 2개뿐 → 재방문 유인 약함. 2025 Festa는 4주 로테이션.</div>
-      <div class="rec"><b>권장:</b> 4주 로테이션으로 확장 — 맥스→<b>슬림</b>(2025 성장 1위·재고 1,729)→미디/미니→서포트. 슬림 반드시 편성.</div>
-    </div>
-
-    <div class="fix amber">
-      <h4><span class="pri p2">보완</span>네이밍 "10" vs 글로벌 "17" 혼선</h4>
-      <div class="issue">원안은 'Yogibirthday <b>10</b>'이나, 앞서 글로벌 <b>17</b>주년으로 공유됨. 한국 10주년/글로벌 17주년 정리 필요.</div>
-      <div class="rec"><b>권장:</b> 마케팅상 <b>'10'(라운드 이어)이 더 강한 후크</b> → "Happy Yogibirthday 10"(한국 10주년) 메인, 글로벌 17주년은 보조 카피로 정합. 단 내부/일본 일정 정합 확인.</div>
-    </div>
-
-    <div class="fix amber">
-      <h4><span class="pri p3">점검</span>재고·기타</h4>
-      <div class="issue">• 드롭 20%(전 충전재): 드롭 본품 한정(이너 207+입고 300) → 조기 완판 가능.<br>• 줄라 5% 쿠폰: 줄라 본체는 표준이너+줄라커버 조합만, 드롭프로(0) 제외.<br>• B2B: 2025 −88%, 원안에 부재.</div>
-      <div class="rec"><b>권장:</b> 드롭은 <b>'한정수량'</b> 표기로 희소성화·품절 클레임 관리 / 줄라 노출 SKU 사전 확정 / <b>B2B 상시 견적 배너</b> 저비용 유지.</div>
-    </div>
-  </div>
-</section>
-
-<!-- MATRIX -->
-<section id="matrix">
-  <div class="wrap">
-    <div class="section-tag">Discount Matrix</div>
-    <h2 class="title">최대 할인율 — 원안 vs 권장</h2>
-    <div class="grid g2">
-      <div class="card" style="padding:0;overflow:hidden;">
-        <table class="matrix">
-          <tr><td class="hd">원안</td><td class="hd">S</td><td class="hd">P</td><td class="hd">P+</td></tr>
-          <tr><td><b>온라인</b></td><td>10%</td><td>20%</td><td class="no">15% ⚠</td></tr>
-          <tr><td><b>오프라인</b></td><td>10%</td><td>15%</td><td>25%</td></tr>
-        </table>
-      </div>
-      <div class="card" style="padding:0;overflow:hidden;">
-        <table class="matrix">
-          <tr><td class="hd" style="background:var(--green);">권장</td><td class="hd" style="background:var(--green);">S</td><td class="hd" style="background:var(--green);">P</td><td class="hd" style="background:var(--green);">P+</td></tr>
-          <tr><td><b>온라인</b></td><td>10%</td><td>20%</td><td class="ok">20~25%</td></tr>
-          <tr><td><b>오프라인</b></td><td>10%</td><td>15%</td><td>25%</td></tr>
-        </table>
-      </div>
-    </div>
-    <div class="note">온라인 P+를 P 이상으로 끌어올려 <b>역전 해소 + HRF 소진 가속 + 온라인(성장채널) 고가 전환</b>. 1차는 이 매트릭스를 살짝 얕게, 2차(주년)에 최대치 + Gift Ladder를 얹어 위계 형성.</div>
-  </div>
-</section>
-
-<!-- ACTION -->
-<section id="action">
-  <div class="wrap">
-    <div class="section-tag">Priority Actions</div>
-    <h2 class="title">보완 우선순위 (요약)</h2>
+    <div class="section-tag">What Changed</div>
+    <h2 class="title">원안 대비 6대 보완 (확정 반영)</h2>
     <div class="card" style="padding:0;overflow:hidden;">
     <table>
-      <tr><th>순위</th><th>액션</th><th>기대 효과</th></tr>
-      <tr><td><span class="pri">1</span></td><td>온라인 P+ 할인 역전 수정(≥20%)</td><td>P+ 전환·HRF 소진 정상화</td></tr>
-      <tr><td><span class="pri">2</span></td><td>1차&lt;2차 위계 차등(카니발 방지)</td><td>주년 임팩트 집중, 분산손실 방지</td></tr>
-      <tr><td><span class="pri">3</span></td><td>2차 Gift Ladder/콤보(객단가)</td><td>객단가 +13%, 매출 +5%p</td></tr>
-      <tr><td><span class="pri p2">4</span></td><td>체험 이탈객 회수 퍼널(QR·리타겟)</td><td>매출 +6%p(최대 레버)</td></tr>
-      <tr><td><span class="pri p2">5</span></td><td>2차 위클리 4주 로테이션(슬림 포함)</td><td>재방문·회전율↑</td></tr>
-      <tr><td><span class="pri p3">6</span></td><td>네이밍 확정(10 vs 17)·B2B 배너·드롭 한정표기</td><td>혼선 제거·증분 보강</td></tr>
+      <tr><th>#</th><th>보완</th><th>확정 내용</th></tr>
+      <tr><td>1</td><td>온라인 P+ 할인 역전 수정</td><td>온라인 P+ <b>15%→20%</b> (P와 동급, HRF 소진 정상화)</td></tr>
+      <tr><td>2</td><td>1차 &lt; 2차 위계</td><td>오프 P+ <b>1차 20% / 2차 25%</b> + 2차에만 객단가 사다리·경품·4주 위클리</td></tr>
+      <tr><td>3</td><td>객단가 후크</td><td>2차 <b>Birthday Gift Ladder</b>(금액 게이트, 50만↑ HRF 비즈 증정)</td></tr>
+      <tr><td>4</td><td>체험 이탈객 회수</td><td>매장 <b>QR 담아두기 + 48h 쿠폰(온·오프) + Meta 리타겟</b></td></tr>
+      <tr><td>5</td><td>2차 위클리 확장</td><td>2종→<b>4주 로테이션</b>(맥스→<b>슬림</b>→미디·미니→서포트)</td></tr>
+      <tr><td>6</td><td>네이밍·기타</td><td><b>Happy Yogibirthday 10</b>(한국 10주년) · B2B 견적 배너 · 드롭 '한정수량'</td></tr>
     </table>
     </div>
-    <div class="note blue">보완 반영 시 시뮬레이션 기본안 <b>₩649M(2024 대비 +4.7%)</b> 도달 가능. 원안(평이한 할인 위주)만으로는 보수안 <b>₩597M(−3.8%)</b> 부근에 머물 위험.</div>
+  </div>
+</section>
+
+<!-- PHASE 1 -->
+<section id="p1">
+  <div class="wrap">
+    <div class="phase summer"><h3>🌊 1차 — 요기보 위크 | 홈캉스 <span class="both" style="background:rgba(255,255,255,.25);color:#fff;">온·오프 공통</span></h3><div class="dt">7/3(금) ~ 7/12(일) · 10일 · 여름/홈캉스 + 줄라 기능성 (주년보다 가볍게)</div></div>
+    <div class="grid g2">
+      <div class="card">
+        <b>가. 온라인</b>
+        <ul class="clean">
+          <li>전 제품 <b>10%</b> / 프리미엄(HRF) <b>15%</b></li>
+          <li>줄라 컬렉션 <b>5% 추가 쿠폰</b></li>
+          <li>회원가입: P·P+ <b>5% 추가쿠폰</b> · 커버/리필비즈 <b>20% 쿠폰(1년)</b></li>
+          <li>최대: <b>S 10% / P 20% / P+ <span class="new">20%</span></b> <span class="chip fix">역전 수정</span></li>
+        </ul>
+      </div>
+      <div class="card">
+        <b>나. 오프라인 매장</b>
+        <ul class="clean">
+          <li>전 제품 <b>10%</b> / 프리미엄플러스 <b>15%</b></li>
+          <li>줄라 컬렉션 <b>5% 추가 쿠폰</b></li>
+          <li>설문 참여: P·P+ 5% 추가할인 · 회원가입: 커버/리필비즈 20% 쿠폰(1년)</li>
+          <li>최대: <b>S 10% / P 15% / P+ <span class="new">20%</span></b> <span class="chip fix">2차보다 얕게</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="card" style="margin-top:14px;">
+      <b>다. 온/오프 공통 특가 · 라. 배송</b>
+      <ul class="clean">
+        <li><b>드롭 20%</b>(전 충전재) <span class="chip">한정수량</span> *프리미엄 이상 추가혜택 적용 가능 · <b>지퍼롤 20%</b></li>
+        <li>5만원↑ <b>무료배송</b> · ※프리미엄 비즈 프로모션으로 <b>HRF 소진↑</b></li>
+        <li><b>체험 회수:</b> 매장 발수 시연·앉아보기 → QR 담아두기 + 48h 쿠폰</li>
+      </ul>
+    </div>
+    <div class="note">1차 차별 포인트 = <b>여름/홈캉스 무드 + 줄라(아웃도어) + 드롭·지퍼롤 한정특가</b>. 주년(2차) 대비 위계상 P+ 오프 20%로 한 단계 낮춰 카니발 방지. (제외: 디즈니계열 IP·줄라 드롭프로)</div>
+  </div>
+</section>
+
+<!-- PHASE 2 -->
+<section id="p2">
+  <div class="wrap">
+    <div class="phase bday"><h3>🎂 2차 — Happy Yogibirthday 10 <span class="both" style="background:rgba(255,255,255,.25);color:#fff;">온·오프 공통 · 메인</span></h3><div class="dt">7/17(금) ~ 8/16(일) · 한 달 · 한국 10주년(라운드 이어) · 광폭 + 객단가 후크 + 경품</div></div>
+    <div class="grid g2">
+      <div class="card">
+        <b>가. 온라인</b>
+        <ul class="clean">
+          <li>전 제품 <b>10%</b> / 프리미엄(HRF) <b>15%</b></li>
+          <li>회원가입: P·P+ <b>5% 추가쿠폰</b> · 커버/리필비즈 <b>20% 쿠폰(1년)</b></li>
+          <li>최대: <b>S 10% / P 20% / P+ <span class="new">20%</span></b></li>
+        </ul>
+      </div>
+      <div class="card">
+        <b>나. 오프라인 매장</b>
+        <ul class="clean">
+          <li>전 제품 <b>10%</b> / 프리미엄플러스 <b>20%</b></li>
+          <li>설문 참여: P·P+ 5% 추가할인 · 회원가입: 커버/리필비즈 20% 쿠폰(1년)</li>
+          <li>최대: <b>S 10% / P 15% / P+ <span class="new">25%</span></b> <span class="chip">주년 피크</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px;">
+      <b>다. 🎁 Birthday Gift Ladder <span class="chip fix">객단가 후크(신규)</span></b>
+      <div class="ladder" style="margin-top:8px;">
+        <div class="rung"><b>5만원 ↑</b><br>5천원 적립</div>
+        <div class="rung"><b>10만원 ↑</b><br>1만원 추가쿠폰</div>
+        <div class="rung"><b>30만원 ↑</b><br>3만원 쿠폰 + 무료배송</div>
+        <div class="rung"><b>50만원 ↑</b><br>추가 5% + <b>리필 비즈 증정</b>(HRF 소진)</div>
+      </div>
+      <div class="note" style="margin-top:10px;">상위 구간 증정을 <b>리필 비즈(HRF)</b>로 설계 → 객단가↑ <b>+ HRF 잉여 소진</b> 동시 달성. (숫자 게이트는 '10주년'에 맞춰 조정 가능)</div>
+    </div>
+
+    <div class="grid g2" style="margin-top:14px;">
+      <div class="card">
+        <b>다-2. 🎈 Birthday Pick — 4주 위클리 추가 5% <span class="chip fix">2종→4주 확장</span></b>
+        <table style="margin-top:8px;">
+          <tr><th>주차</th><th>대상(요기보/줄라/럭스/믹스)</th></tr>
+          <tr><td>W1 7/17~7/24</td><td><b>맥스</b></td></tr>
+          <tr><td>W2 7/25~7/31</td><td><b>슬림</b> (2025 성장 1위)</td></tr>
+          <tr><td>W3 8/1~8/8</td><td><b>미디 · 미니</b></td></tr>
+          <tr><td>W4 8/9~8/16</td><td><b>서포트</b> + 인기 앵콜</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <b>라. 🕯️ 이벤트 — 내가 갖고 싶은 빈백은?</b>
+        <ul class="clean">
+          <li>회원가입 후 <b>선물 설문</b> 참여</li>
+          <li>경품: 설문 1위 상품 추첨 <b>3명</b>(HRF 비즈)</li>
+          <li><b>광복절 특가(8/15~16):</b> 1위 선정 상품 한정 특가 → 피날레</li>
+        </ul>
+        <div class="note pink" style="margin-top:8px;">광복절엔 1위 특가 + Gift Ladder 막판 + 쿠폰 소멸 임박으로 <b>매출 정점</b> 설계.</div>
+      </div>
+    </div>
+    <div class="note">5만원↑ 무료배송 · ※HRF 소진↑ · 체험 회수 퍼널 동일 적용. 위계: <b>오프 P+ 25%(2차) &gt; 20%(1차)</b> + 2차 전용 Gift Ladder·경품 → "주년이 가장 크다" 각인.</div>
+  </div>
+</section>
+
+<!-- COMMON -->
+<section id="common">
+  <div class="wrap">
+    <div class="section-tag">Operations</div>
+    <h2 class="title">공통 운영 — 체험 회수 · 채널 · 가드</h2>
+    <div class="card">
+      <b>🎪 체험 이탈객 회수 퍼널 <span class="chip fix">신규</span></b> — 오프라인 매출은 유지, 이탈객만 증분 전환
+      <div class="o2o">
+        <div class="step"><b>① 체험</b><br>매장 앉아보기·발수 시연 → 구매욕 극대화</div>
+        <div class="arrow">→</div>
+        <div class="step"><b>② 이탈 직전 QR</b><br>"담아두기" + 회원가입(수신동의·방문매장)</div>
+        <div class="arrow">→</div>
+        <div class="step"><b>③ 회수</b><br>당일 카톡/문자 + Meta 리타겟 → <b>48h 쿠폰(온·오프)</b></div>
+      </div>
+      <div class="note blue" style="margin-top:10px;">쿠폰은 <b>매장 재방문에도 사용 가능</b> → 오프라인 매출(70%)을 빼앗지 않으면서 '그냥 나갈 고객'을 증분 전환. 방문매장 추적으로 체험→구매 기여 측정.</div>
+    </div>
+    <div class="grid g2" style="margin-top:14px;">
+      <div class="card"><b>채널 원칙</b>
+        <ul class="clean">
+          <li>혜택은 <b>온·오프 공통</b>(온라인 전용 아님) → 매장 즉시구매 보호</li>
+          <li>매장 = 체험 + 판매 동시, 직원은 이탈 직전 QR 안내 병행</li>
+          <li>온라인(성장 +6%)은 이탈객 회수·고마진 보조로 확대</li>
+        </ul>
+      </div>
+      <div class="card"><b>재고·제외 가드</b>
+        <ul class="clean">
+          <li>제외: <b>디즈니·스타워즈·토이스토리</b> IP / 줄라 드롭프로(0) / 더블·프라임(본체 한정)</li>
+          <li>드롭 20% = <b>한정수량</b>(이너 207+입고 300) 표기</li>
+          <li>커버 최대 <b>20%</b> · 명일 신컬러(Rain·Fern·Lavender·Flamingo) 활용</li>
+          <li><b>B2B 견적 배너</b> 상시(저비용, 2025 −88% 보완)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- GOAL -->
+<section id="goal">
+  <div class="wrap">
+    <div class="section-tag">Target</div>
+    <h2 class="title">목표 · 매출 시뮬레이션</h2>
+    <div class="grid g4">
+      <div class="card" style="text-align:center;padding:16px;"><div style="font-size:22px;font-weight:800;color:var(--green);">₩649M</div><div style="font-size:12px;color:var(--muted);">목표(기본안) · 2024 대비 +4.7%</div></div>
+      <div class="card" style="text-align:center;padding:16px;"><div style="font-size:22px;font-weight:800;color:var(--cobalt);">+13%</div><div style="font-size:12px;color:var(--muted);">객단가(₩110k→₩124k)</div></div>
+      <div class="card" style="text-align:center;padding:16px;"><div style="font-size:22px;font-weight:800;color:var(--party);">+6%p</div><div style="font-size:12px;color:var(--muted);">체험 이탈 회수(최대 레버)</div></div>
+      <div class="card" style="text-align:center;padding:16px;"><div style="font-size:22px;font-weight:800;color:var(--cobalt);">13+</div><div style="font-size:12px;color:var(--muted);">Meta ROAS</div></div>
+    </div>
+    <div class="note">레버: 광폭 +6% · Gift Ladder +5% · 콤보 +3% · 17 Flash/드롭한정 +3% · 체험 회수 +6% = 기본안 +23%(베이스 2025 ₩528M). 재고(판매 가능 본품 ₩1,879M=목표 3배)로 공급 충분 → <b>관건은 후크 실행</b>.</div>
   </div>
 </section>
 
 <footer>
   <div class="wrap">
-    <p><b>YOGIBO 2026 7월 프로모션 — 담당자 원안 검토·보완판</b><br>
-    근거: 2024 8arty(₩620M)·2025 줄라+16주년(₩528M,−15%) 실적 · 6/9 재고(본품)·명일 커버 입고 · Meta Ads<br>
-    핵심 보완: ①온라인 P+ 역전 수정 ②1차&lt;2차 위계 ③객단가 후크 ④체험 이탈 회수 ⑤위클리 4주 ⑥네이밍·B2B<br>
-    <span style="opacity:.7;">※ HRF 비즈·프리미엄 조립 여력, SKU별 판가, 10/17주년 정합은 내부 확정 필요.</span></p>
+    <p><b>YOGIBO 2026 7월 프로모션 — 최종 확정안</b> (요기보 위크 × Happy Yogibirthday 10)<br>
+    담당자 원안 + 보완 6건(P+ 역전·위계·객단가·체험회수·4주위클리·네이밍) 반영 · 2024·2025 실적 + 재고 기반<br>
+    <span style="opacity:.7;">※ HRF 비즈 수량·SKU 판가·10/17주년 정합·Gift Ladder 금액 게이트는 내부 확정 필요. 광고 소재·영상은 크레딧 충전 후 생성.</span></p>
   </div>
 </footer>
 
