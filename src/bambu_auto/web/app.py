@@ -109,6 +109,8 @@ class SubmitReq(BaseModel):
     flat_size_mm: float = 50.0
     flat_thickness_mm: float = 3.5
     remove_bg: bool = False
+    preprocess: bool = True       # 이미지 정규화 (정사각·표준 해상도·대비 보정)
+    vision_assess: bool = True    # Claude vision으로 3D 적합도 평가
     meshy_key: str = ""          # BYO: 사용자 Meshy 키 (미입력 시 서버 .env)
 
 
@@ -219,6 +221,11 @@ def create_app(cfg: AppConfig) -> FastAPI:
                 extras["precision"] = "high"
             if not req.remesh:
                 extras["remesh"] = False
+            # 이미지 전처리·평가 토글 (기본 ON, 사용자가 끄면 명시)
+            if not req.preprocess:
+                extras["preprocess"] = False
+            if not req.vision_assess:
+                extras["vision_assess"] = False
             if req.flat:
                 extras["flat"] = True
                 extras["flat_size_mm"] = float(req.flat_size_mm)
@@ -330,6 +337,14 @@ def create_app(cfg: AppConfig) -> FastAPI:
                 chips.append(f"{mark} 로고:{what}")
             if (pl.get("pause_at_pct") or 0) > 0:
                 chips.append(f"· 정지{int(pl['pause_at_pct'])}%")
+            # AI 적합도 평가 결과 (있을 때만)
+            a = pl.get("assessment") or {}
+            score = a.get("score")
+            if isinstance(score, (int, float)):
+                mark = ("✓" if a.get("recommend") == "proceed"
+                        else "⚠" if a.get("recommend") == "warn" else "✗")
+                cat = a.get("category") or ""
+                chips.append(f"{mark} 평가 {score:.1f}/10 {cat}".rstrip())
             return {"chips": chips}
 
         data_dir = Path(cfg.settings.storage.data_dir)

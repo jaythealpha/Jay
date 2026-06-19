@@ -12,9 +12,10 @@ class PreparedSource:
 
     - kind: 'image' | 'multi_image' | 'text' | 'cad'
     - image_paths: 로컬에 준비된 이미지 경로들 (image/multi_image 일 때)
-    - prompt: 텍스트 프롬프트 (text/cad 일 때)
+    - prompt: 텍스트 프롬프트 (text/cad 일 때) 또는 vision 강화 프롬프트
     - cad_params: 자연어 외 명시 치수·옵션 (cad 일 때, 예 {"width_mm": 18})
     - input_hash: 캐시 dedup 키 (동일 입력 재처리 방지)
+    - preprocess: 정규화·평가 결과 진단 (UI/감사용; 흐름 분기는 안 함)
     """
 
     kind: str
@@ -22,6 +23,7 @@ class PreparedSource:
     image_paths: list[Path] | None = None
     prompt: str | None = None
     cad_params: dict[str, float | int | str] | None = None
+    preprocess: dict | None = None
 
 
 class SourceAdapter(Protocol):

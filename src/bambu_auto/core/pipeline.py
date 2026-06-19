@@ -73,6 +73,10 @@ class Pipeline:
             else:
                 self._notify("[1/5] 소스 준비 중…")
                 prepared = self._prepare(job, adapter, work)
+                # 이미지 트랙은 정규화·평가로 Meshy 입력 품질을 끌어올림.
+                # CAD/텍스트는 이미지가 아니라 스킵.
+                if prepared.kind in ("image", "multi_image"):
+                    prepared = self._preprocess(job, prepared, work)
                 if prepared.kind == "cad":
                     self._notify("[2/5] Claude 파라메트릭 CAD 생성 중…")
                 else:
@@ -105,6 +109,134 @@ class Pipeline:
         except Exception as e:
             self.repo.set_state(job, JobState.FAILED_SOURCE, error=str(e))
             raise
+
+    def _preprocess(self, job: Job, prepared: PreparedSource,
+                    work: Path) -> PreparedSource:
+        """이미지 트랙용 입력 전처리: 정규화 → vision 평가 → image_paths 교체.
+
+        Meshy Creative Lab의 'Image Enhancement' 권장조건과 동일하게 보장.
+        실패는 fatal 아님 — 경고 후 원본으로 진행 (회귀 위험 최소화).
+        """
+        payload = job.source_payload or {}
+        pcfg = self.cfg.settings.pipeline
+
+        run_norm = bool(payload.get("preprocess", pcfg.preprocess_enabled))
+        run_assess = bool(payload.get("vision_assess", pcfg.vision_assess_enabled))
+
+        if not run_norm and not run_assess:
+            return prepared
+        if not prepared.image_paths:
+            return prepared
+
+        diag: dict = {}
+
+        # ── 1) 정규화 (결정적) ──
+        norm_dir = work / "preprocessed"
+        new_paths: list[Path] = []
+        if run_norm:
+            try:
+                from bambu_auto.services.preprocess.normalize import normalize_image
+
+                self._notify("  이미지 정규화 중 (정사각·표준 해상도·대비)…")
+                norm_dir.mkdir(parents=True, exist_ok=True)
+                norm_diag: list[dict] = []
+                for i, p in enumerate(prepared.image_paths):
+                    dst = norm_dir / f"input{i}.png"
+                    r = normalize_image(
+                        p, dst,
+                        target_size=pcfg.preprocess_target_size,
+                        binary_alpha=pcfg.preprocess_binary_alpha,
+                    )
+                    new_paths.append(r.path)
+                    norm_diag.append({
+                        "in": list(r.size_in), "out": list(r.size_out),
+                        "alpha": r.has_alpha, "cropped": r.cropped,
+                        "upscaled": r.upscaled, "notes": r.notes,
+                    })
+                diag["normalize"] = norm_diag
+                self._notify(
+                    f"  ✓ 정규화 {len(new_paths)}장 · "
+                    f"{pcfg.preprocess_target_size}px 정사각"
+                )
+            except Exception as e:  # noqa: BLE001
+                self._notify(f"  ⚠ 정규화 건너뜀: {e}")
+                new_paths = list(prepared.image_paths)
+                diag["normalize_error"] = str(e)
+        else:
+            new_paths = list(prepared.image_paths)
+
+        # ── 2) Vision 평가 (Claude — 첫 장만, 비용 1회) ──
+        api_key = self.cfg.secrets.anthropic_api_key
+        enhanced_prompt = prepared.prompt
+        if run_assess and api_key and new_paths:
+            try:
+                from bambu_auto.services.preprocess.vision_assess import (
+                    assess_image,
+                )
+
+                self._notify("  AI 적합도 평가 중 (Claude vision)…")
+                a = assess_image(
+                    new_paths[0], api_key,
+                    model=pcfg.vision_assess_model,
+                    warn_below=pcfg.vision_assess_warn_below,
+                    block_below=pcfg.vision_assess_block_below,
+                )
+                diag["assessment"] = {
+                    "score": a.score, "category": a.category,
+                    "issues": a.issues, "recommend": a.recommend,
+                    "enhanced_prompt": a.enhanced_prompt,
+                    "model": a.model, "error": a.error,
+                }
+                if a.error:
+                    self._notify(f"  ⚠ 평가 실패 (계속 진행): {a.error}")
+                else:
+                    tag = "✓" if a.recommend == "proceed" else "⚠"
+                    issues = (" · " + "; ".join(a.issues[:2])) if a.issues else ""
+                    self._notify(
+                        f"  {tag} 평가 {a.score:.1f}/10 ({a.category}){issues}"
+                    )
+                    if a.recommend == "block":
+                        raise ValueError(
+                            f"이미지 부적합 (score={a.score:.1f}/10). "
+                            f"issues={'; '.join(a.issues[:3])}"
+                        )
+                    if a.enhanced_prompt:
+                        enhanced_prompt = a.enhanced_prompt
+            except ValueError:
+                self.repo.set_state(
+                    job, JobState.FAILED_SOURCE,
+                    error=f"이미지 평가 차단: score<{pcfg.vision_assess_block_below}",
+                )
+                raise
+            except Exception as e:  # noqa: BLE001
+                self._notify(f"  ⚠ 평가 단계 오류 (계속 진행): {e}")
+                diag["assessment_error"] = str(e)
+
+        if not diag:
+            return prepared
+
+        # 평가 결과를 job payload에도 영속화 → UI 카드·작업 이력에서 조회 가능
+        a = diag.get("assessment") or {}
+        if a:
+            payload = dict(job.source_payload or {})
+            payload["assessment"] = {
+                "score": a.get("score"),
+                "category": a.get("category"),
+                "recommend": a.get("recommend"),
+                "issues": a.get("issues") or [],
+            }
+            job.source_payload = payload
+            self.repo.save(job)
+
+        # 새 PreparedSource — 원본 hash 유지(캐시 일관성), 다른 필드만 교체
+        return PreparedSource(
+            kind=prepared.kind,
+            input_hash=prepared.input_hash,
+            image_paths=new_paths or prepared.image_paths,
+            prompt=enhanced_prompt,
+            cad_params=prepared.cad_params,
+            preprocess=diag,
+        )
 
     def _generate(self, job: Job, prepared: PreparedSource, work: Path) -> str:
         payload = job.source_payload or {}

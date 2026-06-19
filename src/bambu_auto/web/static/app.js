@@ -201,6 +201,8 @@
         addon: $("addon").value,
         texture: $("tex").checked, remesh: $("rem").checked,
         precision: $("prec").value, remove_bg: $("bg").checked,
+        preprocess: $("pre").checked,
+        vision_assess: $("vas").checked,
         brand_type: $("brandType").value,
         brand_text: $("brandText").value,
         brand_icon: $("brandIcon").value,

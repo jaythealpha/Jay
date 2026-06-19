@@ -68,6 +68,14 @@ class PipelineConfig(BaseModel):
     voxel_pitch_ratio: float = 0.01   # voxel 크기 = bbox_max × ratio (0.01=100³셀, 균형)
     target_size_mm: float = 80.0      # 모델 최대치수를 이 크기로 스케일 (Meshy는 스케일 무의미)
     use_remesh: bool = True           # 슬라이싱 전 Meshy remesh로 토폴로지 정리(실패율↓)
+    # ── 이미지 전처리(Image Preprocessor): Meshy 입력 품질 강제 ──
+    preprocess_enabled: bool = True       # 결정적 정규화 (배경bbox·정사각·해상도·대비)
+    preprocess_target_size: int = 1024    # Meshy 권장 1040+
+    preprocess_binary_alpha: bool = False # 부분투명 → 0/255 이분화 (메쉬 경계 안정)
+    vision_assess_enabled: bool = True    # Claude vision으로 3D 적합도 평가
+    vision_assess_model: str = "claude-sonnet-4-6"
+    vision_assess_warn_below: float = 6.0 # 이 점수 미만이면 경고 메시지
+    vision_assess_block_below: float = 3.0 # 이 점수 미만이면 진행 차단
     default_material: str = "pla"
     default_quality: str = "standard"
 

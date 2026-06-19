@@ -236,6 +236,81 @@ def test_cad_track_bypasses_meshy(
     assert job.model_path and Path(job.model_path).exists()
 
 
+def test_preprocess_runs_on_image_track(
+    cfg: AppConfig, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """이미지 트랙: _preprocess가 호출되고 source_payload.assessment에 결과가 저장됨."""
+    from bambu_auto.services.preprocess import vision_assess
+
+    # 평가는 mock, 정규화는 진짜 PIL로 동작
+    fake_anth = __import__("unittest.mock", fromlist=["MagicMock"]).MagicMock()
+    msg = fake_anth.return_value.messages.create.return_value
+    block = __import__("unittest.mock", fromlist=["MagicMock"]).MagicMock()
+    block.type = "text"
+    block.text = (
+        '{"score":7.5,"category":"character",'
+        '"issues":[],"enhanced_prompt":"front-facing figure"}'
+    )
+    msg.content = [block]
+    fake_module = __import__("unittest.mock", fromlist=["MagicMock"]).MagicMock()
+    fake_module.Anthropic.return_value = fake_anth.return_value
+    monkeypatch.setitem(__import__("sys").modules, "anthropic", fake_module)
+    cfg.secrets.anthropic_api_key = "sk-ant-fake"
+
+    # FakeImageAdapter는 'fake-png-bytes'만 쓰는데, PIL이 못 읽음 → 실제 PNG로 교체
+    class RealPngAdapter:
+        def prepare(self, work_dir):
+            from PIL import Image
+            work_dir.mkdir(parents=True, exist_ok=True)
+            p = work_dir / "input.png"
+            Image.new("RGB", (200, 200), (200, 100, 50)).save(p)
+            return PreparedSource(kind="image", input_hash="rp1",
+                                  image_paths=[p])
+
+    pipe, _ = _pipeline(cfg)
+    job = Job(source_type=SourceType.IMAGE,
+              source_payload={"source": "x.png", "preprocess": True,
+                              "vision_assess": True},
+              material="pla")
+    pipe.run(job, RealPngAdapter())
+
+    # 정규화 결과 파일 존재 + 평가 결과가 payload에 저장됨
+    work = pipe.assets / job.id
+    norm = work / "preprocessed"
+    assert norm.exists() and any(norm.glob("input*.png"))
+    a = (job.source_payload or {}).get("assessment") or {}
+    assert a.get("score") == 7.5
+    assert a.get("category") == "character"
+    assert job.state == JobState.SLICED
+
+
+def test_preprocess_disabled_when_payload_off(
+    cfg: AppConfig, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """payload에 preprocess=false, vision_assess=false면 전처리 스킵."""
+
+    class RealPngAdapter:
+        def prepare(self, work_dir):
+            from PIL import Image
+            work_dir.mkdir(parents=True, exist_ok=True)
+            p = work_dir / "input.png"
+            Image.new("RGB", (200, 200), (200, 100, 50)).save(p)
+            return PreparedSource(kind="image", input_hash="rp2",
+                                  image_paths=[p])
+
+    pipe, _ = _pipeline(cfg)
+    job = Job(
+        source_type=SourceType.IMAGE,
+        source_payload={"source": "x.png", "preprocess": False,
+                        "vision_assess": False},
+        material="pla",
+    )
+    pipe.run(job, RealPngAdapter())
+    # preprocessed 폴더가 만들어지지 않음 + assessment 결과 없음
+    assert not (pipe.assets / job.id / "preprocessed").exists()
+    assert "assessment" not in (job.source_payload or {})
+
+
 def test_cache_hit_skips_meshy_call(cfg: AppConfig) -> None:
     pipe, repo = _pipeline(cfg)
     job1 = Job(source_type=SourceType.IMAGE, source_payload={"source": "x.png"},
