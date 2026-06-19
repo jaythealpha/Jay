@@ -181,10 +181,13 @@ function parseVertices(block){
   return {xs,ys,zs,n:xs.length};
 }
 function parseTriangles(block){
-  const re=/v1="(\d+)"\s+v2="(\d+)"\s+v3="(\d+)"/g;
-  const idx=[]; let m;
-  while((m=re.exec(block))){ idx.push(+m[1],+m[2],+m[3]); }
-  return idx;
+  const re=/v1="(\d+)"\s+v2="(\d+)"\s+v3="(\d+)"([^>]*)/g;
+  const idx=[]; const paint=[]; let m;
+  while((m=re.exec(block))){
+    idx.push(+m[1],+m[2],+m[3]);
+    const pm=/paint_color="([^"]*)"/.exec(m[4]); paint.push(pm?pm[1]:'');
+  }
+  return {idx, paint};
 }
 
 /* ---------- orientation: find flat base ---------- */
@@ -278,7 +281,7 @@ runBtn.onclick=async()=>{
     if(n===0){ throw new Error('정점을 찾지 못했습니다.'); }
 
     showBar(.4); setStatus('삼각형 파싱 중…'); await yield_();
-    const triIdx=parseTriangles(tBlockText);
+    const tri=parseTriangles(tBlockText); const triIdx=tri.idx;
 
     // bbox + base detection
     const info=detectBase(xs,ys,zs,n,$('upaxis').value);
@@ -321,15 +324,18 @@ runBtn.onclick=async()=>{
     const blob=await zip.generateAsync({type:'blob',compression:'DEFLATE'});
     const url=URL.createObjectURL(blob);
     const outName=`${fileName}_1u.3mf`;
+    if(window.__lastURL){ try{URL.revokeObjectURL(window.__lastURL);}catch(e){} }
+    window.__lastURL=url;
     dlbox.classList.remove('hidden');
     dlbox.innerHTML=`<a class="btn dl dl-link" href="${url}" download="${outName}">⬇️ ${outName} 다운로드</a>`;
 
-    // ----- results + preview -----
+    // ----- results, then lock in success BEFORE the (optional) 3D preview -----
     fillResults(info,scale,n,triIdx.length/3,stem,addStem,target);
-    preview(xs,ys,zs,n,triIdx,stem,info);
-
     hideBar(); setStatus('✅ 완료! 아래 버튼으로 결과 파일을 받으세요.');
     runBtn.disabled=false;
+    // preview is best-effort: a heavy/failed render must never break the conversion
+    try { preview(xs,ys,zs,n,triIdx,tri.paint,stem,info); }
+    catch(e){ console.warn('preview skipped:',e); }
   }catch(err){ console.error(err); setStatus('⚠️ 변환 오류: '+err.message); hideBar(); runBtn.disabled=false; }
 };
 
@@ -349,46 +355,64 @@ function fillResults(info,scale,n,nt,stem,addStem,target){
 }
 
 /* ---------- three.js preview ---------- */
-let renderer,scene,camera,controls,curMesh;
+let renderer,scene,camera,controls,curMesh,renderFn;
 function initView(){
-  const el=$('view'); const w=el.clientWidth,h=el.clientHeight;
-  renderer=new THREE.WebGLRenderer({antialias:true}); renderer.setSize(w,h);
-  renderer.setPixelRatio(Math.min(2,devicePixelRatio)); el.appendChild(renderer.domElement);
+  const el=$('view'); const w=el.clientWidth||640,h=el.clientHeight||480;
+  try{ renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'}); }
+  catch(e){ console.warn('WebGL unavailable',e); return false; }
+  renderer.setSize(w,h); renderer.setPixelRatio(Math.min(2,devicePixelRatio)); el.appendChild(renderer.domElement);
   scene=new THREE.Scene(); scene.background=new THREE.Color(0x0c0e12);
   camera=new THREE.PerspectiveCamera(40,w/h,.1,5000); camera.position.set(40,30,40);
-  controls=new OrbitControls(camera,renderer.domElement); controls.enableDamping=true;
+  controls=new OrbitControls(camera,renderer.domElement); controls.enableDamping=false;
   scene.add(new THREE.HemisphereLight(0xffffff,0x33384a,1.1));
   const d=new THREE.DirectionalLight(0xffffff,1.2); d.position.set(30,50,20); scene.add(d);
-  const grid=new THREE.GridHelper(60,30,0x3a4150,0x222831); scene.add(grid);
-  (function loop(){ requestAnimationFrame(loop); controls.update(); renderer.render(scene,camera); })();
-  window.addEventListener('resize',()=>{ const w=el.clientWidth,h=el.clientHeight; renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix(); });
+  scene.add(new THREE.GridHelper(60,30,0x3a4150,0x222831));
+  renderFn=()=>{ try{ renderer.render(scene,camera); }catch(e){} };
+  controls.addEventListener('change', renderFn);   // render ONLY on user interaction (no idle drain)
+  window.addEventListener('resize',()=>{ const w=el.clientWidth,h=el.clientHeight; if(!w||!h)return; renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix(); renderFn(); });
+  return true;
 }
-function preview(xs,ys,zs,n,triIdx,stem,info){
-  if(!renderer) initView();
-  if(curMesh){ scene.remove(curMesh); curMesh.geometry.dispose(); }
+function preview(xs,ys,zs,n,triIdx,paint,stem,info){
+  if(!renderer){ if(initView()===false) return; }
+  if(curMesh){ scene.remove(curMesh); if(curMesh.geometry)curMesh.geometry.dispose(); if(curMesh.material)curMesh.material.dispose(); curMesh=null; }
   const nv=n+stem.V.length;
   const pos=new Float32Array(nv*3);
   for(let i=0;i<n;i++){ pos[i*3]=xs[i]; pos[i*3+1]=ys[i]; pos[i*3+2]=zs[i]; }
   for(let i=0;i<stem.V.length;i++){ const p=stem.V[i]; pos[(n+i)*3]=p[0]; pos[(n+i)*3+1]=p[1]; pos[(n+i)*3+2]=p[2]; }
-  const idx=[]; for(let i=0;i<triIdx.length;i++) idx.push(triIdx[i]);
-  for(const t of stem.T){ idx.push(t[0]+n,t[1]+n,t[2]+n); }
+  // per-vertex colors from paint_color so painted regions are visible (not one flat color)
+  const palette=[[.72,.65,1],[.95,.45,.55],[.30,.78,.95],[.45,.85,.55],[.98,.80,.35],[.65,.55,.95],[.95,.6,.85],[.55,.9,.85]];
+  const col=new Float32Array(nv*3); for(let i=0;i<col.length;i++) col[i]=0.72;
+  const codeColor={}; let next=0;
+  if(paint && paint.length){
+    for(let f=0;f<paint.length;f++){
+      const code=paint[f]; let c=palette[0];
+      if(code){ if(!(code in codeColor)) codeColor[code]=palette[next++%palette.length]; c=codeColor[code]; }
+      const a=triIdx[f*3],b=triIdx[f*3+1],d=triIdx[f*3+2];
+      col[a*3]=c[0];col[a*3+1]=c[1];col[a*3+2]=c[2];
+      col[b*3]=c[0];col[b*3+1]=c[1];col[b*3+2]=c[2];
+      col[d*3]=c[0];col[d*3+1]=c[1];col[d*3+2]=c[2];
+    }
+  }
+  for(let i=n;i<nv;i++){ col[i*3]=.70; col[i*3+1]=.70; col[i*3+2]=.72; } // stem = neutral
+  // only downsample for extreme meshes (keeps the preview solid; on-demand render keeps it light)
+  const totalF=triIdx.length/3 + stem.T.length;
+  const stride=Math.max(1, Math.ceil(totalF/1500000));
+  const idx=[];
+  for(let f=0; f*3<triIdx.length; f+=stride){ idx.push(triIdx[f*3],triIdx[f*3+1],triIdx[f*3+2]); }
+  for(let s=0;s<stem.T.length;s+=stride){ const t=stem.T[s]; idx.push(t[0]+n,t[1]+n,t[2]+n); }
   const g=new THREE.BufferGeometry();
   g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  g.setAttribute('color',new THREE.BufferAttribute(col,3));
   g.setIndex(nv>65535?new THREE.Uint32BufferAttribute(idx,1):new THREE.Uint16BufferAttribute(idx,1));
-  g.computeVertexNormals();
-  // orient up-axis -> +Y for nice view, center on grid
-  const m=new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:0xb9a6ff,metalness:.1,roughness:.65,flatShading:false}));
-  const grp=new THREE.Group(); grp.add(m);
-  const a=info.axis;
-  if(a===2) m.rotation.x=-Math.PI/2;      // Z up -> Y up
-  else if(a===0) m.rotation.z=Math.PI/2;  // X up -> Y up
-  // center
   g.computeBoundingBox(); const bb=g.boundingBox; const c=new THREE.Vector3(); bb.getCenter(c);
-  m.position.set(-c.x,-c.y,-c.z);
-  // recenter group on ground after rotation
-  scene.add(grp); curMesh=grp;
-  const size=new THREE.Vector3(); bb.getSize(size); const r=Math.max(size.x,size.y,size.z);
+  g.translate(-c.x,-c.y,-c.z); g.computeBoundingBox(); g.computeVertexNormals();
+  const m=new THREE.Mesh(g,new THREE.MeshStandardMaterial({vertexColors:true,metalness:.05,roughness:.7}));
+  const a=info.axis;
+  if(a===2) m.rotation.x=-Math.PI/2; else if(a===0) m.rotation.z=Math.PI/2;
+  scene.add(m); curMesh=m;
+  const size=new THREE.Vector3(); g.boundingBox.getSize(size); const r=Math.max(size.x,size.y,size.z)||20;
   camera.position.set(r*1.6,r*1.3,r*1.6); controls.target.set(0,0,0); controls.update();
+  renderFn && renderFn();
 }
 </script>
 </body>
