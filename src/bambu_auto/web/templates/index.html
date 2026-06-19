@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="ko" data-theme="auto">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="description" content="이미지·텍스트·CAD 스펙으로 Bambu Lab FDM 출력 파일 자동 생성" />
+  <title>Bambu Auto</title>
+  <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%231d4ed8'/><text x='50%25' y='56%25' font-size='34' text-anchor='middle' font-family='-apple-system,sans-serif' font-weight='700' fill='white' dominant-baseline='middle'>B</text></svg>" />
+  <link rel="stylesheet" href="/static/app.css?v={{ build }}" />
+</head>
+<body>
+
+<header class="appbar">
+  <div class="appbar-inner">
+    <div class="brand">
+      <span>Bambu&nbsp;Auto</span>
+      <span class="ver" id="ver"></span>
+    </div>
+    <div class="appbar-spacer"></div>
+    <span id="cred-mini" class="muted"></span>
+    <button class="btn btn-soft btn-sm" onclick="openKeyModal()" title="API 키 관리">
+      🔑 키
+    </button>
+    <button class="btn btn-icon" id="themeBtn" onclick="toggleTheme()" title="테마 전환">🌓</button>
+  </div>
+</header>
+
+<main class="shell">
+
+  <!-- Track switcher -->
+  <div class="tracks" role="tablist" aria-label="작업 트랙">
+    <button class="track-btn on" data-track="3d" role="tab" onclick="setTrack('3d')">
+      <span class="ttl">① 3D 모델</span>
+      <span class="sub">Meshy · 이미지·텍스트로 입체 생성</span>
+    </button>
+    <button class="track-btn" data-track="func" role="tab" onclick="setTrack('func')">
+      <span class="ttl">② 기능 제품</span>
+      <span class="sub">마그넷·NFC·키링 (크레딧 0)</span>
+    </button>
+    <button class="track-btn" data-track="cad" role="tab" onclick="setTrack('cad')">
+      <span class="ttl">③ CAD 파라메트릭</span>
+      <span class="sub">Claude → build123d · 치수 정확</span>
+    </button>
+  </div>
+
+  <!-- ───────────── 3D 트랙 ───────────── -->
+  <section id="form3d" class="card">
+    <div class="card-head">
+      <h2>3D 모델 생성</h2>
+      <div class="seg" role="tablist" aria-label="입력 모드">
+        <button id="mBatch" class="on" onclick="setMode('batch')">이미지 배치</button>
+        <button id="mView" onclick="setMode('multiview')">멀티뷰</button>
+        <button id="mText" onclick="setMode('text')">텍스트</button>
+      </div>
+    </div>
+
+    <p class="hint" id="hint">한 줄에 이미지 URL 1개 = 물체 1개.</p>
+    <div class="field">
+      <textarea id="src" rows="4"
+        placeholder="https://.../productA.jpg"
+        aria-label="이미지 URL 또는 텍스트 프롬프트"></textarea>
+      <div class="err">최소 하나는 입력하거나 파일을 첨부하세요.</div>
+    </div>
+    <div class="opts">
+      <label class="hint">파일 첨부:
+        <input type="file" accept="image/*" multiple
+          onchange="upFiles(this,'up3d','up3dMsg')" />
+      </label>
+      <span id="up3dMsg" class="hint"></span>
+    </div>
+
+    <div class="grid mt-12">
+      <div>
+        <label class="fld">재질</label>
+        <select id="mat">
+          <option value="pla">PLA</option>
+          <option value="petg">PETG</option>
+          <option value="abs">ABS</option>
+          <option value="silk">PLA Silk</option>
+        </select>
+      </div>
+      <div>
+        <label class="fld">프린터</label>
+        <select id="prn"><option value="auto">자동</option></select>
+      </div>
+      <div>
+        <label class="fld">3D 추가</label>
+        <select id="addon">
+          <option value="">없음</option>
+          <option value="stand">받침대</option>
+          <option value="keychain">열쇠고리(3D 고리)</option>
+          <option value="keycap">키캡 만들기 (MX 캡 위에 얹음)</option>
+          <option value="keycap_fit">키캡 소켓 보정 (1u · MX 소켓)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="opts mt-12">
+      <label><input id="bg" type="checkbox" checked /> 배경 제거</label>
+      <label><input id="tex" type="checkbox" /> 텍스처(컬러)</label>
+      <label title="끄면 생성만 — 크레딧 절약"><input id="rem" type="checkbox" checked /> 리메시</label>
+      <label>정밀도:
+        <select id="prec" class="inline-input">
+          <option value="standard">표준</option>
+          <option value="high">고정밀</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="opts mt-8">
+      <label>바닥 로고:
+        <select id="brandType" class="inline-input" onchange="onBrandChange()">
+          <option value="">없음</option>
+          <option value="text">텍스트</option>
+          <option value="icon">아이콘</option>
+        </select>
+      </label>
+      <input id="brandText" type="text" class="inline-input hidden" placeholder="예: YOGIBO" />
+      <select id="brandIcon" class="inline-input hidden">
+        <option value="wifi">Wi-Fi</option>
+        <option value="nfc">NFC</option>
+        <option value="phone">전화</option>
+        <option value="mobile">휴대폰</option>
+        <option value="email">이메일</option>
+        <option value="bluetooth">블루투스</option>
+      </select>
+    </div>
+
+    <div class="card-head mt-16">
+      <span id="addonHint" class="hint hidden">색 키캡은 '텍스처' 옵션이 필요 — 자동 켜집니다.</span>
+      <div class="appbar-spacer"></div>
+      <button id="go3d" class="btn btn-primary" onclick="submit3d()">3D 제작 시작</button>
+    </div>
+  </section>
+
+  <!-- ───────────── 기능 제품 트랙 ───────────── -->
+  <section id="formFunc" class="card hidden">
+    <div class="card-head">
+      <h2>기능 제품 — 평면 패널</h2>
+      <span class="bdg info">크레딧 0</span>
+    </div>
+    <p class="hint">이미지를 마그넷·NFC·키링용 평면 패널로 직접 압출 (Meshy 미사용).</p>
+
+    <div class="field">
+      <textarea id="fsrc" rows="4"
+        placeholder="https://.../character.png"
+        aria-label="이미지 URL"></textarea>
+      <div class="err">최소 하나는 입력하거나 파일을 첨부하세요.</div>
+    </div>
+    <div class="opts">
+      <label class="hint">파일 첨부:
+        <input type="file" accept="image/*" multiple
+          onchange="upFiles(this,'upFn','upFnMsg')" />
+      </label>
+      <span id="upFnMsg" class="hint"></span>
+    </div>
+
+    <div class="grid mt-12">
+      <div>
+        <label class="fld">제품</label>
+        <select id="product" onchange="onProductChange()">
+          <option value="magnet">마그넷 (자석 공동)</option>
+          <option value="nfc">NFC 태그 (27mm 공동)</option>
+          <option value="keyring">키링 (구멍)</option>
+        </select>
+      </div>
+      <div id="fmagWrap">
+        <label class="fld">자석 크기 (D×H)</label>
+        <select id="fmagsize">
+          <option value="4x2">4×2</option><option value="4x3">4×3</option>
+          <option value="5x2" selected>5×2</option><option value="5x3">5×3</option>
+          <option value="6x2">6×2</option><option value="6x3">6×3</option>
+          <option value="8x2">8×2</option><option value="10x2">10×2</option>
+        </select>
+      </div>
+      <div>
+        <label class="fld">프린터</label>
+        <select id="fprn"><option value="auto">자동</option></select>
+      </div>
+      <div>
+        <label class="fld">재질</label>
+        <select id="fmat">
+          <option value="pla">PLA</option>
+          <option value="petg">PETG</option>
+          <option value="silk">PLA Silk</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="opts mt-12">
+      <label>크기(mm)
+        <input id="fsize" type="number" min="20" max="120" step="1" value="50"
+          class="inline-input" style="max-width:90px" />
+      </label>
+      <label>두께(mm)
+        <input id="fth" type="number" min="1.5" max="10" step="0.5" value="3.5"
+          class="inline-input" style="max-width:90px" />
+      </label>
+      <label><input id="fbg" type="checkbox" checked /> 배경 제거</label>
+    </div>
+
+    <div class="card-head mt-16">
+      <div class="appbar-spacer"></div>
+      <button id="goFn" class="btn btn-primary" onclick="submitFunc()">기능 제품 제작</button>
+    </div>
+  </section>
+
+  <!-- ───────────── CAD 트랙 ───────────── -->
+  <section id="formCad" class="card hidden">
+    <div class="card-head">
+      <h2>CAD 파라메트릭 — Claude → build123d</h2>
+      <span class="bdg info">Meshy 미사용</span>
+    </div>
+    <p class="hint">
+      자연어로 부품을 설명 → Claude가 build123d 코드를 짜고 실행 →
+      결정적 watertight STL. 키캡·홀더·박스·브래킷 등 <b>치수 중요한 부품</b>에 적합.
+    </p>
+
+    <div class="field">
+      <label class="fld">스펙 (자연어, 한글/영어)</label>
+      <textarea id="cadPrompt" rows="4"
+        placeholder="예) 1u MX 호환 키캡, 상단에 'A' 음각 0.6mm, 모서리 R1.2"></textarea>
+      <div class="err">스펙을 입력하세요.</div>
+    </div>
+
+    <div class="field">
+      <label class="fld">치수 (선택 · 한 줄에 key=value)</label>
+      <textarea id="cadParams" rows="3"
+        placeholder="cap_mm=18&#10;height_mm=8&#10;letter=A"></textarea>
+    </div>
+
+    <div class="grid mt-12">
+      <div>
+        <label class="fld">Claude 모델</label>
+        <select id="cadModel">
+          <option value="claude-sonnet-4-6" selected>Sonnet 4.6 (균형)</option>
+          <option value="claude-opus-4-7">Opus 4.7 (정밀)</option>
+          <option value="claude-haiku-4-5-20251001">Haiku 4.5 (빠름)</option>
+        </select>
+      </div>
+      <div>
+        <label class="fld">최대 시도</label>
+        <select id="cadAttempts">
+          <option value="2">2회</option>
+          <option value="3" selected>3회</option>
+          <option value="5">5회</option>
+        </select>
+      </div>
+      <div>
+        <label class="fld">재질</label>
+        <select id="cadMat">
+          <option value="pla">PLA</option>
+          <option value="petg">PETG</option>
+          <option value="abs">ABS</option>
+        </select>
+      </div>
+      <div>
+        <label class="fld">프린터</label>
+        <select id="cadPrn"><option value="auto">자동</option></select>
+      </div>
+    </div>
+
+    <div class="card-head mt-16">
+      <div class="appbar-spacer"></div>
+      <button id="goCad" class="btn btn-primary" onclick="submitCad()">CAD 생성</button>
+    </div>
+  </section>
+
+  <!-- ───────────── 작업 목록 ───────────── -->
+  <section class="card">
+    <div class="jobs-toolbar">
+      <div>
+        <h2>제작 현황</h2>
+        <div id="cred" class="muted"></div>
+      </div>
+      <div class="row">
+        <button id="bulk" class="btn btn-danger btn-sm" onclick="bulkDelete()" disabled>선택 삭제</button>
+        <a class="btn btn-ghost btn-sm" href="/api/download-all">⬇ 전체 ZIP</a>
+      </div>
+    </div>
+    <div id="jobs" class="jobs"></div>
+    <div id="empty" class="empty hidden">
+      <div class="emoji">📭</div>
+      <div class="ttl">이 트랙에는 아직 작업이 없습니다</div>
+      <div class="hint">위 폼에서 첫 작업을 시작하세요.</div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ───────────── 키 모달 ───────────── -->
+<div id="keyModalBg" class="modal-bg" onclick="if(event.target===this) closeKeyModal()">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="keyModalTitle">
+    <h3 id="keyModalTitle">Meshy API 키</h3>
+    <p class="hint">키는 브라우저(localStorage)와 처리 중 메모리에만 사용됩니다. 서버에 저장되지 않습니다.</p>
+    <div class="field mt-12">
+      <input id="key" type="password" placeholder="msy_..." oninput="saveKey()" />
+    </div>
+    <div id="keyMsg" class="muted mt-8"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" onclick="checkBal()">잔액 확인</button>
+      <button class="btn btn-primary btn-sm" onclick="closeKeyModal()">완료</button>
+    </div>
+  </div>
+</div>
+
+<div id="toasts" class="toasts" aria-live="polite" aria-atomic="false"></div>
+
+<script src="/static/app.js?v={{ build }}"></script>
+</body>
+</html>

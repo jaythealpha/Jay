@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ko" data-theme="auto">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
+  <title>Bambu Auto · 공유 — {{ short_id }}</title>
+  <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%231d4ed8'/><text x='50%25' y='56%25' font-size='34' text-anchor='middle' font-family='-apple-system,sans-serif' font-weight='700' fill='white' dominant-baseline='middle'>B</text></svg>" />
+  <link rel="stylesheet" href="/static/app.css" />
+  <style>
+    body { display: flex; align-items: center; min-height: 100vh; }
+    .shell { max-width: 520px; margin: 0 auto; padding: 24px 16px; }
+    .center { text-align: center; }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="card center">
+      <h1 style="font-size:18px;margin-bottom:6px;">3D 프린트 파일 공유</h1>
+      <p class="muted">
+        ID <span class="mono">{{ short_id }}</span>
+        · {{ material }} · {{ printer }} · {{ created }}
+      </p>
+      <div class="mt-16">
+        {% if ready %}
+          <a class="btn btn-primary" href="/api/download/{{ job_id }}">⬇ 3MF 다운로드</a>
+        {% else %}
+          <p style="color: var(--c-err);">아직 준비되지 않았습니다 (상태: {{ state }})</p>
+        {% endif %}
+      </div>
+      <p class="hint mt-16">
+        이 파일을 Bambu Studio / Handy 앱으로 열어 출력하세요.
+      </p>
+    </div>
+  </main>
+</body>
+</html>

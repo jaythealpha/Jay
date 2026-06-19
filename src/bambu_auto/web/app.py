@@ -18,8 +18,10 @@ from pathlib import Path
 
 import uuid
 
-from fastapi import FastAPI, File, Header, HTTPException, UploadFile
+from fastapi import FastAPI, File, Header, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
 from bambu_auto.config import AppConfig
@@ -28,6 +30,23 @@ from bambu_auto.core.repository import JobRepository
 from bambu_auto.services.meshy.credits import CreditGuard
 from bambu_auto.storage.db import Database
 from bambu_auto.web.worker import Worker
+
+
+WEB_DIR = Path(__file__).parent
+TEMPLATES = Jinja2Templates(directory=str(WEB_DIR / "templates"))
+
+
+def _git_sha() -> str:
+    """현재 실행 중인 코드의 git SHA. UI 헤더와 정적 캐시 버스팅에 사용."""
+    import subprocess
+    try:
+        out = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"],
+            cwd=WEB_DIR, capture_output=True, text=True, timeout=2,
+        )
+        return out.stdout.strip() or "unknown"
+    except Exception:  # noqa: BLE001
+        return "unknown"
 
 
 def _slice_stats(gcode_3mf: str) -> dict:
@@ -53,373 +72,6 @@ def _slice_stats(gcode_3mf: str) -> dict:
         out["filament_g"] = f.group(1)
     return out
 
-INDEX_HTML = r"""<!doctype html>
-<html lang="ko"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Bambu Auto</title>
-<style>
- :root{--bd:#e5e7eb;--mut:#6b7280;--ink:#111827;--bg:#f7f7f8}
- *{box-sizing:border-box}
- body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-   max-width:1000px;margin:0 auto;padding:24px 18px;color:var(--ink);
-   background:var(--bg)}
- h1{font-size:19px;margin:0 0 4px} .sub{color:var(--mut);font-size:13px;
-   margin:0 0 18px}
- .card{background:#fff;border:1px solid var(--bd);border-radius:12px;
-   padding:18px;margin:14px 0}
- label.fld{display:block;font-size:12px;color:var(--mut);margin:10px 0 4px}
- textarea,select{width:100%;font-size:14px;padding:9px 11px;
-   border:1px solid #d1d5db;border-radius:8px;background:#fff}
- textarea{resize:vertical;font-family:ui-monospace,Menlo,monospace;font-size:12px}
- .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
- .opts{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-top:12px}
- .opts label{font-size:13px;color:var(--ink);display:flex;gap:6px;
-   align-items:center}
- button{background:var(--ink);color:#fff;border:0;border-radius:8px;
-   padding:11px 22px;font-size:14px;font-weight:600;cursor:pointer}
- button:disabled{opacity:.45}
- .seg{display:inline-flex;border:1px solid #d1d5db;border-radius:8px;
-   overflow:hidden}
- .seg button{background:#fff;color:var(--ink);font-weight:500;border:0;
-   padding:8px 14px;border-radius:0}
- .seg button.on{background:var(--ink);color:#fff}
- .bar{display:flex;justify-content:space-between;align-items:center;
-   margin-top:14px;flex-wrap:wrap;gap:8px}
- .msg{font-size:13px;color:var(--mut)}
- table{width:100%;border-collapse:collapse;font-size:13px}
- th{text-align:left;color:var(--mut);font-weight:500;font-size:11px;
-   text-transform:uppercase;letter-spacing:.04em;padding:8px 8px}
- td{padding:10px 8px;border-top:1px solid #f0f0f1;vertical-align:middle}
- .id{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--mut)}
- .b{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;
-   border-radius:99px;background:#eef0f2;color:#374151;white-space:nowrap;
-   margin:1px 3px 1px 0}
- .b.ok{background:#dcfce7;color:#15803d}
- .b.no{background:#fee2e2;color:#b91c1c}
- .b.go{background:#fef9c3;color:#854d0e}
- .b.coin{background:#fef3c7;color:#92400e}
- .jid{font-family:ui-monospace,Menlo,monospace;font-size:12px;
-   display:flex;align-items:center;gap:6px}
- .prog{max-width:300px;color:var(--mut);font-size:12px;overflow:hidden;
-   text-overflow:ellipsis;white-space:nowrap;margin:2px 0}
- .thumb{width:40px;height:40px;object-fit:cover;border-radius:8px;
-   background:#eee}
- td{vertical-align:middle}
- .dlcell a{font-size:12px} .sep{color:#d1d5db;margin:0 5px}
- .acts{white-space:nowrap} .acts a{font-size:15px;margin-left:8px}
- a{color:#1d4ed8;text-decoration:none;font-weight:600}
- a:hover{text-decoration:underline}
- .empty{color:var(--mut);text-align:center;padding:28px 0;font-size:13px}
-</style></head><body>
-<h1>Bambu Auto <span id="ver" style="font-size:11px;font-weight:400;color:#9ca3af"></span></h1>
-<p class="sub">이미지/텍스트 → 3D 모델 또는 기능 제품(마그넷·NFC·키링) · 본인 Meshy 키</p>
-
-<div class="card" style="padding:12px 18px">
-  <label class="fld">내 Meshy API 키 (이 브라우저에만 저장 · 서버 미저장)</label>
-  <div class="row" style="display:flex;gap:8px">
-    <input id="key" type="password" placeholder="msy_..."
-      style="flex:1;padding:8px 11px;border:1px solid #d1d5db;border-radius:8px"
-      oninput="saveKey()">
-    <button type="button" onclick="checkBal()" style="background:#374151;padding:9px 14px">잔액 확인</button>
-  </div>
-  <div id="keyMsg" class="msg" style="margin-top:6px">키는 브라우저 localStorage + 처리 중 메모리에만 사용.</div>
-</div>
-
-<div class="seg" style="margin-bottom:4px">
-  <button id="t3d" class="on" onclick="setTrack('3d')">① 3D 모델 (Meshy)</button>
-  <button id="tfn" onclick="setTrack('func')">② 기능 제품 (마그넷·NFC·키링)</button>
-  <button id="tcad" onclick="setTrack('cad')">③ CAD (Claude·파라메트릭)</button>
-</div>
-
-<div id="form3d" class="card">
-  <div class="seg">
-    <button id="mBatch" class="on" onclick="setMode('batch')">이미지 (배치)</button>
-    <button id="mView" onclick="setMode('multiview')">한 물체·여러 각도</button>
-    <button id="mText" onclick="setMode('text')">텍스트 → 3D</button>
-  </div>
-  <label class="fld" id="hint">한 줄에 이미지 URL 1개 = 물체 1개.</label>
-  <textarea id="src" rows="4" placeholder="https://.../productA.jpg (이미지 직접 URL)"></textarea>
-  <div class="opts" style="margin-top:6px">
-    <label class="msg">또는 파일 첨부:
-      <input type="file" accept="image/*" multiple
-        onchange="upFiles(this,'up3d','up3dMsg')"></label>
-    <span id="up3dMsg" class="msg"></span>
-  </div>
-  <div class="grid">
-    <div><label class="fld">재질</label>
-      <select id="mat"><option value="pla">PLA</option><option value="petg">PETG</option>
-        <option value="abs">ABS</option><option value="silk">PLA Silk</option></select></div>
-    <div><label class="fld">프린터</label>
-      <select id="prn"><option value="auto">자동 (기본 A1)</option></select></div>
-    <div><label class="fld">3D 추가</label>
-      <select id="addon">
-        <option value="">없음</option>
-        <option value="stand">받침대</option>
-        <option value="keychain">열쇠고리(3D 입체고리)</option>
-        <option value="keycap">키캡 만들기 (아트만 있는 모델 → MX 캡에 얹음)</option>
-        <option value="keycap_fit">키캡 소켓 보정 (이미 키캡 형태 → 1u·규격 MX 소켓)</option>
-      </select>
-      <span id="addonHint" class="msg" style="display:none">색 키캡은 '텍스처(컬러)' 필요 — 자동 켜짐</span></div>
-  </div>
-  <div class="opts" style="margin-top:10px">
-    <label><input id="bg" type="checkbox" checked> 배경·인물 제거</label>
-    <label><input id="tex" type="checkbox"> 텍스처(컬러)</label>
-    <label title="끄면 생성만 — 크레딧 절약(약 절반)"><input id="rem" type="checkbox" checked> 리메시</label>
-    <label>정밀도: <select id="prec" style="width:auto">
-      <option value="standard">표준</option><option value="high">고정밀</option></select></label>
-  </div>
-  <div class="opts" style="margin-top:8px">
-    <label>바닥 로고:
-      <select id="brandType" onchange="onBrandChange()" style="width:auto">
-        <option value="">없음</option><option value="text">텍스트</option><option value="icon">아이콘</option></select></label>
-    <input id="brandText" type="text" placeholder="예: YOGIBO" style="flex:1;min-width:120px;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;display:none">
-    <select id="brandIcon" style="display:none;width:auto"><option value="wifi">Wi-Fi</option><option value="nfc">NFC</option>
-      <option value="phone">전화</option><option value="mobile">휴대폰</option><option value="email">이메일</option><option value="bluetooth">블루투스</option></select>
-  </div>
-  <div class="bar">
-    <span id="msg3d" class="msg"></span>
-    <button id="go3d" onclick="submit3d()">3D 제작 시작</button>
-  </div>
-</div>
-
-<div id="formFunc" class="card" style="display:none">
-  <p class="msg" style="margin:0 0 10px">이미지를 <b>평면 제품</b>으로 — Meshy 미사용·<b>크레딧 0</b>. 한 줄에 1개(배치).</p>
-  <textarea id="fsrc" rows="4" placeholder="https://.../character.png (이미지 직접 URL)"></textarea>
-  <div class="opts" style="margin-top:6px">
-    <label class="msg">또는 파일 첨부:
-      <input type="file" accept="image/*" multiple
-        onchange="upFiles(this,'upFn','upFnMsg')"></label>
-    <span id="upFnMsg" class="msg"></span>
-  </div>
-  <div class="grid">
-    <div><label class="fld">제품</label>
-      <select id="product" onchange="onProductChange()">
-        <option value="magnet">마그넷 (자석 공동)</option>
-        <option value="nfc">NFC 태그 (27mm 공동)</option>
-        <option value="keyring">키링 (구멍)</option>
-      </select></div>
-    <div id="fmagWrap"><label class="fld">자석 크기 (D×H)</label>
-      <select id="fmagsize"><option value="4x2">4×2</option><option value="4x3">4×3</option>
-        <option value="5x2" selected>5×2</option><option value="5x3">5×3</option>
-        <option value="6x2">6×2</option><option value="6x3">6×3</option><option value="8x2">8×2</option><option value="10x2">10×2</option></select></div>
-    <div><label class="fld">프린터</label><select id="fprn"><option value="auto">자동 (기본 A1)</option></select></div>
-  </div>
-  <div class="opts" style="margin-top:10px">
-    <label>크기(mm) <input id="fsize" type="number" min="20" max="120" step="1" value="50" style="width:64px;padding:6px;border:1px solid #d1d5db;border-radius:6px"></label>
-    <label>두께(mm) <input id="fth" type="number" min="1.5" max="10" step="0.5" value="3.5" style="width:64px;padding:6px;border:1px solid #d1d5db;border-radius:6px"></label>
-    <label>재질 <select id="fmat" style="width:auto"><option value="pla">PLA</option><option value="petg">PETG</option><option value="silk">PLA Silk</option></select></label>
-    <label><input id="fbg" type="checkbox" checked> 배경·인물 제거</label>
-  </div>
-  <div class="bar">
-    <span id="msgFn" class="msg"></span>
-    <button id="goFn" onclick="submitFunc()">기능 제품 제작 (크레딧 0)</button>
-  </div>
-</div>
-
-<div id="formCad" class="card" style="display:none">
-  <p class="msg" style="margin:0 0 10px">
-    <b>Claude 파라메트릭 CAD</b> — 자연어로 부품 설명 → 결정적 watertight STL.
-    키캡·홀더·박스·브래킷 등 <b>치수 중요한 부품</b>에 적합. Meshy 미사용·크레딧 0.
-  </p>
-  <label class="fld">스펙 (자연어, 영어/한글 모두 가능)</label>
-  <textarea id="cadPrompt" rows="4"
-    placeholder="예) 1u MX 호환 키캡, 상단에 'A' 음각 0.6mm, 모서리 R1.2mm"></textarea>
-  <label class="fld">치수 (선택, 한 줄에 key=value)</label>
-  <textarea id="cadParams" rows="3"
-    placeholder="cap_mm=18&#10;height_mm=8&#10;letter=A"></textarea>
-  <div class="grid" style="margin-top:8px">
-    <div><label class="fld">Claude 모델</label>
-      <select id="cadModel">
-        <option value="claude-sonnet-4-6" selected>Sonnet 4.6 (균형·권장)</option>
-        <option value="claude-opus-4-7">Opus 4.7 (정밀)</option>
-        <option value="claude-haiku-4-5-20251001">Haiku 4.5 (빠름·저비용)</option>
-      </select></div>
-    <div><label class="fld">최대 시도</label>
-      <select id="cadAttempts"><option value="2">2회</option>
-        <option value="3" selected>3회</option><option value="5">5회</option></select></div>
-    <div><label class="fld">재질</label>
-      <select id="cadMat"><option value="pla">PLA</option>
-        <option value="petg">PETG</option><option value="abs">ABS</option></select></div>
-    <div><label class="fld">프린터</label>
-      <select id="cadPrn"><option value="auto">자동</option></select></div>
-  </div>
-  <div class="bar">
-    <span id="msgCad" class="msg"></span>
-    <button id="goCad" onclick="submitCad()">CAD 생성 (크레딧 0)</button>
-  </div>
-</div>
-<div id="cred" class="msg" style="margin:0 4px 14px"></div>
-
-<div class="card">
-  <div class="bar" style="margin:0 0 12px">
-    <strong style="font-size:14px">제작 현황</strong>
-    <span>
-      <button id="bulk" onclick="bulkDelete()" disabled style="background:#b91c1c;padding:7px 14px;font-size:13px;margin-right:8px">선택 삭제</button>
-      <a href="/api/download-all" style="font-size:13px">⬇ 완료분 전체 ZIP</a>
-    </span>
-  </div>
-  <table><thead><tr>
-    <th style="width:24px"><input type="checkbox" id="all" onclick="toggleAll(this)"></th>
-    <th style="width:44px"></th><th>작업</th><th>옵션 · 크레딧</th>
-    <th>다운로드</th><th style="width:90px">관리</th>
-  </tr></thead><tbody id="tb"></tbody></table>
-  <div id="empty" class="empty" style="display:none">아직 작업이 없습니다.</div>
-</div>
-
-<script>
-let MODE='batch', TRACK='3d';
-function setTrack(t){TRACK=t;
- document.getElementById('t3d').className=t==='3d'?'on':'';
- document.getElementById('tfn').className=t==='func'?'on':'';
- document.getElementById('tcad').className=t==='cad'?'on':'';
- document.getElementById('form3d').style.display=t==='3d'?'block':'none';
- document.getElementById('formFunc').style.display=t==='func'?'block':'none';
- document.getElementById('formCad').style.display=t==='cad'?'block':'none';refresh();}
-function setMode(m){MODE=m;
- document.getElementById('mBatch').className=m==='batch'?'on':'';
- document.getElementById('mView').className=m==='multiview'?'on':'';
- document.getElementById('mText').className=m==='text'?'on':'';
- const h={batch:'한 줄에 이미지 URL 1개 = 물체 1개.',
-  multiview:'같은 물체 2~4장 → 정밀 3D 1개.',
-  text:'한 줄에 설명 1개. 예: 요기보 캐릭터 피규어'};
- document.getElementById('hint').textContent=h[m];
- document.getElementById('src').placeholder=m==='text'?'요기보 캐릭터 피규어':'https://.../productA.jpg';}
-function onBrandChange(){const t=document.getElementById('brandType').value;
- document.getElementById('brandText').style.display=t==='text'?'block':'none';
- document.getElementById('brandIcon').style.display=t==='icon'?'inline-block':'none';}
-function onProductChange(){
- document.getElementById('fmagWrap').style.display=
-  document.getElementById('product').value==='magnet'?'block':'none';}
-async function loadPrinters(){try{const p=await (await fetch('/api/printers')).json();
- for(const id of ['prn','fprn','cadPrn']){const s=document.getElementById(id);if(!s)continue;
-  for(const n of p.printers){const o=document.createElement('option');o.value=n;o.textContent=n.toUpperCase();s.appendChild(o);}
-  if([...s.options].some(o=>o.value==='a1'))s.value='a1';}}catch(e){}}
-function keyHdr(){const k=document.getElementById('key').value.trim();return k?{'X-Meshy-Key':k}:{};}
-function saveKey(){localStorage.setItem('meshy_key',document.getElementById('key').value.trim());}
-async function checkBal(){const c=await (await fetch('/api/credits',{headers:keyHdr()})).json();
- document.getElementById('keyMsg').textContent=(c.meshy_balance==null)?'잔액 조회 실패 — 키 확인':('현재 잔액: '+c.meshy_balance);}
-async function post(body,msgEl,btn){btn.disabled=true;msgEl.textContent='제출 중…';
- try{const r=await fetch('/api/jobs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-  const j=await r.json();msgEl.textContent=r.ok?(j.count+'개 대기열 등록'):('오류: '+(j.detail||r.status));
- }catch(e){msgEl.textContent='오류: '+e;}btn.disabled=false;refresh();}
-function srcs(id){return document.getElementById(id).value.split(/\n/).map(s=>s.trim()).filter(Boolean);}
-const UP={up3d:[],upFn:[]};
-async function upFiles(input,store,msgId){
- const fs=input.files;if(!fs.length)return;
- document.getElementById(msgId).textContent='업로드 중…';
- const fd=new FormData();for(const f of fs)fd.append('files',f);
- try{const r=await fetch('/api/upload',{method:'POST',body:fd});
-  const j=await r.json();UP[store]=(UP[store]||[]).concat(j.paths||[]);
-  document.getElementById(msgId).textContent=UP[store].length+'개 첨부됨';
- }catch(e){document.getElementById(msgId).textContent='업로드 실패: '+e;}}
-document.getElementById('addon').addEventListener('change',function(){
- const kc=this.value==='keycap';
- document.getElementById('addonHint').style.display=kc?'inline':'none';
- if(kc)document.getElementById('tex').checked=true;});
-async function submit3d(){const s=srcs('src').concat(UP.up3d);
- if(!s.length){alert('URL 입력 또는 파일 첨부');return;}
- if(MODE==='multiview'&&s.length>4){alert('멀티뷰 최대 4장');return;}
- if(s.length>20){alert('최대 20개');return;}
- await post({track:'3d',sources:s,mode:MODE,
-  material:document.getElementById('mat').value,printer:document.getElementById('prn').value,
-  addon:document.getElementById('addon').value,
-  texture:document.getElementById('tex').checked,remesh:document.getElementById('rem').checked,
-  precision:document.getElementById('prec').value,remove_bg:document.getElementById('bg').checked,
-  brand_type:document.getElementById('brandType').value,brand_text:document.getElementById('brandText').value,
-  brand_icon:document.getElementById('brandIcon').value,
-  meshy_key:document.getElementById('key').value.trim()},
-  document.getElementById('msg3d'),document.getElementById('go3d'));
- UP.up3d=[];document.getElementById('up3dMsg').textContent='';}
-async function submitCad(){
- const spec=document.getElementById('cadPrompt').value.trim();
- if(!spec){alert('CAD 스펙(자연어)을 입력하세요');return;}
- const params={};
- for(const ln of document.getElementById('cadParams').value.split(/\n/)){
-  const s=ln.trim();if(!s||!s.includes('='))continue;
-  const [k,v]=s.split('=');const t=v.trim();
-  const num=parseFloat(t);params[k.trim()]=Number.isNaN(num)?t:num;}
- await post({track:'cad',sources:[],cad_prompt:spec,cad_params:params,
-  cad_model:document.getElementById('cadModel').value,
-  cad_max_attempts:parseInt(document.getElementById('cadAttempts').value)||3,
-  material:document.getElementById('cadMat').value,
-  printer:document.getElementById('cadPrn').value},
-  document.getElementById('msgCad'),document.getElementById('goCad'));}
-async function submitFunc(){const s=srcs('fsrc').concat(UP.upFn);
- if(!s.length){alert('URL 입력 또는 파일 첨부');return;}
- if(s.length>20){alert('최대 20개');return;}
- await post({track:'func',sources:s,mode:'batch',product:document.getElementById('product').value,
-  magnet_size:document.getElementById('fmagsize').value,
-  flat_size_mm:parseFloat(document.getElementById('fsize').value)||50,
-  flat_thickness_mm:parseFloat(document.getElementById('fth').value)||3.5,
-  material:document.getElementById('fmat').value,printer:document.getElementById('fprn').value,
-  remove_bg:document.getElementById('fbg').checked},
-  document.getElementById('msgFn'),document.getElementById('goFn'));
- UP.upFn=[];document.getElementById('upFnMsg').textContent='';}
-function badge(s){let c='b';if(s==='sliced'||s==='done')c+=' ok';
- else if(s.startsWith('failed'))c+=' no';else if(s!=='new')c+=' go';
- const t=s==='sliced'?'완료':s==='new'?'대기':s;return '<span class="'+c+'">'+t+'</span>';}
-const SEL=new Set();
-function onSel(cb){cb.checked?SEL.add(cb.dataset.id):SEL.delete(cb.dataset.id);syncBulk();}
-function toggleAll(cb){document.querySelectorAll('.sel').forEach(x=>{x.checked=cb.checked;
- x.checked?SEL.add(x.dataset.id):SEL.delete(x.dataset.id);});syncBulk();}
-function syncBulk(){const n=SEL.size;const b=document.getElementById('bulk');
- b.disabled=!n;b.textContent=n?('선택 삭제 ('+n+')'):'선택 삭제';}
-async function bulkDelete(){const ids=[...SEL];if(!ids.length)return;
- if(!confirm(ids.length+'개 삭제할까요?'))return;
- await fetch('/api/jobs/bulk-delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids})});
- SEL.clear();document.getElementById('all').checked=false;refresh();}
-async function refresh(){const j=await (await fetch('/api/jobs')).json();
- const tb=document.getElementById('tb');tb.innerHTML='';
- const rows=j.jobs.filter(x=>(x.track||'3d')===TRACK);
- document.getElementById('empty').style.display=rows.length?'none':'block';
- for(const x of rows){
-  const links=[];
-  if(x.bambu3mf)links.push('<a href="/api/bambu3mf/'+x.id+'" title="Bambu/Orca Studio에서 열면 색마다 필라멘트(익스트루더)가 배정됨 → AMS에 팔레트 색 끼우고 바로 출력" style="background:#16a34a;color:#fff;padding:2px 7px;border-radius:5px;font-weight:600">🎨 Bambu 멀티컬러 3MF</a>');
-  if(x.color3mf)links.push('<a href="/api/color3mf/'+x.id+'" title="미리보기용 컬러 3MF(필라멘트 미배정)" style="background:#dcfce7;color:#15803d;padding:2px 7px;border-radius:5px">컬러 3MF(미리보기)</a>');
-  if(x.has_gcode)links.push('<a href="/api/download/'+x.id+'">3MF(단색)</a>');
-  for(const f of (x.model_formats||[]))links.push('<a href="/api/model/'+x.id+'/'+f+'">'+f+'</a>');
-  for(let i=1;i<=(x.color_parts||0);i++)links.push('<a href="/api/colorpart/'+x.id+'/'+i+'" title="색상 파트 '+i+'">C'+i+'</a>');
-  let dl=links.length?links.join('<span class="sep">·</span>'):'<span class="msg">—</span>';
-  if((x.palette||[]).length){const sw=x.palette.map(c=>'<span style="display:inline-block;width:11px;height:11px;border-radius:2px;border:1px solid #ccc;background:'+c+'"></span>').join(' ');
-   dl+='<div style="margin-top:3px">'+sw+'</div>';}
-  const m=(x.message||'').replace(/"/g,'&quot;');
-  const th='<img src="/api/thumb/'+x.id+'" class="thumb" onerror="this.style.visibility=\'hidden\'">';
-  const ck=SEL.has(x.id)?' checked':'';
-  const job='<div class="jid">'+x.id.slice(0,8)+' '+badge(x.state)+'</div>'+
-   '<div class="prog" title="'+m+'">'+m+'</div>'+
-   '<div class="msg">'+x.material+' · '+(x.printer||'auto')+' · '+x.created.slice(5,16).replace('T',' ')+'</div>';
-  const cr=x.credits>0?'<span class="b coin" title="'+(x.credits_actual?'실측':'견적')+'">🪙'+x.credits+(x.credits_actual?'':'~')+'</span>':'';
-  const op=(cr+(x.options||[]).map(s=>'<span class="b">'+s+'</span>').join(''))||'<span class="msg">—</span>';
-  const rt=x.can_retry?'<a href="#" title="재시도" onclick="retry(\''+x.id+'\');return false">↻</a>':'';
-  const sh=x.has_gcode?'<a href="#" title="공유" onclick="share(\''+x.id+'\');return false">🔗</a>':'';
-  const tx=(TRACK==='3d'&&x.state==='sliced')?'<a href="#" title="텍스처 입히기" onclick="retexture(\''+x.id+'\');return false">🎨</a>':'';
-  const tr=document.createElement('tr');
-  tr.innerHTML='<td><input type="checkbox" class="sel" data-id="'+x.id+'"'+ck+' onclick="onSel(this)"></td>'+
-   '<td>'+th+'</td><td>'+job+'</td><td>'+op+'</td><td class="dlcell">'+dl+'</td>'+
-   '<td class="acts">'+tx+rt+sh+'<a href="#" title="삭제" onclick="del(\''+x.id+'\');return false">🗑</a></td>';
-  tb.appendChild(tr);}
- syncBulk();
- const c=await (await fetch('/api/credits',{headers:keyHdr()})).json();
- const bal=(c.meshy_balance==null)?'키 입력 후 잔액 확인':c.meshy_balance.toLocaleString();
- document.getElementById('cred').innerHTML='<b>Meshy 잔액 '+bal+'</b> · 월 견적 '+c.monthly_used+'/'+c.monthly_cap;}
-function share(id){const u=location.origin+'/share/'+id;
- navigator.clipboard.writeText(u).then(()=>alert('공유 링크 복사됨:\n'+u),()=>prompt('공유 링크:',u));}
-async function retry(id){await fetch('/api/jobs/'+id+'/retry',{method:'POST'});refresh();}
-async function retexture(id){
- const p=prompt('텍스처 설명 (예: 광택 파스텔 컬러, 만화풍):');
- if(!p)return;
- const h=Object.assign({'Content-Type':'application/json'},keyHdr());
- const r=await fetch('/api/jobs/'+id+'/retexture',{method:'POST',headers:h,body:JSON.stringify({prompt:p})});
- const j=await r.json();
- if(!r.ok)alert('오류: '+(j.detail||r.status));refresh();}
-async function del(id){if(!confirm('삭제할까요?'))return;await fetch('/api/jobs/'+id,{method:'DELETE'});SEL.delete(id);refresh();}
-document.getElementById('key').value=localStorage.getItem('meshy_key')||'';
-fetch('/api/config').then(r=>r.json()).then(c=>{if(c.byo_required)
- document.getElementById('keyMsg').textContent='⚠ 본인 Meshy 키 입력 필수 (외부 배포 모드)';});
-fetch('/api/version').then(r=>r.json()).then(v=>{
- document.getElementById('ver').textContent='build '+(v.version||'?')+' · '+(v.started||'');});
-loadPrinters();refresh();setInterval(refresh,3000);onProductChange();
-</script></body></html>"""
 
 
 class BulkIds(BaseModel):
@@ -466,15 +118,20 @@ def create_app(cfg: AppConfig) -> FastAPI:
     guard = CreditGuard(db, cfg.budgets)
     worker = Worker(cfg, db)
 
+    assets_dir = Path(cfg.settings.storage.data_dir) / "assets"
+
     app = FastAPI(title="Bambu Auto")
+    app.mount("/static", StaticFiles(directory=str(WEB_DIR / "static")), name="static")
 
     @app.on_event("startup")
     def _start() -> None:
         worker.start()
 
     @app.get("/", response_class=HTMLResponse)
-    def index() -> str:
-        return INDEX_HTML
+    def index(request: Request) -> HTMLResponse:
+        return TEMPLATES.TemplateResponse(
+            request, "index.html", {"build": _git_sha()},
+        )
 
     @app.get("/api/printers")
     def printers() -> dict:
@@ -487,18 +144,6 @@ def create_app(cfg: AppConfig) -> FastAPI:
     # 실행 중인 서버의 코드 버전 — 화면 헤더에 표시해 'git pull 후 미재시작'을
     # 즉시 식별. 표시 SHA != `git rev-parse --short HEAD` 면 서버가 옛 코드.
     import datetime
-    import subprocess
-
-    def _git_sha() -> str:
-        try:
-            out = subprocess.run(
-                ["git", "rev-parse", "--short", "HEAD"],
-                cwd=Path(__file__).resolve().parent, capture_output=True,
-                text=True, timeout=2)
-            return out.stdout.strip() or "unknown"
-        except Exception:  # noqa: BLE001
-            return "unknown"
-
     _server_version = {"version": _git_sha(),
                        "started": datetime.datetime.now().strftime("%m-%d %H:%M")}
 
@@ -734,6 +379,15 @@ def create_app(cfg: AppConfig) -> FastAPI:
             return est_by_job.get(jid, 0), False
         credit_by_job = credit_of
 
+        def _has_thumb(job_id: str) -> bool:
+            src = assets_dir / job_id / "source"
+            if not src.exists():
+                return False
+            try:
+                return any(src.rglob("input*"))
+            except Exception:  # noqa: BLE001
+                return False
+
         def jobrow(r):
             cval, is_actual = credit_by_job(r["id"])
             try:
@@ -745,6 +399,7 @@ def create_app(cfg: AppConfig) -> FastAPI:
                 "id": r["id"], "state": r["state"], "material": r["material"],
                 "printer": r["target_printer"],
                 "has_gcode": bool(r["gcode_path"]),
+                "has_thumb": _has_thumb(r["id"]),
                 "can_retry": r["state"].startswith("failed"),
                 "created": r["created_at"],
                 "message": msg(r),
@@ -803,8 +458,6 @@ def create_app(cfg: AppConfig) -> FastAPI:
                 "monthly_used": u.monthly_used, "monthly_cap": u.monthly_cap,
                 "monthly_remaining": u.monthly_remaining,
                 "daily_used": u.daily_used, "daily_cap": u.daily_cap}
-
-    assets_dir = Path(cfg.settings.storage.data_dir) / "assets"
 
     @app.get("/api/model/{job_id}/{fmt}")
     def model_file(job_id: str, fmt: str) -> FileResponse:
@@ -946,7 +599,7 @@ def create_app(cfg: AppConfig) -> FastAPI:
         return {"deleted": len(req.ids)}
 
     @app.get("/share/{job_id}", response_class=HTMLResponse)
-    def share(job_id: str) -> str:
+    def share(request: Request, job_id: str) -> HTMLResponse:
         with db.connect() as conn:
             r = conn.execute(
                 "SELECT id, state, material, target_printer, gcode_path, "
@@ -955,26 +608,17 @@ def create_app(cfg: AppConfig) -> FastAPI:
         if not r:
             raise HTTPException(404, "작업을 찾을 수 없음")
         ready = bool(r["gcode_path"]) and Path(r["gcode_path"]).exists()
-        dl = (f'<a href="/api/download/{job_id}" '
-              f'style="display:inline-block;background:#111;color:#fff;'
-              f'padding:12px 22px;border-radius:8px;text-decoration:none;'
-              f'font-weight:600">⬇ 3MF 다운로드</a>') if ready else \
-             '<p style="color:#a40000">아직 준비되지 않았습니다 ' \
-             f'(상태: {r["state"]})</p>'
-        return f"""<!doctype html><html lang="ko"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Bambu Auto 공유 — {job_id[:8]}</title>
-<style>body{{font-family:-apple-system,sans-serif;max-width:560px;
-margin:60px auto;padding:0 16px;text-align:center;color:#1a1a1a}}
-.card{{border:1px solid #e3e3e3;border-radius:12px;padding:32px}}
-.m{{color:#888;font-size:13px}}</style></head><body>
-<div class="card">
-<h2>3D 프린트 파일 공유</h2>
-<p class="m">ID {job_id[:8]} · 재질 {r['material']} ·
- 프린터 {r['target_printer'] or 'auto'} ·
- {r['created_at'][:16].replace('T',' ')}</p>
-<div style="margin:28px 0">{dl}</div>
-<p class="m">이 파일을 Bambu Studio/Handy로 열어 출력하세요.</p>
-</div></body></html>"""
+        return TEMPLATES.TemplateResponse(
+            request, "share.html",
+            {
+                "job_id": job_id,
+                "short_id": job_id[:8],
+                "state": r["state"],
+                "material": r["material"],
+                "printer": r["target_printer"] or "auto",
+                "created": (r["created_at"] or "")[:16].replace("T", " "),
+                "ready": ready,
+            },
+        )
 
     return app
