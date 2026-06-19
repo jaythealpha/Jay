@@ -132,7 +132,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 const $ = id => document.getElementById(id);
 const drop=$('drop'), fileInput=$('file'), runBtn=$('run'), statusEl=$('status'),
       bar=$('bar'), barI=bar.querySelector('i'), dlbox=$('dlbox');
-let zip=null, modelPath=null, modelText=null, fileName='keycap';
+let zip=null, modelPath=null, modelText=null, fileName='keycap', filamentCols=null;
 
 /* ---------- file intake ---------- */
 drop.onclick=()=>fileInput.click();
@@ -163,6 +163,18 @@ async function loadFile(f){
     }
     if(!best){ setStatus('⚠️ 메쉬를 가진 .model을 찾지 못했습니다.'); hideBar(); return; }
     modelPath=best;
+    // pull the original filament colours (Bambu/Orca project settings) for a true-colour preview
+    filamentCols=null;
+    try{
+      const cfgName=Object.keys(zip.files).find(n=>/project_settings\.config$/i.test(n))
+                  ||Object.keys(zip.files).find(n=>/model_settings\.config$/i.test(n));
+      if(cfgName){
+        const cfg=await zip.files[cfgName].async('string');
+        let arr=null;
+        try{ arr=JSON.parse(cfg).filament_colour; }catch(_){ const m=cfg.match(/"filament_colour"\s*:\s*\[([^\]]*)\]/); if(m) arr=m[1].split(',').map(s=>s.replace(/["\s]/g,'')); }
+        if(arr&&arr.length) filamentCols=arr.map(h=>('#'+h.replace('#','').slice(0,6)));
+      }
+    }catch(_){}
     hideBar();
     setStatus(`✅ 불러옴: ${f.name} · 변환 설정 후 “변환 실행”을 누르세요.`);
     runBtn.disabled=false;
@@ -379,21 +391,28 @@ function preview(xs,ys,zs,n,triIdx,paint,stem,info){
   const pos=new Float32Array(nv*3);
   for(let i=0;i<n;i++){ pos[i*3]=xs[i]; pos[i*3+1]=ys[i]; pos[i*3+2]=zs[i]; }
   for(let i=0;i<stem.V.length;i++){ const p=stem.V[i]; pos[(n+i)*3]=p[0]; pos[(n+i)*3+1]=p[1]; pos[(n+i)*3+2]=p[2]; }
-  // per-vertex colors from paint_color so painted regions are visible (not one flat color)
-  const palette=[[.72,.65,1],[.95,.45,.55],[.30,.78,.95],[.45,.85,.55],[.98,.80,.35],[.65,.55,.95],[.95,.6,.85],[.55,.9,.85]];
-  const col=new Float32Array(nv*3); for(let i=0;i<col.length;i++) col[i]=0.72;
-  const codeColor={}; let next=0;
+  // per-vertex colours pulled from the file's real filament_colour palette,
+  // keyed by each triangle's paint_color region (first code char => paint region).
+  const hex2rgb=h=>{ h=h.replace('#',''); return [parseInt(h.slice(0,2),16)/255, parseInt(h.slice(2,4),16)/255, parseInt(h.slice(4,6),16)/255]; };
+  const fila=(filamentCols&&filamentCols.length)?filamentCols.map(hex2rgb):[[.72,.65,1],[.95,.45,.55],[.45,.85,.55],[.98,.80,.35]];
+  // map the distinct region keys (first char of each paint_color) to filament slots, in sorted order
+  const keys=new Set();
+  if(paint&&paint.length) for(let f=0;f<paint.length;f++){ keys.add(paint[f]?paint[f][0]:'·'); }
+  const order=[...keys].sort();
+  const keyCol={}; order.forEach((k,i)=>{ keyCol[k]=fila[i%fila.length]; });
+  const col=new Float32Array(nv*3);
+  const base=fila[0];
+  for(let i=0;i<nv;i++){ col[i*3]=base[0]; col[i*3+1]=base[1]; col[i*3+2]=base[2]; }
   if(paint && paint.length){
     for(let f=0;f<paint.length;f++){
-      const code=paint[f]; let c=palette[0];
-      if(code){ if(!(code in codeColor)) codeColor[code]=palette[next++%palette.length]; c=codeColor[code]; }
+      const c=keyCol[paint[f]?paint[f][0]:'·']||base;
       const a=triIdx[f*3],b=triIdx[f*3+1],d=triIdx[f*3+2];
       col[a*3]=c[0];col[a*3+1]=c[1];col[a*3+2]=c[2];
       col[b*3]=c[0];col[b*3+1]=c[1];col[b*3+2]=c[2];
       col[d*3]=c[0];col[d*3+1]=c[1];col[d*3+2]=c[2];
     }
   }
-  for(let i=n;i<nv;i++){ col[i*3]=.70; col[i*3+1]=.70; col[i*3+2]=.72; } // stem = neutral
+  for(let i=n;i<nv;i++){ col[i*3]=.78; col[i*3+1]=.78; col[i*3+2]=.80; } // added stem = neutral grey
   // only downsample for extreme meshes (keeps the preview solid; on-demand render keeps it light)
   const totalF=triIdx.length/3 + stem.T.length;
   const stride=Math.max(1, Math.ceil(totalF/1500000));
