@@ -62,7 +62,7 @@
 </head>
 <body>
 <header>
-  <h1>🦄 키캡 리사이저 <span class="pill">3MF → 1u + Cherry MX 스템</span> <span class="pill" style="background:#10241a;color:#86efac;border-color:#1f5138">build v10 · pick-4-colors</span></h1>
+  <h1>🦄 키캡 리사이저 <span class="pill">3MF → 1u + Cherry MX 스템</span> <span class="pill" style="background:#10241a;color:#86efac;border-color:#1f5138">build v11 · bambu-paint</span></h1>
   <p>3D 키캡 <b>.3mf</b> 파일을 끌어다 놓으면 → 표준 1u 크기로 리사이즈하고 정확한 Cherry MX 스템을 넣어 바로 인쇄 가능한 파일로 만들어 줍니다. 모든 처리는 브라우저에서만 실행돼요(업로드 없음).</p>
 </header>
 
@@ -658,30 +658,32 @@ async function colorizeFromVertexColors(xs,ys,zs,n,triIdx,col,stem,info,scale,ad
   if(refImageData){ $('projbtn').disabled=false; if(projGeo&&projGeo.col) $('palbtn').disabled=false; }
 }
 async function buildColored3mf(xs,ys,zs,n,triIdx,tcol,palette,stem,info,scale){
-  // reorient so the seating face is on the plate (up-axis -> +Z, base at Z=0)
+  // ===== Bambu/Orca NATIVE multi-colour 3mf (paint_color per triangle) =====
   const a=info.axis, o=info.oth, dir=info.dir, baseS=info.base*scale;
   const RX=p=>[p[o[0]], p[o[1]], (p[a]-baseS)*dir];
+  const K=palette.length;
   const to255=c=>Math.min(255,Math.max(0,Math.round(c*255)));
-  const hex=c=>'#'+c.map(x=>to255(x).toString(16).padStart(2,'0')).join('')+'FF';
-  const colors=palette.map(c=>`   <m:color color="${hex(c)}"/>`).join('\n');
-  const stemIdx=0; // stem (hidden under cap) uses filament 1
-  // vertices (model + stem), all reoriented
+  const hex=c=>'#'+c.map(x=>to255(x).toString(16).padStart(2,'0').toUpperCase()).join('')+'FF';
+  // paint_color code for extruder e (1-based): 1->"4", 2->"8", e>=3 -> hex(e-3)+"C"
+  const code=e=> e===1?'4' : e===2?'8' : ((e-3).toString(16).toUpperCase()+'C');
+  const codeFor=new Array(K); for(let k=0;k<K;k++) codeFor[k]=code(k+1);
+  const stemCode=codeFor[0]; // stem -> filament 1 (hidden under cap)
+  // vertices (model + stem), reoriented
   const vlines=new Array(n+stem.V.length);
   for(let i=0;i<n;i++){ const q=RX([xs[i],ys[i],zs[i]]); vlines[i]=`     <vertex x="${q[0].toFixed(4)}" y="${q[1].toFixed(4)}" z="${q[2].toFixed(4)}"/>`; }
   for(let i=0;i<stem.V.length;i++){ const q=RX(stem.V[i]); vlines[n+i]=`     <vertex x="${q[0].toFixed(4)}" y="${q[1].toFixed(4)}" z="${q[2].toFixed(4)}"/>`; }
-  // each triangle = its (smoothed) flat filament colour
+  // triangles with paint_color
   const tlines=[];
   for(let f=0; f*3<triIdx.length; f++){ const A=triIdx[f*3],B=triIdx[f*3+1],C=triIdx[f*3+2];
-    tlines.push(`     <triangle v1="${A}" v2="${B}" v3="${C}" pid="1" p1="${tcol[f]}"/>`); }
-  for(const t of stem.T){ const A=t[0]+n,B=t[1]+n,C=t[2]+n;
-    tlines.push(`     <triangle v1="${A}" v2="${B}" v3="${C}" pid="1" p1="${stemIdx}"/>`); }
-  const model=`<?xml version="1.0" encoding="UTF-8"?>
-<model unit="millimeter" xml:lang="en-US" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02" xmlns:m="http://schemas.microsoft.com/3dmanufacturing/material/2015/02">
+    tlines.push(`     <triangle v1="${A}" v2="${B}" v3="${C}" paint_color="${codeFor[tcol[f]]}"/>`); }
+  for(const t of stem.T){ tlines.push(`     <triangle v1="${t[0]+n}" v2="${t[1]+n}" v3="${t[2]+n}" paint_color="${stemCode}"/>`); }
+  const faceCount=triIdx.length/3 + stem.T.length;
+  // object_1.model (the actual painted mesh)
+  const objModel=`<?xml version="1.0" encoding="UTF-8"?>
+<model unit="millimeter" xml:lang="en-US" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02" xmlns:BambuStudio="http://schemas.bambulab.com/package/2021" xmlns:p="http://schemas.microsoft.com/3dmanufacturing/production/2015/06" requiredextensions="p">
+ <metadata name="BambuStudio:3mfVersion">2</metadata>
  <resources>
-  <m:colorgroup id="1">
-${colors}
-  </m:colorgroup>
-  <object id="2" type="model">
+  <object id="1" p:UUID="00010000-81cb-4c03-9d28-80fed5dfa1dc" type="model">
    <mesh>
     <vertices>
 ${vlines.join('\n')}
@@ -692,10 +694,60 @@ ${tlines.join('\n')}
    </mesh>
   </object>
  </resources>
- <build>
-  <item objectid="2" transform="1 0 0 0 1 0 0 0 1 128 128 0" printable="1"/>
+</model>`;
+  // 3dmodel.model (component wrapper + Bambu painting metadata + build placement)
+  const root=`<?xml version="1.0" encoding="UTF-8"?>
+<model unit="millimeter" xml:lang="en-US" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02" xmlns:BambuStudio="http://schemas.bambulab.com/package/2021" xmlns:p="http://schemas.microsoft.com/3dmanufacturing/production/2015/06" requiredextensions="p">
+ <metadata name="Application">KeycapResizer</metadata>
+ <metadata name="BambuStudio:3mfVersion">2</metadata>
+ <metadata name="BambuStudio:MmPaintingVersion">1</metadata>
+ <resources>
+  <object id="2" p:UUID="00000001-61cb-4c03-9d28-80fed5dfa1dc" type="model">
+   <components>
+    <component p:path="/3D/Objects/object_1.model" objectid="1" p:UUID="00010000-b206-40ff-9872-83e8017abed1" transform="1 0 0 0 1 0 0 0 1 0 0 0"/>
+   </components>
+  </object>
+ </resources>
+ <build p:UUID="2c7c17d8-22b5-4d84-8835-1976022ea369">
+  <item objectid="2" p:UUID="00000002-b1ec-4553-aec9-835e5b724bb4" transform="1 0 0 0 1 0 0 0 1 128 128 0" printable="1"/>
  </build>
 </model>`;
+  // project_settings.config: define the K filaments + their colours
+  const rep=(v)=>Array.from({length:K},()=>v);
+  const matrix=[]; for(let i=0;i<K;i++) for(let j=0;j<K;j++) matrix.push(i===j?"0":"280");
+  const proj={
+    filament_colour: palette.map(c=>hex(c)),
+    filament_settings_id: rep("Bambu PLA Basic @BBL X1C"),
+    filament_type: rep("PLA"),
+    filament_diameter: rep("1.75"),
+    filament_flow_ratio: rep("0.98"),
+    flush_volumes_matrix: matrix,
+    flush_volumes_vector: Array.from({length:2*K},()=>"140"),
+    single_extruder_multi_material: "1",
+    print_sequence: "by layer",
+    version: "02.03.01.00", from: "project", name: "project_settings"
+  };
+  const modelSettings=`<?xml version="1.0" encoding="UTF-8"?>
+<config>
+  <object id="2">
+    <metadata key="name" value="Object_1"/>
+    <metadata key="extruder" value="1"/>
+    <metadata face_count="${faceCount}"/>
+    <part id="1" subtype="normal_part">
+      <metadata key="name" value="Object_1"/>
+      <metadata key="matrix" value="1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1"/>
+      <mesh_stat face_count="${faceCount}" edges_fixed="0" degenerate_facets="0" facets_removed="0" facets_reversed="0" backwards_edges="0"/>
+    </part>
+  </object>
+  <plate>
+    <metadata key="plater_id" value="1"/>
+    <model_instance>
+      <metadata key="object_id" value="2"/>
+      <metadata key="instance_id" value="0"/>
+    </model_instance>
+  </plate>
+  <assemble></assemble>
+</config>`;
   const ct=`<?xml version="1.0" encoding="UTF-8"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
@@ -705,12 +757,21 @@ ${tlines.join('\n')}
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
  <Relationship Target="/3D/3dmodel.model" Id="rel-1" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/>
 </Relationships>`;
+  const relsModel=`<?xml version="1.0" encoding="UTF-8"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+ <Relationship Target="/3D/Objects/object_1.model" Id="rel-1" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/>
+</Relationships>`;
   const z=new JSZip();
   z.file('[Content_Types].xml',ct);
   z.file('_rels/.rels',rels);
-  z.file('3D/3dmodel.model',model);
+  z.file('3D/3dmodel.model',root);
+  z.file('3D/_rels/3dmodel.model.rels',relsModel);
+  z.file('3D/Objects/object_1.model',objModel);
+  z.file('Metadata/project_settings.config',JSON.stringify(proj,null,4));
+  z.file('Metadata/model_settings.config',modelSettings);
   return z.generateAsync({type:'blob',compression:'DEFLATE'});
 }
+
 
 function fillResults(info,scale,n,nt,stem,addStem,target){
   $('results').classList.remove('hidden');
