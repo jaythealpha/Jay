@@ -71,10 +71,10 @@
     <div class="panel">
       <h2>1. 파일</h2>
       <div id="drop">
-        <div class="big">📁 여기에 .3mf 파일을 끌어놓기</div>
-        <div class="sub">또는 클릭해서 선택 · 데스크톱 브라우저 권장(대용량 메쉬)</div>
+        <div class="big">📁 여기에 .3mf 또는 .glb 파일을 끌어놓기</div>
+        <div class="sub">또는 클릭해서 선택 · GLB는 텍스처 색상까지 반영 · 데스크톱 권장</div>
       </div>
-      <input type="file" id="file" accept=".3mf">
+      <input type="file" id="file" accept=".3mf,.glb,.gltf">
     </div>
 
     <div class="panel" style="margin-top:16px">
@@ -128,11 +128,12 @@
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const $ = id => document.getElementById(id);
 const drop=$('drop'), fileInput=$('file'), runBtn=$('run'), statusEl=$('status'),
       bar=$('bar'), barI=bar.querySelector('i'), dlbox=$('dlbox');
-let zip=null, modelPath=null, modelText=null, fileName='keycap', filamentCols=null;
+let zip=null, modelPath=null, modelText=null, fileName='keycap', filamentCols=null, glbData=null;
 
 /* ---------- file intake ---------- */
 drop.onclick=()=>fileInput.click();
@@ -147,9 +148,13 @@ function hideBar(){ bar.style.display='none'; }
 const yield_=()=>new Promise(r=>setTimeout(r,0));
 
 async function loadFile(f){
-  if(!f.name.toLowerCase().endsWith('.3mf')){ setStatus('⚠️ .3mf 파일만 지원합니다.'); return; }
-  fileName=f.name.replace(/\.3mf$/i,'');
+  const nm=f.name.toLowerCase();
+  if(!/\.(3mf|glb|gltf)$/.test(nm)){ setStatus('⚠️ .3mf 또는 .glb 파일만 지원합니다.'); return; }
+  fileName=f.name.replace(/\.(3mf|glb|gltf)$/i,'');
   dlbox.classList.add('hidden'); dlbox.innerHTML='';
+  glbData=null; modelText=null;
+  runBtn.disabled=true;
+  if(nm.endsWith('.glb')||nm.endsWith('.gltf')){ return loadGLB(f); }
   setStatus('압축 해제 중…'); showBar(.1);
   try{
     const buf=await f.arrayBuffer();
@@ -179,6 +184,60 @@ async function loadFile(f){
     setStatus(`✅ 불러옴: ${f.name} · 변환 설정 후 “변환 실행”을 누르세요.`);
     runBtn.disabled=false;
   }catch(err){ console.error(err); setStatus('⚠️ 파일을 여는 중 오류: '+err.message); hideBar(); }
+}
+
+/* ---------- GLB / glTF (texture-coloured) ---------- */
+function imageData(image){
+  const w=image.width||image.videoWidth, h=image.height||image.videoHeight;
+  const c=document.createElement('canvas'); c.width=w; c.height=h;
+  const ctx=c.getContext('2d',{willReadFrequently:true}); ctx.drawImage(image,0,0,w,h);
+  return ctx.getImageData(0,0,w,h);
+}
+async function loadGLB(f){
+  setStatus('GLB 읽는 중…'); showBar(.2);
+  try{
+    const buf=await f.arrayBuffer();
+    const gltf=await new Promise((res,rej)=>{ new GLTFLoader().parse(buf,'',res,rej); });
+    setStatus('텍스처 색상 굽는 중…'); showBar(.5); await yield_();
+    gltf.scene.updateMatrixWorld(true);
+    const meshes=[]; gltf.scene.traverse(o=>{ if(o.isMesh&&o.geometry) meshes.push(o); });
+    if(!meshes.length) throw new Error('메쉬를 찾지 못했습니다.');
+    const POS=[], IDX=[], COL=[]; let voff=0;
+    for(const mesh of meshes){
+      let g=mesh.geometry;
+      const posA=g.getAttribute('position'); if(!posA) continue;
+      const uvA=g.getAttribute('uv'); const colA=g.getAttribute('color');
+      const m=mesh.material||{};
+      const baseCol=(m.color)?[m.color.r,m.color.g,m.color.b]:[0.8,0.8,0.8];
+      let imgd=null; const tex=m.map;
+      if(tex&&tex.image&&uvA){ try{ imgd=imageData(tex.image); }catch(e){ imgd=null; } }
+      const wm=mesh.matrixWorld;
+      const vcount=posA.count;
+      const v=new THREE.Vector3();
+      for(let i=0;i<vcount;i++){
+        v.set(posA.getX(i),posA.getY(i),posA.getZ(i)).applyMatrix4(wm);
+        POS.push(v.x,v.y,v.z);
+        let r=baseCol[0],gr=baseCol[1],b=baseCol[2];
+        if(imgd&&uvA){
+          let u=uvA.getX(i), w=uvA.getY(i);
+          u=u-Math.floor(u); w=w-Math.floor(w);
+          let px=Math.min(imgd.width-1, Math.max(0, Math.floor(u*imgd.width)));
+          let py=Math.min(imgd.height-1,Math.max(0, Math.floor((1-w)*imgd.height)));
+          const k=(py*imgd.width+px)*4; r=imgd.data[k]/255; gr=imgd.data[k+1]/255; b=imgd.data[k+2]/255;
+        } else if(colA){ r=colA.getX(i); gr=colA.getY(i); b=colA.getZ(i); }
+        COL.push(r,gr,b);
+      }
+      let idx=g.getIndex();
+      if(idx){ for(let i=0;i<idx.count;i++) IDX.push(idx.getX(i)+voff); }
+      else { for(let i=0;i<vcount;i++) IDX.push(i+voff); }
+      voff+=vcount;
+    }
+    glbData={ pos:new Float32Array(POS), idx:IDX, col:new Float32Array(COL) };
+    modelText=null; modelPath=null;
+    hideBar();
+    setStatus(`✅ 불러옴 (GLB · 텍스처 색상): ${f.name} · “변환 실행”을 누르세요.`);
+    runBtn.disabled=false;
+  }catch(err){ console.error(err); setStatus('⚠️ GLB 로드 오류: '+err.message); hideBar(); }
 }
 
 /* ---------- parsing helpers ---------- */
@@ -277,6 +336,7 @@ function buildStem(info, scale, p){
 
 /* ---------- main convert ---------- */
 runBtn.onclick=async()=>{
+  if(glbData){ await convertGLB(); return; }
   if(!modelText) return;
   runBtn.disabled=true; showBar(.05); setStatus('정점 파싱 중…'); await yield_();
   try{
@@ -351,6 +411,99 @@ runBtn.onclick=async()=>{
   }catch(err){ console.error(err); setStatus('⚠️ 변환 오류: '+err.message); hideBar(); runBtn.disabled=false; }
 };
 
+/* ---------- GLB conversion: resize + stem + colour-baked 3mf ---------- */
+async function convertGLB(){
+  runBtn.disabled=true; showBar(.1); setStatus('크기/방향 분석 중…'); await yield_();
+  try{
+    const P=glbData.pos, col=glbData.col, triIdx=glbData.idx;
+    const n=P.length/3;
+    const xs=new Float64Array(n),ys=new Float64Array(n),zs=new Float64Array(n);
+    for(let i=0;i<n;i++){ xs[i]=P[i*3]; ys[i]=P[i*3+1]; zs[i]=P[i*3+2]; }
+    const info=detectBase(xs,ys,zs,n,$('upaxis').value);
+    const scale=(+$('target').value)/Math.max(info.footU,info.footV);
+    for(let i=0;i<n;i++){ xs[i]*=scale; ys[i]*=scale; zs[i]*=scale; }
+    const addStem=$('addstem').value==='1';
+    let stem={V:[],T:[]};
+    if(addStem) stem=buildStem(info,scale,{collar:+$('collar').value,arml:+$('arml').value,armw:+$('armw').value,stemh:+$('stemh').value,segs:256});
+    showBar(.45); setStatus('색상 포함 3mf 작성 중…'); await yield_();
+    const blob=await buildColored3mf(xs,ys,zs,n,triIdx,col,stem,info,scale);
+    const url=URL.createObjectURL(blob);
+    const outName=`${fileName}_1u.3mf`;
+    if(window.__lastURL){ try{URL.revokeObjectURL(window.__lastURL);}catch(e){} }
+    window.__lastURL=url;
+    dlbox.classList.remove('hidden');
+    dlbox.innerHTML=`<a class="btn dl dl-link" href="${url}" download="${outName}">⬇️ ${outName} 다운로드 (색상 포함)</a>`;
+    fillResults(info,scale,n,triIdx.length/3,stem,addStem,+$('target').value);
+    hideBar(); setStatus('✅ 완료! 색상이 입혀진 3mf를 받으세요.');
+    runBtn.disabled=false;
+    try{ preview(xs,ys,zs,n,triIdx,null,stem,info,col); }catch(e){ console.warn('preview skipped',e); }
+  }catch(err){ console.error(err); setStatus('⚠️ GLB 변환 오류: '+err.message); hideBar(); runBtn.disabled=false; }
+}
+async function buildColored3mf(xs,ys,zs,n,triIdx,col,stem,info,scale){
+  // reorient so the seating face is on the plate (up-axis -> +Z, base at Z=0)
+  const a=info.axis, o=info.oth, dir=info.dir, baseS=info.base*scale;
+  const RX=p=>[p[o[0]], p[o[1]], (p[a]-baseS)*dir];
+  // build palette from baked vertex colours (quantised) + grey for the stem
+  const pal=[], palMap=new Map();
+  const ci=new Int32Array(n+stem.V.length);
+  const key=(r,g,b)=>(r<<16)|(g<<8)|b;
+  const quant=v=>Math.min(255,Math.max(0,Math.round(v*255/8)*8));
+  for(let i=0;i<n;i++){
+    const r=quant(col[i*3]),g=quant(col[i*3+1]),b=quant(col[i*3+2]); const k=key(r,g,b);
+    let idx=palMap.get(k); if(idx===undefined){ idx=pal.length; palMap.set(k,idx); pal.push([r,g,b]); } ci[i]=idx;
+  }
+  const greyK=key(200,200,205); let greyIdx=palMap.get(greyK);
+  if(greyIdx===undefined){ greyIdx=pal.length; palMap.set(greyK,greyIdx); pal.push([200,200,205]); }
+  for(let i=n;i<ci.length;i++) ci[i]=greyIdx;
+  const hex=c=>'#'+c.map(x=>x.toString(16).padStart(2,'0')).join('')+'FF';
+  // vertices (model + stem), all reoriented
+  const vlines=new Array(n+stem.V.length);
+  for(let i=0;i<n;i++){ const q=RX([xs[i],ys[i],zs[i]]); vlines[i]=`     <vertex x="${q[0].toFixed(4)}" y="${q[1].toFixed(4)}" z="${q[2].toFixed(4)}"/>`; }
+  for(let i=0;i<stem.V.length;i++){ const q=RX(stem.V[i]); vlines[n+i]=`     <vertex x="${q[0].toFixed(4)}" y="${q[1].toFixed(4)}" z="${q[2].toFixed(4)}"/>`; }
+  // triangles with per-vertex colour indices (pid=1)
+  const tlines=[];
+  for(let f=0; f*3<triIdx.length; f++){ const A=triIdx[f*3],B=triIdx[f*3+1],C=triIdx[f*3+2];
+    tlines.push(`     <triangle v1="${A}" v2="${B}" v3="${C}" pid="1" p1="${ci[A]}" p2="${ci[B]}" p3="${ci[C]}"/>`); }
+  for(const t of stem.T){ const A=t[0]+n,B=t[1]+n,C=t[2]+n;
+    tlines.push(`     <triangle v1="${A}" v2="${B}" v3="${C}" pid="1" p1="${greyIdx}" p2="${greyIdx}" p3="${greyIdx}"/>`); }
+  const colors=pal.map(c=>`   <m:color color="${hex(c)}"/>`).join('\n');
+  const model=`<?xml version="1.0" encoding="UTF-8"?>
+<model unit="millimeter" xml:lang="en-US" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02" xmlns:m="http://schemas.microsoft.com/3dmanufacturing/material/2015/02">
+ <resources>
+  <m:colorgroup id="1">
+${colors}
+  </m:colorgroup>
+  <object id="2" type="model">
+   <mesh>
+    <vertices>
+${vlines.join('\n')}
+    </vertices>
+    <triangles>
+${tlines.join('\n')}
+    </triangles>
+   </mesh>
+  </object>
+ </resources>
+ <build>
+  <item objectid="2" transform="1 0 0 0 1 0 0 0 1 128 128 0" printable="1"/>
+ </build>
+</model>`;
+  const ct=`<?xml version="1.0" encoding="UTF-8"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+ <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+ <Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/>
+</Types>`;
+  const rels=`<?xml version="1.0" encoding="UTF-8"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+ <Relationship Target="/3D/3dmodel.model" Id="rel-1" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/>
+</Relationships>`;
+  const z=new JSZip();
+  z.file('[Content_Types].xml',ct);
+  z.file('_rels/.rels',rels);
+  z.file('3D/3dmodel.model',model);
+  return z.generateAsync({type:'blob',compression:'DEFLATE'});
+}
+
 function fillResults(info,scale,n,nt,stem,addStem,target){
   $('results').classList.remove('hidden');
   const o=info.oth, a=info.axis;
@@ -384,13 +537,19 @@ function initView(){
   window.addEventListener('resize',()=>{ const w=el.clientWidth,h=el.clientHeight; if(!w||!h)return; renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix(); renderFn(); });
   return true;
 }
-function preview(xs,ys,zs,n,triIdx,paint,stem,info){
+function preview(xs,ys,zs,n,triIdx,paint,stem,info,vcolors){
   if(!renderer){ if(initView()===false) return; }
   if(curMesh){ scene.remove(curMesh); if(curMesh.geometry)curMesh.geometry.dispose(); if(curMesh.material)curMesh.material.dispose(); curMesh=null; }
   const nv=n+stem.V.length;
   const pos=new Float32Array(nv*3);
   for(let i=0;i<n;i++){ pos[i*3]=xs[i]; pos[i*3+1]=ys[i]; pos[i*3+2]=zs[i]; }
   for(let i=0;i<stem.V.length;i++){ const p=stem.V[i]; pos[(n+i)*3]=p[0]; pos[(n+i)*3+1]=p[1]; pos[(n+i)*3+2]=p[2]; }
+  const col=new Float32Array(nv*3);
+  if(vcolors){
+    // GLB: use the per-vertex colours baked straight from the texture
+    for(let i=0;i<n*3;i++) col[i]=vcolors[i];
+    for(let i=n;i<nv;i++){ col[i*3]=.78; col[i*3+1]=.78; col[i*3+2]=.80; }
+  } else {
   // per-vertex colours pulled from the file's real filament_colour palette,
   // keyed by each triangle's paint_color region (first code char => paint region).
   const hex2rgb=h=>{ h=h.replace('#',''); return [parseInt(h.slice(0,2),16)/255, parseInt(h.slice(2,4),16)/255, parseInt(h.slice(4,6),16)/255]; };
@@ -400,7 +559,6 @@ function preview(xs,ys,zs,n,triIdx,paint,stem,info){
   if(paint&&paint.length) for(let f=0;f<paint.length;f++){ keys.add(paint[f]?paint[f][0]:'·'); }
   const order=[...keys].sort();
   const keyCol={}; order.forEach((k,i)=>{ keyCol[k]=fila[i%fila.length]; });
-  const col=new Float32Array(nv*3);
   const base=fila[0];
   for(let i=0;i<nv;i++){ col[i*3]=base[0]; col[i*3+1]=base[1]; col[i*3+2]=base[2]; }
   if(paint && paint.length){
@@ -413,6 +571,7 @@ function preview(xs,ys,zs,n,triIdx,paint,stem,info){
     }
   }
   for(let i=n;i<nv;i++){ col[i*3]=.78; col[i*3+1]=.78; col[i*3+2]=.80; } // added stem = neutral grey
+  }
   // only downsample for extreme meshes (keeps the preview solid; on-demand render keeps it light)
   const totalF=triIdx.length/3 + stem.T.length;
   const stride=Math.max(1, Math.ceil(totalF/1500000));
