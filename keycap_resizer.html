@@ -87,6 +87,7 @@
       <div class="opt"><label>칼라 지름(Ø)<div class="hint">기본 5.5</div></label><input type="number" id="collar" value="5.5" step="0.1"></div>
       <div class="opt"><label>스템 높이<div class="hint">삽입 깊이</div></label><input type="number" id="stemh" value="4.5" step="0.1"></div>
       <div class="opt"><label>멀티컬러 색상 수<div class="hint">GLB 전용 · AMS 색 수(기본 4)</div></label><input type="number" id="ncolors" value="4" min="1" max="8" step="1"></div>
+      <div class="opt"><label>색 영역 정리<div class="hint">GLB · 높을수록 깔끔/디테일↓ (기본 3)</div></label><input type="number" id="smooth" value="3" min="0" max="8" step="1"></div>
       <div class="opt"><label>위쪽 축<div class="hint">바닥 자동 감지</div></label>
         <select id="upaxis"><option value="auto" selected>자동</option><option value="2">Z</option><option value="1">Y</option><option value="0">X</option></select></div>
       <button class="btn" id="run" disabled>변환 실행</button>
@@ -428,6 +429,26 @@ function kmeansColors(col,n,K,iters=14,sample=6000){
   }
   return cent;
 }
+// majority-vote smoothing over shared edges -> turns speckle into clean colour regions
+function smoothFaceColors(triIdx,F,tcol,K,n,passes){
+  if(passes<=0) return;
+  const em=new Map();
+  const addEdge=(u,v,f)=>{ const k=u<v?u*n+v:v*n+u; const a=em.get(k); if(a===undefined)em.set(k,f); else if(typeof a==='number')em.set(k,[a,f]); else a.push(f); };
+  for(let f=0;f<F;f++){ const a=triIdx[f*3],b=triIdx[f*3+1],c=triIdx[f*3+2]; addEdge(a,b,f); addEdge(b,c,f); addEdge(c,a,f); }
+  const cnt=new Int32Array(K);
+  for(let p=0;p<passes;p++){
+    const nc=new Int32Array(F);
+    for(let f=0;f<F;f++){
+      cnt.fill(0); cnt[tcol[f]]+=1;
+      const a=triIdx[f*3],b=triIdx[f*3+1],c=triIdx[f*3+2];
+      const ek=[a<b?a*n+b:b*n+a, b<c?b*n+c:c*n+b, c<a?c*n+a:a*n+c];
+      for(const k of ek){ const e=em.get(k); if(e===undefined)continue; if(typeof e==='number'){ if(e!==f)cnt[tcol[e]]++; } else { for(const g of e) if(g!==f)cnt[tcol[g]]++; } }
+      let bi=tcol[f],bv=-1; for(let k=0;k<K;k++) if(cnt[k]>bv){bv=cnt[k];bi=k;}
+      nc[f]=bi;
+    }
+    tcol.set(nc);
+  }
+}
 async function convertGLB(){
   runBtn.disabled=true; showBar(.1); setStatus('크기/방향 분석 중…'); await yield_();
   try{
@@ -441,14 +462,26 @@ async function convertGLB(){
     const addStem=$('addstem').value==='1';
     let stem={V:[],T:[]};
     if(addStem) stem=buildStem(info,scale,{collar:+$('collar').value,arml:+$('arml').value,armw:+$('armw').value,stemh:+$('stemh').value,segs:256});
-    // --- reduce the texture to K filament colours (k-means) ---
+    // --- reduce the texture to K filament colours, then clean up the regions ---
     showBar(.4); setStatus('대표 색상 추출 중…'); await yield_();
     const K=Math.max(1,Math.min(8, parseInt($('ncolors').value)||4));
+    const passes=Math.max(0,Math.min(8, parseInt($('smooth').value)||0));
     const palette=kmeansColors(col,n,K);
-    const qcol=new Float32Array(n*3);  // per-vertex quantised colour (preview)
-    for(let i=0;i<n;i++){ const c=palette[nearestColor(palette,col[i*3],col[i*3+1],col[i*3+2])]; qcol[i*3]=c[0];qcol[i*3+1]=c[1];qcol[i*3+2]=c[2]; }
-    showBar(.6); setStatus(`${K}색 3mf 작성 중…`); await yield_();
-    const blob=await buildColored3mf(xs,ys,zs,n,triIdx,col,palette,stem,info,scale);
+    const F=triIdx.length/3;
+    // classify each triangle to ONE colour (nearest to its average texture colour)
+    const tcol=new Int32Array(F);
+    for(let f=0;f<F;f++){ const A=triIdx[f*3],B=triIdx[f*3+1],C=triIdx[f*3+2];
+      const r=(col[A*3]+col[B*3]+col[C*3])/3,g=(col[A*3+1]+col[B*3+1]+col[C*3+1])/3,b=(col[A*3+2]+col[B*3+2]+col[C*3+2])/3;
+      tcol[f]=nearestColor(palette,r,g,b); }
+    showBar(.5); setStatus('색 영역 정리 중…'); await yield_();
+    smoothFaceColors(triIdx,F,tcol,K,n,passes);   // despeckle -> clean regions
+    // per-vertex colour for the preview (majority of incident triangles)
+    const vcnt=new Uint16Array(n*K);
+    for(let f=0;f<F;f++){ const t=tcol[f]; vcnt[triIdx[f*3]*K+t]++; vcnt[triIdx[f*3+1]*K+t]++; vcnt[triIdx[f*3+2]*K+t]++; }
+    const qcol=new Float32Array(n*3);
+    for(let i=0;i<n;i++){ let bi=0,bv=-1; for(let k=0;k<K;k++){const v=vcnt[i*K+k]; if(v>bv){bv=v;bi=k;}} const c=palette[bi]; qcol[i*3]=c[0];qcol[i*3+1]=c[1];qcol[i*3+2]=c[2]; }
+    showBar(.7); setStatus(`${K}색 3mf 작성 중…`); await yield_();
+    const blob=await buildColored3mf(xs,ys,zs,n,triIdx,tcol,palette,stem,info,scale);
     const url=URL.createObjectURL(blob);
     const outName=`${fileName}_1u_${K}color.3mf`;
     if(window.__lastURL){ try{URL.revokeObjectURL(window.__lastURL);}catch(e){} }
@@ -463,7 +496,7 @@ async function convertGLB(){
     try{ preview(xs,ys,zs,n,triIdx,null,stem,info,qcol); }catch(e){ console.warn('preview skipped',e); }
   }catch(err){ console.error(err); setStatus('⚠️ GLB 변환 오류: '+err.message); hideBar(); runBtn.disabled=false; }
 }
-async function buildColored3mf(xs,ys,zs,n,triIdx,col,palette,stem,info,scale){
+async function buildColored3mf(xs,ys,zs,n,triIdx,tcol,palette,stem,info,scale){
   // reorient so the seating face is on the plate (up-axis -> +Z, base at Z=0)
   const a=info.axis, o=info.oth, dir=info.dir, baseS=info.base*scale;
   const RX=p=>[p[o[0]], p[o[1]], (p[a]-baseS)*dir];
@@ -475,12 +508,10 @@ async function buildColored3mf(xs,ys,zs,n,triIdx,col,palette,stem,info,scale){
   const vlines=new Array(n+stem.V.length);
   for(let i=0;i<n;i++){ const q=RX([xs[i],ys[i],zs[i]]); vlines[i]=`     <vertex x="${q[0].toFixed(4)}" y="${q[1].toFixed(4)}" z="${q[2].toFixed(4)}"/>`; }
   for(let i=0;i<stem.V.length;i++){ const q=RX(stem.V[i]); vlines[n+i]=`     <vertex x="${q[0].toFixed(4)}" y="${q[1].toFixed(4)}" z="${q[2].toFixed(4)}"/>`; }
-  // each triangle = ONE flat filament colour (nearest palette to its average texture colour)
+  // each triangle = its (smoothed) flat filament colour
   const tlines=[];
   for(let f=0; f*3<triIdx.length; f++){ const A=triIdx[f*3],B=triIdx[f*3+1],C=triIdx[f*3+2];
-    const r=(col[A*3]+col[B*3]+col[C*3])/3, g=(col[A*3+1]+col[B*3+1]+col[C*3+1])/3, b=(col[A*3+2]+col[B*3+2]+col[C*3+2])/3;
-    const ti=nearestColor(palette,r,g,b);
-    tlines.push(`     <triangle v1="${A}" v2="${B}" v3="${C}" pid="1" p1="${ti}"/>`); }
+    tlines.push(`     <triangle v1="${A}" v2="${B}" v3="${C}" pid="1" p1="${tcol[f]}"/>`); }
   for(const t of stem.T){ const A=t[0]+n,B=t[1]+n,C=t[2]+n;
     tlines.push(`     <triangle v1="${A}" v2="${B}" v3="${C}" pid="1" p1="${stemIdx}"/>`); }
   const model=`<?xml version="1.0" encoding="UTF-8"?>
