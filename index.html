@@ -429,19 +429,23 @@ function kmeansColors(col,n,K,iters=14,sample=6000){
   }
   return cent;
 }
-// majority-vote smoothing over shared edges -> turns speckle into clean colour regions
-function smoothFaceColors(triIdx,F,tcol,K,n,passes){
+// majority-vote smoothing over shared edges -> turns speckle into clean colour regions.
+// Uses POSITION-welded vertex ids so it works even when the GLB mesh is non-indexed
+// (Meshy exports often duplicate every vertex per face -> index-based adjacency finds nothing).
+function smoothFaceColors(triIdx,F,tcol,K,weld,wn,passes){
   if(passes<=0) return;
+  const wa=new Int32Array(F), wb=new Int32Array(F), wc=new Int32Array(F);
+  for(let f=0;f<F;f++){ wa[f]=weld[triIdx[f*3]]; wb[f]=weld[triIdx[f*3+1]]; wc[f]=weld[triIdx[f*3+2]]; }
   const em=new Map();
-  const addEdge=(u,v,f)=>{ const k=u<v?u*n+v:v*n+u; const a=em.get(k); if(a===undefined)em.set(k,f); else if(typeof a==='number')em.set(k,[a,f]); else a.push(f); };
-  for(let f=0;f<F;f++){ const a=triIdx[f*3],b=triIdx[f*3+1],c=triIdx[f*3+2]; addEdge(a,b,f); addEdge(b,c,f); addEdge(c,a,f); }
+  const addEdge=(u,v,f)=>{ if(u===v)return; const k=u<v?u*wn+v:v*wn+u; const a=em.get(k); if(a===undefined)em.set(k,f); else if(typeof a==='number')em.set(k,[a,f]); else a.push(f); };
+  for(let f=0;f<F;f++){ addEdge(wa[f],wb[f],f); addEdge(wb[f],wc[f],f); addEdge(wc[f],wa[f],f); }
   const cnt=new Int32Array(K);
   for(let p=0;p<passes;p++){
     const nc=new Int32Array(F);
     for(let f=0;f<F;f++){
       cnt.fill(0); cnt[tcol[f]]+=1;
-      const a=triIdx[f*3],b=triIdx[f*3+1],c=triIdx[f*3+2];
-      const ek=[a<b?a*n+b:b*n+a, b<c?b*n+c:c*n+b, c<a?c*n+a:a*n+c];
+      const a=wa[f],b=wb[f],c=wc[f];
+      const ek=[a<b?a*wn+b:b*wn+a, b<c?b*wn+c:c*wn+b, c<a?c*wn+a:a*wn+c];
       for(const k of ek){ const e=em.get(k); if(e===undefined)continue; if(typeof e==='number'){ if(e!==f)cnt[tcol[e]]++; } else { for(const g of e) if(g!==f)cnt[tcol[g]]++; } }
       let bi=tcol[f],bv=-1; for(let k=0;k<K;k++) if(cnt[k]>bv){bv=cnt[k];bi=k;}
       nc[f]=bi;
@@ -462,20 +466,38 @@ async function convertGLB(){
     const addStem=$('addstem').value==='1';
     let stem={V:[],T:[]};
     if(addStem) stem=buildStem(info,scale,{collar:+$('collar').value,arml:+$('arml').value,armw:+$('armw').value,stemh:+$('stemh').value,segs:256});
-    // --- reduce the texture to K filament colours, then clean up the regions ---
-    showBar(.4); setStatus('대표 색상 추출 중…'); await yield_();
+    // --- weld (Meshy GLBs are non-indexed), DENOISE the colour field, THEN quantise ---
+    showBar(.4); setStatus('표면 색 정리 중…'); await yield_();
     const K=Math.max(1,Math.min(8, parseInt($('ncolors').value)||4));
     const passes=Math.max(0,Math.min(8, parseInt($('smooth').value)||0));
-    const palette=kmeansColors(col,n,K);
     const F=triIdx.length/3;
-    // classify each triangle to ONE colour (nearest to its average texture colour)
+    // weld vertices by position (so a face's neighbours can be found despite duplicated verts)
+    const weld=new Int32Array(n); const wmap=new Map(); let wn=0;
+    for(let i=0;i<n;i++){ const k=(Math.round(xs[i]*200))+'_'+(Math.round(ys[i]*200))+'_'+(Math.round(zs[i]*200)); let w=wmap.get(k); if(w===undefined){w=wn++;wmap.set(k,w);} weld[i]=w; }
+    // welded-vertex colour = mean of the original verts welded there
+    let wcol=new Float32Array(wn*3); const wcnt=new Float32Array(wn);
+    for(let i=0;i<n;i++){ const w=weld[i]; wcol[w*3]+=col[i*3]; wcol[w*3+1]+=col[i*3+1]; wcol[w*3+2]+=col[i*3+2]; wcnt[w]++; }
+    for(let w=0;w<wn;w++){ const c=wcnt[w]||1; wcol[w*3]/=c; wcol[w*3+1]/=c; wcol[w*3+2]/=c; }
+    // welded vertex adjacency
+    const nbr=Array.from({length:wn},()=>[]);
+    for(let f=0;f<F;f++){ const a=weld[triIdx[f*3]],b=weld[triIdx[f*3+1]],c=weld[triIdx[f*3+2]]; nbr[a].push(b,c); nbr[b].push(a,c); nbr[c].push(a,b); }
+    // Laplacian colour smoothing: removes baked shading/noise BEFORE quantising -> clean regions
+    const lap=Math.max(2, passes*3);
+    for(let it=0;it<lap;it++){
+      const nx=new Float32Array(wn*3);
+      for(let w=0;w<wn;w++){ let r=wcol[w*3],g=wcol[w*3+1],b=wcol[w*3+2],c=1; const a=nbr[w]; for(let j=0;j<a.length;j++){ const m=a[j]; r+=wcol[m*3];g+=wcol[m*3+1];b+=wcol[m*3+2];c++; } nx[w*3]=r/c;nx[w*3+1]=g/c;nx[w*3+2]=b/c; }
+      wcol=nx;
+    }
+    // quantise the cleaned colour field to K filament colours
+    const palette=kmeansColors(wcol,wn,K);
+    const wci=new Int32Array(wn);
+    for(let w=0;w<wn;w++) wci[w]=nearestColor(palette,wcol[w*3],wcol[w*3+1],wcol[w*3+2]);
+    // face colour = majority of its 3 (welded) vertices, then a light face-level cleanup
+    showBar(.55); setStatus('색 영역 정리 중…'); await yield_();
     const tcol=new Int32Array(F);
-    for(let f=0;f<F;f++){ const A=triIdx[f*3],B=triIdx[f*3+1],C=triIdx[f*3+2];
-      const r=(col[A*3]+col[B*3]+col[C*3])/3,g=(col[A*3+1]+col[B*3+1]+col[C*3+1])/3,b=(col[A*3+2]+col[B*3+2]+col[C*3+2])/3;
-      tcol[f]=nearestColor(palette,r,g,b); }
-    showBar(.5); setStatus('색 영역 정리 중…'); await yield_();
-    smoothFaceColors(triIdx,F,tcol,K,n,passes);   // despeckle -> clean regions
-    // per-vertex colour for the preview (majority of incident triangles)
+    for(let f=0;f<F;f++){ const a=wci[weld[triIdx[f*3]]],b=wci[weld[triIdx[f*3+1]]],c=wci[weld[triIdx[f*3+2]]]; tcol[f]=(a===b||a===c)?a:b; }
+    smoothFaceColors(triIdx,F,tcol,K,weld,wn,2);
+    // per-vertex colour for the preview (majority of incident triangles -> matches output)
     const vcnt=new Uint16Array(n*K);
     for(let f=0;f<F;f++){ const t=tcol[f]; vcnt[triIdx[f*3]*K+t]++; vcnt[triIdx[f*3+1]*K+t]++; vcnt[triIdx[f*3+2]*K+t]++; }
     const qcol=new Float32Array(n*3);
