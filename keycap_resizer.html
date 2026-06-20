@@ -62,7 +62,7 @@
 </head>
 <body>
 <header>
-  <h1>🦄 키캡 리사이저 <span class="pill">3MF → 1u + Cherry MX 스템</span> <span class="pill" style="background:#10241a;color:#86efac;border-color:#1f5138">build v8 · image-projection</span></h1>
+  <h1>🦄 키캡 리사이저 <span class="pill">3MF → 1u + Cherry MX 스템</span> <span class="pill" style="background:#10241a;color:#86efac;border-color:#1f5138">build v9 · image-palette</span></h1>
   <p>3D 키캡 <b>.3mf</b> 파일을 끌어다 놓으면 → 표준 1u 크기로 리사이즈하고 정확한 Cherry MX 스템을 넣어 바로 인쇄 가능한 파일로 만들어 줍니다. 모든 처리는 브라우저에서만 실행돼요(업로드 없음).</p>
 </header>
 
@@ -98,12 +98,16 @@
     </div>
 
     <div class="panel" style="margin-top:16px">
-      <h2>🎨 이미지로 색칠 (투영)</h2>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">텍스처 색이 별로면, <b>깔끔한 참고 이미지</b>를 모델에 투영해 강제로 색을 입혀요. ① 변환 실행 → ② 이미지 선택 → ③ 미리보기에서 모델을 이미지와 같은 각도로 돌려 맞추고 → ④ 아래 버튼.</div>
+      <h2>🎨 참고 이미지로 색 지정</h2>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">텍스처 색이 별로면 <b>원하는 색감의 참고 이미지</b>를 주세요. ① 변환 실행 → ② 이미지 선택 → ③ 아래 버튼.</div>
       <input type="file" id="refimg" accept="image/*">
       <button class="btn" id="pickimg" style="background:#1f232c;border:1px solid var(--line)">🖼 참고 이미지 선택</button>
-      <div class="opt" style="margin-top:10px"><label>오버레이 투명도<div class="hint">모델과 이미지 정렬용</div></label><input type="range" id="ovop" min="0" max="100" value="45" style="width:110px"></div>
-      <button class="btn" id="projbtn" style="margin-top:6px;background:var(--accent2)" disabled>🎯 이 각도로 색 입히기</button>
+      <button class="btn" id="palbtn" style="margin-top:8px;background:var(--accent2)" disabled>🎨 이미지 색감으로 색 지정 (추천)</button>
+      <div style="font-size:11px;color:var(--muted);margin:4px 0 10px">이미지에서 대표 색을 뽑아, 모델의 밝고 어두운 영역에 그 색을 자동 배정해요(모델 구조 유지).</div>
+      <details style="font-size:12px;color:var(--muted)"><summary style="cursor:pointer">고급: 이미지를 그대로 투영(랩핑)</summary>
+        <div class="opt" style="margin-top:8px"><label>오버레이 투명도<div class="hint">정렬 확인용</div></label><input type="range" id="ovop" min="0" max="100" value="45" style="width:110px"></div>
+        <button class="btn" id="projbtn" style="margin-top:4px;background:#1f232c;border:1px solid var(--line)" disabled>🎯 이 각도로 이미지 투영</button>
+      </details>
       <div id="projmsg" style="font-size:12px;color:var(--muted);margin-top:8px"></div>
     </div>
 
@@ -173,7 +177,8 @@ function loadRefImage(f){
     if(!overlayImg){ overlayImg=document.createElement('img'); overlayImg.id='overlayImg'; view.appendChild(overlayImg); }
     overlayImg.src=refImgURL; overlayImg.style.opacity=$('ovop').value/100;
     $('projbtn').disabled=!projGeo;
-    $('projmsg').textContent = projGeo ? '이미지 로드됨 · 모델을 이미지와 같은 각도로 돌린 뒤 “이 각도로 색 입히기”'
+    $('palbtn').disabled=!(projGeo&&projGeo.col);
+    $('projmsg').textContent = projGeo ? '이미지 로드됨 · “이미지 색감으로 색 지정”을 누르세요.'
                                        : '먼저 위에서 “변환 실행”을 눌러 모델을 불러오세요.';
   };
   img.src=refImgURL;
@@ -215,6 +220,24 @@ $('projbtn').onclick=async()=>{
     $('projmsg').textContent='✅ 이미지 색으로 다시 칠했어요. 각도가 안 맞으면 모델을 돌려 다시 시도하세요.';
   }catch(e){ console.error(e); setStatus('⚠️ 투영 오류: '+e.message); hideBar(); }
   $('projbtn').disabled=false;
+};
+function extractImagePalette(imgd,K){
+  const d=imgd.data, N=imgd.width*imgd.height, step=Math.max(1,Math.floor(N/9000)), cols=[];
+  for(let i=0;i<N;i+=step){ const k=i*4; if(d[k+3]<8) continue; cols.push(d[k]/255,d[k+1]/255,d[k+2]/255); }
+  const arr=new Float32Array(cols);
+  return kmeansColors(arr, arr.length/3, K);
+}
+$('palbtn').onclick=async()=>{
+  if(!projGeo||!projGeo.col||!refImageData){ $('projmsg').textContent='GLB 변환 실행 + 이미지 선택이 필요해요. (.3mf는 텍스처 색이 없어 이 기능은 GLB 전용)'; return; }
+  $('palbtn').disabled=true; runBtn.disabled=true; setStatus('이미지 색감 적용 중…'); showBar(.2); await yield_();
+  try{
+    const K=Math.max(1,Math.min(8, parseInt($('ncolors').value)||4));
+    const imgPal=extractImagePalette(refImageData,K);
+    const g=projGeo;
+    await colorizeFromVertexColors(g.xs,g.ys,g.zs,g.n,g.triIdx,g.col,g.stem,g.info,g.scale,g.addStem,imgPal);
+    $('projmsg').textContent='✅ 이미지 색감으로 다시 칠했어요. (색 수/정리값 바꿔 재시도 가능)';
+  }catch(e){ console.error(e); setStatus('⚠️ 오류: '+e.message); hideBar(); }
+  $('palbtn').disabled=false;
 };
 
 function setStatus(t){ statusEl.textContent=t; }
@@ -542,13 +565,13 @@ async function convertGLB(){
     const addStem=$('addstem').value==='1';
     let stem={V:[],T:[]};
     if(addStem) stem=buildStem(info,scale,{collar:+$('collar').value,arml:+$('arml').value,armw:+$('armw').value,stemh:+$('stemh').value,segs:256});
-    // keep the prepared geometry so a reference image can re-colour it later
-    projGeo={xs,ys,zs,n,triIdx,stem,info,scale,addStem};
+    // keep the prepared geometry + baked colours so a reference image can re-colour it later
+    projGeo={xs,ys,zs,n,triIdx,stem,info,scale,addStem,col};
     await colorizeFromVertexColors(xs,ys,zs,n,triIdx,col,stem,info,scale,addStem);
   }catch(err){ console.error(err); setStatus('⚠️ GLB 변환 오류: '+err.message); hideBar(); runBtn.disabled=false; }
 }
 // shared colour pipeline: per-vertex colours -> K filaments (denoise+quantise) -> 3mf + preview
-async function colorizeFromVertexColors(xs,ys,zs,n,triIdx,col,stem,info,scale,addStem){
+async function colorizeFromVertexColors(xs,ys,zs,n,triIdx,col,stem,info,scale,addStem,forcedPalette){
   showBar(.4); setStatus('표면 색 정리 중…'); await yield_();
   const K=Math.max(1,Math.min(8, parseInt($('ncolors').value)||4));
   const passes=Math.max(0,Math.min(8, parseInt($('smooth').value)||0));
@@ -566,9 +589,22 @@ async function colorizeFromVertexColors(xs,ys,zs,n,triIdx,col,stem,info,scale,ad
     for(let w=0;w<wn;w++){ let r=wcol[w*3],g=wcol[w*3+1],b=wcol[w*3+2],c=1; const a=nbr[w]; for(let j=0;j<a.length;j++){ const m=a[j]; r+=wcol[m*3];g+=wcol[m*3+1];b+=wcol[m*3+2];c++; } nx[w*3]=r/c;nx[w*3+1]=g/c;nx[w*3+2]=b/c; }
     wcol=nx;
   }
-  const palette=kmeansColors(wcol,wn,K);
+  // cluster the model's own colour field, then optionally REMAP those clusters onto a
+  // reference-image palette (by luminance order) so the model keeps its structure but uses the image's colours
+  const modelPal=kmeansColors(wcol,wn,K);
   const wci=new Int32Array(wn);
-  for(let w=0;w<wn;w++) wci[w]=nearestColor(palette,wcol[w*3],wcol[w*3+1],wcol[w*3+2]);
+  for(let w=0;w<wn;w++) wci[w]=nearestColor(modelPal,wcol[w*3],wcol[w*3+1],wcol[w*3+2]);
+  let palette;
+  if(forcedPalette && forcedPalette.length){
+    const lum=c=>0.299*c[0]+0.587*c[1]+0.114*c[2];
+    const fp=forcedPalette.slice(); while(fp.length<K) fp.push(fp[fp.length-1]||[0.8,0.8,0.8]);
+    const om=[...Array(K).keys()].sort((a,b)=>lum(modelPal[a])-lum(modelPal[b]));
+    const oi=[...Array(fp.length).keys()].sort((a,b)=>lum(fp[a])-lum(fp[b]));
+    const remap=new Int32Array(K);
+    for(let j=0;j<K;j++) remap[om[j]]=oi[Math.min(j,oi.length-1)];
+    for(let w=0;w<wn;w++) wci[w]=remap[wci[w]];
+    palette=fp.slice(0,Math.max(K, oi.length));
+  } else { palette=modelPal; }
   showBar(.55); setStatus('색 영역 정리 중…'); await yield_();
   const tcol=new Int32Array(F);
   for(let f=0;f<F;f++){ const a=wci[weld[triIdx[f*3]]],b=wci[weld[triIdx[f*3+1]]],c=wci[weld[triIdx[f*3+2]]]; tcol[f]=(a===b||a===c)?a:b; }
@@ -591,7 +627,7 @@ async function colorizeFromVertexColors(xs,ys,zs,n,triIdx,col,stem,info,scale,ad
   hideBar(); setStatus(`✅ 완료! ${K}색 3mf 다운로드 → Bambu에서 열면 색상 인식 창이 떠요.`);
   runBtn.disabled=false;
   try{ preview(xs,ys,zs,n,triIdx,null,stem,info,qcol); }catch(e){ console.warn('preview skipped',e); }
-  if(refImageData) $('projbtn').disabled=false;
+  if(refImageData){ $('projbtn').disabled=false; if(projGeo&&projGeo.col) $('palbtn').disabled=false; }
 }
 async function buildColored3mf(xs,ys,zs,n,triIdx,tcol,palette,stem,info,scale){
   // reorient so the seating face is on the plate (up-axis -> +Z, base at Z=0)
