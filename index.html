@@ -48,7 +48,8 @@
   table{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px}
   td{padding:5px 4px;border-bottom:1px solid var(--line)} td:first-child{color:var(--muted)}
   td:last-child{text-align:right;font-variant-numeric:tabular-nums}
-  #view{width:100%;height:480px;background:#0c0e12;border-radius:12px;border:1px solid var(--line);overflow:hidden}
+  #view{width:100%;height:480px;background:#0c0e12;border-radius:12px;border:1px solid var(--line);overflow:hidden;position:relative}
+  #overlayImg{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;z-index:5}
   .note{font-size:12px;color:var(--muted);background:#141821;border:1px solid var(--line);
         border-radius:10px;padding:11px 12px;margin-top:14px}
   .note b{color:var(--warn)}
@@ -61,7 +62,7 @@
 </head>
 <body>
 <header>
-  <h1>🦄 키캡 리사이저 <span class="pill">3MF → 1u + Cherry MX 스템</span> <span class="pill" style="background:#10241a;color:#86efac;border-color:#1f5138">build v7 · color-denoise</span></h1>
+  <h1>🦄 키캡 리사이저 <span class="pill">3MF → 1u + Cherry MX 스템</span> <span class="pill" style="background:#10241a;color:#86efac;border-color:#1f5138">build v8 · image-projection</span></h1>
   <p>3D 키캡 <b>.3mf</b> 파일을 끌어다 놓으면 → 표준 1u 크기로 리사이즈하고 정확한 Cherry MX 스템을 넣어 바로 인쇄 가능한 파일로 만들어 줍니다. 모든 처리는 브라우저에서만 실행돼요(업로드 없음).</p>
 </header>
 
@@ -94,6 +95,16 @@
       <div class="bar" id="bar"><i></i></div>
       <div id="status">파일을 선택하세요.</div>
       <div id="dlbox" class="hidden"></div>
+    </div>
+
+    <div class="panel" style="margin-top:16px">
+      <h2>🎨 이미지로 색칠 (투영)</h2>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">텍스처 색이 별로면, <b>깔끔한 참고 이미지</b>를 모델에 투영해 강제로 색을 입혀요. ① 변환 실행 → ② 이미지 선택 → ③ 미리보기에서 모델을 이미지와 같은 각도로 돌려 맞추고 → ④ 아래 버튼.</div>
+      <input type="file" id="refimg" accept="image/*">
+      <button class="btn" id="pickimg" style="background:#1f232c;border:1px solid var(--line)">🖼 참고 이미지 선택</button>
+      <div class="opt" style="margin-top:10px"><label>오버레이 투명도<div class="hint">모델과 이미지 정렬용</div></label><input type="range" id="ovop" min="0" max="100" value="45" style="width:110px"></div>
+      <button class="btn" id="projbtn" style="margin-top:6px;background:var(--accent2)" disabled>🎯 이 각도로 색 입히기</button>
+      <div id="projmsg" style="font-size:12px;color:var(--muted);margin-top:8px"></div>
     </div>
 
     <div class="note">
@@ -136,6 +147,7 @@ const $ = id => document.getElementById(id);
 const drop=$('drop'), fileInput=$('file'), runBtn=$('run'), statusEl=$('status'),
       bar=$('bar'), barI=bar.querySelector('i'), dlbox=$('dlbox');
 let zip=null, modelPath=null, modelText=null, fileName='keycap', filamentCols=null, glbData=null;
+let projGeo=null, refImageData=null, previewCenter=null;
 
 /* ---------- file intake ---------- */
 drop.onclick=()=>fileInput.click();
@@ -143,6 +155,67 @@ drop.onclick=()=>fileInput.click();
 ['dragleave','drop'].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.remove('hover')}));
 drop.addEventListener('drop',ev=>{ if(ev.dataTransfer.files[0]) loadFile(ev.dataTransfer.files[0]); });
 fileInput.onchange=()=>{ if(fileInput.files[0]) loadFile(fileInput.files[0]); };
+
+/* ---------- reference-image projection ---------- */
+let overlayImg=null, refImgURL=null;
+$('pickimg').onclick=()=>$('refimg').click();
+$('refimg').onchange=()=>{ if($('refimg').files[0]) loadRefImage($('refimg').files[0]); };
+$('ovop').oninput=()=>{ if(overlayImg) overlayImg.style.opacity=$('ovop').value/100; };
+function loadRefImage(f){
+  const img=new Image();
+  if(refImgURL) URL.revokeObjectURL(refImgURL);
+  refImgURL=URL.createObjectURL(f);
+  img.onload=()=>{
+    const c=document.createElement('canvas'); c.width=img.naturalWidth; c.height=img.naturalHeight;
+    const ctx=c.getContext('2d',{willReadFrequently:true}); ctx.drawImage(img,0,0);
+    refImageData=ctx.getImageData(0,0,c.width,c.height);
+    const view=$('view');
+    if(!overlayImg){ overlayImg=document.createElement('img'); overlayImg.id='overlayImg'; view.appendChild(overlayImg); }
+    overlayImg.src=refImgURL; overlayImg.style.opacity=$('ovop').value/100;
+    $('projbtn').disabled=!projGeo;
+    $('projmsg').textContent = projGeo ? '이미지 로드됨 · 모델을 이미지와 같은 각도로 돌린 뒤 “이 각도로 색 입히기”'
+                                       : '먼저 위에서 “변환 실행”을 눌러 모델을 불러오세요.';
+  };
+  img.src=refImgURL;
+}
+function sampleRef(u,v){
+  const w=refImageData.width,h=refImageData.height;
+  const x=Math.floor(u*w), y=Math.floor(v*h);
+  if(x<0||x>=w||y<0||y>=h) return null;
+  const k=(y*w+x)*4, d=refImageData.data;
+  if(d[k+3]<8) return null;
+  return [d[k]/255,d[k+1]/255,d[k+2]/255];
+}
+$('projbtn').onclick=async()=>{
+  if(!projGeo||!refImageData||!renderer||!camera||!curMesh){ $('projmsg').textContent='먼저 변환 실행 + 이미지 선택이 필요해요.'; return; }
+  $('projbtn').disabled=true; runBtn.disabled=true; setStatus('이미지 투영 중…'); showBar(.2); await yield_();
+  try{
+    const {xs,ys,zs,n,triIdx,stem,info,scale,addStem}=projGeo;
+    const c=previewCenter||{x:0,y:0,z:0};
+    camera.updateMatrixWorld(); curMesh.updateMatrixWorld();
+    // match the on-screen overlay (object-fit: contain) so projection is WYSIWYG
+    const ca=camera.aspect, ia=refImageData.width/refImageData.height;
+    let dispW=1,dispH=1,offX=0,offY=0;
+    if(ia>ca){ dispH=ca/ia; offY=(1-dispH)/2; } else { dispW=ia/ca; offX=(1-dispW)/2; }
+    const v=new THREE.Vector3();
+    const tmp=new Float32Array(n*3); const got=new Uint8Array(n);
+    let fr=0,fg=0,fb=0,fc=0;
+    for(let i=0;i<n;i++){
+      v.set(xs[i]-c.x, ys[i]-c.y, zs[i]-c.z);
+      curMesh.localToWorld(v); v.project(camera);
+      const sx=(v.x+1)/2, sy=1-(v.y+1)/2;
+      const u=(sx-offX)/dispW, w=(sy-offY)/dispH;
+      const s=sampleRef(u,w);
+      if(s){ tmp[i*3]=s[0];tmp[i*3+1]=s[1];tmp[i*3+2]=s[2]; got[i]=1; fr+=s[0];fg+=s[1];fb+=s[2];fc++; }
+    }
+    fr/=(fc||1);fg/=(fc||1);fb/=(fc||1);
+    const col=new Float32Array(n*3);
+    for(let i=0;i<n;i++){ if(got[i]){col[i*3]=tmp[i*3];col[i*3+1]=tmp[i*3+1];col[i*3+2]=tmp[i*3+2];} else {col[i*3]=fr;col[i*3+1]=fg;col[i*3+2]=fb;} }
+    await colorizeFromVertexColors(xs,ys,zs,n,triIdx,col,stem,info,scale,addStem);
+    $('projmsg').textContent='✅ 이미지 색으로 다시 칠했어요. 각도가 안 맞으면 모델을 돌려 다시 시도하세요.';
+  }catch(e){ console.error(e); setStatus('⚠️ 투영 오류: '+e.message); hideBar(); }
+  $('projbtn').disabled=false;
+};
 
 function setStatus(t){ statusEl.textContent=t; }
 function showBar(p){ bar.style.display='block'; barI.style.width=(p*100)+'%'; }
@@ -407,6 +480,9 @@ runBtn.onclick=async()=>{
     fillResults(info,scale,n,triIdx.length/3,stem,addStem,target);
     hideBar(); setStatus('✅ 완료! 아래 버튼으로 결과 파일을 받으세요.');
     runBtn.disabled=false;
+    // keep geometry so a reference image can colour even a plain .3mf
+    projGeo={xs,ys,zs,n,triIdx,stem,info,scale,addStem};
+    if(refImageData) $('projbtn').disabled=false;
     // preview is best-effort: a heavy/failed render must never break the conversion
     try { preview(xs,ys,zs,n,triIdx,tri.paint,stem,info); }
     catch(e){ console.warn('preview skipped:',e); }
@@ -466,57 +542,56 @@ async function convertGLB(){
     const addStem=$('addstem').value==='1';
     let stem={V:[],T:[]};
     if(addStem) stem=buildStem(info,scale,{collar:+$('collar').value,arml:+$('arml').value,armw:+$('armw').value,stemh:+$('stemh').value,segs:256});
-    // --- weld (Meshy GLBs are non-indexed), DENOISE the colour field, THEN quantise ---
-    showBar(.4); setStatus('표면 색 정리 중…'); await yield_();
-    const K=Math.max(1,Math.min(8, parseInt($('ncolors').value)||4));
-    const passes=Math.max(0,Math.min(8, parseInt($('smooth').value)||0));
-    const F=triIdx.length/3;
-    // weld vertices by position (so a face's neighbours can be found despite duplicated verts)
-    const weld=new Int32Array(n); const wmap=new Map(); let wn=0;
-    for(let i=0;i<n;i++){ const k=(Math.round(xs[i]*200))+'_'+(Math.round(ys[i]*200))+'_'+(Math.round(zs[i]*200)); let w=wmap.get(k); if(w===undefined){w=wn++;wmap.set(k,w);} weld[i]=w; }
-    // welded-vertex colour = mean of the original verts welded there
-    let wcol=new Float32Array(wn*3); const wcnt=new Float32Array(wn);
-    for(let i=0;i<n;i++){ const w=weld[i]; wcol[w*3]+=col[i*3]; wcol[w*3+1]+=col[i*3+1]; wcol[w*3+2]+=col[i*3+2]; wcnt[w]++; }
-    for(let w=0;w<wn;w++){ const c=wcnt[w]||1; wcol[w*3]/=c; wcol[w*3+1]/=c; wcol[w*3+2]/=c; }
-    // welded vertex adjacency
-    const nbr=Array.from({length:wn},()=>[]);
-    for(let f=0;f<F;f++){ const a=weld[triIdx[f*3]],b=weld[triIdx[f*3+1]],c=weld[triIdx[f*3+2]]; nbr[a].push(b,c); nbr[b].push(a,c); nbr[c].push(a,b); }
-    // Laplacian colour smoothing: removes baked shading/noise BEFORE quantising -> clean regions
-    const lap=Math.max(2, passes*3);
-    for(let it=0;it<lap;it++){
-      const nx=new Float32Array(wn*3);
-      for(let w=0;w<wn;w++){ let r=wcol[w*3],g=wcol[w*3+1],b=wcol[w*3+2],c=1; const a=nbr[w]; for(let j=0;j<a.length;j++){ const m=a[j]; r+=wcol[m*3];g+=wcol[m*3+1];b+=wcol[m*3+2];c++; } nx[w*3]=r/c;nx[w*3+1]=g/c;nx[w*3+2]=b/c; }
-      wcol=nx;
-    }
-    // quantise the cleaned colour field to K filament colours
-    const palette=kmeansColors(wcol,wn,K);
-    const wci=new Int32Array(wn);
-    for(let w=0;w<wn;w++) wci[w]=nearestColor(palette,wcol[w*3],wcol[w*3+1],wcol[w*3+2]);
-    // face colour = majority of its 3 (welded) vertices, then a light face-level cleanup
-    showBar(.55); setStatus('색 영역 정리 중…'); await yield_();
-    const tcol=new Int32Array(F);
-    for(let f=0;f<F;f++){ const a=wci[weld[triIdx[f*3]]],b=wci[weld[triIdx[f*3+1]]],c=wci[weld[triIdx[f*3+2]]]; tcol[f]=(a===b||a===c)?a:b; }
-    smoothFaceColors(triIdx,F,tcol,K,weld,wn,2);
-    // per-vertex colour for the preview (majority of incident triangles -> matches output)
-    const vcnt=new Uint16Array(n*K);
-    for(let f=0;f<F;f++){ const t=tcol[f]; vcnt[triIdx[f*3]*K+t]++; vcnt[triIdx[f*3+1]*K+t]++; vcnt[triIdx[f*3+2]*K+t]++; }
-    const qcol=new Float32Array(n*3);
-    for(let i=0;i<n;i++){ let bi=0,bv=-1; for(let k=0;k<K;k++){const v=vcnt[i*K+k]; if(v>bv){bv=v;bi=k;}} const c=palette[bi]; qcol[i*3]=c[0];qcol[i*3+1]=c[1];qcol[i*3+2]=c[2]; }
-    showBar(.7); setStatus(`${K}색 3mf 작성 중…`); await yield_();
-    const blob=await buildColored3mf(xs,ys,zs,n,triIdx,tcol,palette,stem,info,scale);
-    const url=URL.createObjectURL(blob);
-    const outName=`${fileName}_1u_${K}color.3mf`;
-    if(window.__lastURL){ try{URL.revokeObjectURL(window.__lastURL);}catch(e){} }
-    window.__lastURL=url;
-    const sw=palette.map(c=>`<span title="${c.map(x=>Math.round(x*255)).join(',')}" style="display:inline-block;width:18px;height:18px;border-radius:4px;border:1px solid #000;vertical-align:middle;background:rgb(${Math.round(c[0]*255)},${Math.round(c[1]*255)},${Math.round(c[2]*255)})"></span>`).join(' ');
-    dlbox.classList.remove('hidden');
-    dlbox.innerHTML=`<a class="btn dl dl-link" href="${url}" download="${outName}">⬇️ ${outName} 다운로드 (${K}색)</a>
-      <div style="margin-top:9px;font-size:12px;color:var(--muted)">추출된 ${K}색 (이 색으로 AMS 필라멘트 준비):<br><span style="display:inline-flex;gap:6px;margin-top:5px">${sw}</span></div>`;
-    fillResults(info,scale,n,triIdx.length/3,stem,addStem,+$('target').value);
-    hideBar(); setStatus(`✅ 완료! ${K}색 3mf 다운로드 → Bambu에서 열면 색상 인식 창이 떠요.`);
-    runBtn.disabled=false;
-    try{ preview(xs,ys,zs,n,triIdx,null,stem,info,qcol); }catch(e){ console.warn('preview skipped',e); }
+    // keep the prepared geometry so a reference image can re-colour it later
+    projGeo={xs,ys,zs,n,triIdx,stem,info,scale,addStem};
+    await colorizeFromVertexColors(xs,ys,zs,n,triIdx,col,stem,info,scale,addStem);
   }catch(err){ console.error(err); setStatus('⚠️ GLB 변환 오류: '+err.message); hideBar(); runBtn.disabled=false; }
+}
+// shared colour pipeline: per-vertex colours -> K filaments (denoise+quantise) -> 3mf + preview
+async function colorizeFromVertexColors(xs,ys,zs,n,triIdx,col,stem,info,scale,addStem){
+  showBar(.4); setStatus('표면 색 정리 중…'); await yield_();
+  const K=Math.max(1,Math.min(8, parseInt($('ncolors').value)||4));
+  const passes=Math.max(0,Math.min(8, parseInt($('smooth').value)||0));
+  const F=triIdx.length/3;
+  const weld=new Int32Array(n); const wmap=new Map(); let wn=0;
+  for(let i=0;i<n;i++){ const k=(Math.round(xs[i]*200))+'_'+(Math.round(ys[i]*200))+'_'+(Math.round(zs[i]*200)); let w=wmap.get(k); if(w===undefined){w=wn++;wmap.set(k,w);} weld[i]=w; }
+  let wcol=new Float32Array(wn*3); const wcnt=new Float32Array(wn);
+  for(let i=0;i<n;i++){ const w=weld[i]; wcol[w*3]+=col[i*3]; wcol[w*3+1]+=col[i*3+1]; wcol[w*3+2]+=col[i*3+2]; wcnt[w]++; }
+  for(let w=0;w<wn;w++){ const c=wcnt[w]||1; wcol[w*3]/=c; wcol[w*3+1]/=c; wcol[w*3+2]/=c; }
+  const nbr=Array.from({length:wn},()=>[]);
+  for(let f=0;f<F;f++){ const a=weld[triIdx[f*3]],b=weld[triIdx[f*3+1]],c=weld[triIdx[f*3+2]]; nbr[a].push(b,c); nbr[b].push(a,c); nbr[c].push(a,b); }
+  const lap=Math.max(2, passes*3);
+  for(let it=0;it<lap;it++){
+    const nx=new Float32Array(wn*3);
+    for(let w=0;w<wn;w++){ let r=wcol[w*3],g=wcol[w*3+1],b=wcol[w*3+2],c=1; const a=nbr[w]; for(let j=0;j<a.length;j++){ const m=a[j]; r+=wcol[m*3];g+=wcol[m*3+1];b+=wcol[m*3+2];c++; } nx[w*3]=r/c;nx[w*3+1]=g/c;nx[w*3+2]=b/c; }
+    wcol=nx;
+  }
+  const palette=kmeansColors(wcol,wn,K);
+  const wci=new Int32Array(wn);
+  for(let w=0;w<wn;w++) wci[w]=nearestColor(palette,wcol[w*3],wcol[w*3+1],wcol[w*3+2]);
+  showBar(.55); setStatus('색 영역 정리 중…'); await yield_();
+  const tcol=new Int32Array(F);
+  for(let f=0;f<F;f++){ const a=wci[weld[triIdx[f*3]]],b=wci[weld[triIdx[f*3+1]]],c=wci[weld[triIdx[f*3+2]]]; tcol[f]=(a===b||a===c)?a:b; }
+  smoothFaceColors(triIdx,F,tcol,K,weld,wn,2);
+  const vcnt=new Uint16Array(n*K);
+  for(let f=0;f<F;f++){ const t=tcol[f]; vcnt[triIdx[f*3]*K+t]++; vcnt[triIdx[f*3+1]*K+t]++; vcnt[triIdx[f*3+2]*K+t]++; }
+  const qcol=new Float32Array(n*3);
+  for(let i=0;i<n;i++){ let bi=0,bv=-1; for(let k=0;k<K;k++){const v=vcnt[i*K+k]; if(v>bv){bv=v;bi=k;}} const c=palette[bi]; qcol[i*3]=c[0];qcol[i*3+1]=c[1];qcol[i*3+2]=c[2]; }
+  showBar(.7); setStatus(`${K}색 3mf 작성 중…`); await yield_();
+  const blob=await buildColored3mf(xs,ys,zs,n,triIdx,tcol,palette,stem,info,scale);
+  const url=URL.createObjectURL(blob);
+  const outName=`${fileName}_1u_${K}color.3mf`;
+  if(window.__lastURL){ try{URL.revokeObjectURL(window.__lastURL);}catch(e){} }
+  window.__lastURL=url;
+  const sw=palette.map(c=>`<span title="${c.map(x=>Math.round(x*255)).join(',')}" style="display:inline-block;width:18px;height:18px;border-radius:4px;border:1px solid #000;vertical-align:middle;background:rgb(${Math.round(c[0]*255)},${Math.round(c[1]*255)},${Math.round(c[2]*255)})"></span>`).join(' ');
+  dlbox.classList.remove('hidden');
+  dlbox.innerHTML=`<a class="btn dl dl-link" href="${url}" download="${outName}">⬇️ ${outName} 다운로드 (${K}색)</a>
+    <div style="margin-top:9px;font-size:12px;color:var(--muted)">추출된 ${K}색 (이 색으로 AMS 필라멘트 준비):<br><span style="display:inline-flex;gap:6px;margin-top:5px">${sw}</span></div>`;
+  fillResults(info,scale,n,triIdx.length/3,stem,addStem,+$('target').value);
+  hideBar(); setStatus(`✅ 완료! ${K}색 3mf 다운로드 → Bambu에서 열면 색상 인식 창이 떠요.`);
+  runBtn.disabled=false;
+  try{ preview(xs,ys,zs,n,triIdx,null,stem,info,qcol); }catch(e){ console.warn('preview skipped',e); }
+  if(refImageData) $('projbtn').disabled=false;
 }
 async function buildColored3mf(xs,ys,zs,n,triIdx,tcol,palette,stem,info,scale){
   // reorient so the seating face is on the plate (up-axis -> +Z, base at Z=0)
@@ -652,6 +727,7 @@ function preview(xs,ys,zs,n,triIdx,paint,stem,info,vcolors){
   g.setAttribute('color',new THREE.BufferAttribute(col,3));
   g.setIndex(nv>65535?new THREE.Uint32BufferAttribute(idx,1):new THREE.Uint16BufferAttribute(idx,1));
   g.computeBoundingBox(); const bb=g.boundingBox; const c=new THREE.Vector3(); bb.getCenter(c);
+  previewCenter={x:c.x,y:c.y,z:c.z};   // so image projection can map model verts -> screen
   g.translate(-c.x,-c.y,-c.z); g.computeBoundingBox(); g.computeVertexNormals();
   const m=new THREE.Mesh(g,new THREE.MeshStandardMaterial({vertexColors:true,metalness:.05,roughness:.7}));
   const a=info.axis;
