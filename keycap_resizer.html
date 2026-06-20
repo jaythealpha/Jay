@@ -62,7 +62,7 @@
 </head>
 <body>
 <header>
-  <h1>🦄 키캡 리사이저 <span class="pill">3MF → 1u + Cherry MX 스템</span> <span class="pill" style="background:#10241a;color:#86efac;border-color:#1f5138">build v9 · image-palette</span></h1>
+  <h1>🦄 키캡 리사이저 <span class="pill">3MF → 1u + Cherry MX 스템</span> <span class="pill" style="background:#10241a;color:#86efac;border-color:#1f5138">build v10 · pick-4-colors</span></h1>
   <p>3D 키캡 <b>.3mf</b> 파일을 끌어다 놓으면 → 표준 1u 크기로 리사이즈하고 정확한 Cherry MX 스템을 넣어 바로 인쇄 가능한 파일로 만들어 줍니다. 모든 처리는 브라우저에서만 실행돼요(업로드 없음).</p>
 </header>
 
@@ -98,7 +98,14 @@
     </div>
 
     <div class="panel" style="margin-top:16px">
-      <h2>🎨 참고 이미지로 색 지정</h2>
+      <h2>🎚 4색 직접 지정 (가장 간단)</h2>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">GLB 변환 실행 후, 아래 색을 원하는 대로 고르고 <b>적용</b>만 누르면 모델이 그 색들로 칠해져요(밝고 어두운 영역에 자동 배정).</div>
+      <div id="palpickers" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"></div>
+      <button class="btn" id="applycolors" style="background:var(--accent2)" disabled>🎨 이 색들로 적용</button>
+      <div id="palmsg" style="font-size:12px;color:var(--muted);margin-top:8px"></div>
+    </div>
+
+    <div class="panel" style="margin-top:16px">
       <div style="font-size:12px;color:var(--muted);margin-bottom:10px">텍스처 색이 별로면 <b>원하는 색감의 참고 이미지</b>를 주세요. ① 변환 실행 → ② 이미지 선택 → ③ 아래 버튼.</div>
       <input type="file" id="refimg" accept="image/*">
       <button class="btn" id="pickimg" style="background:#1f232c;border:1px solid var(--line)">🖼 참고 이미지 선택</button>
@@ -238,6 +245,26 @@ $('palbtn').onclick=async()=>{
     $('projmsg').textContent='✅ 이미지 색감으로 다시 칠했어요. (색 수/정리값 바꿔 재시도 가능)';
   }catch(e){ console.error(e); setStatus('⚠️ 오류: '+e.message); hideBar(); }
   $('palbtn').disabled=false;
+};
+// --- direct 4-colour pickers (simplest path) ---
+const DEFCOLORS=['#2e8b8b','#e0524f','#f0c33c','#5cb85c','#9b59b6','#e8843a','#3a7bd5','#cfcfcf'];
+function renderPickers(){
+  const K=Math.max(1,Math.min(8,parseInt($('ncolors').value)||4));
+  const box=$('palpickers'); if(!box) return; box.innerHTML='';
+  for(let i=0;i<K;i++){ const inp=document.createElement('input'); inp.type='color'; inp.value=DEFCOLORS[i%DEFCOLORS.length];
+    inp.style.cssText='width:44px;height:36px;border:1px solid #000;border-radius:6px;background:none;cursor:pointer;padding:0'; box.appendChild(inp); }
+}
+$('ncolors').addEventListener('input', renderPickers);
+renderPickers();
+const hex2rgbF=h=>{ h=h.replace('#',''); return [parseInt(h.slice(0,2),16)/255,parseInt(h.slice(2,4),16)/255,parseInt(h.slice(4,6),16)/255]; };
+$('applycolors').onclick=async()=>{
+  if(!projGeo||!projGeo.col){ $('palmsg').textContent='먼저 GLB를 “변환 실행”하세요. (.3mf는 색/명암 정보가 없어 이 기능은 GLB 전용)'; return; }
+  const pal=[...$('palpickers').querySelectorAll('input')].map(i=>hex2rgbF(i.value));
+  $('applycolors').disabled=true; runBtn.disabled=true; setStatus('지정한 색 적용 중…'); showBar(.2); await yield_();
+  try{ const g=projGeo; await colorizeFromVertexColors(g.xs,g.ys,g.zs,g.n,g.triIdx,g.col,g.stem,g.info,g.scale,g.addStem,pal);
+    $('palmsg').textContent='✅ 지정한 색으로 적용했어요. 색을 바꾼 뒤 다시 누르면 즉시 갱신돼요.'; }
+  catch(e){ console.error(e); setStatus('⚠️ 오류: '+e.message); hideBar(); }
+  $('applycolors').disabled=false;
 };
 
 function setStatus(t){ statusEl.textContent=t; }
@@ -627,6 +654,7 @@ async function colorizeFromVertexColors(xs,ys,zs,n,triIdx,col,stem,info,scale,ad
   hideBar(); setStatus(`✅ 완료! ${K}색 3mf 다운로드 → Bambu에서 열면 색상 인식 창이 떠요.`);
   runBtn.disabled=false;
   try{ preview(xs,ys,zs,n,triIdx,null,stem,info,qcol); }catch(e){ console.warn('preview skipped',e); }
+  if(projGeo&&projGeo.col) $('applycolors').disabled=false;
   if(refImageData){ $('projbtn').disabled=false; if(projGeo&&projGeo.col) $('palbtn').disabled=false; }
 }
 async function buildColored3mf(xs,ys,zs,n,triIdx,tcol,palette,stem,info,scale){
