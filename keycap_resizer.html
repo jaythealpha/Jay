@@ -62,7 +62,7 @@
 </head>
 <body>
 <header>
-  <h1>🦄 키캡 리사이저 <span class="pill">3MF → 1u + Cherry MX 스템</span> <span class="pill" style="background:#10241a;color:#86efac;border-color:#1f5138">build v11 · bambu-paint</span></h1>
+  <h1>🦄 키캡 리사이저 <span class="pill">3MF → 1u + Cherry MX 스템</span> <span class="pill" style="background:#10241a;color:#86efac;border-color:#1f5138">build v12 · height-bands</span></h1>
   <p>3D 키캡 <b>.3mf</b> 파일을 끌어다 놓으면 → 표준 1u 크기로 리사이즈하고 정확한 Cherry MX 스템을 넣어 바로 인쇄 가능한 파일로 만들어 줍니다. 모든 처리는 브라우저에서만 실행돼요(업로드 없음).</p>
 </header>
 
@@ -101,7 +101,9 @@
       <h2>🎚 4색 직접 지정 (가장 간단)</h2>
       <div style="font-size:12px;color:var(--muted);margin-bottom:10px">GLB 변환 실행 후, 아래 색을 원하는 대로 고르고 <b>적용</b>만 누르면 모델이 그 색들로 칠해져요(밝고 어두운 영역에 자동 배정).</div>
       <div id="palpickers" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"></div>
-      <button class="btn" id="applycolors" style="background:var(--accent2)" disabled>🎨 이 색들로 적용</button>
+      <div class="opt"><label>색 배치 기준<div class="hint">노이즈 텍스처면 '높이' 추천</div></label>
+        <select id="colormode"><option value="height" selected>높이·깊이 띠 (깔끔)</option><option value="texture">텍스처 색감</option></select></div>
+      <button class="btn" id="applycolors" style="background:var(--accent2);margin-top:6px" disabled>🎨 이 색들로 적용</button>
       <div id="palmsg" style="font-size:12px;color:var(--muted);margin-top:8px"></div>
     </div>
 
@@ -241,7 +243,7 @@ $('palbtn').onclick=async()=>{
     const K=Math.max(1,Math.min(8, parseInt($('ncolors').value)||4));
     const imgPal=extractImagePalette(refImageData,K);
     const g=projGeo;
-    await colorizeFromVertexColors(g.xs,g.ys,g.zs,g.n,g.triIdx,g.col,g.stem,g.info,g.scale,g.addStem,imgPal);
+    await colorizeFromVertexColors(g.xs,g.ys,g.zs,g.n,g.triIdx,g.col,g.stem,g.info,g.scale,g.addStem,imgPal,$('colormode').value);
     $('projmsg').textContent='✅ 이미지 색감으로 다시 칠했어요. (색 수/정리값 바꿔 재시도 가능)';
   }catch(e){ console.error(e); setStatus('⚠️ 오류: '+e.message); hideBar(); }
   $('palbtn').disabled=false;
@@ -261,8 +263,8 @@ $('applycolors').onclick=async()=>{
   if(!projGeo||!projGeo.col){ $('palmsg').textContent='먼저 GLB를 “변환 실행”하세요. (.3mf는 색/명암 정보가 없어 이 기능은 GLB 전용)'; return; }
   const pal=[...$('palpickers').querySelectorAll('input')].map(i=>hex2rgbF(i.value));
   $('applycolors').disabled=true; runBtn.disabled=true; setStatus('지정한 색 적용 중…'); showBar(.2); await yield_();
-  try{ const g=projGeo; await colorizeFromVertexColors(g.xs,g.ys,g.zs,g.n,g.triIdx,g.col,g.stem,g.info,g.scale,g.addStem,pal);
-    $('palmsg').textContent='✅ 지정한 색으로 적용했어요. 색을 바꾼 뒤 다시 누르면 즉시 갱신돼요.'; }
+  try{ const g=projGeo; await colorizeFromVertexColors(g.xs,g.ys,g.zs,g.n,g.triIdx,g.col,g.stem,g.info,g.scale,g.addStem,pal,$('colormode').value);
+    $('palmsg').textContent='✅ 지정한 색으로 적용했어요. 색/기준을 바꾼 뒤 다시 누르면 즉시 갱신돼요.'; }
   catch(e){ console.error(e); setStatus('⚠️ 오류: '+e.message); hideBar(); }
   $('applycolors').disabled=false;
 };
@@ -598,7 +600,7 @@ async function convertGLB(){
   }catch(err){ console.error(err); setStatus('⚠️ GLB 변환 오류: '+err.message); hideBar(); runBtn.disabled=false; }
 }
 // shared colour pipeline: per-vertex colours -> K filaments (denoise+quantise) -> 3mf + preview
-async function colorizeFromVertexColors(xs,ys,zs,n,triIdx,col,stem,info,scale,addStem,forcedPalette){
+async function colorizeFromVertexColors(xs,ys,zs,n,triIdx,col,stem,info,scale,addStem,forcedPalette,mode){
   showBar(.4); setStatus('표면 색 정리 중…'); await yield_();
   const K=Math.max(1,Math.min(8, parseInt($('ncolors').value)||4));
   const passes=Math.max(0,Math.min(8, parseInt($('smooth').value)||0));
@@ -618,20 +620,33 @@ async function colorizeFromVertexColors(xs,ys,zs,n,triIdx,col,stem,info,scale,ad
   }
   // cluster the model's own colour field, then optionally REMAP those clusters onto a
   // reference-image palette (by luminance order) so the model keeps its structure but uses the image's colours
-  const modelPal=kmeansColors(wcol,wn,K);
-  const wci=new Int32Array(wn);
-  for(let w=0;w<wn;w++) wci[w]=nearestColor(modelPal,wcol[w*3],wcol[w*3+1],wcol[w*3+2]);
-  let palette;
-  if(forcedPalette && forcedPalette.length){
-    const lum=c=>0.299*c[0]+0.587*c[1]+0.114*c[2];
-    const fp=forcedPalette.slice(); while(fp.length<K) fp.push(fp[fp.length-1]||[0.8,0.8,0.8]);
-    const om=[...Array(K).keys()].sort((a,b)=>lum(modelPal[a])-lum(modelPal[b]));
-    const oi=[...Array(fp.length).keys()].sort((a,b)=>lum(fp[a])-lum(fp[b]));
-    const remap=new Int32Array(K);
-    for(let j=0;j<K;j++) remap[om[j]]=oi[Math.min(j,oi.length-1)];
-    for(let w=0;w<wn;w++) wci[w]=remap[wci[w]];
-    palette=fp.slice(0,Math.max(K, oi.length));
-  } else { palette=modelPal; }
+  let wci=new Int32Array(wn), palette;
+  const lum=c=>0.299*c[0]+0.587*c[1]+0.114*c[2];
+  if(mode==='height'){
+    // colour by reoriented height/depth -> K clean bands (best for noisy/poor textures)
+    const baseS=info.base*scale, ax=info.axis, dr=info.dir;
+    const hh=new Float32Array(wn), seen=new Float32Array(wn);
+    for(let i=0;i<n;i++){ const w=weld[i]; const p=[xs[i],ys[i],zs[i]]; hh[w]+=(p[ax]-baseS)*dr; seen[w]++; }
+    for(let w=0;w<wn;w++) hh[w]/=(seen[w]||1);
+    const sorted=Float32Array.from(hh).sort(); const th=[]; for(let k=1;k<K;k++) th.push(sorted[Math.floor(sorted.length*k/K)]);
+    for(let w=0;w<wn;w++){ let bnd=0; while(bnd<th.length && hh[w]>=th[bnd]) bnd++; wci[w]=bnd; }
+    let fp=(forcedPalette&&forcedPalette.length)?forcedPalette.slice():kmeansColors(wcol,wn,K);
+    while(fp.length<K) fp.push(fp[fp.length-1]||[0.8,0.8,0.8]);
+    fp.sort((a,b)=>lum(a)-lum(b));     // band 0 (deepest) -> darkest colour
+    palette=fp.slice(0,K);
+  } else {
+    const modelPal=kmeansColors(wcol,wn,K);
+    for(let w=0;w<wn;w++) wci[w]=nearestColor(modelPal,wcol[w*3],wcol[w*3+1],wcol[w*3+2]);
+    if(forcedPalette && forcedPalette.length){
+      const fp=forcedPalette.slice(); while(fp.length<K) fp.push(fp[fp.length-1]||[0.8,0.8,0.8]);
+      const om=[...Array(K).keys()].sort((a,b)=>lum(modelPal[a])-lum(modelPal[b]));
+      const oi=[...Array(fp.length).keys()].sort((a,b)=>lum(fp[a])-lum(fp[b]));
+      const remap=new Int32Array(K);
+      for(let j=0;j<K;j++) remap[om[j]]=oi[Math.min(j,oi.length-1)];
+      for(let w=0;w<wn;w++) wci[w]=remap[wci[w]];
+      palette=fp.slice(0,K);
+    } else palette=modelPal;
+  }
   showBar(.55); setStatus('색 영역 정리 중…'); await yield_();
   const tcol=new Int32Array(F);
   for(let f=0;f<F;f++){ const a=wci[weld[triIdx[f*3]]],b=wci[weld[triIdx[f*3+1]]],c=wci[weld[triIdx[f*3+2]]]; tcol[f]=(a===b||a===c)?a:b; }
