@@ -122,4 +122,45 @@ QR 매트릭스 (모듈 격자, boolean 2D)
 
 ---
 
+## 5. 배포 (Deployment)
+
+빌드 과정이 없는 정적 웹앱이라 어떤 정적 호스팅에도 그대로 올라갑니다.
+
+### Vercel (원클릭)
+
+루트(`/`)가 `qr-studio.html` 로 뜨도록 `vercel.json` 에 rewrite를 설정해 두었습니다.
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/jaythealpha/jay/tree/claude/website-analysis-implementation-8rolis)
+
+**대시보드로 배포**
+1. [vercel.com/new](https://vercel.com/new) 접속 → GitHub 저장소 `jaythealpha/jay` 임포트
+2. **Branch** 를 `claude/website-analysis-implementation-8rolis` 로 선택
+3. Framework Preset: **Other** (설정 불필요 — `vercel.json` 이 자동 인식됨)
+4. **Deploy** → `https://<프로젝트명>.vercel.app` 에서 루트에 QR 스튜디오가 열립니다.
+
+**CLI로 배포**
+```bash
+npm i -g vercel
+vercel            # 최초: 로그인 + 프로젝트 연결
+vercel --prod     # 프로덕션 배포
+```
+
+`vercel.json`:
+```json
+{
+  "cleanUrls": true,
+  "rewrites": [{ "source": "/", "destination": "/qr-studio.html" }]
+}
+```
+
+### GitHub Pages
+저장소는 기본 브랜치 push 시 `gh-pages` 로 자동 발행됩니다. 이 브랜치가 병합되면
+`https://jaythealpha.github.io/jay/qr-studio.html` 로 접속할 수 있습니다.
+
+### 직접 열기 / 자체 호스팅
+`qr-studio.html` 단일 파일만 있으면 됩니다. 파일을 더블클릭해 브라우저로 열거나
+(`file://`), 정적 파일 서버(`python -m http.server`) 에 올려도 동일하게 동작합니다.
+
+---
+
 *QR Code는 DENSO WAVE의 등록상표입니다. 인코더: qrcode-generator (MIT, © Kazuhiko Arase).*
