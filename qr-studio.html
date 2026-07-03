@@ -457,7 +457,7 @@
   <footer>
     <div>Aesthetic QR Studio · LemioCode 컨셉을 오픈소스로 재구현 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.03-g</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.03-h</b></div>
   </footer>
 </div>
 
@@ -3076,6 +3076,16 @@ function drawCover(g, img, x, y, w, h){
   g.restore();
   return true;
 }
+// centre-mark shape for art mode (follows the selected module style)
+function drawArtMark(g, cx, cy, r, shape){
+  switch(shape){
+    case "square":  g.fillRect(cx-r, cy-r, r*2, r*2); break;
+    case "rounded": roundRect(g, cx-r, cy-r, r*2, r*2, r*0.55); g.fill(); break;
+    case "classy":  roundRect(g, cx-r, cy-r, r*2, r*2, r*0.9); g.fill(); break;
+    case "diamond": g.beginPath(); g.moveTo(cx,cy-r*1.15); g.lineTo(cx+r*1.15,cy); g.lineTo(cx,cy+r*1.15); g.lineTo(cx-r*1.15,cy); g.closePath(); g.fill(); break;
+    default:        g.beginPath(); g.arc(cx, cy, r, 0, Math.PI*2); g.fill();  // dots
+  }
+}
 // LemioCode-style blending, client-side: the artwork stays BRIGHT and fills the whole QR;
 // each module keeps a small opaque centre dot (the scanner samples module centres, so a
 // solid dot there guarantees the read) plus a faint full-cell luminance bias. Result: the
@@ -3104,15 +3114,15 @@ function drawArtLayer(g, ox, oy, unit, n, m){
     }
   }
 
-  // 3) opaque centre dots — high-contrast sample point per module (keeps it scannable).
-  //    Radius shrinks with visibility but has a scan-safe floor (~0.30 of a cell).
+  // 3) opaque centre marks — high-contrast sample point per module (keeps it scannable).
+  //    Shape follows the selected module style; radius shrinks with visibility (scan-safe floor).
   var dotR = unit*(0.46 - vis*0.16);     // vis .2→.428 … .92→.313
   for (var r=0;r<n;r++){
     for (var c=0;c<n;c++){
       if (isFinder(r,c,n)) continue;
       var cx = ox+c*unit+unit/2, cy = oy+r*unit+unit/2;
       g.fillStyle = m[r][c] ? ("rgba("+dk+",1)") : ("rgba("+lt+",1)");
-      g.beginPath(); g.arc(cx, cy, dotR, 0, Math.PI*2); g.fill();
+      drawArtMark(g, cx, cy, dotR, S.dot);
     }
   }
 
@@ -3443,15 +3453,24 @@ $("artFile").addEventListener("change",function(e){
       rerender();
     });
   } else {
-    var img=new Image();
-    img.onload=function(){
-      S.artImg=img; S.artIsVideo=false;
+    // Robust across Safari: fully decode, then BAKE into an offscreen canvas.
+    // Canvas→canvas drawImage always works (no decode-timing / large-image / HEIC pitfalls).
+    var useBaked=function(src){
+      var iw=src.naturalWidth||src.width, ih=src.naturalHeight||src.height;
+      if(!iw||!ih){ toast("이미지를 읽지 못했어요"); return; }
+      var MAX=1600, k=Math.min(1, MAX/Math.max(iw,ih));
+      var oc=document.createElement("canvas"); oc.width=Math.max(1,Math.round(iw*k)); oc.height=Math.max(1,Math.round(ih*k));
+      try{ oc.getContext("2d").drawImage(src,0,0,oc.width,oc.height); }
+      catch(e){ toast("이미지 처리에 실패했어요"); return; }
+      S.artImg=oc; S.artIsVideo=false;
       $("artControls").style.display="block";
       $("artLabel").textContent="✓ 이미지 업로드됨 — 변경하려면 클릭";
       if(S.ecc!=="H") toast("아트 QR은 ECC-H 권장");
       rerender();
     };
-    img.src=url;
+    var viaImg=function(){ var img=new Image(); img.onload=function(){ useBaked(img); }; img.onerror=function(){ toast("이미지를 불러오지 못했어요"); }; img.src=url; };
+    if(window.createImageBitmap){ createImageBitmap(f).then(useBaked).catch(viaImg); }
+    else { viaImg(); }
   }
 });
 $("artVis").addEventListener("input",function(e){ S.artVisibility=+e.target.value; $("artVisOut").textContent=e.target.value+"%"; rerender(); });
