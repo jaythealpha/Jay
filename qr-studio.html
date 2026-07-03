@@ -457,7 +457,7 @@
   <footer>
     <div>Aesthetic QR Studio · LemioCode 컨셉을 오픈소스로 재구현 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.03-h</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.03-k</b></div>
   </footer>
 </div>
 
@@ -3076,6 +3076,28 @@ function drawCover(g, img, x, y, w, h){
   g.restore();
   return true;
 }
+// cap a colour's luminance so a "dark" QR mark stays dark enough to scan, keeping its hue
+function scannableColor(hex){
+  var c=hexToRgb(hex); var L=0.2126*c[0]+0.7152*c[1]+0.0722*c[2];
+  var target=110;
+  if(L<=target) return "rgb("+c[0]+","+c[1]+","+c[2]+")";
+  var f=target/Math.max(L,1);
+  return "rgb("+Math.round(c[0]*f)+","+Math.round(c[1]*f)+","+Math.round(c[2]*f)+")";
+}
+// template fill for art-mode marks: same gradient geometry as makeFill but luminance-capped
+// so bright gradients (cyan/lime/yellow) still scan while keeping their colour.
+function makeArtFill(g, x0, y0, size){
+  var c1=scannableColor(S.fg1), c2=scannableColor(S.fg2);
+  if(S.fill==="solid") return c1;
+  var grad;
+  if(S.fill==="linear"){
+    var a=S.angle*Math.PI/180, cx=x0+size/2, cy=y0+size/2, r=size/2, dx=Math.cos(a)*r, dy=Math.sin(a)*r;
+    grad=g.createLinearGradient(cx-dx,cy-dy,cx+dx,cy+dy);
+  } else {
+    grad=g.createRadialGradient(x0+size/2,y0+size/2,0,x0+size/2,y0+size/2,size*0.72);
+  }
+  grad.addColorStop(0,c1); grad.addColorStop(1,c2); return grad;
+}
 // centre-mark shape for art mode (follows the selected module style)
 function drawArtMark(g, cx, cy, r, shape){
   switch(shape){
@@ -3098,36 +3120,39 @@ function drawArtLayer(g, ox, oy, unit, n, m){
   if (!ok){ g.fillStyle="#0b0d12"; g.fillRect(ox,oy,area,area); }
 
   var vis = Math.max(0.2, Math.min(0.92, S.artVisibility/100));
-  var dk = S.artInvert ? "255,255,255" : "0,0,0";
-  var lt = S.artInvert ? "0,0,0"       : "255,255,255";
+  // Apply the chosen template colour/gradient to the QR marks (dark role); light role stays
+  // white. This keeps the selected template/gradient visible in art mode instead of forcing
+  // mono ink. artInvert swaps roles for dark artworks.
+  var markFill = makeArtFill(g, ox, oy, area);   // template colour/gradient, luminance-capped to scan
+  function roleDark(rr,cc){ return m[rr][cc] !== S.artInvert; }
 
-  // 2) faint per-cell luminance bias (fades out as visibility rises) — nudges each cell the
-  //    right way without hiding the artwork.
+  // 2) faint per-cell luminance bias (fades out as visibility rises) — helps binarisation
+  //    without hiding the artwork.
   var bias = (1-vis)*0.32;               // vis .2→.256 … .92→.026
   if (bias > 0.02){
     for (var r0=0;r0<n;r0++){
       for (var c0=0;c0<n;c0++){
         if (isFinder(r0,c0,n)) continue;
-        g.fillStyle = "rgba("+(m[r0][c0]?dk:lt)+","+bias+")";
+        g.fillStyle = "rgba("+(roleDark(r0,c0)?"0,0,0":"255,255,255")+","+bias+")";
         g.fillRect(ox+c0*unit, oy+r0*unit, unit+0.6, unit+0.6);
       }
     }
   }
 
-  // 3) opaque centre marks — high-contrast sample point per module (keeps it scannable).
-  //    Shape follows the selected module style; radius shrinks with visibility (scan-safe floor).
+  // 3) opaque centre marks — template-coloured (dark role) vs white (light role).
+  //    Shape follows the selected module style; radius shrinks with visibility.
   var dotR = unit*(0.46 - vis*0.16);     // vis .2→.428 … .92→.313
   for (var r=0;r<n;r++){
     for (var c=0;c<n;c++){
       if (isFinder(r,c,n)) continue;
       var cx = ox+c*unit+unit/2, cy = oy+r*unit+unit/2;
-      g.fillStyle = m[r][c] ? ("rgba("+dk+",1)") : ("rgba("+lt+",1)");
+      g.fillStyle = roleDark(r,c) ? markFill : "#ffffff";
       drawArtMark(g, cx, cy, dotR, S.dot);
     }
   }
 
-  // 4) finder patterns — solid, on a clean pad, for reliable detection
-  var eyeDark  = S.artInvert ? "#ffffff" : "#000000";
+  // 4) finder patterns — template-coloured on a clean pad, for reliable detection
+  var eyeDark  = S.artInvert ? "#ffffff" : markFill;
   var eyeLight = S.artInvert ? "#000000" : "#ffffff";
   var pos = [[0,0],[0,n-7],[n-7,0]];
   for (var i=0;i<pos.length;i++){
