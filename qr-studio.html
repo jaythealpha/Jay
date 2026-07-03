@@ -140,6 +140,8 @@
   #arCanvas{width:100%;height:100%;object-fit:cover;touch-action:none;cursor:grab;display:block}
   #arCanvas:active{cursor:grabbing}
   .ar-msg{position:absolute;color:var(--mut);font-size:14px;pointer-events:none;text-align:center;padding:24px;line-height:1.6}
+  .ar-badge{position:absolute;top:12px;left:12px;background:rgba(11,13,18,.72);backdrop-filter:blur(6px);border:1px solid var(--line2);color:#fff;font-size:12px;font-weight:600;padding:6px 12px;border-radius:20px;pointer-events:none;opacity:0;transition:.2s;max-width:80%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ar-badge.on{opacity:1}
   .ar-controls{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-top:14px}
   .about{max-width:820px;margin:0 auto}
   .about h3{font-size:19px;margin:26px 0 10px}
@@ -248,8 +250,8 @@
             <input type="file" id="artFile" accept="image/*,video/*" />
             <div id="artControls" style="display:none">
               <label class="fld">
-                <div class="lbl">아트 노출도 <b id="artVisOut">55%</b></div>
-                <input type="range" id="artVis" min="20" max="85" step="1" value="55" />
+                <div class="lbl">아트 노출도 <b id="artVisOut">72%</b></div>
+                <input type="range" id="artVis" min="30" max="92" step="1" value="72" />
                 <div class="hint">높을수록 그림이 더 드러나고, 낮을수록 스캔이 더 안정적입니다.</div>
               </label>
               <div class="switch" style="margin-top:12px">
@@ -384,29 +386,34 @@
     </div>
   </section>
 
-  <!-- ============ AR (camera) ============ -->
+  <!-- ============ AR (marker-based) ============ -->
   <section class="view" id="view-ar">
     <div class="hero" style="padding:6px 0 16px">
-      <h2>QR을 <span class="g">현실 공간</span>에 띄우기</h2>
-      <p>카메라를 켜고 방금 만든 QR을 실제 화면 위에 배치·크기 조절해 사진으로 남기세요. 모바일 후면 카메라 권장 · 100% 브라우저 처리(영상 전송 없음).</p>
+      <h2>카메라로 <span class="g">QR을 비추면</span> AR이 나타납니다</h2>
+      <p>후면 카메라로 아무 QR 코드나 비추세요. 코드를 실시간 인식해 그 위에 3D 오브젝트·정보 카드를 얹어 보여줍니다. 100% 브라우저 처리(영상 전송 없음).</p>
     </div>
     <div class="ar-wrap">
       <div class="ar-stage" id="arStage">
         <video id="arCam" playsinline muted></video>
         <canvas id="arCanvas"></canvas>
-        <div class="ar-msg" id="arMsg">‘카메라 시작’을 눌러 QR을 현실에 배치해 보세요</div>
+        <div class="ar-msg" id="arMsg">‘카메라 시작’을 눌러 QR을 비춰 보세요</div>
+        <div class="ar-badge" id="arBadge"></div>
       </div>
       <div class="ar-controls">
         <button class="btn" id="arStart">📷 카메라 시작</button>
         <button class="btn sec" id="arFlip" disabled>전환</button>
-        <label class="fld" style="flex:1;min-width:170px;margin:0">
-          <div class="lbl" style="margin-bottom:5px">QR 크기 <b id="arSizeOut">42%</b></div>
-          <input type="range" id="arSize" min="15" max="90" step="1" value="42" />
+        <label class="fld" style="flex:1;min-width:150px;margin:0">
+          <div class="lbl" style="margin-bottom:5px">AR 오브젝트</div>
+          <select id="arObj">
+            <option value="cube">🧊 3D 큐브 + 정보 카드</option>
+            <option value="card">🪧 정보 카드만</option>
+            <option value="portal">🌀 네온 포탈</option>
+          </select>
         </label>
         <button class="btn" id="arShot" disabled>📸 사진 저장</button>
         <button class="btn sec" id="arStop" disabled>정지</button>
       </div>
-      <div class="hint" style="text-align:center;margin-top:10px">QR을 손가락/마우스로 드래그해 위치를 옮길 수 있습니다. 스튜디오에서 만든 디자인(아트·애니메이션 포함)이 그대로 반영됩니다.</div>
+      <div class="hint" style="text-align:center;margin-top:10px">스튜디오에서 만든 QR을 <b>다른 화면/인쇄물</b>에 띄워 두고 이 카메라로 비추면 그 위에 AR이 나타납니다. 실시간 인식은 <b>jsQR</b>(브라우저 내 디코딩)로 동작합니다.</div>
     </div>
   </section>
 
@@ -430,7 +437,7 @@
         <div class="f"><h4>3. 스타일 렌더링</h4><p>모듈 5종(사각·둥근·점·클래시·다이아)·눈 4종. 이웃 인식 라운딩으로 예쁘면서 잉크 커버리지 유지.</p></div>
         <div class="f"><h4>4. 컬러/그라디언트</h4><p>단색·선형·원형 그라디언트. 실시간 대비 경고로 스캔성 보호.</p></div>
         <div class="f"><h4>5. 로고 & 애니메이션</h4><p>중앙 로고 합성(ECC-H 복원력). 컬러 회전/펄스/스윕 애니메이션 + MediaRecorder WebM.</p></div>
-        <div class="f"><h4>6. 📷 AR 미리보기</h4><p>추가 기능. 카메라 위에 QR을 배치·크기조절해 현실 공간에 띄우고 사진 저장. 100% 브라우저, 영상 비전송.</p></div>
+        <div class="f"><h4>6. 📷 마커 기반 AR</h4><p>추가 기능. 카메라로 QR을 비추면 <b>jsQR</b>로 실시간 인식 → 코너 좌표 위에 3D 큐브·정보 카드·네온 포탈을 얹어 표시. 100% 브라우저, 영상 비전송.</p></div>
       </div>
 
       <h3>이 구현의 기술 스택</h3>
@@ -2757,6 +2764,9 @@ var qrcode = function() {
 
 </script>
 
+<!-- ===== QR decoder (jsQR, MIT) — powers marker-based AR ===== -->
+<script src="vendor/jsQR.js"></script>
+
 <!-- ===== App ===== -->
 <script>
 (function(){
@@ -2786,7 +2796,7 @@ var S = {
   // ---- full-image "art QR" (LemioCode-style: media covers the whole code) ----
   artImg: null,        // HTMLImageElement or HTMLVideoElement used as full background
   artIsVideo: false,   // true when the uploaded media is a video → animated QR
-  artVisibility: 55,   // % — higher = artwork shows more, lower = more scannable
+  artVisibility: 72,   // % — higher = artwork shows more, lower = more scannable
   artInvert: false     // invert dark/light overlay (for dark artworks)
 };
 
@@ -3065,38 +3075,43 @@ function drawCover(g, img, x, y, w, h){
   g.restore();
   return true;
 }
-// LemioCode-style blending, done client-side: the artwork fills the whole QR and the
-// QR pattern is embedded as an opaque module-dot grid. Dark modules → dark dots,
-// light modules → light dots; the artwork shows through the gaps between dots.
-// Higher "visibility" shrinks the dots (more art, less scan margin). Finders stay solid.
+// LemioCode-style blending, client-side: the artwork stays BRIGHT and fills the whole QR;
+// each module keeps a small opaque centre dot (the scanner samples module centres, so a
+// solid dot there guarantees the read) plus a faint full-cell luminance bias. Result: the
+// image reads clearly across the entire code while staying scannable. Higher "visibility"
+// shrinks the dots + fades the bias (more artwork). Finders stay solid.
 function drawArtLayer(g, ox, oy, unit, n, m){
   var area = n*unit;
-  // 1) artwork covers the whole module area
+  // 1) artwork covers the whole module area — at full strength (no heavy veil)
   var ok = drawCover(g, S.artImg, ox, oy, area, area);
   if (!ok){ g.fillStyle="#0b0d12"; g.fillRect(ox,oy,area,area); }
-  // 2) gentle contrast veil so dots read on busy artwork
-  g.fillStyle = "rgba(255,255,255,0.12)";
-  g.fillRect(ox, oy, area, area);
 
-  var vis = Math.max(0.2, Math.min(0.80, S.artVisibility/100));
-  // Per-cell translucent overlay: the whole cell shifts toward dark/light so its average
-  // luminance encodes the module correctly (reliable scanning), while (1-alpha) of the
-  // artwork still shows through every cell → the image reads across the ENTIRE code.
-  // Higher visibility → lower alpha → more artwork, less scan margin.
-  var aDark  = 1 - vis*0.60;   // 0.20→0.88 … 0.80→0.52
-  var aLight = 1 - vis*0.52;   // 0.20→0.90 … 0.80→0.58
+  var vis = Math.max(0.2, Math.min(0.92, S.artVisibility/100));
   var dk = S.artInvert ? "255,255,255" : "0,0,0";
   var lt = S.artInvert ? "0,0,0"       : "255,255,255";
-  var rad = unit*0.20;         // soft-rounded cells; artwork peeks at the corners
 
-  // 3) module overlay (skip finder regions)
+  // 2) faint per-cell luminance bias (fades out as visibility rises) — nudges each cell the
+  //    right way without hiding the artwork.
+  var bias = (1-vis)*0.32;               // vis .2→.256 … .92→.026
+  if (bias > 0.02){
+    for (var r0=0;r0<n;r0++){
+      for (var c0=0;c0<n;c0++){
+        if (isFinder(r0,c0,n)) continue;
+        g.fillStyle = "rgba("+(m[r0][c0]?dk:lt)+","+bias+")";
+        g.fillRect(ox+c0*unit, oy+r0*unit, unit+0.6, unit+0.6);
+      }
+    }
+  }
+
+  // 3) opaque centre dots — high-contrast sample point per module (keeps it scannable).
+  //    Radius shrinks with visibility but has a scan-safe floor (~0.30 of a cell).
+  var dotR = unit*(0.46 - vis*0.16);     // vis .2→.428 … .92→.313
   for (var r=0;r<n;r++){
     for (var c=0;c<n;c++){
       if (isFinder(r,c,n)) continue;
-      var x = ox + c*unit, y = oy + r*unit;
-      if (m[r][c]) g.fillStyle = "rgba("+dk+","+aDark+")";
-      else         g.fillStyle = "rgba("+lt+","+aLight+")";
-      roundRect(g, x, y, unit+0.6, unit+0.6, rad); g.fill();
+      var cx = ox+c*unit+unit/2, cy = oy+r*unit+unit/2;
+      g.fillStyle = m[r][c] ? ("rgba("+dk+",1)") : ("rgba("+lt+",1)");
+      g.beginPath(); g.arc(cx, cy, dotR, 0, Math.PI*2); g.fill();
     }
   }
 
@@ -3466,71 +3481,127 @@ $("tabs").addEventListener("click",function(e){
   if(b.dataset.view==="ar") AR.refresh(); else AR.leave();
 });
 
-// ---------- AR (camera overlay) ----------
+// ---------- AR (marker-based: detect a QR in the camera, overlay 3D content) ----------
 var AR = (function(){
-  var stream=null, raf=null, facing="environment";
-  var qr=document.createElement("canvas");     // offscreen current QR sprite
-  var pos={x:0.5,y:0.5}, drag=false, dragOff={x:0,y:0};
-  var cam, cv, cx, stage, msg;
-  function els(){ cam=$("arCam"); cv=$("arCanvas"); stage=$("arStage"); msg=$("arMsg"); if(cv) cx=cv.getContext("2d"); }
-  function refresh(){ qr.width=qr.height=512; try{ render(qr.getContext("2d"), 512); }catch(e){} }
-  function fit(){ if(!cv||!stage) return; var r=stage.getBoundingClientRect(); cv.width=Math.max(2,Math.round(r.width)); cv.height=Math.max(2,Math.round(r.height)); }
+  var stream=null, raf=null, facing="environment", frame=0;
+  var cam, cv, cx, stage, msg, badge;
+  var sc=document.createElement("canvas"), sctx=sc.getContext("2d", {willReadFrequently:true});
+  var last=null, ttl=0;   // last detection (corners+data), time-to-live for smoothing
+  function els(){ cam=$("arCam"); cv=$("arCanvas"); stage=$("arStage"); msg=$("arMsg"); badge=$("arBadge"); if(cv) cx=cv.getContext("2d"); }
+  function fit(){ if(!cv||!stage) return; var r=stage.getBoundingClientRect(); var w=Math.max(2,Math.round(r.width)), h=Math.max(2,Math.round(r.height)); if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h;} }
   function coverDraw(g,img,W,H){ var iw=img.videoWidth||img.width, ih=img.videoHeight||img.height; if(!iw||!ih)return; var s=Math.max(W/iw,H/ih), dw=iw*s, dh=ih*s; g.drawImage(img,(W-dw)/2,(H-dh)/2,dw,dh); }
-  function loop(){
+  // vector helpers on {x,y}
+  function sub(a,b){return{x:a.x-b.x,y:a.y-b.y};} function add(a,b){return{x:a.x+b.x,y:a.y+b.y};}
+  function mul(a,s){return{x:a.x*s,y:a.y*s};} function mid(a,b){return{x:(a.x+b.x)/2,y:(a.y+b.y)/2};}
+  function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
+  function detect(W,H){
+    if(!window.jsQR) return null;
+    var k=Math.min(1, 480/Math.max(W,H)); var sW=Math.max(2,Math.round(W*k)), sH=Math.max(2,Math.round(H*k));
+    if(sc.width!==sW||sc.height!==sH){sc.width=sW;sc.height=sH;}
+    sctx.drawImage(cv,0,0,W,H,0,0,sW,sH);
+    var img; try{ img=sctx.getImageData(0,0,sW,sH); }catch(e){ return null; }
+    var res=window.jsQR(img.data,sW,sH,{inversionAttempts:"attemptBoth"});
+    if(!res||!res.location) return null;
+    var L=res.location, sx=W/sW, sy=H/sH;
+    function P(p){return {x:p.x*sx,y:p.y*sy};}
+    return {tl:P(L.topLeftCorner),tr:P(L.topRightCorner),br:P(L.bottomRightCorner),bl:P(L.bottomLeftCorner),data:res.data};
+  }
+  function poly(g,pts,close){ g.beginPath(); g.moveTo(pts[0].x,pts[0].y); for(var i=1;i<pts.length;i++)g.lineTo(pts[i].x,pts[i].y); if(close!==false)g.closePath(); }
+  function neon(g,pts,col,w){ g.save(); g.shadowColor=col; g.shadowBlur=16; g.strokeStyle=col; g.lineWidth=w||4; g.lineJoin="round"; poly(g,pts); g.stroke(); g.restore(); }
+  function face(g,pts,fill,stroke){ poly(g,pts); g.fillStyle=fill; g.fill(); if(stroke){ g.strokeStyle=stroke; g.lineWidth=2; g.stroke(); } }
+  function drawCube(g,L,t){
+    var up=mul(add(sub(L.tl,L.bl),sub(L.tr,L.br)),0.5);
+    var bob=1+0.07*Math.sin(t/360);
+    var lift=mul(up,0.95*bob);
+    var T={tl:add(L.tl,lift),tr:add(L.tr,lift),br:add(L.br,lift),bl:add(L.bl,lift)};
+    g.save();
+    face(g,[L.tl,L.bl,T.bl,T.tl],"rgba(255,92,138,0.42)","rgba(255,92,138,0.9)");
+    face(g,[L.tr,L.tl,T.tl,T.tr],"rgba(124,92,255,0.38)","rgba(124,92,255,0.9)");
+    face(g,[L.bl,L.br,T.br,T.bl],"rgba(34,211,238,0.42)","rgba(34,211,238,0.9)");
+    face(g,[L.br,L.tr,T.tr,T.br],"rgba(124,92,255,0.5)","rgba(124,92,255,0.95)");
+    var grd=g.createLinearGradient(T.tl.x,T.tl.y,T.br.x,T.br.y); grd.addColorStop(0,"rgba(124,92,255,0.9)"); grd.addColorStop(1,"rgba(34,211,238,0.9)");
+    face(g,[T.tl,T.tr,T.br,T.bl],grd,"rgba(255,255,255,0.9)");
+    g.restore();
+    neon(g,[L.tl,L.tr,L.br,L.bl],"rgba(34,211,238,0.9)",3);
+  }
+  function drawPortal(g,L,t){
+    var c=mid(mid(L.tl,L.br),mid(L.tr,L.bl)); var R=Math.max(dist(L.tl,L.br),dist(L.tr,L.bl))/2*1.15;
+    g.save(); g.translate(c.x,c.y); g.rotate(t/900);
+    for(var i=0;i<3;i++){ g.beginPath(); g.setLineDash([R*0.18,R*0.12]); g.lineWidth=4; g.strokeStyle=["rgba(124,92,255,.9)","rgba(34,211,238,.9)","rgba(255,92,138,.9)"][i]; g.shadowColor=g.strokeStyle; g.shadowBlur=14; g.arc(0,0,R*(0.55+i*0.22),0,Math.PI*2); g.stroke(); g.rotate(0.5); }
+    g.restore();
+  }
+  function drawCard(g,L,data,t){
+    var top=mid(L.tl,L.tr); var up=mul(add(sub(L.tl,L.bl),sub(L.tr,L.br)),0.5);
+    var w=Math.max(dist(L.tl,L.tr),120)*1.15, h=w*0.30;
+    var anchor=add(top,mul(up,0.55)); var x=anchor.x-w/2, y=anchor.y-h-8+3*Math.sin(t/400);
+    g.save(); g.shadowColor="rgba(0,0,0,0.5)"; g.shadowBlur=14; g.shadowOffsetY=4;
+    var grd=g.createLinearGradient(x,y,x+w,y); grd.addColorStop(0,"rgba(20,24,36,0.94)"); grd.addColorStop(1,"rgba(30,24,54,0.94)");
+    roundRect(g,x,y,w,h,h*0.24); g.fillStyle=grd; g.fill();
+    g.lineWidth=1.5; g.strokeStyle="rgba(124,92,255,0.8)"; g.stroke(); g.restore();
+    var isUrl=/^https?:\/\//i.test(data||""); var label=(data||"").replace(/^https?:\/\//i,"");
+    if(label.length>26) label=label.slice(0,24)+"…";
+    g.fillStyle="#fff"; g.textBaseline="middle"; g.textAlign="left";
+    g.font="700 "+Math.round(h*0.30)+"px -apple-system,'Noto Sans KR',sans-serif";
+    g.fillText((isUrl?"🔗 ":"📄 ")+label, x+h*0.28, y+h*0.36);
+    g.fillStyle="rgba(34,211,238,0.95)"; g.font="600 "+Math.round(h*0.22)+"px -apple-system,'Noto Sans KR',sans-serif";
+    g.fillText(isUrl?"탭하여 열기":"QR 내용", x+h*0.28, y+h*0.72);
+    // little pointer to the QR
+    g.beginPath(); g.moveTo(anchor.x-6,y+h); g.lineTo(anchor.x+6,y+h); g.lineTo(anchor.x,y+h+8); g.closePath(); g.fillStyle=grd; g.fill();
+  }
+  function overlay(g,L,t){
+    var kind=($("arObj")&&$("arObj").value)||"cube";
+    if(kind==="portal"){ drawPortal(g,L,t); drawCard(g,L,L.data,t); }
+    else if(kind==="card"){ neon(g,[L.tl,L.tr,L.br,L.bl],"rgba(124,92,255,0.9)",4); drawCard(g,L,L.data,t); }
+    else { drawCube(g,L,t); drawCard(g,L,L.data,t); }
+  }
+  function loop(ts){
     if(!stream){return;}
-    fit(); var W=cv.width,H=cv.height;
+    fit(); var W=cv.width,H=cv.height, t=ts||0;
     cx.fillStyle="#000"; cx.fillRect(0,0,W,H);
     if(cam.readyState>=2) coverDraw(cx,cam,W,H);
-    var sz=(+$("arSize").value/100)*Math.min(W,H);
-    var x=pos.x*W - sz/2, y=pos.y*H - sz/2;
-    cx.save();
-    cx.shadowColor="rgba(0,0,0,0.45)"; cx.shadowBlur=sz*0.05; cx.shadowOffsetY=sz*0.02;
-    roundRect(cx, x-sz*0.04, y-sz*0.04, sz*1.08, sz*1.08, sz*0.06); cx.fillStyle="#fff"; cx.fill();
-    cx.restore();
-    if(qr.width) cx.drawImage(qr, x, y, sz, sz);
+    frame++;
+    if(frame%2===0){ var d=detect(W,H); if(d){ last=d; ttl=10; } else if(ttl>0){ ttl--; } else { last=null; } }
+    else if(ttl>0){ ttl--; } else { last=null; }
+    if(last){ overlay(cx,last,t); if(badge){ badge.textContent="🔎 인식됨: "+((last.data||"").slice(0,40)); badge.classList.add("on"); } if(msg)msg.style.display="none"; }
+    else { if(badge)badge.classList.remove("on"); if(msg){ msg.textContent=window.jsQR?"QR 코드를 화면에 비춰 보세요…":"QR 인식 모듈을 불러오지 못했어요(vendor/jsQR.js)."; msg.style.display="block"; } }
     raf=requestAnimationFrame(loop);
   }
-  function evtPos(e){ var r=cv.getBoundingClientRect(); var t=e.touches?e.touches[0]:e; return {x:(t.clientX-r.left)/r.width, y:(t.clientY-r.top)/r.height}; }
-  function down(e){ var p=evtPos(e); drag=true; dragOff.x=p.x-pos.x; dragOff.y=p.y-pos.y; e.preventDefault(); }
-  function move(e){ if(!drag)return; var p=evtPos(e); pos.x=Math.max(0,Math.min(1,p.x-dragOff.x)); pos.y=Math.max(0,Math.min(1,p.y-dragOff.y)); e.preventDefault(); }
-  function up(){ drag=false; }
   function showMsg(txt){ if(msg){ msg.textContent=txt; msg.style.display="block"; } }
   function explain(err){
     var n=(err&&err.name)||"", d=(err&&err.message)||"";
-    if(n==="NotAllowedError"||n==="SecurityError") return "카메라 권한이 거부됨 (NotAllowedError). Safari 주소창 왼쪽 ⚙/‘ⓐ’ → 카메라 ‘허용’ 또는 Safari 설정 › 웹사이트 › 카메라에서 이 사이트를 ‘허용’으로 바꾸고 새로고침하세요.";
-    if(n==="NotFoundError"||n==="OverconstrainedError") return "사용 가능한 카메라를 찾지 못했어요 ("+n+"). 다른 앱이 카메라를 쓰고 있지 않은지 확인하세요.";
-    if(n==="NotReadableError") return "카메라를 다른 앱이 사용 중이에요 (NotReadableError). 줌/페이스타임 등 카메라 쓰는 앱을 끄고 다시 시도하세요.";
-    if(!navigator.mediaDevices) return "이 환경은 카메라 API가 없어요(HTTPS 필요). 현재 주소가 https 인지 확인하세요.";
+    if(n==="NotAllowedError"||n==="SecurityError") return "카메라 권한이 거부됨 (NotAllowedError). Safari 설정 › 웹사이트 › 카메라에서 이 사이트를 ‘허용’으로 바꾸고 새로고침하세요.";
+    if(n==="NotFoundError"||n==="OverconstrainedError") return "사용 가능한 카메라를 찾지 못했어요 ("+n+").";
+    if(n==="NotReadableError") return "카메라를 다른 앱이 사용 중이에요 (NotReadableError). 줌/페이스타임 등을 끄고 다시 시도하세요.";
     return "카메라를 열 수 없어요: "+(n||d||"알 수 없는 오류");
   }
+  function openLink(){ if(last && /^https?:\/\//i.test(last.data)){ window.open(last.data,"_blank","noopener"); } }
   async function start(){
     els();
     if(!window.isSecureContext){ showMsg("보안 연결(HTTPS)이 아니어서 카메라를 쓸 수 없어요. https://jay-inky.vercel.app 로 접속했는지 확인하세요."); return; }
     if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){ showMsg("이 브라우저는 카메라 API(getUserMedia)를 지원하지 않아요."); return; }
     showMsg("카메라 권한 요청 중… (팝업이 뜨면 ‘허용’)");
     try{ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:facing}},audio:false}); }
-    catch(err){
-      try{ stream=await navigator.mediaDevices.getUserMedia({video:true,audio:false}); }
-      catch(e2){ showMsg(explain(e2)); return; }
-    }
+    catch(err){ try{ stream=await navigator.mediaDevices.getUserMedia({video:true,audio:false}); }
+      catch(e2){ showMsg(explain(e2)); return; } }
     cam.srcObject=stream; cam.setAttribute("playsinline",""); cam.muted=true;
     try{ await cam.play(); }catch(e){}
-    msg.style.display="none"; refresh(); fit();
+    showMsg("QR 코드를 화면에 비춰 보세요…"); fit();
     $("arStart").disabled=true; $("arShot").disabled=false; $("arStop").disabled=false; $("arFlip").disabled=false;
-    cv.addEventListener("mousedown",down); window.addEventListener("mousemove",move); window.addEventListener("mouseup",up);
-    cv.addEventListener("touchstart",down,{passive:false}); cv.addEventListener("touchmove",move,{passive:false}); cv.addEventListener("touchend",up);
-    if(raf)cancelAnimationFrame(raf); loop();
+    cv.addEventListener("click",openLink);
+    if(raf)cancelAnimationFrame(raf); raf=requestAnimationFrame(loop);
   }
   function stop(){
     if(raf){cancelAnimationFrame(raf);raf=null;}
     if(stream){ stream.getTracks().forEach(function(t){t.stop();}); stream=null; }
-    if(cam) cam.srcObject=null;
+    if(cam) cam.srcObject=null; last=null; ttl=0;
     if(cx&&cv){ cx.clearRect(0,0,cv.width,cv.height); }
+    if(badge)badge.classList.remove("on");
+    if(cv) cv.removeEventListener("click",openLink);
     if(msg){ msg.textContent="정지됨 — 다시 시작할 수 있어요"; msg.style.display="block"; }
     $("arStart").disabled=false; $("arShot").disabled=true; $("arStop").disabled=true; $("arFlip").disabled=true;
   }
   async function flip(){ facing=(facing==="environment")?"user":"environment"; if(stream){ stream.getTracks().forEach(function(t){t.stop();}); stream=null; } $("arStart").disabled=false; await start(); }
-  function shot(){ if(!stream)return; cv.toBlob(function(b){ if(!b)return; download(URL.createObjectURL(b),"qr-in-ar.png"); toast("AR 사진 저장됨"); },"image/png"); }
+  function shot(){ if(!stream||!cv)return; cv.toBlob(function(b){ if(!b)return; download(URL.createObjectURL(b),"qr-ar.png"); toast("AR 사진 저장됨"); },"image/png"); }
   function leave(){ if(stream) stop(); }
   return {
     init:function(){ els();
@@ -3538,9 +3609,8 @@ var AR = (function(){
       $("arStop").addEventListener("click",stop);
       $("arFlip").addEventListener("click",flip);
       $("arShot").addEventListener("click",shot);
-      $("arSize").addEventListener("input",function(e){$("arSizeOut").textContent=e.target.value+"%";});
     },
-    refresh:function(){ els(); refresh(); fit(); },
+    refresh:function(){ els(); fit(); },
     leave:leave
   };
 })();
