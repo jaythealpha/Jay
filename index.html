@@ -136,7 +136,7 @@
   /* AR */
   .ar-wrap{max-width:720px;margin:0 auto}
   .ar-stage{position:relative;width:100%;aspect-ratio:3/4;min-height:340px;max-height:72vh;background:#0b0d12;border:1px solid var(--line);border-radius:16px;overflow:hidden;display:grid;place-items:center}
-  #arCam{display:none}
+  #arCam{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
   #arCanvas{width:100%;height:100%;object-fit:cover;touch-action:none;cursor:grab;display:block}
   #arCanvas:active{cursor:grabbing}
   .ar-msg{position:absolute;color:var(--mut);font-size:14px;pointer-events:none;text-align:center;padding:24px;line-height:1.6}
@@ -3494,13 +3494,27 @@ var AR = (function(){
   function down(e){ var p=evtPos(e); drag=true; dragOff.x=p.x-pos.x; dragOff.y=p.y-pos.y; e.preventDefault(); }
   function move(e){ if(!drag)return; var p=evtPos(e); pos.x=Math.max(0,Math.min(1,p.x-dragOff.x)); pos.y=Math.max(0,Math.min(1,p.y-dragOff.y)); e.preventDefault(); }
   function up(){ drag=false; }
+  function showMsg(txt){ if(msg){ msg.textContent=txt; msg.style.display="block"; } }
+  function explain(err){
+    var n=(err&&err.name)||"", d=(err&&err.message)||"";
+    if(n==="NotAllowedError"||n==="SecurityError") return "카메라 권한이 거부됨 (NotAllowedError). Safari 주소창 왼쪽 ⚙/‘ⓐ’ → 카메라 ‘허용’ 또는 Safari 설정 › 웹사이트 › 카메라에서 이 사이트를 ‘허용’으로 바꾸고 새로고침하세요.";
+    if(n==="NotFoundError"||n==="OverconstrainedError") return "사용 가능한 카메라를 찾지 못했어요 ("+n+"). 다른 앱이 카메라를 쓰고 있지 않은지 확인하세요.";
+    if(n==="NotReadableError") return "카메라를 다른 앱이 사용 중이에요 (NotReadableError). 줌/페이스타임 등 카메라 쓰는 앱을 끄고 다시 시도하세요.";
+    if(!navigator.mediaDevices) return "이 환경은 카메라 API가 없어요(HTTPS 필요). 현재 주소가 https 인지 확인하세요.";
+    return "카메라를 열 수 없어요: "+(n||d||"알 수 없는 오류");
+  }
   async function start(){
     els();
-    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){ msg.textContent="이 브라우저/환경은 카메라를 지원하지 않습니다 (HTTPS 필요)."; msg.style.display="block"; return; }
+    if(!window.isSecureContext){ showMsg("보안 연결(HTTPS)이 아니어서 카메라를 쓸 수 없어요. https://jay-inky.vercel.app 로 접속했는지 확인하세요."); return; }
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){ showMsg("이 브라우저는 카메라 API(getUserMedia)를 지원하지 않아요."); return; }
+    showMsg("카메라 권한 요청 중… (팝업이 뜨면 ‘허용’)");
     try{ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:facing}},audio:false}); }
-    catch(err){ try{ stream=await navigator.mediaDevices.getUserMedia({video:true,audio:false}); }
-      catch(e2){ msg.textContent="카메라 접근이 거부되었어요. 브라우저 권한을 허용해 주세요."; msg.style.display="block"; return; } }
-    cam.srcObject=stream; await cam.play().catch(function(){});
+    catch(err){
+      try{ stream=await navigator.mediaDevices.getUserMedia({video:true,audio:false}); }
+      catch(e2){ showMsg(explain(e2)); return; }
+    }
+    cam.srcObject=stream; cam.setAttribute("playsinline",""); cam.muted=true;
+    try{ await cam.play(); }catch(e){}
     msg.style.display="none"; refresh(); fit();
     $("arStart").disabled=true; $("arShot").disabled=false; $("arStop").disabled=false; $("arFlip").disabled=false;
     cv.addEventListener("mousedown",down); window.addEventListener("mousemove",move); window.addEventListener("mouseup",up);
