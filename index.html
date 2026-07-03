@@ -3636,14 +3636,26 @@ $("featureChips").addEventListener("click",function(e){
 
 // ---------- gallery presets ----------
 var PRESETS = [
-  {name:"네온 펄스", tag:"그라디언트 · 회전", s:{fill:"linear",fg1:"#7c5cff",fg2:"#22d3ee",angle:45,dot:"rounded",eye:"rounded",bg:"#0b0d12",transparent:false}},
-  {name:"선셋", tag:"따뜻한 톤", s:{fill:"linear",fg1:"#ff5c8a",fg2:"#ffb347",angle:120,dot:"dots",eye:"circle",bg:"#ffffff"}},
-  {name:"미드나잇", tag:"딥 블루", s:{fill:"radial",fg1:"#22d3ee",fg2:"#3b5bff",dot:"classy",eye:"leaf",bg:"#0b1020"}},
-  {name:"에메랄드", tag:"자연", s:{fill:"linear",fg1:"#3ddc97",fg2:"#0ea5e9",angle:90,dot:"dots",eye:"circle",bg:"#ffffff"}},
-  {name:"모노 잉크", tag:"클래식", s:{fill:"solid",fg1:"#111111",fg2:"#111111",dot:"square",eye:"square",bg:"#ffffff"}},
-  {name:"라즈베리", tag:"비비드", s:{fill:"linear",fg1:"#ff3d81",fg2:"#7c3aed",angle:135,dot:"rounded",eye:"rounded",bg:"#ffffff"}},
-  {name:"골드 럭스", tag:"프리미엄", s:{fill:"linear",fg1:"#b8860b",fg2:"#ffd76a",angle:60,dot:"classy",eye:"leaf",bg:"#0b0d12"}},
-  {name:"오션 다이아", tag:"기하학", s:{fill:"linear",fg1:"#06b6d4",fg2:"#6366f1",angle:30,dot:"diamond",eye:"square",bg:"#ffffff"}}
+  {name:"네온 펄스", tag:"사이버 · 다크", s:{fill:"linear",fg1:"#7c5cff",fg2:"#22d3ee",angle:45,dot:"rounded",eye:"rounded",bg:"#0b0d12",transparent:false}},
+  {name:"스카이", tag:"청량한 하늘", s:{fill:"linear",fg1:"#38bdf8",fg2:"#4f46e5",angle:90,dot:"rounded",eye:"rounded",bg:"#ffffff",transparent:false}},
+  {name:"오션", tag:"딥 블루", s:{fill:"linear",fg1:"#06b6d4",fg2:"#1d4ed8",angle:120,dot:"dots",eye:"circle",bg:"#ffffff",transparent:false}},
+  {name:"오로라", tag:"오로라 빛", s:{fill:"linear",fg1:"#34d399",fg2:"#8b5cf6",angle:120,dot:"classy",eye:"leaf",bg:"#0b1020",transparent:false}},
+  {name:"선셋", tag:"따뜻한 노을", s:{fill:"linear",fg1:"#ff5c8a",fg2:"#ffb347",angle:120,dot:"dots",eye:"circle",bg:"#ffffff",transparent:false}},
+  {name:"미드나잇", tag:"심야 네온", s:{fill:"radial",fg1:"#22d3ee",fg2:"#3b5bff",dot:"classy",eye:"leaf",bg:"#0b1020",transparent:false}},
+  {name:"라벤더", tag:"부드러운 퍼플", s:{fill:"linear",fg1:"#a78bfa",fg2:"#7c3aed",angle:60,dot:"classy",eye:"leaf",bg:"#ffffff",transparent:false}},
+  {name:"에메랄드", tag:"자연 그린", s:{fill:"linear",fg1:"#10b981",fg2:"#0ea5e9",angle:90,dot:"dots",eye:"circle",bg:"#ffffff",transparent:false}},
+  {name:"코랄", tag:"산호빛 웜톤", s:{fill:"linear",fg1:"#fb7185",fg2:"#f97316",angle:45,dot:"rounded",eye:"rounded",bg:"#ffffff",transparent:false}},
+  {name:"사이버펑크", tag:"핑크×시안", s:{fill:"linear",fg1:"#ec4899",fg2:"#22d3ee",angle:135,dot:"rounded",eye:"rounded",bg:"#0b0d12",transparent:false}},
+  {name:"포레스트", tag:"딥 그린", s:{fill:"linear",fg1:"#15803d",fg2:"#065f46",angle:90,dot:"dots",eye:"circle",bg:"#ffffff",transparent:false}},
+  {name:"라즈베리", tag:"비비드", s:{fill:"linear",fg1:"#ff3d81",fg2:"#7c3aed",angle:135,dot:"rounded",eye:"rounded",bg:"#ffffff",transparent:false}},
+  {name:"바이올렛", tag:"퍼플×마젠타", s:{fill:"linear",fg1:"#7c3aed",fg2:"#db2777",angle:135,dot:"rounded",eye:"rounded",bg:"#ffffff",transparent:false}},
+  {name:"아쿠아", tag:"물빛 라디얼", s:{fill:"radial",fg1:"#22d3ee",fg2:"#0369a1",dot:"dots",eye:"circle",bg:"#ffffff",transparent:false}},
+  {name:"라임 네온", tag:"형광 라임", s:{fill:"linear",fg1:"#a3e635",fg2:"#16a34a",angle:90,dot:"dots",eye:"circle",bg:"#0b0d12",transparent:false}},
+  {name:"선라이즈", tag:"일출 라디얼", s:{fill:"radial",fg1:"#fb7185",fg2:"#f59e0b",dot:"dots",eye:"circle",bg:"#ffffff",transparent:false}},
+  {name:"골드 럭스", tag:"프리미엄", s:{fill:"linear",fg1:"#b8860b",fg2:"#ffd76a",angle:60,dot:"classy",eye:"leaf",bg:"#0b0d12",transparent:false}},
+  {name:"그래파이트", tag:"라이트 온 다크", s:{fill:"solid",fg1:"#e5e7eb",fg2:"#e5e7eb",dot:"square",eye:"square",bg:"#0b0d12",transparent:false}},
+  {name:"인디고", tag:"기하학 · 클래시", s:{fill:"linear",fg1:"#06b6d4",fg2:"#6366f1",angle:30,dot:"classy",eye:"square",bg:"#ffffff",transparent:false}},
+  {name:"모노 잉크", tag:"클래식 블랙", s:{fill:"solid",fg1:"#111111",fg2:"#111111",dot:"square",eye:"square",bg:"#ffffff",transparent:false}}
 ];
 function buildGallery(){
   var grid=$("galGrid"); grid.innerHTML="";
