@@ -356,7 +356,8 @@
             <label class="fld">
               <div class="lbl">효과</div>
               <div class="seg" id="animSeg">
-                <button data-anim="rotate" class="on">그라디언트 회전</button>
+                <button data-anim="shine" class="on">샤인 ✨</button>
+                <button data-anim="rotate">회전</button>
                 <button data-anim="pulse">펄스</button>
                 <button data-anim="sweep">스윕</button>
               </div>
@@ -365,7 +366,7 @@
               <div class="lbl">속도 <b id="animSpeedOut">1.0×</b></div>
               <input type="range" id="animSpeed" min="0.2" max="3" step="0.1" value="1" />
             </label>
-            <div class="hint">애니메이션은 그라디언트 채우기에서 가장 잘 보입니다. <b>애니메이션 저장</b>은 WebM 영상으로 내보냅니다. QR 패턴은 고정이라 모든 프레임이 스캔됩니다.</div>
+            <div class="hint"><b>샤인</b>은 단색·그라디언트·아트 어디서나 빛이 흐르는 효과라 항상 보입니다. <b>회전/펄스/스윕</b>은 <b>그라디언트</b> 채우기에서 보입니다(단색이면 변화 없음). 미리보기에서 움직이며, <b>애니메이션 저장</b>은 WebM 영상으로 내보냅니다. QR 패턴은 고정이라 모든 프레임이 스캔됩니다.</div>
           </div>
         </details>
 
@@ -373,12 +374,23 @@
           <summary><svg class="ic" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 15h18" stroke="currentColor" stroke-width="2"/></svg>라벨 & 프레임<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
           <div class="body">
             <div class="switch">
-              <div class="lbl" style="margin:0">하단 라벨 표시</div>
+              <div class="lbl" style="margin:0">라벨 표시</div>
               <label class="toggle"><input type="checkbox" id="labelOn" /><span></span></label>
             </div>
             <label class="fld">
               <div class="lbl">라벨 텍스트</div>
               <input type="text" id="labelText" value="SCAN ME" maxlength="24" />
+            </label>
+            <label class="fld">
+              <div class="lbl">글자 크기 <b id="labelSizeOut">100%</b></div>
+              <input type="range" id="labelSize" min="40" max="160" step="5" value="100" />
+            </label>
+            <label class="fld">
+              <div class="lbl">위치</div>
+              <div class="seg" id="labelPosSeg">
+                <button data-lpos="bottom" class="on">하단</button>
+                <button data-lpos="top">상단</button>
+              </div>
             </label>
           </div>
         </details>
@@ -457,7 +469,7 @@
   <footer>
     <div>Aesthetic QR Studio · LemioCode 컨셉을 오픈소스로 재구현 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.03-k</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.03-l</b></div>
   </footer>
 </div>
 
@@ -2790,10 +2802,12 @@ var S = {
   logoSize: 22,
   logoPad: true,
   anim: false,
-  animKind: "rotate",
+  animKind: "shine",
   animSpeed: 1,
   labelOn: false,
   labelText: "SCAN ME",
+  labelSize: 100,      // % font size
+  labelPos: "bottom",  // bottom | top
   // ---- full-image "art QR" (LemioCode-style: media covers the whole code) ----
   artImg: null,        // HTMLImageElement or HTMLVideoElement used as full background
   artIsVideo: false,   // true when the uploaded media is a video → animated QR
@@ -2993,11 +3007,14 @@ function render(g2, exportSize){
   }
   var n = data.n, m = data.m;
   var quiet = S.margin;
-  var labelSpace = S.labelOn ? Math.round(size*0.10) : 0;
-  var avail = size - labelSpace;
+  var labelFrac = S.labelOn ? (0.055 + (S.labelSize/100)*0.11) : 0;  // ~5.5%..16.5% of size
+  var labelSpace = Math.round(size*labelFrac);
+  var avail = size - labelSpace;                 // square QR block size
   var total = n + quiet*2;
   var unit = avail/total;
-  var ox = quiet*unit, oy = quiet*unit;
+  var topPad = (S.labelOn && S.labelPos==="top") ? labelSpace : 0;
+  var xoff = (size - avail)/2;                    // centre the QR block horizontally
+  var ox = xoff + quiet*unit, oy = topPad + quiet*unit;
 
   // background
   g.clearRect(0,0,size,size);
@@ -3052,13 +3069,30 @@ function render(g2, exportSize){
     g.restore();
   }
 
+  // animated "shine" — a moving diagonal light band; works on ANY fill (solid/gradient/art).
+  // At phase 0 the band sits off the left edge, so exported PNG stays clean.
+  if (S.anim && S.animKind==="shine"){
+    var bs = avail, bx0 = xoff, by0 = topPad, band = bs*0.42;
+    g.save();
+    g.beginPath(); g.rect(bx0, by0, bs, bs); g.clip();
+    var cxp = bx0 - band + _phase*(bs + 2*band);
+    var sg = g.createLinearGradient(cxp-band, by0, cxp+band, by0+bs);
+    sg.addColorStop(0, "rgba(255,255,255,0)");
+    sg.addColorStop(0.5, "rgba(255,255,255,0.4)");
+    sg.addColorStop(1, "rgba(255,255,255,0)");
+    g.globalCompositeOperation = "lighter";
+    g.fillStyle = sg; g.fillRect(bx0, by0, bs, bs);
+    g.restore();
+  }
+
   // label
   if (S.labelOn && S.labelText){
     g.fillStyle = S.transparent ? "#111111" : (luminance(S.bg)>140 ? "#111111" : "#ffffff");
-    var fs = Math.round(labelSpace*0.44);
+    var fs = Math.round(labelSpace*0.5);
     g.font = "700 "+fs+"px -apple-system,'Noto Sans KR',sans-serif";
     g.textAlign="center"; g.textBaseline="middle";
-    g.fillText(S.labelText, size/2, avail + labelSpace*0.52);
+    var ly = (S.labelPos==="top") ? labelSpace*0.5 : (avail + labelSpace*0.5);
+    g.fillText(S.labelText, size/2, ly);
   }
 }
 
@@ -3212,9 +3246,11 @@ function toSVG(){
   var n=data.n, m=data.m, quiet=S.margin, total=n+quiet*2;
   var U=10; // svg unit
   var W=total*U;
-  var labelH = S.labelOn ? Math.round(W*0.11) : 0;
+  var labelH = S.labelOn ? Math.round(W*(0.06+(S.labelSize/100)*0.11)) : 0;
+  var topPadS = (S.labelOn && S.labelPos==="top") ? labelH : 0;
+  var totalH = W + labelH;
   var svg=[];
-  svg.push('<svg xmlns="http://www.w3.org/2000/svg" width="'+W+'" height="'+(W+labelH)+'" viewBox="0 0 '+W+' '+(W+labelH)+'">');
+  svg.push('<svg xmlns="http://www.w3.org/2000/svg" width="'+W+'" height="'+totalH+'" viewBox="0 0 '+W+' '+totalH+'">');
   // defs gradient
   var fillRef;
   if (S.fill==="solid"){ fillRef=S.fg1; }
@@ -3227,8 +3263,8 @@ function toSVG(){
     svg.push('<defs><radialGradient id="g"><stop offset="0" stop-color="'+S.fg1+'"/><stop offset="1" stop-color="'+S.fg2+'"/></radialGradient></defs>');
     fillRef="url(#g)";
   }
-  if(!S.transparent) svg.push('<rect width="'+W+'" height="'+(W+labelH)+'" fill="'+S.bg+'"/>');
-  svg.push('<g fill="'+fillRef+'">');
+  if(!S.transparent) svg.push('<rect width="'+W+'" height="'+totalH+'" fill="'+S.bg+'"/>');
+  svg.push('<g fill="'+fillRef+'" transform="translate(0,'+topPadS+')">');
   for(var r=0;r<n;r++)for(var c=0;c<n;c++){
     if(!m[r][c]) continue;
     if(isFinder(r,c,n)) continue;
@@ -3244,7 +3280,7 @@ function toSVG(){
   }
   svg.push('</g>');
   if(S.labelOn && S.labelText){
-    var ty=W+labelH*0.62, col=(luminance(S.bg)>140||S.transparent)?"#111":"#fff";
+    var ty=(S.labelPos==="top")?(labelH*0.62):(topPadS+W+labelH*0.62), col=(luminance(S.bg)>140||S.transparent)?"#111":"#fff";
     svg.push('<text x="'+(W/2)+'" y="'+ty+'" font-family="sans-serif" font-weight="700" font-size="'+(labelH*0.5)+'" fill="'+col+'" text-anchor="middle">'+escapeXml(S.labelText)+'</text>');
   }
   svg.push('</svg>');
@@ -3396,6 +3432,7 @@ function segBind(id, key, cb){
 segBind("dotSeg","dot");
 segBind("eyeSeg","eye");
 segBind("animSeg","animKind");
+segBind("labelPosSeg","labelPos");
 
 $("content").addEventListener("input", function(e){ S.content=e.target.value; rerender(); });
 
@@ -3504,11 +3541,12 @@ $("artClear").addEventListener("click",clearArt);
 
 // animation
 $("anim").addEventListener("change",function(e){ S.anim=e.target.checked; rerender(); });
-$("animSpeed").addEventListener("input",function(e){S.animSpeed=+e.target.value;$("animSpeedOut").textContent((+e.target.value).toFixed(1)+"×");rerender();});
+$("animSpeed").addEventListener("input",function(e){S.animSpeed=+e.target.value;$("animSpeedOut").textContent=(+e.target.value).toFixed(1)+"×";rerender();});
 
 // label
 $("labelOn").addEventListener("change",function(e){S.labelOn=e.target.checked;rerender();});
 $("labelText").addEventListener("input",function(e){S.labelText=e.target.value;rerender();});
+$("labelSize").addEventListener("input",function(e){S.labelSize=+e.target.value;$("labelSizeOut").textContent=e.target.value+"%";rerender();});
 
 // export buttons
 $("dlPng").addEventListener("click",exportPNG);
