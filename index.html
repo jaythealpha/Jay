@@ -129,9 +129,18 @@
   .gal-intro h3{margin:0;font-size:20px}
   .gal-intro p{margin:4px 0 0;color:var(--mut);font-size:13px}
   .chips{display:flex;gap:8px;flex-wrap:wrap}
-  .chip{background:var(--card2);border:1px solid var(--line2);border-radius:20px;padding:6px 12px;font-size:12px;color:var(--mut)}
+  .chip{background:var(--card2);border:1px solid var(--line2);border-radius:20px;padding:8px 14px;font-size:12px;color:var(--mut);cursor:pointer;font-family:inherit;font-weight:600;transition:.15s}
+  button.chip:hover{border-color:var(--acc);color:#fff;background:linear-gradient(135deg,rgba(124,92,255,.28),rgba(34,211,238,.2));transform:translateY(-1px)}
 
   /* about */
+  /* AR */
+  .ar-wrap{max-width:720px;margin:0 auto}
+  .ar-stage{position:relative;width:100%;aspect-ratio:3/4;min-height:340px;max-height:72vh;background:#0b0d12;border:1px solid var(--line);border-radius:16px;overflow:hidden;display:grid;place-items:center}
+  #arCam{display:none}
+  #arCanvas{width:100%;height:100%;object-fit:cover;touch-action:none;cursor:grab;display:block}
+  #arCanvas:active{cursor:grabbing}
+  .ar-msg{position:absolute;color:var(--mut);font-size:14px;pointer-events:none;text-align:center;padding:24px;line-height:1.6}
+  .ar-controls{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-top:14px}
   .about{max-width:820px;margin:0 auto}
   .about h3{font-size:19px;margin:26px 0 10px}
   .about p,.about li{color:var(--mut);font-size:14px;line-height:1.7}
@@ -162,6 +171,7 @@
     <nav class="tabs" id="tabs">
       <button data-view="gallery" class="active">갤러리</button>
       <button data-view="studio">스튜디오</button>
+      <button data-view="ar">AR</button>
       <button data-view="about">기술 분석</button>
     </nav>
   </header>
@@ -177,11 +187,12 @@
         <h3>디자인 갤러리</h3>
         <p>클릭 한 번으로 스튜디오에 불러오기</p>
       </div>
-      <div class="chips">
-        <span class="chip">🎨 그라디언트</span>
-        <span class="chip">⬤ 커스텀 모듈</span>
-        <span class="chip">🖼️ 로고 삽입</span>
-        <span class="chip">✨ 애니메이션</span>
+      <div class="chips" id="featureChips">
+        <button class="chip" data-jump="1" data-act="art">🖼️ 이미지·영상 아트</button>
+        <button class="chip" data-jump="3" data-act="gradient">🎨 그라디언트</button>
+        <button class="chip" data-jump="2">⬤ 커스텀 모듈</button>
+        <button class="chip" data-jump="4">🏷️ 로고 삽입</button>
+        <button class="chip" data-jump="5" data-act="anim">✨ 애니메이션</button>
       </div>
     </div>
     <div class="gal-grid" id="galGrid"></div>
@@ -227,6 +238,27 @@
               </div>
               <div class="hint">높을수록 로고를 크게 넣어도 스캔이 됩니다. 로고 사용 시 <b>H</b> 권장.</div>
             </label>
+          </div>
+        </details>
+
+        <details class="grp" open>
+          <summary><svg class="ic" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="10" r="2" fill="currentColor"/><path d="M4 18l5-5 3 3 4-4 4 4" stroke="currentColor" stroke-width="2" fill="none"/></svg>이미지 · 영상 아트 QR<span style="margin-left:8px;font-size:10px;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--acc),var(--acc3));padding:2px 7px;border-radius:20px">핵심</span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
+          <div class="body">
+            <label class="file-btn" for="artFile" id="artLabel">＋ 이미지 / 영상 업로드 — QR 전체를 덮는 아트</label>
+            <input type="file" id="artFile" accept="image/*,video/*" />
+            <div id="artControls" style="display:none">
+              <label class="fld">
+                <div class="lbl">아트 노출도 <b id="artVisOut">55%</b></div>
+                <input type="range" id="artVis" min="20" max="85" step="1" value="55" />
+                <div class="hint">높을수록 그림이 더 드러나고, 낮을수록 스캔이 더 안정적입니다.</div>
+              </label>
+              <div class="switch" style="margin-top:12px">
+                <div class="lbl" style="margin:0">어두운 그림용 반전</div>
+                <label class="toggle"><input type="checkbox" id="artInvert" /><span></span></label>
+              </div>
+              <button class="btn sec" id="artClear" style="margin-top:12px;flex:none;width:100%">아트 제거</button>
+            </div>
+            <div class="hint" id="artHint">Stable Diffusion+ControlNet 기반 AI 아트 QR을 <b>서버 없이</b> 재현합니다. 업로드한 이미지가 QR 전체에 깔리고, 그 위 도트 패턴으로 스캔됩니다. <b>영상</b>을 올리면 애니메이션 QR이 되고 <b>애니메이션 저장</b>으로 WebM 출력됩니다. (오류정정 <b>H</b> 권장)</div>
           </div>
         </details>
 
@@ -352,6 +384,32 @@
     </div>
   </section>
 
+  <!-- ============ AR (camera) ============ -->
+  <section class="view" id="view-ar">
+    <div class="hero" style="padding:6px 0 16px">
+      <h2>QR을 <span class="g">현실 공간</span>에 띄우기</h2>
+      <p>카메라를 켜고 방금 만든 QR을 실제 화면 위에 배치·크기 조절해 사진으로 남기세요. 모바일 후면 카메라 권장 · 100% 브라우저 처리(영상 전송 없음).</p>
+    </div>
+    <div class="ar-wrap">
+      <div class="ar-stage" id="arStage">
+        <video id="arCam" playsinline muted></video>
+        <canvas id="arCanvas"></canvas>
+        <div class="ar-msg" id="arMsg">‘카메라 시작’을 눌러 QR을 현실에 배치해 보세요</div>
+      </div>
+      <div class="ar-controls">
+        <button class="btn" id="arStart">📷 카메라 시작</button>
+        <button class="btn sec" id="arFlip" disabled>전환</button>
+        <label class="fld" style="flex:1;min-width:170px;margin:0">
+          <div class="lbl" style="margin-bottom:5px">QR 크기 <b id="arSizeOut">42%</b></div>
+          <input type="range" id="arSize" min="15" max="90" step="1" value="42" />
+        </label>
+        <button class="btn" id="arShot" disabled>📸 사진 저장</button>
+        <button class="btn sec" id="arStop" disabled>정지</button>
+      </div>
+      <div class="hint" style="text-align:center;margin-top:10px">QR을 손가락/마우스로 드래그해 위치를 옮길 수 있습니다. 스튜디오에서 만든 디자인(아트·애니메이션 포함)이 그대로 반영됩니다.</div>
+    </div>
+  </section>
+
   <!-- ============ ABOUT / ANALYSIS ============ -->
   <section class="view" id="view-about">
     <div class="about">
@@ -359,17 +417,20 @@
       <p style="font-size:13px;color:var(--mut2)">참고 사이트: <a href="https://lemiocode.com/gallery" target="_blank" rel="noopener">lemiocode.com/gallery</a> · 이 앱은 동일한 핵심 기술(미적·스캔가능 QR 생성)을 오픈소스로 재구현한 결과물입니다.</p>
 
       <h3>컨셉</h3>
-      <p>LemioCode의 슬로건은 <b>“Transform the Ordinary”</b>입니다. 흑백 사각형에 불과하던 QR 코드를, 브랜드 컬러·형태·로고·움직임을 입힌 <b>디자인 자산</b>으로 바꾸는 것이 핵심 가치입니다. 정적(이미지) QR과 애니메이션(GIF/영상) QR 두 종류를 제공하며, 갤러리는 영감을 주는 샘플 쇼케이스로 기능합니다. 주요 타깃은 마케팅 에이전시·이벤트 주최자·크리에이터입니다.</p>
+      <p>LemioCode의 슬로건은 <b>“Transform the Ordinary”</b>입니다. 핵심은 단순 로고 삽입이 아니라, <b>이미지·영상·GIF 전체가 QR 코드 그 자체가 되는 “아트 QR”</b>입니다. 정적(이미지) QR과 애니메이션(영상/GIF) QR을 제공하고, 갤러리는 영감을 주는 샘플 쇼케이스입니다. 타깃은 마케팅 에이전시·이벤트 주최자·크리에이터입니다.</p>
 
-      <h3>핵심 기술 — 어떻게 “예쁜데 스캔이 되는가”</h3>
-      <p>비밀은 QR 규격의 <b>오류 정정(Reed–Solomon Error Correction)</b>에 있습니다. QR은 최대 30%(레벨 H)가 손상돼도 복원됩니다. 이 여유분을 “디자인 예산”으로 써서 색·형태·로고를 얹어도 스캐너가 원본 데이터를 복구합니다. 이 앱은 다음 파이프라인으로 이를 구현합니다:</p>
+      <h3>실제 원본의 기술 — Stable Diffusion + ControlNet</h3>
+      <p>LemioCode는 <b>Stable Diffusion + ControlNet</b> 기반의 <b>AI 아트 QR</b>입니다(특허 출원 중 스캔 최적화). ControlNet이 QR 패턴을 “밝고 어두운 영역의 조건(condition)”으로 넣어, AI가 그림의 명암·질감·오브젝트 배치를 <b>QR 모듈에 맞춰</b> 생성합니다. 그 결과 그림 전체가 스캔 가능한 QR이 됩니다.</p>
+
+      <h3>이 앱의 재현 방식 — 서버 없이 “이미지가 QR 전체에 반영”</h3>
+      <p>브라우저에는 GPU 확산 모델이 없으므로, 동일한 <b>결과(그림이 코드 전체에 깔리고 스캔됨)</b>를 <b>이미지 블렌딩</b>으로 재현합니다. 업로드한 이미지/영상을 QR 영역 전체에 깔고, 각 셀을 <b>반투명 명암 오버레이</b>로 덮어 셀의 평균 밝기가 모듈(밝음/어둠)을 정확히 인코딩하게 합니다 — 그림은 셀마다 비쳐 보이고, 스캐너는 데이터를 읽습니다. “아트 노출도” 슬라이더로 그림 노출과 스캔 안정성을 조절합니다.</p>
       <div class="feat">
-        <div class="f"><h4>1. 인코딩</h4><p>텍스트/URL → 오류정정 레벨(L/M/Q/H)에 맞춰 QR 매트릭스(모듈 격자) 생성. 자동 버전 선택.</p></div>
-        <div class="f"><h4>2. 스타일 렌더링</h4><p>Canvas 2D로 각 모듈을 사각·둥근·점·다이아 등 커스텀 형태로 그리고, 3개의 “눈(Finder)”을 별도 스타일로 렌더링.</p></div>
-        <div class="f"><h4>3. 컬러/그라디언트</h4><p>단색·선형·원형 그라디언트를 fillStyle로 적용. 명암 대비(contrast)를 유지해 스캔성 보장.</p></div>
-        <div class="f"><h4>4. 로고 합성</h4><p>중앙에 로고를 배치하고 아래 모듈을 비워 가독성 확보. ECC-H의 복원력에 의존.</p></div>
-        <div class="f"><h4>5. 애니메이션</h4><p>패턴은 고정, 컬러 레이어만 움직임(회전/펄스/스윕). 모든 프레임이 스캔 가능. MediaRecorder로 영상 내보내기.</p></div>
-        <div class="f"><h4>6. 내보내기</h4><p>고해상 PNG, 벡터 SVG(인쇄용), 애니메이션 WebM. 클립보드 복사 지원.</p></div>
+        <div class="f"><h4>1. 인코딩</h4><p>텍스트/URL → 오류정정 레벨(L/M/Q/H) QR 매트릭스 생성. 자동 버전. UTF-8로 한/일/이모지 지원.</p></div>
+        <div class="f"><h4>2. 🖼️ 이미지·영상 아트 QR</h4><p><b>핵심.</b> 미디어가 코드 전체를 덮고, 셀 단위 반투명 오버레이로 스캔성을 보장. 영상 업로드 시 애니메이션 QR + WebM 출력.</p></div>
+        <div class="f"><h4>3. 스타일 렌더링</h4><p>모듈 5종(사각·둥근·점·클래시·다이아)·눈 4종. 이웃 인식 라운딩으로 예쁘면서 잉크 커버리지 유지.</p></div>
+        <div class="f"><h4>4. 컬러/그라디언트</h4><p>단색·선형·원형 그라디언트. 실시간 대비 경고로 스캔성 보호.</p></div>
+        <div class="f"><h4>5. 로고 & 애니메이션</h4><p>중앙 로고 합성(ECC-H 복원력). 컬러 회전/펄스/스윕 애니메이션 + MediaRecorder WebM.</p></div>
+        <div class="f"><h4>6. 📷 AR 미리보기</h4><p>추가 기능. 카메라 위에 QR을 배치·크기조절해 현실 공간에 띄우고 사진 저장. 100% 브라우저, 영상 비전송.</p></div>
       </div>
 
       <h3>이 구현의 기술 스택</h3>
@@ -2721,7 +2782,12 @@ var S = {
   animKind: "rotate",
   animSpeed: 1,
   labelOn: false,
-  labelText: "SCAN ME"
+  labelText: "SCAN ME",
+  // ---- full-image "art QR" (LemioCode-style: media covers the whole code) ----
+  artImg: null,        // HTMLImageElement or HTMLVideoElement used as full background
+  artIsVideo: false,   // true when the uploaded media is a video → animated QR
+  artVisibility: 55,   // % — higher = artwork shows more, lower = more scannable
+  artInvert: false     // invert dark/light overlay (for dark artworks)
 };
 
 var $ = function(id){ return document.getElementById(id); };
@@ -2926,32 +2992,38 @@ function render(g2, exportSize){
   g.clearRect(0,0,size,size);
   if (!S.transparent){ g.fillStyle = S.bg; g.fillRect(0,0,size,size); }
 
-  // fill style for modules
-  g.fillStyle = makeFill(g, ox, oy, n*unit);
+  if (S.artImg){
+    // ===== full-image "art QR" mode (media covers the entire code) =====
+    drawArtLayer(g, ox, oy, unit, n, m);
+  } else {
+    // ===== styled vector QR mode =====
+    // fill style for modules
+    g.fillStyle = makeFill(g, ox, oy, n*unit);
 
-  // body modules (skip finders). Pass dark-neighbour flags for connected rounding.
-  for (var r=0;r<n;r++){
-    for (var c=0;c<n;c++){
-      if (!m[r][c]) continue;
-      if (isFinder(r,c,n)) continue;
-      var nb = {
-        u: r>0     && m[r-1][c],
-        d: r<n-1   && m[r+1][c],
-        l: c>0     && m[r][c-1],
-        r: c<n-1   && m[r][c+1]
-      };
-      drawModule(g, ox+c*unit, oy+r*unit, unit, S.dot, nb);
+    // body modules (skip finders). Pass dark-neighbour flags for connected rounding.
+    for (var r=0;r<n;r++){
+      for (var c=0;c<n;c++){
+        if (!m[r][c]) continue;
+        if (isFinder(r,c,n)) continue;
+        var nb = {
+          u: r>0     && m[r-1][c],
+          d: r<n-1   && m[r+1][c],
+          l: c>0     && m[r][c-1],
+          r: c<n-1   && m[r][c+1]
+        };
+        drawModule(g, ox+c*unit, oy+r*unit, unit, S.dot, nb);
+      }
     }
-  }
 
-  // finders (eyes) — draw with same fill; punch bg hole
-  var eyeFill = g.fillStyle;
-  var positions = [[0,0],[0,n-7],[n-7,0]];
-  for (var i=0;i<positions.length;i++){
-    var fr=positions[i][0], fc=positions[i][1];
-    var px=ox+fc*unit, py=oy+fr*unit;
-    // punch background under the eye so evenodd holes show bg, not transparent (unless transparent bg)
-    drawEyeWithHole(g, px, py, unit, S.eye, eyeFill);
+    // finders (eyes) — draw with same fill; punch bg hole
+    var eyeFill = g.fillStyle;
+    var positions = [[0,0],[0,n-7],[n-7,0]];
+    for (var i=0;i<positions.length;i++){
+      var fr=positions[i][0], fc=positions[i][1];
+      var px=ox+fc*unit, py=oy+fr*unit;
+      // punch background under the eye so evenodd holes show bg, not transparent (unless transparent bg)
+      drawEyeWithHole(g, px, py, unit, S.eye, eyeFill);
+    }
   }
 
   // logo
@@ -2976,6 +3048,68 @@ function render(g2, exportSize){
     g.font = "700 "+fs+"px -apple-system,'Noto Sans KR',sans-serif";
     g.textAlign="center"; g.textBaseline="middle";
     g.fillText(S.labelText, size/2, avail + labelSpace*0.52);
+  }
+}
+
+// ---------- full-image "art QR" ----------
+// draw an image/video "cover"-fit into a square box, cropping the overflow
+function drawCover(g, img, x, y, w, h){
+  var iw = img.videoWidth || img.naturalWidth || img.width;
+  var ih = img.videoHeight || img.naturalHeight || img.height;
+  if (!iw || !ih){ return false; }
+  var scale = Math.max(w/iw, h/ih);
+  var dw = iw*scale, dh = ih*scale;
+  var dx = x + (w-dw)/2, dy = y + (h-dh)/2;
+  g.save(); g.beginPath(); g.rect(x,y,w,h); g.clip();
+  try { g.drawImage(img, dx, dy, dw, dh); } catch(e){}
+  g.restore();
+  return true;
+}
+// LemioCode-style blending, done client-side: the artwork fills the whole QR and the
+// QR pattern is embedded as an opaque module-dot grid. Dark modules → dark dots,
+// light modules → light dots; the artwork shows through the gaps between dots.
+// Higher "visibility" shrinks the dots (more art, less scan margin). Finders stay solid.
+function drawArtLayer(g, ox, oy, unit, n, m){
+  var area = n*unit;
+  // 1) artwork covers the whole module area
+  var ok = drawCover(g, S.artImg, ox, oy, area, area);
+  if (!ok){ g.fillStyle="#0b0d12"; g.fillRect(ox,oy,area,area); }
+  // 2) gentle contrast veil so dots read on busy artwork
+  g.fillStyle = "rgba(255,255,255,0.12)";
+  g.fillRect(ox, oy, area, area);
+
+  var vis = Math.max(0.2, Math.min(0.80, S.artVisibility/100));
+  // Per-cell translucent overlay: the whole cell shifts toward dark/light so its average
+  // luminance encodes the module correctly (reliable scanning), while (1-alpha) of the
+  // artwork still shows through every cell → the image reads across the ENTIRE code.
+  // Higher visibility → lower alpha → more artwork, less scan margin.
+  var aDark  = 1 - vis*0.60;   // 0.20→0.88 … 0.80→0.52
+  var aLight = 1 - vis*0.52;   // 0.20→0.90 … 0.80→0.58
+  var dk = S.artInvert ? "255,255,255" : "0,0,0";
+  var lt = S.artInvert ? "0,0,0"       : "255,255,255";
+  var rad = unit*0.20;         // soft-rounded cells; artwork peeks at the corners
+
+  // 3) module overlay (skip finder regions)
+  for (var r=0;r<n;r++){
+    for (var c=0;c<n;c++){
+      if (isFinder(r,c,n)) continue;
+      var x = ox + c*unit, y = oy + r*unit;
+      if (m[r][c]) g.fillStyle = "rgba("+dk+","+aDark+")";
+      else         g.fillStyle = "rgba("+lt+","+aLight+")";
+      roundRect(g, x, y, unit+0.6, unit+0.6, rad); g.fill();
+    }
+  }
+
+  // 4) finder patterns — solid, on a clean pad, for reliable detection
+  var eyeDark  = S.artInvert ? "#ffffff" : "#000000";
+  var eyeLight = S.artInvert ? "#000000" : "#ffffff";
+  var pos = [[0,0],[0,n-7],[n-7,0]];
+  for (var i=0;i<pos.length;i++){
+    var px = ox + pos[i][1]*unit, py = oy + pos[i][0]*unit, o = unit*7;
+    g.fillStyle = eyeLight; roundRect(g, px-unit*0.5, py-unit*0.5, o+unit, o+unit, unit*0.6); g.fill();
+    g.fillStyle = eyeDark;  pathEyeShape(g, px, py, o, S.eye, 0); g.fill();
+    g.fillStyle = eyeLight; pathEyeShape(g, px+unit, py+unit, o-2*unit, S.eye, 1); g.fill();
+    g.fillStyle = eyeDark;  pathEyeShape(g, px+unit*2, py+unit*2, o-4*unit, S.eye, 2); g.fill();
   }
 }
 
@@ -3111,6 +3245,13 @@ function updateMeta(){
   if(!data){ $("metaVer").textContent="—"; $("metaScan").textContent="⚠ 데이터 길이 초과"; $("metaScan").style.color="#ff5c8a"; return; }
   $("metaVer").textContent = "버전 "+data.version+" · "+data.n+"×"+data.n;
   $("metaEcc").textContent = "ECC "+S.ecc;
+  if (S.artImg){
+    var msg = (S.artIsVideo?"🎬 영상 아트 QR":"🖼️ 이미지 아트 QR");
+    if (S.artVisibility > 70) { $("metaScan").textContent="⚠ "+msg+" · 노출도 높음(스캔 테스트 권장)"; $("metaScan").style.color="#ffcc4d"; }
+    else { $("metaScan").textContent="✓ "+msg+" · 스캔 양호"; $("metaScan").style.color="#3ddc97"; }
+    if (S.ecc!=="H"){ $("metaScan").textContent="⚠ "+msg+" · ECC-H 권장"; $("metaScan").style.color="#ffcc4d"; }
+    return;
+  }
   var warn=[];
   var cr = S.transparent ? 5 : contrastRatio(S.fg1, S.bg);
   var cr2 = S.transparent ? 5 : contrastRatio(S.fg2, S.bg);
@@ -3137,10 +3278,11 @@ function startAnim(){
   _raf=requestAnimationFrame(step);
 }
 function stopAnim(){ if(_raf){cancelAnimationFrame(_raf);_raf=null;} _phase=0; }
+function isAnimating(){ return S.anim || S.artIsVideo; }
 function rerender(){
-  if(S.anim){ startAnim(); } else { stopAnim(); render(ctx,EXPORT); }
+  if(isAnimating()){ startAnim(); } else { stopAnim(); render(ctx,EXPORT); }
   updateMeta();
-  $("dlWebm").disabled = !S.anim;
+  $("dlWebm").disabled = !isAnimating();
 }
 
 // ---------- exports ----------
@@ -3148,7 +3290,7 @@ function download(url, name){
   var a=document.createElement("a"); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
 }
 function exportPNG(){
-  var was=S.anim; if(was){ stopAnim(); }
+  var was=isAnimating() && !S.artIsVideo; if(was){ stopAnim(); }
   var off=document.createElement("canvas"); off.width=EXPORT; off.height=EXPORT;
   render(off.getContext("2d"), EXPORT);
   off.toBlob(function(b){ download(URL.createObjectURL(b), "aesthetic-qr.png"); toast("PNG 저장됨"); if(was) startAnim(); }, "image/png");
@@ -3170,7 +3312,7 @@ function copyPNG(){
   },"image/png");
 }
 function exportWebM(){
-  if(!S.anim){ toast("애니메이션을 먼저 켜세요"); return; }
+  if(!isAnimating()){ toast("애니메이션 또는 영상 아트를 먼저 켜세요"); return; }
   if(!canvas.captureStream || typeof MediaRecorder==="undefined"){ toast("이 브라우저는 영상 저장 미지원"); return; }
   var stream=canvas.captureStream(30);
   var mime = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")?"video/webm;codecs=vp9":"video/webm";
@@ -3178,9 +3320,10 @@ function exportWebM(){
   var chunks=[];
   rec.ondataavailable=function(e){ if(e.data.size) chunks.push(e.data); };
   rec.onstop=function(){ var b=new Blob(chunks,{type:"video/webm"}); download(URL.createObjectURL(b),"aesthetic-qr.webm"); toast("애니메이션(WebM) 저장됨"); };
-  toast("녹화 중… (약 3.5초)");
+  var dur = S.artIsVideo ? Math.min((S.artImg && S.artImg.duration ? S.artImg.duration*1000 : 4000), 8000) : (3600/S.animSpeed);
+  toast("녹화 중… ("+Math.round(dur/1000)+"초)");
   rec.start();
-  setTimeout(function(){ rec.stop(); }, 3600/S.animSpeed + 200);
+  setTimeout(function(){ rec.stop(); }, dur + 200);
 }
 
 // ---------- toast ----------
@@ -3261,6 +3404,44 @@ $("logoClear").addEventListener("click",function(){
   rerender();
 });
 
+// ---- image/video art QR ----
+function clearArt(){
+  if (S.artImg && S.artIsVideo){ try{ S.artImg.pause(); }catch(e){} }
+  S.artImg=null; S.artIsVideo=false; $("artFile").value="";
+  $("artControls").style.display="none";
+  $("artLabel").textContent="＋ 이미지 / 영상 업로드 — QR 전체를 덮는 아트";
+  rerender();
+}
+$("artFile").addEventListener("change",function(e){
+  var f=e.target.files[0]; if(!f) return;
+  var url=URL.createObjectURL(f);
+  if (/^video\//.test(f.type)){
+    var v=document.createElement("video");
+    v.muted=true; v.loop=true; v.playsInline=true; v.crossOrigin="anonymous"; v.src=url;
+    v.addEventListener("loadeddata",function(){
+      S.artImg=v; S.artIsVideo=true;
+      v.play().catch(function(){});
+      $("artControls").style.display="block";
+      $("artLabel").textContent="✓ 영상 업로드됨 (애니메이션 QR) — 변경하려면 클릭";
+      if(S.ecc!=="H") toast("아트 QR은 ECC-H 권장");
+      rerender();
+    });
+  } else {
+    var img=new Image();
+    img.onload=function(){
+      S.artImg=img; S.artIsVideo=false;
+      $("artControls").style.display="block";
+      $("artLabel").textContent="✓ 이미지 업로드됨 — 변경하려면 클릭";
+      if(S.ecc!=="H") toast("아트 QR은 ECC-H 권장");
+      rerender();
+    };
+    img.src=url;
+  }
+});
+$("artVis").addEventListener("input",function(e){ S.artVisibility=+e.target.value; $("artVisOut").textContent=e.target.value+"%"; rerender(); });
+$("artInvert").addEventListener("change",function(e){ S.artInvert=e.target.checked; rerender(); });
+$("artClear").addEventListener("click",clearArt);
+
 // animation
 $("anim").addEventListener("change",function(e){ S.anim=e.target.checked; rerender(); });
 $("animSpeed").addEventListener("input",function(e){S.animSpeed=+e.target.value;$("animSpeedOut").textContent((+e.target.value).toFixed(1)+"×");rerender();});
@@ -3280,8 +3461,93 @@ $("tabs").addEventListener("click",function(e){
   var b=e.target.closest("button"); if(!b) return;
   Array.prototype.forEach.call(this.children,function(x){x.classList.remove("active");});
   b.classList.add("active");
-  ["gallery","studio","about"].forEach(function(v){ $("view-"+v).classList.toggle("active", v===b.dataset.view); });
+  ["gallery","studio","ar","about"].forEach(function(v){ $("view-"+v).classList.toggle("active", v===b.dataset.view); });
   if(b.dataset.view==="studio") rerender();
+  if(b.dataset.view==="ar") AR.refresh(); else AR.leave();
+});
+
+// ---------- AR (camera overlay) ----------
+var AR = (function(){
+  var stream=null, raf=null, facing="environment";
+  var qr=document.createElement("canvas");     // offscreen current QR sprite
+  var pos={x:0.5,y:0.5}, drag=false, dragOff={x:0,y:0};
+  var cam, cv, cx, stage, msg;
+  function els(){ cam=$("arCam"); cv=$("arCanvas"); stage=$("arStage"); msg=$("arMsg"); if(cv) cx=cv.getContext("2d"); }
+  function refresh(){ qr.width=qr.height=512; try{ render(qr.getContext("2d"), 512); }catch(e){} }
+  function fit(){ if(!cv||!stage) return; var r=stage.getBoundingClientRect(); cv.width=Math.max(2,Math.round(r.width)); cv.height=Math.max(2,Math.round(r.height)); }
+  function coverDraw(g,img,W,H){ var iw=img.videoWidth||img.width, ih=img.videoHeight||img.height; if(!iw||!ih)return; var s=Math.max(W/iw,H/ih), dw=iw*s, dh=ih*s; g.drawImage(img,(W-dw)/2,(H-dh)/2,dw,dh); }
+  function loop(){
+    if(!stream){return;}
+    fit(); var W=cv.width,H=cv.height;
+    cx.fillStyle="#000"; cx.fillRect(0,0,W,H);
+    if(cam.readyState>=2) coverDraw(cx,cam,W,H);
+    var sz=(+$("arSize").value/100)*Math.min(W,H);
+    var x=pos.x*W - sz/2, y=pos.y*H - sz/2;
+    cx.save();
+    cx.shadowColor="rgba(0,0,0,0.45)"; cx.shadowBlur=sz*0.05; cx.shadowOffsetY=sz*0.02;
+    roundRect(cx, x-sz*0.04, y-sz*0.04, sz*1.08, sz*1.08, sz*0.06); cx.fillStyle="#fff"; cx.fill();
+    cx.restore();
+    if(qr.width) cx.drawImage(qr, x, y, sz, sz);
+    raf=requestAnimationFrame(loop);
+  }
+  function evtPos(e){ var r=cv.getBoundingClientRect(); var t=e.touches?e.touches[0]:e; return {x:(t.clientX-r.left)/r.width, y:(t.clientY-r.top)/r.height}; }
+  function down(e){ var p=evtPos(e); drag=true; dragOff.x=p.x-pos.x; dragOff.y=p.y-pos.y; e.preventDefault(); }
+  function move(e){ if(!drag)return; var p=evtPos(e); pos.x=Math.max(0,Math.min(1,p.x-dragOff.x)); pos.y=Math.max(0,Math.min(1,p.y-dragOff.y)); e.preventDefault(); }
+  function up(){ drag=false; }
+  async function start(){
+    els();
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){ msg.textContent="이 브라우저/환경은 카메라를 지원하지 않습니다 (HTTPS 필요)."; msg.style.display="block"; return; }
+    try{ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:facing}},audio:false}); }
+    catch(err){ try{ stream=await navigator.mediaDevices.getUserMedia({video:true,audio:false}); }
+      catch(e2){ msg.textContent="카메라 접근이 거부되었어요. 브라우저 권한을 허용해 주세요."; msg.style.display="block"; return; } }
+    cam.srcObject=stream; await cam.play().catch(function(){});
+    msg.style.display="none"; refresh(); fit();
+    $("arStart").disabled=true; $("arShot").disabled=false; $("arStop").disabled=false; $("arFlip").disabled=false;
+    cv.addEventListener("mousedown",down); window.addEventListener("mousemove",move); window.addEventListener("mouseup",up);
+    cv.addEventListener("touchstart",down,{passive:false}); cv.addEventListener("touchmove",move,{passive:false}); cv.addEventListener("touchend",up);
+    if(raf)cancelAnimationFrame(raf); loop();
+  }
+  function stop(){
+    if(raf){cancelAnimationFrame(raf);raf=null;}
+    if(stream){ stream.getTracks().forEach(function(t){t.stop();}); stream=null; }
+    if(cam) cam.srcObject=null;
+    if(cx&&cv){ cx.clearRect(0,0,cv.width,cv.height); }
+    if(msg){ msg.textContent="정지됨 — 다시 시작할 수 있어요"; msg.style.display="block"; }
+    $("arStart").disabled=false; $("arShot").disabled=true; $("arStop").disabled=true; $("arFlip").disabled=true;
+  }
+  async function flip(){ facing=(facing==="environment")?"user":"environment"; if(stream){ stream.getTracks().forEach(function(t){t.stop();}); stream=null; } $("arStart").disabled=false; await start(); }
+  function shot(){ if(!stream)return; cv.toBlob(function(b){ if(!b)return; download(URL.createObjectURL(b),"qr-in-ar.png"); toast("AR 사진 저장됨"); },"image/png"); }
+  function leave(){ if(stream) stop(); }
+  return {
+    init:function(){ els();
+      $("arStart").addEventListener("click",start);
+      $("arStop").addEventListener("click",stop);
+      $("arFlip").addEventListener("click",flip);
+      $("arShot").addEventListener("click",shot);
+      $("arSize").addEventListener("input",function(e){$("arSizeOut").textContent=e.target.value+"%";});
+    },
+    refresh:function(){ els(); refresh(); fit(); },
+    leave:leave
+  };
+})();
+
+// ---------- feature chips (jump to the matching control group) ----------
+function gotoStudio(){
+  Array.prototype.forEach.call($("tabs").children,function(x){x.classList.toggle("active", x.dataset.view==="studio");});
+  ["gallery","studio","ar","about"].forEach(function(v){ $("view-"+v).classList.toggle("active", v==="studio"); });
+  rerender();
+}
+$("featureChips").addEventListener("click",function(e){
+  var b=e.target.closest("button"); if(!b) return;
+  gotoStudio();
+  var groups=document.querySelectorAll("#panel > details");
+  var idx=+b.dataset.jump;
+  Array.prototype.forEach.call(groups,function(d,i){ d.open = (i===idx); });
+  if(groups[idx]) groups[idx].scrollIntoView({behavior:"smooth",block:"center"});
+  // optional quick action
+  if(b.dataset.act==="gradient"){ var lg=[].slice.call($("fillSeg").children).find(function(x){return x.dataset.fill==="linear";}); if(lg) lg.click(); }
+  if(b.dataset.act==="anim"){ if(!S.anim){ $("anim").checked=true; S.anim=true; rerender(); } }
+  if(b.dataset.act==="art"){ setTimeout(function(){ $("artFile").click(); }, 350); }
 });
 
 // ---------- gallery presets ----------
@@ -3326,7 +3592,7 @@ function applyPreset(ps){
   $("angleWrap").style.display = S.fill==="linear"?"block":"none";
   // switch to studio
   Array.prototype.forEach.call($("tabs").children,function(x){x.classList.toggle("active", x.dataset.view==="studio");});
-  ["gallery","studio","about"].forEach(function(v){ $("view-"+v).classList.toggle("active", v==="studio"); });
+  ["gallery","studio","ar","about"].forEach(function(v){ $("view-"+v).classList.toggle("active", v==="studio"); });
   rerender();
   toast("프리셋 적용됨 — 자유롭게 편집하세요");
 }
@@ -3345,6 +3611,7 @@ if (typeof qrcode === "undefined"){
   render(ctx, EXPORT);
   updateMeta();
   buildGallery();
+  AR.init();
 }
 })();
 </script>
