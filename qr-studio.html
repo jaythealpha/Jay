@@ -366,7 +366,7 @@
               <div class="lbl">속도 <b id="animSpeedOut">1.0×</b></div>
               <input type="range" id="animSpeed" min="0.2" max="3" step="0.1" value="1" />
             </label>
-            <div class="hint"><b>샤인</b>은 단색·그라디언트·아트 어디서나 빛이 흐르는 효과라 항상 보입니다. <b>회전/펄스/스윕</b>은 <b>그라디언트</b> 채우기에서 보입니다(단색이면 변화 없음). 미리보기에서 움직이며, <b>애니메이션 저장</b>은 WebM 영상으로 내보냅니다. QR 패턴은 고정이라 모든 프레임이 스캔됩니다.</div>
+            <div class="hint">네 가지 효과(<b>샤인·회전·펄스·스윕</b>) 모두 단색·그라디언트·아트 어디서나 빛 오버레이로 <b>항상 보입니다</b>. 미리보기에서 실시간으로 움직이고, <b>애니메이션 저장</b>은 WebM 영상으로 내보냅니다. QR 패턴은 고정이라 모든 프레임이 스캔됩니다.</div>
           </div>
         </details>
 
@@ -469,7 +469,7 @@
   <footer>
     <div>Aesthetic QR Studio · LemioCode 컨셉을 오픈소스로 재구현 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.03-l</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.03-o</b></div>
   </footer>
 </div>
 
@@ -2866,29 +2866,21 @@ function contrastRatio(a,b){
   return (hi+0.05)/(lo+0.05);
 }
 
-// build fill style for the module layer
+// build fill style for the module layer (static; motion is added by an overlay pass)
+function hexA(h,a){ var c=hexToRgb(h); return "rgba("+c[0]+","+c[1]+","+c[2]+","+a+")"; }
 function makeFill(g, x0, y0, size){
   if (S.fill==="solid") return S.fg1;
   var grad;
   if (S.fill==="linear"){
-    var a = (S.angle + (S.anim && S.animKind==="rotate" ? _phase*360 : 0)) * Math.PI/180;
+    var a = S.angle * Math.PI/180;
     var cx=x0+size/2, cy=y0+size/2, r=size/2;
     var dx=Math.cos(a)*r, dy=Math.sin(a)*r;
     grad = g.createLinearGradient(cx-dx, cy-dy, cx+dx, cy+dy);
   } else {
-    var pr = size*0.72;
-    var off = (S.anim && S.animKind==="pulse") ? (0.5+0.5*Math.sin(_phase*Math.PI*2))*size*0.2 : 0;
-    grad = g.createRadialGradient(x0+size/2, y0+size/2, off, x0+size/2, y0+size/2, pr);
+    grad = g.createRadialGradient(x0+size/2, y0+size/2, 0, x0+size/2, y0+size/2, size*0.72);
   }
-  if (S.anim && S.animKind==="sweep"){
-    var t=_phase;
-    grad.addColorStop(Math.max(0,t-0.35), S.fg1);
-    grad.addColorStop(t, S.fg2);
-    grad.addColorStop(Math.min(1,t+0.35), S.fg1);
-  } else {
-    grad.addColorStop(0, S.fg1);
-    grad.addColorStop(1, S.fg2);
-  }
+  grad.addColorStop(0, S.fg1);
+  grad.addColorStop(1, S.fg2);
   return grad;
 }
 
@@ -3069,19 +3061,45 @@ function render(g2, exportSize){
     g.restore();
   }
 
-  // animated "shine" — a moving diagonal light band; works on ANY fill (solid/gradient/art).
-  // At phase 0 the band sits off the left edge, so exported PNG stays clean.
-  if (S.anim && S.animKind==="shine"){
-    var bs = avail, bx0 = xoff, by0 = topPad, band = bs*0.42;
+  // animated overlay pass — a post-render layer so motion is ALWAYS visible, on any fill
+  // (solid/gradient/art) and every browser. Clipped to the QR block; phase 0 = neutral so
+  // exported PNG stays clean. WebM capture records the motion.
+  if (S.anim){
+    var bs = avail, bx0 = xoff, by0 = topPad, ccx = bx0+bs/2, ccy = by0+bs/2, t = _phase;
     g.save();
     g.beginPath(); g.rect(bx0, by0, bs, bs); g.clip();
-    var cxp = bx0 - band + _phase*(bs + 2*band);
-    var sg = g.createLinearGradient(cxp-band, by0, cxp+band, by0+bs);
-    sg.addColorStop(0, "rgba(255,255,255,0)");
-    sg.addColorStop(0.5, "rgba(255,255,255,0.4)");
-    sg.addColorStop(1, "rgba(255,255,255,0)");
-    g.globalCompositeOperation = "lighter";
-    g.fillStyle = sg; g.fillRect(bx0, by0, bs, bs);
+    // source-over with capped alpha: a visible moving sheen that keeps dark modules dark
+    // enough that EVERY animated frame still scans (verified).
+    if (S.animKind==="pulse"){
+      var pr = bs*(0.16 + 0.42*(0.5+0.5*Math.sin(t*Math.PI*2)));
+      var rg = g.createRadialGradient(ccx, ccy, 0, ccx, ccy, pr);
+      rg.addColorStop(0, "rgba(255,255,255,0.22)");
+      rg.addColorStop(0.7, "rgba(255,255,255,0.06)");
+      rg.addColorStop(1, "rgba(255,255,255,0)");
+      g.fillStyle = rg; g.fillRect(bx0, by0, bs, bs);
+    } else if (S.animKind==="rotate"){
+      g.translate(ccx, ccy); g.rotate(t*Math.PI*2);
+      var band = bs*0.42;
+      var rg2 = g.createLinearGradient(-band, 0, band, 0);
+      rg2.addColorStop(0, "rgba(255,255,255,0)");
+      rg2.addColorStop(0.5, "rgba(255,255,255,0.26)");
+      rg2.addColorStop(1, "rgba(255,255,255,0)");
+      g.fillStyle = rg2; g.fillRect(-bs, -bs, bs*2, bs*2);
+    } else if (S.animKind==="sweep"){
+      var band2 = bs*0.4, p2 = bx0 - band2 + t*(bs + 2*band2);
+      var sg2 = g.createLinearGradient(p2-band2, by0, p2+band2, by0+bs);
+      sg2.addColorStop(0, "rgba(255,255,255,0)");
+      sg2.addColorStop(0.5, hexA(S.fill==="solid"? "#ffffff" : S.fg2, 0.26));
+      sg2.addColorStop(1, "rgba(255,255,255,0)");
+      g.fillStyle = sg2; g.fillRect(bx0, by0, bs, bs);
+    } else { // shine (default): diagonal light band
+      var band3 = bs*0.36, cxp = bx0 - band3 + t*(bs + 2*band3);
+      var sg = g.createLinearGradient(cxp-band3, by0, cxp+band3, by0+bs);
+      sg.addColorStop(0, "rgba(255,255,255,0)");
+      sg.addColorStop(0.5, "rgba(255,255,255,0.28)");
+      sg.addColorStop(1, "rgba(255,255,255,0)");
+      g.fillStyle = sg; g.fillRect(bx0, by0, bs, bs);
+    }
     g.restore();
   }
 
