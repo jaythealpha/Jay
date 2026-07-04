@@ -479,7 +479,7 @@
   <footer>
     <div>Aesthetic QR Studio · LemioCode 컨셉을 오픈소스로 재구현 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.03-r</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.03-s</b></div>
   </footer>
 </div>
 
@@ -3539,8 +3539,10 @@ $("logoClear").addEventListener("click",function(){
 });
 
 // ---- image/video art QR ----
+var _artVid=null;  // current uploaded <video> element (kept in DOM so Safari decodes frames)
+function removeArtVid(){ if(_artVid){ try{_artVid.pause();}catch(e){} try{_artVid.remove();}catch(e){} _artVid=null; } }
 function clearArt(){
-  if (S.artImg && S.artIsVideo){ try{ S.artImg.pause(); }catch(e){} }
+  removeArtVid();
   S.artImg=null; S.artIsVideo=false; $("artFile").value="";
   $("artControls").style.display="none";
   $("artLabel").textContent="＋ 이미지 / 영상 업로드 — QR 전체를 덮는 아트";
@@ -3550,16 +3552,29 @@ $("artFile").addEventListener("change",function(e){
   var f=e.target.files[0]; if(!f) return;
   var url=URL.createObjectURL(f);
   if (/^video\//.test(f.type)){
+    removeArtVid();
     var v=document.createElement("video");
-    v.muted=true; v.loop=true; v.playsInline=true; v.crossOrigin="anonymous"; v.src=url;
-    v.addEventListener("loadeddata",function(){
+    v.muted=true; v.defaultMuted=true; v.loop=true; v.autoplay=true; v.playsInline=true;
+    v.setAttribute("muted",""); v.setAttribute("playsinline",""); v.setAttribute("webkit-playsinline","");
+    // hidden but IN THE DOM → Safari/iOS need this to decode video frames for canvas
+    v.style.cssText="position:absolute;left:-9px;top:-9px;width:1px;height:1px;opacity:0;pointer-events:none";
+    document.body.appendChild(v); _artVid=v;
+    var done=false;
+    function ready(){
+      if(done || !v.videoWidth) return; done=true;
       S.artImg=v; S.artIsVideo=true;
       v.play().catch(function(){});
       $("artControls").style.display="block";
       $("artLabel").textContent="✓ 영상 업로드됨 (애니메이션 QR) — 변경하려면 클릭";
       if(S.ecc!=="H") toast("아트 QR은 ECC-H 권장");
       rerender();
-    });
+    }
+    v.addEventListener("loadeddata",ready);
+    v.addEventListener("canplay",ready);
+    v.addEventListener("loadedmetadata",function(){ v.play().then(ready).catch(ready); });
+    v.addEventListener("error",function(){ removeArtVid(); toast("이 영상 형식은 지원되지 않아요 — MP4(H.264) 또는 WebM으로 변환해 주세요"); });
+    v.src=url; try{ v.load(); }catch(e){}
+    setTimeout(function(){ if(!done){ if(v.videoWidth){ ready(); } else { removeArtVid(); toast("영상을 불러오지 못했어요 — MP4(H.264) 권장(아이폰 .mov는 브라우저에 따라 미지원)"); } } }, 7000);
   } else {
     // Robust across Safari: fully decode, then BAKE into an offscreen canvas.
     // Canvas→canvas drawImage always works (no decode-timing / large-image / HEIC pitfalls).
