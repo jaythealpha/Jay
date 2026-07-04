@@ -254,6 +254,11 @@
                 <input type="range" id="artVis" min="30" max="92" step="1" value="72" />
                 <div class="hint">높을수록 그림이 더 드러나고, 낮을수록 스캔이 더 안정적입니다.</div>
               </label>
+              <label class="fld">
+                <div class="lbl">모듈 밀도(도트 크기) <b id="artDensityOut">보통</b></div>
+                <input type="range" id="artDensity" min="4" max="10" step="1" value="6" />
+                <div class="hint">오른쪽일수록 모듈이 작고 촘촘해져 그림이 더 선명합니다(스캔엔 더 큰 화면/인쇄 권장).</div>
+              </label>
               <div class="switch" style="margin-top:12px">
                 <div class="lbl" style="margin:0">어두운 그림용 반전</div>
                 <label class="toggle"><input type="checkbox" id="artInvert" /><span></span></label>
@@ -474,7 +479,7 @@
   <footer>
     <div>Aesthetic QR Studio · LemioCode 컨셉을 오픈소스로 재구현 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.03-q</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.03-r</b></div>
   </footer>
 </div>
 
@@ -2818,7 +2823,8 @@ var S = {
   artImg: null,        // HTMLImageElement or HTMLVideoElement used as full background
   artIsVideo: false,   // true when the uploaded media is a video → animated QR
   artVisibility: 72,   // % — higher = artwork shows more, lower = more scannable
-  artInvert: false     // invert dark/light overlay (for dark artworks)
+  artInvert: false,    // invert dark/light overlay (for dark artworks)
+  artDensity: 6        // min QR version for art (higher = more, smaller modules; finer look)
 };
 
 var $ = function(id){ return document.getElementById(id); };
@@ -2834,10 +2840,16 @@ if (typeof qrcode !== "undefined" && qrcode.stringToBytesFuncs && qrcode.stringT
 }
 
 // ---------- QR matrix build ----------
-function buildMatrix(text, ecc){
-  var qr = qrcode(0, ecc);
-  qr.addData(text);
-  qr.make();
+function buildMatrix(text, ecc, minVer){
+  var qr;
+  if (minVer && minVer>=1){
+    // force a higher version → more, smaller modules (finer look). Fall back to auto if data
+    // doesn't fit the requested version.
+    try { qr = qrcode(minVer, ecc); qr.addData(text); qr.make(); }
+    catch(e){ qr = qrcode(0, ecc); qr.addData(text); qr.make(); }
+  } else {
+    qr = qrcode(0, ecc); qr.addData(text); qr.make();
+  }
   var n = qr.getModuleCount();
   var m = [];
   for (var r=0;r<n;r++){ m[r]=[]; for(var c=0;c<n;c++) m[r][c]=qr.isDark(r,c); }
@@ -2845,9 +2857,10 @@ function buildMatrix(text, ecc){
 }
 var _cache = { key:"", data:null };
 function getMatrix(){
-  var key = S.content + "|" + S.ecc;
+  var minVer = S.artImg ? S.artDensity : 0;   // denser (smaller modules) for art QR
+  var key = S.content + "|" + S.ecc + "|" + minVer;
   if (key !== _cache.key){
-    try { _cache.data = buildMatrix(S.content || " ", S.ecc); _cache.key = key; }
+    try { _cache.data = buildMatrix(S.content || " ", S.ecc, minVer); _cache.key = key; }
     catch(e){ _cache.data = null; _cache.key = key; }
   }
   return _cache.data;
@@ -3186,9 +3199,9 @@ function drawArtLayer(g, ox, oy, unit, n, m){
   var markFill = makeArtFill(g, ox, oy, area);   // template colour/gradient, luminance-capped to scan
   function roleDark(rr,cc){ return m[rr][cc] !== S.artInvert; }
 
-  // 2) faint per-cell luminance bias (fades out as visibility rises) — helps binarisation
-  //    without hiding the artwork.
-  var bias = (1-vis)*0.32;               // vis .2→.256 … .92→.026
+  // 2) per-cell luminance bias (helps binarisation without hiding the artwork). Kept modest
+  //    so the image stays clear; the small crisp marks + bias together keep it scannable.
+  var bias = (1-vis)*0.40;               // vis .2→.32 … .92→.032
   if (bias > 0.02){
     for (var r0=0;r0<n;r0++){
       for (var c0=0;c0<n;c0++){
@@ -3199,9 +3212,9 @@ function drawArtLayer(g, ox, oy, unit, n, m){
     }
   }
 
-  // 3) opaque centre marks — template-coloured (dark role) vs white (light role).
+  // 3) small crisp centre marks — finer, image-forward look (more artwork shows between them).
   //    Shape follows the selected module style; radius shrinks with visibility.
-  var dotR = unit*(0.46 - vis*0.16);     // vis .2→.428 … .92→.313
+  var dotR = unit*(0.40 - vis*0.13);     // vis .2→.374 … .92→.28
   for (var r=0;r<n;r++){
     for (var c=0;c<n;c++){
       if (isFinder(r,c,n)) continue;
@@ -3569,6 +3582,7 @@ $("artFile").addEventListener("change",function(e){
   }
 });
 $("artVis").addEventListener("input",function(e){ S.artVisibility=+e.target.value; $("artVisOut").textContent=e.target.value+"%"; rerender(); });
+$("artDensity").addEventListener("input",function(e){ S.artDensity=+e.target.value; $("artDensityOut").textContent=({4:"성김",5:"약간 성김",6:"보통",7:"촘촘",8:"더 촘촘",9:"매우 촘촘",10:"최대"})[e.target.value]||"보통"; rerender(); });
 $("artInvert").addEventListener("change",function(e){ S.artInvert=e.target.checked; rerender(); });
 $("artClear").addEventListener("click",clearArt);
 
