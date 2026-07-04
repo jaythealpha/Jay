@@ -444,19 +444,28 @@
             </div>
             <div style="height:1px;background:var(--line);margin:16px 0"></div>
             <label class="fld">
-              <div class="lbl">내장 아이콘</div>
-              <select id="iconName"></select>
+              <div class="lbl">중앙 콘텐츠</div>
+              <div class="seg" id="centerModeSeg">
+                <button data-cmode="none" class="on">없음</button>
+                <button data-cmode="text">텍스트 로고</button>
+                <button data-cmode="emoji">이모지 픽토그램</button>
+              </div>
             </label>
-            <div id="iconControls" style="display:none">
+            <div id="centerControls" style="display:none">
               <label class="fld">
-                <div class="lbl">크기</div>
-                <div class="seg" id="iconKindSeg">
-                  <button data-ikind="logo" class="on">로고(작게)</button>
-                  <button data-ikind="pictogram">픽토그램(크게)</button>
-                </div>
+                <div class="lbl" id="centerTextLbl">로고 텍스트</div>
+                <input type="text" id="centerText" value="BRAND" maxlength="16" />
+                <div class="hint" id="centerTextHint">기업/브랜드명을 입력하세요(짧을수록 선명).</div>
               </label>
-              <label class="fld"><div class="lbl">아이콘 색</div><input type="color" id="iconColor" value="#ffffff" /></label>
-              <div class="hint">아이콘/픽토그램은 오류정정 <b>H</b>에 의존해 스캔됩니다. 픽토그램이 크면 스캔 테스트를 권장합니다.</div>
+              <label class="fld" id="centerColorWrap">
+                <div class="lbl">텍스트 색</div>
+                <input type="color" id="centerColor" value="#111111" />
+              </label>
+              <label class="fld">
+                <div class="lbl">크기 <b id="centerScaleOut">24%</b></div>
+                <input type="range" id="centerScale" min="14" max="40" step="1" value="24" />
+              </label>
+              <div class="hint">오류정정 <b>H</b>에 의존해 스캔됩니다. 크면(특히 픽토그램) 스캔 테스트를 권장합니다.</div>
             </div>
           </div>
         </details>
@@ -535,7 +544,7 @@
   <footer>
     <div>Aesthetic QR Studio · LemioCode 컨셉을 오픈소스로 재구현 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.03-t</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.03-u</b></div>
   </footer>
 </div>
 
@@ -2887,10 +2896,11 @@ var S = {
   frameBg1: "#0e7a3b",
   frameBg2: "#0b3d22",
   frameAngle: 135,
-  // ---- built-in icon (vector) as logo or large pictogram ----
-  iconName: "",        // "" = none; else a key in ICONS
-  iconKind: "logo",    // logo (small, centred) | pictogram (large, centred)
-  iconColor: "#ffffff"
+  // ---- centre content: text wordmark (Logo) or emoji symbol (Pictogram) ----
+  centerMode: "none",  // none | text | emoji
+  centerText: "",      // wordmark text, or a single emoji
+  centerColor: "#111111",
+  centerScale: 24      // % of QR width
 };
 
 var $ = function(id){ return document.getElementById(id); };
@@ -3187,21 +3197,30 @@ function render(g2, exportSize){
     g.restore();
   }
 
-  // built-in vector icon (logo = small / pictogram = large). Relies on ECC-H for recovery.
-  if (S.iconName && ICONS[S.iconName]){
+  // centre content — text wordmark (Logo) or emoji symbol (Pictogram). Relies on ECC-H.
+  if (S.centerMode!=="none" && S.centerText){
     var qarea = n*unit;
-    var frac = (S.iconKind==="pictogram") ? 0.30 : 0.20;
-    var ir = frac*qarea/2;                       // icon half-size
+    var isz = (S.centerScale/100) * qarea;
     var icx = ox + qarea/2, icy = oy + qarea/2;
     var bgc = S.transparent ? "#ffffff" : S.bg;
-    if (S.iconKind==="pictogram"){
-      // punch a clean shaped halo (bg colour), then the icon → "cut into" look, no box
-      drawIcon(g, S.iconName, icx, icy, ir*1.28, bgc);
-      drawIcon(g, S.iconName, icx, icy, ir, S.iconColor);
+    g.textAlign="center"; g.textBaseline="middle";
+    if (S.centerMode==="emoji"){
+      // clean rounded card + the emoji (colourful, instantly recognisable)
+      var pad = isz*0.16;
+      g.fillStyle = bgc; roundRect(g, icx-isz/2-pad, icy-isz/2-pad, isz+2*pad, isz+2*pad, isz*0.24); g.fill();
+      g.font = Math.round(isz*0.96)+"px 'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif";
+      g.fillText(S.centerText, icx, icy+isz*0.02);
     } else {
-      var pad = ir*0.28;
-      g.fillStyle = bgc; roundRect(g, icx-ir-pad, icy-ir-pad, (ir+pad)*2, (ir+pad)*2, ir*0.5); g.fill();
-      drawIcon(g, S.iconName, icx, icy, ir, S.iconColor);
+      // text wordmark on a horizontal pill sized to the text
+      var fs = isz*0.52;
+      g.font = "800 "+fs+"px -apple-system,'Noto Sans KR',Pretendard,sans-serif";
+      var tw = g.measureText(S.centerText).width;
+      var maxW = qarea*0.62;
+      while (fs>10 && tw>maxW){ fs*=0.92; g.font="800 "+fs+"px -apple-system,'Noto Sans KR',Pretendard,sans-serif"; tw=g.measureText(S.centerText).width; }
+      var padX = fs*0.55, padY = fs*0.42;
+      var pw = tw+padX*2, ph = fs+padY*2;
+      g.fillStyle = bgc; roundRect(g, icx-pw/2, icy-ph/2, pw, ph, ph*0.32); g.fill();
+      g.fillStyle = S.centerColor; g.fillText(S.centerText, icx, icy+fs*0.04);
     }
   }
 
@@ -3735,29 +3754,31 @@ $("labelText").addEventListener("input",function(e){S.labelText=e.target.value;r
 $("labelSize").addEventListener("input",function(e){S.labelSize=+e.target.value;$("labelSizeOut").textContent=e.target.value+"%";rerender();});
 $("labelOffset").addEventListener("input",function(e){S.labelOffset=+e.target.value;$("labelOffsetOut").textContent=e.target.value;rerender();});
 
-// ---- frame background & built-in icon ----
-(function(){
-  var names=["","heart","cross","star","wifi","bolt","play","location","music","camera","home","chat","gift","coffee","leaf","flame","bag","bell","check","paw","mail"];
-  var ko={"":"없음",heart:"하트",cross:"십자",star:"별",wifi:"와이파이",bolt:"번개",play:"플레이",location:"위치",music:"음악",camera:"카메라",home:"홈",chat:"채팅",gift:"선물",coffee:"커피",leaf:"잎",flame:"불꽃",bag:"쇼핑백",bell:"벨",check:"체크",paw:"발바닥",mail:"메일"};
-  var sel=$("iconName");
-  names.forEach(function(n){ var o=document.createElement("option"); o.value=n; o.textContent=ko[n]; sel.appendChild(o); });
-})();
+// ---- frame background & centre content (text logo / emoji pictogram) ----
 $("frameOn").addEventListener("change",function(e){ S.frameOn=e.target.checked; $("frameControls").style.display=e.target.checked?"block":"none"; rerender(); });
 $("frameModeSeg").addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b)return; Array.prototype.forEach.call(this.children,function(x){x.classList.remove("on");}); b.classList.add("on"); S.frameMode=b.dataset.fmode; $("frameBg2Wrap").style.display=(S.frameMode==="solid")?"none":"block"; rerender(); });
 $("frameBg1").addEventListener("input",function(e){ S.frameBg1=e.target.value; rerender(); });
 $("frameBg2").addEventListener("input",function(e){ S.frameBg2=e.target.value; rerender(); });
-$("iconName").addEventListener("change",function(e){ S.iconName=e.target.value; $("iconControls").style.display=e.target.value?"block":"none"; if(e.target.value&&S.ecc!=="H"){ setEcc("H"); } rerender(); });
-$("iconKindSeg").addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b)return; Array.prototype.forEach.call(this.children,function(x){x.classList.remove("on");}); b.classList.add("on"); S.iconKind=b.dataset.ikind; rerender(); });
-$("iconColor").addEventListener("input",function(e){ S.iconColor=e.target.value; rerender(); });
+function centerUIvis(){
+  var on=S.centerMode!=="none";
+  $("centerControls").style.display=on?"block":"none";
+  $("centerColorWrap").style.display=(S.centerMode==="text")?"block":"none";
+  $("centerTextLbl").textContent=(S.centerMode==="emoji")?"이모지":"로고 텍스트";
+  $("centerTextHint").textContent=(S.centerMode==="emoji")?"이모지 하나를 입력/붙여넣기 (예: 🧯 ⭐ ☕ 📶 🎁)":"기업/브랜드명을 입력하세요(짧을수록 선명).";
+}
+$("centerModeSeg").addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b)return; Array.prototype.forEach.call(this.children,function(x){x.classList.remove("on");}); b.classList.add("on"); S.centerMode=b.dataset.cmode; if(S.centerMode!=="none"){ if(!S.centerText) S.centerText=(S.centerMode==="emoji")?"⭐":"BRAND"; $("centerText").value=S.centerText; if(S.ecc!=="H") setEcc("H"); } centerUIvis(); rerender(); });
+$("centerText").addEventListener("input",function(e){ S.centerText=e.target.value; rerender(); });
+$("centerColor").addEventListener("input",function(e){ S.centerColor=e.target.value; rerender(); });
+$("centerScale").addEventListener("input",function(e){ S.centerScale=+e.target.value; $("centerScaleOut").textContent=e.target.value+"%"; rerender(); });
 function setEcc(v){ S.ecc=v; Array.prototype.forEach.call($("eccSeg").children,function(x){x.classList.toggle("on",x.dataset.ecc===v);}); $("eccOut").textContent=v+" ("+({L:"7%",M:"15%",Q:"25%",H:"30%"})[v]+")"; }
 function syncFrameIconUI(){
   $("frameOn").checked=S.frameOn; $("frameControls").style.display=S.frameOn?"block":"none";
   Array.prototype.forEach.call($("frameModeSeg").children,function(x){x.classList.toggle("on",x.dataset.fmode===S.frameMode);});
   $("frameBg2Wrap").style.display=(S.frameMode==="solid")?"none":"block";
   $("frameBg1").value=S.frameBg1; $("frameBg2").value=S.frameBg2;
-  $("iconName").value=S.iconName||""; $("iconControls").style.display=S.iconName?"block":"none";
-  Array.prototype.forEach.call($("iconKindSeg").children,function(x){x.classList.toggle("on",x.dataset.ikind===S.iconKind);});
-  $("iconColor").value=S.iconColor;
+  Array.prototype.forEach.call($("centerModeSeg").children,function(x){x.classList.toggle("on",x.dataset.cmode===S.centerMode);});
+  $("centerText").value=S.centerText||""; $("centerColor").value=S.centerColor; $("centerScale").value=S.centerScale; $("centerScaleOut").textContent=S.centerScale+"%";
+  centerUIvis();
 }
 
 // export buttons
@@ -3930,8 +3951,8 @@ $("featureChips").addEventListener("click",function(e){
 });
 
 // ---------- gallery: categorised presets ----------
-var DKEYS=["fill","fg1","fg2","angle","transparent","bg","dot","eye","margin","ecc","anim","animKind","animSpeed","frameOn","frameMode","frameBg1","frameBg2","frameAngle","iconName","iconKind","iconColor"];
-var DDEF={fill:"solid",fg1:"#111111",fg2:"#111111",angle:45,transparent:false,bg:"#ffffff",dot:"square",eye:"square",margin:4,ecc:"H",anim:false,animKind:"shine",animSpeed:1,frameOn:false,frameMode:"solid",frameBg1:"#0e7a3b",frameBg2:"#0b3d22",frameAngle:135,iconName:"",iconKind:"logo",iconColor:"#ffffff"};
+var DKEYS=["fill","fg1","fg2","angle","transparent","bg","dot","eye","margin","ecc","anim","animKind","animSpeed","frameOn","frameMode","frameBg1","frameBg2","frameAngle","centerMode","centerText","centerColor","centerScale"];
+var DDEF={fill:"solid",fg1:"#111111",fg2:"#111111",angle:45,transparent:false,bg:"#ffffff",dot:"square",eye:"square",margin:4,ecc:"H",anim:false,animKind:"shine",animSpeed:1,frameOn:false,frameMode:"solid",frameBg1:"#0e7a3b",frameBg2:"#0b3d22",frameAngle:135,centerMode:"none",centerText:"",centerColor:"#111111",centerScale:24};
 function resetDesign(fullArt){ for(var k in DDEF) S[k]=DDEF[k]; S.logo=null; S.artImg=null; S.artIsVideo=false; if(fullArt && typeof removeArtVid==="function") removeArtVid(); }
 
 var CATS = {
@@ -3967,32 +3988,32 @@ var CATS = {
     {name:"선라이즈 회전",tag:"회전",s:{anim:true,animKind:"rotate",fill:"radial",fg1:"#fb7185",fg2:"#f59e0b",dot:"dots",eye:"circle",bg:"#ffffff"}}
   ],
   logo:[
-    {name:"하트",tag:"로고",s:{iconName:"heart",iconKind:"logo",iconColor:"#ffffff",fill:"linear",fg1:"#ff3d81",fg2:"#7c3aed",angle:135,dot:"rounded",eye:"rounded",bg:"#0b0d12"}},
-    {name:"별",tag:"로고",s:{iconName:"star",iconKind:"logo",iconColor:"#111111",fill:"linear",fg1:"#f59e0b",fg2:"#b8860b",angle:60,dot:"classy",eye:"leaf",bg:"#ffffff"}},
-    {name:"와이파이",tag:"로고",s:{iconName:"wifi",iconKind:"logo",iconColor:"#ffffff",fill:"linear",fg1:"#06b6d4",fg2:"#1d4ed8",angle:120,dot:"dots",eye:"circle",bg:"#0b1020"}},
-    {name:"카메라",tag:"로고",s:{iconName:"camera",iconKind:"logo",iconColor:"#ffffff",fill:"linear",fg1:"#7c5cff",fg2:"#22d3ee",angle:45,dot:"rounded",eye:"rounded",bg:"#0b0d12"}},
-    {name:"뮤직",tag:"로고",s:{iconName:"music",iconKind:"logo",iconColor:"#ffffff",fill:"linear",fg1:"#ec4899",fg2:"#8b5cf6",angle:135,dot:"rounded",eye:"rounded",bg:"#0b0d12"}},
-    {name:"메일",tag:"로고",s:{iconName:"mail",iconKind:"logo",iconColor:"#111111",fill:"linear",fg1:"#38bdf8",fg2:"#4f46e5",angle:90,dot:"dots",eye:"circle",bg:"#ffffff"}},
-    {name:"채팅",tag:"로고",s:{iconName:"chat",iconKind:"logo",iconColor:"#ffffff",fill:"linear",fg1:"#10b981",fg2:"#0ea5e9",angle:90,dot:"rounded",eye:"rounded",bg:"#0b1020"}},
-    {name:"커피",tag:"로고",s:{iconName:"coffee",iconKind:"logo",iconColor:"#ffffff",fill:"solid",fg1:"#6f4e37",bg:"#f5efe6",dot:"classy",eye:"leaf"}},
-    {name:"위치",tag:"로고",s:{iconName:"location",iconKind:"logo",iconColor:"#ffffff",fill:"linear",fg1:"#ef4444",fg2:"#b91c1c",angle:120,dot:"rounded",eye:"rounded",bg:"#0b0d12"}},
-    {name:"선물",tag:"로고",s:{iconName:"gift",iconKind:"logo",iconColor:"#ffffff",fill:"linear",fg1:"#f43f5e",fg2:"#7c3aed",angle:60,dot:"rounded",eye:"rounded",bg:"#0b0d12"}},
-    {name:"벨",tag:"로고",s:{iconName:"bell",iconKind:"logo",iconColor:"#111111",fill:"linear",fg1:"#fbbf24",fg2:"#f97316",angle:90,dot:"dots",eye:"circle",bg:"#ffffff"}},
-    {name:"쇼핑백",tag:"로고",s:{iconName:"bag",iconKind:"logo",iconColor:"#ffffff",fill:"linear",fg1:"#8b5cf6",fg2:"#db2777",angle:135,dot:"rounded",eye:"rounded",bg:"#0b0d12"}}
+    {name:"ACME",tag:"텍스트 로고",s:{fill:"solid",fg1:"#e11d48",bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"text",centerText:"ACME",centerColor:"#e11d48",centerScale:30}},
+    {name:"NOVA",tag:"텍스트 로고",s:{fill:"linear",fg1:"#2563eb",fg2:"#4f46e5",angle:120,dot:"dots",eye:"circle",bg:"#ffffff",centerMode:"text",centerText:"NOVA",centerColor:"#1d4ed8",centerScale:30}},
+    {name:"PIXEL",tag:"텍스트 로고",s:{fill:"linear",fg1:"#7c3aed",fg2:"#db2777",angle:135,dot:"rounded",eye:"rounded",bg:"#ffffff",centerMode:"text",centerText:"PIXEL",centerColor:"#7c3aed",centerScale:28}},
+    {name:"ORBIT",tag:"텍스트 로고",s:{fill:"linear",fg1:"#0d9488",fg2:"#0e7490",angle:90,dot:"dots",eye:"circle",bg:"#ffffff",centerMode:"text",centerText:"ORBIT",centerColor:"#0d9488",centerScale:28}},
+    {name:"LUMEN",tag:"다크 로고",s:{fill:"solid",fg1:"#f59e0b",bg:"#111111",dot:"classy",eye:"leaf",centerMode:"text",centerText:"LUMEN",centerColor:"#f59e0b",centerScale:28}},
+    {name:"AERO",tag:"텍스트 로고",s:{fill:"linear",fg1:"#38bdf8",fg2:"#2563eb",angle:100,dot:"rounded",eye:"rounded",bg:"#ffffff",centerMode:"text",centerText:"AERO",centerColor:"#0284c7",centerScale:30}},
+    {name:"KODE",tag:"텍스트 로고",s:{fill:"solid",fg1:"#16a34a",bg:"#ffffff",dot:"square",eye:"square",centerMode:"text",centerText:"KODE",centerColor:"#15803d",centerScale:30}},
+    {name:"BLOOM",tag:"텍스트 로고",s:{fill:"linear",fg1:"#ec4899",fg2:"#f43f5e",angle:120,dot:"rounded",eye:"rounded",bg:"#ffffff",centerMode:"text",centerText:"BLOOM",centerColor:"#db2777",centerScale:26}},
+    {name:"SONIC",tag:"텍스트 로고",s:{fill:"linear",fg1:"#6366f1",fg2:"#8b5cf6",angle:135,dot:"dots",eye:"circle",bg:"#ffffff",centerMode:"text",centerText:"SONIC",centerColor:"#4f46e5",centerScale:28}},
+    {name:"ZEN",tag:"모노 로고",s:{fill:"solid",fg1:"#111111",bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"text",centerText:"ZEN",centerColor:"#111111",centerScale:30}},
+    {name:"VERTEX",tag:"다크 로고",s:{fill:"solid",fg1:"#a78bfa",bg:"#0b0d12",dot:"classy",eye:"leaf",centerMode:"text",centerText:"VERTEX",centerColor:"#c4b5fd",centerScale:26}},
+    {name:"WAVE",tag:"텍스트 로고",s:{fill:"linear",fg1:"#06b6d4",fg2:"#0369a1",angle:120,dot:"dots",eye:"circle",bg:"#ffffff",centerMode:"text",centerText:"WAVE",centerColor:"#0e7490",centerScale:30}}
   ],
   pictogram:[
-    {name:"제세동기(AED)",tag:"응급",s:{iconName:"heart",iconKind:"pictogram",iconColor:"#ffffff",fill:"solid",fg1:"#16a34a",bg:"#ffffff",dot:"dots",eye:"square",frameOn:true,frameMode:"solid",frameBg1:"#16a34a"}},
-    {name:"응급 십자",tag:"의료",s:{iconName:"cross",iconKind:"pictogram",iconColor:"#ffffff",fill:"solid",fg1:"#15803d",bg:"#ffffff",dot:"dots",eye:"square",frameOn:true,frameMode:"linear",frameBg1:"#166534",frameBg2:"#0b3d22",frameAngle:135}},
-    {name:"소화기",tag:"소방",s:{iconName:"flame",iconKind:"pictogram",iconColor:"#ffffff",fill:"solid",fg1:"#dc2626",bg:"#ffffff",dot:"dots",eye:"square",frameOn:true,frameMode:"solid",frameBg1:"#b91c1c"}},
-    {name:"와이파이 존",tag:"안내",s:{iconName:"wifi",iconKind:"pictogram",iconColor:"#ffffff",fill:"solid",fg1:"#2563eb",bg:"#ffffff",dot:"dots",eye:"square",frameOn:true,frameMode:"linear",frameBg1:"#1d4ed8",frameBg2:"#0b2a6b",frameAngle:120}},
-    {name:"별점",tag:"리뷰",s:{iconName:"star",iconKind:"pictogram",iconColor:"#ffffff",fill:"solid",fg1:"#f59e0b",bg:"#ffffff",dot:"dots",eye:"square",frameOn:true,frameMode:"solid",frameBg1:"#d97706"}},
-    {name:"음악",tag:"미디어",s:{iconName:"music",iconKind:"pictogram",iconColor:"#ffffff",fill:"solid",fg1:"#7c3aed",bg:"#ffffff",dot:"dots",eye:"square",frameOn:true,frameMode:"linear",frameBg1:"#6d28d9",frameBg2:"#2e1065",frameAngle:135}},
-    {name:"플레이",tag:"영상",s:{iconName:"play",iconKind:"pictogram",iconColor:"#ffffff",fill:"solid",fg1:"#ef4444",bg:"#ffffff",dot:"dots",eye:"square",frameOn:true,frameMode:"solid",frameBg1:"#991b1b"}},
-    {name:"위치 안내",tag:"길찾기",s:{iconName:"location",iconKind:"pictogram",iconColor:"#ffffff",fill:"solid",fg1:"#e11d48",bg:"#ffffff",dot:"dots",eye:"square",frameOn:true,frameMode:"linear",frameBg1:"#be123c",frameBg2:"#4c0519",frameAngle:120}},
-    {name:"홈",tag:"부동산",s:{iconName:"home",iconKind:"pictogram",iconColor:"#ffffff",fill:"solid",fg1:"#0d9488",bg:"#ffffff",dot:"dots",eye:"square",frameOn:true,frameMode:"solid",frameBg1:"#0f766e"}},
-    {name:"카페",tag:"F&B",s:{iconName:"coffee",iconKind:"pictogram",iconColor:"#ffffff",fill:"solid",fg1:"#6f4e37",bg:"#ffffff",dot:"dots",eye:"square",frameOn:true,frameMode:"linear",frameBg1:"#5b3a29",frameBg2:"#2e1c14",frameAngle:135}},
-    {name:"에코",tag:"친환경",s:{iconName:"leaf",iconKind:"pictogram",iconColor:"#ffffff",fill:"solid",fg1:"#22c55e",bg:"#ffffff",dot:"dots",eye:"square",frameOn:true,frameMode:"solid",frameBg1:"#15803d"}},
-    {name:"선물함",tag:"이벤트",s:{iconName:"gift",iconKind:"pictogram",iconColor:"#ffffff",fill:"solid",fg1:"#db2777",bg:"#ffffff",dot:"dots",eye:"square",frameOn:true,frameMode:"linear",frameBg1:"#be185d",frameBg2:"#500724",frameAngle:120}}
+    {name:"소화기",tag:"소방 안전",s:{fill:"solid",fg1:"#dc2626",bg:"#ffffff",dot:"dots",eye:"square",centerMode:"emoji",centerText:"🧯",centerScale:32,frameOn:true,frameMode:"solid",frameBg1:"#b91c1c"}},
+    {name:"응급/병원",tag:"의료",s:{fill:"solid",fg1:"#16a34a",bg:"#ffffff",dot:"dots",eye:"square",centerMode:"emoji",centerText:"🏥",centerScale:32,frameOn:true,frameMode:"linear",frameBg1:"#16a34a",frameBg2:"#0b3d22",frameAngle:135}},
+    {name:"와이파이",tag:"안내",s:{fill:"solid",fg1:"#2563eb",bg:"#ffffff",dot:"dots",eye:"square",centerMode:"emoji",centerText:"📶",centerScale:32,frameOn:true,frameMode:"linear",frameBg1:"#1d4ed8",frameBg2:"#0b2a6b",frameAngle:120}},
+    {name:"별점 리뷰",tag:"리뷰",s:{fill:"solid",fg1:"#f59e0b",bg:"#ffffff",dot:"dots",eye:"square",centerMode:"emoji",centerText:"⭐",centerScale:32,frameOn:true,frameMode:"solid",frameBg1:"#d97706"}},
+    {name:"이벤트 선물",tag:"프로모션",s:{fill:"solid",fg1:"#db2777",bg:"#ffffff",dot:"dots",eye:"square",centerMode:"emoji",centerText:"🎁",centerScale:32,frameOn:true,frameMode:"linear",frameBg1:"#be185d",frameBg2:"#500724",frameAngle:120}},
+    {name:"카페 메뉴",tag:"F&B",s:{fill:"solid",fg1:"#6f4e37",bg:"#fffaf3",dot:"dots",eye:"square",centerMode:"emoji",centerText:"☕",centerScale:32,frameOn:true,frameMode:"linear",frameBg1:"#5b3a29",frameBg2:"#2e1c14",frameAngle:135}},
+    {name:"매장 위치",tag:"길찾기",s:{fill:"solid",fg1:"#e11d48",bg:"#ffffff",dot:"dots",eye:"square",centerMode:"emoji",centerText:"📍",centerScale:32,frameOn:true,frameMode:"linear",frameBg1:"#be123c",frameBg2:"#4c0519",frameAngle:120}},
+    {name:"음악/플레이",tag:"미디어",s:{fill:"solid",fg1:"#7c3aed",bg:"#ffffff",dot:"dots",eye:"square",centerMode:"emoji",centerText:"🎵",centerScale:32,frameOn:true,frameMode:"linear",frameBg1:"#6d28d9",frameBg2:"#2e1065",frameAngle:135}},
+    {name:"홈/부동산",tag:"부동산",s:{fill:"solid",fg1:"#0d9488",bg:"#ffffff",dot:"dots",eye:"square",centerMode:"emoji",centerText:"🏠",centerScale:32,frameOn:true,frameMode:"solid",frameBg1:"#0f766e"}},
+    {name:"친환경",tag:"에코",s:{fill:"solid",fg1:"#22c55e",bg:"#ffffff",dot:"dots",eye:"square",centerMode:"emoji",centerText:"🌿",centerScale:32,frameOn:true,frameMode:"solid",frameBg1:"#15803d"}},
+    {name:"포토/카메라",tag:"사진",s:{fill:"solid",fg1:"#8b5cf6",bg:"#ffffff",dot:"dots",eye:"square",centerMode:"emoji",centerText:"📷",centerScale:32,frameOn:true,frameMode:"linear",frameBg1:"#7c3aed",frameBg2:"#2e1065",frameAngle:120}},
+    {name:"주차",tag:"교통",s:{fill:"solid",fg1:"#2563eb",bg:"#ffffff",dot:"dots",eye:"square",centerMode:"emoji",centerText:"🅿️",centerScale:32,frameOn:true,frameMode:"solid",frameBg1:"#1e40af"}}
   ],
   frame:[
     {name:"에메랄드 카드",tag:"프레임",s:{fill:"solid",fg1:"#0b3d22",bg:"#ffffff",dot:"rounded",eye:"rounded",frameOn:true,frameMode:"linear",frameBg1:"#16a34a",frameBg2:"#0b3d22",frameAngle:135}},
