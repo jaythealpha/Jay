@@ -383,7 +383,7 @@
             </label>
             <label class="fld">
               <div class="lbl">글자 크기 <b id="labelSizeOut">100%</b></div>
-              <input type="range" id="labelSize" min="40" max="160" step="5" value="100" />
+              <input type="range" id="labelSize" min="40" max="180" step="5" value="100" />
             </label>
             <label class="fld">
               <div class="lbl">위치</div>
@@ -391,6 +391,11 @@
                 <button data-lpos="bottom" class="on">하단</button>
                 <button data-lpos="top">상단</button>
               </div>
+            </label>
+            <label class="fld">
+              <div class="lbl">상하 미세 위치 <b id="labelOffsetOut">0</b></div>
+              <input type="range" id="labelOffset" min="-100" max="100" step="2" value="0" />
+              <div class="hint">− 위로 / + 아래로. QR과 글자 사이 간격을 조절합니다.</div>
             </label>
           </div>
         </details>
@@ -469,7 +474,7 @@
   <footer>
     <div>Aesthetic QR Studio · LemioCode 컨셉을 오픈소스로 재구현 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.03-o</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.03-p</b></div>
   </footer>
 </div>
 
@@ -2806,8 +2811,9 @@ var S = {
   animSpeed: 1,
   labelOn: false,
   labelText: "SCAN ME",
-  labelSize: 100,      // % font size
+  labelSize: 100,      // % font size (tight)
   labelPos: "bottom",  // bottom | top
+  labelOffset: 0,      // -100..100 fine vertical nudge (negative = up)
   // ---- full-image "art QR" (LemioCode-style: media covers the whole code) ----
   artImg: null,        // HTMLImageElement or HTMLVideoElement used as full background
   artIsVideo: false,   // true when the uploaded media is a video → animated QR
@@ -2999,8 +3005,9 @@ function render(g2, exportSize){
   }
   var n = data.n, m = data.m;
   var quiet = S.margin;
-  var labelFrac = S.labelOn ? (0.055 + (S.labelSize/100)*0.11) : 0;  // ~5.5%..16.5% of size
-  var labelSpace = Math.round(size*labelFrac);
+  // tight label band: font is driven directly by size%, band hugs the text (~1.7× font)
+  var labelFont = S.labelOn ? Math.max(8, Math.round(size*(S.labelSize/100)*0.050)) : 0;
+  var labelSpace = S.labelOn ? Math.round(labelFont*1.7) : 0;
   var avail = size - labelSpace;                 // square QR block size
   var total = n + quiet*2;
   var unit = avail/total;
@@ -3106,10 +3113,11 @@ function render(g2, exportSize){
   // label
   if (S.labelOn && S.labelText){
     g.fillStyle = S.transparent ? "#111111" : (luminance(S.bg)>140 ? "#111111" : "#ffffff");
-    var fs = Math.round(labelSpace*0.5);
-    g.font = "700 "+fs+"px -apple-system,'Noto Sans KR',sans-serif";
+    g.font = "700 "+labelFont+"px -apple-system,'Noto Sans KR',sans-serif";
     g.textAlign="center"; g.textBaseline="middle";
-    var ly = (S.labelPos==="top") ? labelSpace*0.5 : (avail + labelSpace*0.5);
+    var baseY = (S.labelPos==="top") ? (labelSpace*0.5) : (avail + labelSpace*0.5);
+    var offPx = (S.labelOffset/100) * (size*0.14);   // fine up/down nudge (negative=up)
+    var ly = Math.max(labelFont*0.65, Math.min(size - labelFont*0.65, baseY + offPx));
     g.fillText(S.labelText, size/2, ly);
   }
 }
@@ -3264,7 +3272,8 @@ function toSVG(){
   var n=data.n, m=data.m, quiet=S.margin, total=n+quiet*2;
   var U=10; // svg unit
   var W=total*U;
-  var labelH = S.labelOn ? Math.round(W*(0.06+(S.labelSize/100)*0.11)) : 0;
+  var labelFontS = S.labelOn ? Math.max(6, Math.round(W*(S.labelSize/100)*0.050)) : 0;
+  var labelH = S.labelOn ? Math.round(labelFontS*1.7) : 0;
   var topPadS = (S.labelOn && S.labelPos==="top") ? labelH : 0;
   var totalH = W + labelH;
   var svg=[];
@@ -3298,8 +3307,10 @@ function toSVG(){
   }
   svg.push('</g>');
   if(S.labelOn && S.labelText){
-    var ty=(S.labelPos==="top")?(labelH*0.62):(topPadS+W+labelH*0.62), col=(luminance(S.bg)>140||S.transparent)?"#111":"#fff";
-    svg.push('<text x="'+(W/2)+'" y="'+ty+'" font-family="sans-serif" font-weight="700" font-size="'+(labelH*0.5)+'" fill="'+col+'" text-anchor="middle">'+escapeXml(S.labelText)+'</text>');
+    var baseTy=(S.labelPos==="top")?(labelH*0.5):(topPadS+W+labelH*0.5);
+    var ty=Math.max(labelFontS*0.7, Math.min(totalH-labelFontS*0.35, baseTy + (S.labelOffset/100)*(W*0.14)));
+    var col=(luminance(S.bg)>140||S.transparent)?"#111":"#fff";
+    svg.push('<text x="'+(W/2)+'" y="'+ty+'" font-family="sans-serif" font-weight="700" font-size="'+labelFontS+'" fill="'+col+'" dominant-baseline="middle" text-anchor="middle">'+escapeXml(S.labelText)+'</text>');
   }
   svg.push('</svg>');
   return svg.join("");
@@ -3565,6 +3576,7 @@ $("animSpeed").addEventListener("input",function(e){S.animSpeed=+e.target.value;
 $("labelOn").addEventListener("change",function(e){S.labelOn=e.target.checked;rerender();});
 $("labelText").addEventListener("input",function(e){S.labelText=e.target.value;rerender();});
 $("labelSize").addEventListener("input",function(e){S.labelSize=+e.target.value;$("labelSizeOut").textContent=e.target.value+"%";rerender();});
+$("labelOffset").addEventListener("input",function(e){S.labelOffset=+e.target.value;$("labelOffsetOut").textContent=e.target.value;rerender();});
 
 // export buttons
 $("dlPng").addEventListener("click",exportPNG);
