@@ -116,6 +116,12 @@
   input[type=file]{display:none}
 
   /* gallery */
+  .cat-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 18px}
+  .cat-tabs button{border:1px solid var(--line2);background:var(--card);color:var(--mut);border-radius:24px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s}
+  .cat-tabs button:hover{border-color:var(--acc);color:#fff}
+  .cat-tabs button.on{background:linear-gradient(135deg,var(--acc),#5a3fd6);border-color:transparent;color:#fff;box-shadow:0 4px 14px rgba(124,92,255,.35)}
+  .gal-card .del{position:absolute;top:12px;left:12px;background:rgba(11,13,18,.7);backdrop-filter:blur(6px);border:1px solid var(--line2);color:#ff8095;font-size:11px;font-weight:700;padding:5px 9px;border-radius:20px;opacity:0;transition:.15s;z-index:2}
+  .gal-card:hover .del{opacity:1}
   .gal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px}
   .gal-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;cursor:pointer;transition:.18s;position:relative;overflow:hidden}
   .gal-card:hover{transform:translateY(-3px);border-color:var(--acc);box-shadow:0 12px 30px rgba(0,0,0,.4)}
@@ -187,17 +193,27 @@
     <div class="gal-intro">
       <div>
         <h3>디자인 갤러리</h3>
-        <p>클릭 한 번으로 스튜디오에 불러오기</p>
+        <p>카테고리를 고르고, 카드를 눌러 스튜디오에 불러오기 (예시 QR은 이 사이트로 연결)</p>
       </div>
       <div class="chips" id="featureChips">
         <button class="chip" data-jump="1" data-act="art">🖼️ 이미지·영상 아트</button>
-        <button class="chip" data-jump="3" data-act="gradient">🎨 그라디언트</button>
-        <button class="chip" data-jump="2">⬤ 커스텀 모듈</button>
-        <button class="chip" data-jump="4">🏷️ 로고 삽입</button>
         <button class="chip" data-jump="5" data-act="anim">✨ 애니메이션</button>
       </div>
     </div>
+    <div class="cat-tabs" id="catTabs">
+      <button data-cat="standard" class="on">Standard</button>
+      <button data-cat="animation">Animation</button>
+      <button data-cat="logo">Logo</button>
+      <button data-cat="pictogram">Pictogram</button>
+      <button data-cat="frame">Frame</button>
+      <button data-cat="myqr">★ My QR</button>
+    </div>
+    <div id="myqrBar" style="display:none;margin:0 0 14px;display:none;align-items:center;gap:10px;flex-wrap:wrap">
+      <button class="btn" id="saveMyQr" style="flex:none">＋ 현재 디자인 저장</button>
+      <span class="hint" style="margin:0">스튜디오에서 만든 디자인을 브라우저에 저장·관리합니다(기기 로컬 저장).</span>
+    </div>
     <div class="gal-grid" id="galGrid"></div>
+    <div id="galEmpty" class="hint" style="display:none;text-align:center;padding:40px 0"></div>
   </section>
 
   <!-- ============ STUDIO ============ -->
@@ -228,7 +244,7 @@
           <div class="body">
             <label class="fld">
               <div class="lbl">URL 또는 텍스트</div>
-              <textarea id="content">https://lemiocode.com/gallery</textarea>
+              <textarea id="content">https://jay-inky.vercel.app</textarea>
             </label>
             <label class="fld">
               <div class="lbl">오류 정정 레벨 <b id="eccOut">H (30%)</b></div>
@@ -404,6 +420,46 @@
             </label>
           </div>
         </details>
+
+        <details class="grp">
+          <summary><svg class="ic" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" stroke-width="2"/><rect x="8" y="8" width="8" height="8" rx="2" fill="currentColor"/></svg>프레임 배경 & 아이콘<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
+          <div class="body">
+            <div class="switch">
+              <div class="lbl" style="margin:0">프레임 배경(카드)</div>
+              <label class="toggle"><input type="checkbox" id="frameOn" /><span></span></label>
+            </div>
+            <div id="frameControls" style="display:none">
+              <label class="fld">
+                <div class="lbl">배경 채우기</div>
+                <div class="seg" id="frameModeSeg">
+                  <button data-fmode="solid" class="on">단색</button>
+                  <button data-fmode="linear">선형</button>
+                  <button data-fmode="radial">원형</button>
+                </div>
+              </label>
+              <div class="row2">
+                <label class="fld"><div class="lbl">배경색 1</div><input type="color" id="frameBg1" value="#16a34a" /></label>
+                <label class="fld" id="frameBg2Wrap"><div class="lbl">배경색 2</div><input type="color" id="frameBg2" value="#0b3d22" /></label>
+              </div>
+            </div>
+            <div style="height:1px;background:var(--line);margin:16px 0"></div>
+            <label class="fld">
+              <div class="lbl">내장 아이콘</div>
+              <select id="iconName"></select>
+            </label>
+            <div id="iconControls" style="display:none">
+              <label class="fld">
+                <div class="lbl">크기</div>
+                <div class="seg" id="iconKindSeg">
+                  <button data-ikind="logo" class="on">로고(작게)</button>
+                  <button data-ikind="pictogram">픽토그램(크게)</button>
+                </div>
+              </label>
+              <label class="fld"><div class="lbl">아이콘 색</div><input type="color" id="iconColor" value="#ffffff" /></label>
+              <div class="hint">아이콘/픽토그램은 오류정정 <b>H</b>에 의존해 스캔됩니다. 픽토그램이 크면 스캔 테스트를 권장합니다.</div>
+            </div>
+          </div>
+        </details>
       </div>
     </div>
   </section>
@@ -479,7 +535,7 @@
   <footer>
     <div>Aesthetic QR Studio · LemioCode 컨셉을 오픈소스로 재구현 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.03-s</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.03-t</b></div>
   </footer>
 </div>
 
@@ -2797,7 +2853,7 @@ var qrcode = function() {
 
 // ---------- state ----------
 var S = {
-  content: "https://lemiocode.com/gallery",
+  content: "https://jay-inky.vercel.app",
   ecc: "H",
   dot: "square",
   eye: "square",
@@ -2824,7 +2880,17 @@ var S = {
   artIsVideo: false,   // true when the uploaded media is a video → animated QR
   artVisibility: 72,   // % — higher = artwork shows more, lower = more scannable
   artInvert: false,    // invert dark/light overlay (for dark artworks)
-  artDensity: 6        // min QR version for art (higher = more, smaller modules; finer look)
+  artDensity: 6,       // min QR version for art (higher = more, smaller modules; finer look)
+  // ---- framed background (LemioCode-style card on a coloured backdrop) ----
+  frameOn: false,      // draw an outer backdrop + white rounded card around the QR
+  frameMode: "solid",  // solid | linear | radial  (backdrop fill)
+  frameBg1: "#0e7a3b",
+  frameBg2: "#0b3d22",
+  frameAngle: 135,
+  // ---- built-in icon (vector) as logo or large pictogram ----
+  iconName: "",        // "" = none; else a key in ICONS
+  iconKind: "logo",    // logo (small, centred) | pictogram (large, centred)
+  iconColor: "#ffffff"
 };
 
 var $ = function(id){ return document.getElementById(id); };
@@ -2887,6 +2953,14 @@ function contrastRatio(a,b){
 
 // build fill style for the module layer (static; motion is added by an overlay pass)
 function hexA(h,a){ var c=hexToRgb(h); return "rgba("+c[0]+","+c[1]+","+c[2]+","+a+")"; }
+// backdrop fill for the framed-background style
+function frameFill(g, size){
+  if (S.frameMode==="solid") return S.frameBg1;
+  var grad;
+  if (S.frameMode==="linear"){ var a=S.frameAngle*Math.PI/180, cx=size/2, cy=size/2, r=size/2, dx=Math.cos(a)*r, dy=Math.sin(a)*r; grad=g.createLinearGradient(cx-dx,cy-dy,cx+dx,cy+dy); }
+  else { grad=g.createRadialGradient(size/2,size/2,0,size/2,size/2,size*0.72); }
+  grad.addColorStop(0,S.frameBg1); grad.addColorStop(1,S.frameBg2); return grad;
+}
 function makeFill(g, x0, y0, size){
   if (S.fill==="solid") return S.fg1;
   var grad;
@@ -2949,6 +3023,31 @@ function roundRect(g,x,y,w,h,r){
   g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r);
   g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath();
 }
+// ---------- built-in vector icons (canvas primitives) for logo / pictogram ----------
+// each: fn(g, cx, cy, r, col)  where r = half the icon size
+var ICONS = {
+  heart:function(g,cx,cy,r,col){g.fillStyle=col;g.beginPath();g.moveTo(cx,cy+r*0.85);g.bezierCurveTo(cx-r*1.45,cy-r*0.15,cx-r*0.6,cy-r*1.15,cx,cy-r*0.35);g.bezierCurveTo(cx+r*0.6,cy-r*1.15,cx+r*1.45,cy-r*0.15,cx,cy+r*0.85);g.closePath();g.fill();},
+  cross:function(g,cx,cy,r,col){g.fillStyle=col;var w=r*0.62;roundRect(g,cx-w/2,cy-r,w,2*r,w*0.22);g.fill();roundRect(g,cx-r,cy-w/2,2*r,w,w*0.22);g.fill();},
+  star:function(g,cx,cy,r,col){g.fillStyle=col;g.beginPath();for(var i=0;i<10;i++){var a=-Math.PI/2+i*Math.PI/5,rr=(i%2)?r*0.45:r;g[i?'lineTo':'moveTo'](cx+Math.cos(a)*rr,cy+Math.sin(a)*rr);}g.closePath();g.fill();},
+  wifi:function(g,cx,cy,r,col){g.strokeStyle=col;g.lineWidth=r*0.22;g.lineCap="round";var by=cy+r*0.55;for(var i=0;i<3;i++){g.beginPath();g.arc(cx,by,r*(0.4+i*0.32),-Math.PI*0.78,-Math.PI*0.22);g.stroke();}g.fillStyle=col;g.beginPath();g.arc(cx,by,r*0.13,0,7);g.fill();},
+  bolt:function(g,cx,cy,r,col){g.fillStyle=col;g.beginPath();g.moveTo(cx+r*0.35,cy-r);g.lineTo(cx-r*0.55,cy+r*0.12);g.lineTo(cx-r*0.05,cy+r*0.12);g.lineTo(cx-r*0.35,cy+r);g.lineTo(cx+r*0.55,cy-r*0.12);g.lineTo(cx+r*0.05,cy-r*0.12);g.closePath();g.fill();},
+  play:function(g,cx,cy,r,col){g.fillStyle=col;g.beginPath();g.moveTo(cx-r*0.6,cy-r*0.85);g.lineTo(cx+r*0.85,cy);g.lineTo(cx-r*0.6,cy+r*0.85);g.closePath();g.fill();},
+  location:function(g,cx,cy,r,col){g.fillStyle=col;g.beginPath();g.arc(cx,cy-r*0.25,r*0.72,Math.PI*0.08,Math.PI*0.92,true);g.lineTo(cx,cy+r);g.closePath();g.fill();g.fillStyle="#00000030";g.beginPath();g.arc(cx,cy-r*0.25,r*0.28,0,7);g.fill();},
+  music:function(g,cx,cy,r,col){g.fillStyle=col;g.beginPath();g.arc(cx-r*0.45,cy+r*0.55,r*0.32,0,7);g.arc(cx+r*0.55,cy+r*0.3,r*0.32,0,7);g.fill();g.lineWidth=r*0.16;g.strokeStyle=col;g.beginPath();g.moveTo(cx-r*0.15,cy+r*0.55);g.lineTo(cx-r*0.15,cy-r*0.8);g.lineTo(cx+r*0.85,cy-r*1.0);g.lineTo(cx+r*0.85,cy+r*0.3);g.stroke();g.beginPath();g.moveTo(cx-r*0.15,cy-r*0.45);g.lineTo(cx+r*0.85,cy-r*0.65);g.stroke();},
+  camera:function(g,cx,cy,r,col){g.fillStyle=col;roundRect(g,cx-r,cy-r*0.55,2*r,r*1.5,r*0.25);g.fill();roundRect(g,cx-r*0.35,cy-r*0.85,r*0.7,r*0.35,r*0.1);g.fill();g.fillStyle="#00000035";g.beginPath();g.arc(cx,cy+r*0.2,r*0.42,0,7);g.fill();g.fillStyle=col;g.beginPath();g.arc(cx,cy+r*0.2,r*0.24,0,7);g.fill();},
+  home:function(g,cx,cy,r,col){g.fillStyle=col;g.beginPath();g.moveTo(cx,cy-r);g.lineTo(cx+r,cy-r*0.05);g.lineTo(cx-r,cy-r*0.05);g.closePath();g.fill();roundRect(g,cx-r*0.7,cy-r*0.2,r*1.4,r*1.1,r*0.12);g.fill();g.fillStyle="#00000035";roundRect(g,cx-r*0.2,cy+r*0.25,r*0.4,r*0.65,r*0.06);g.fill();},
+  chat:function(g,cx,cy,r,col){g.fillStyle=col;roundRect(g,cx-r,cy-r*0.85,2*r,r*1.4,r*0.3);g.fill();g.beginPath();g.moveTo(cx-r*0.3,cy+r*0.5);g.lineTo(cx-r*0.05,cy+r);g.lineTo(cx+r*0.25,cy+r*0.5);g.closePath();g.fill();g.fillStyle="#00000035";for(var i=-1;i<2;i++){g.beginPath();g.arc(cx+i*r*0.45,cy-r*0.15,r*0.12,0,7);g.fill();}},
+  gift:function(g,cx,cy,r,col){g.fillStyle=col;roundRect(g,cx-r,cy-r*0.1,2*r,r*1.1,r*0.1);g.fill();roundRect(g,cx-r*1.05,cy-r*0.45,2.1*r,r*0.42,r*0.08);g.fill();g.fillStyle="#00000030";g.fillRect(cx-r*0.12,cy-r*0.45,r*0.24,r*1.55);},
+  coffee:function(g,cx,cy,r,col){g.fillStyle=col;roundRect(g,cx-r*0.7,cy-r*0.5,r*1.3,r*1.2,r*0.15);g.fill();g.lineWidth=r*0.18;g.strokeStyle=col;g.beginPath();g.arc(cx+r*0.75,cy,r*0.35,-Math.PI*0.5,Math.PI*0.5);g.stroke();g.lineCap="round";g.beginPath();g.moveTo(cx-r*0.35,cy-r*0.95);g.lineTo(cx-r*0.35,cy-r*0.7);g.moveTo(cx+r*0.1,cy-r*0.95);g.lineTo(cx+r*0.1,cy-r*0.7);g.stroke();},
+  leaf:function(g,cx,cy,r,col){g.fillStyle=col;g.beginPath();g.moveTo(cx-r*0.8,cy+r*0.8);g.quadraticCurveTo(cx-r*0.9,cy-r*0.9,cx+r*0.8,cy-r*0.8);g.quadraticCurveTo(cx+r*0.9,cy+r*0.9,cx-r*0.8,cy+r*0.8);g.fill();g.strokeStyle="#00000030";g.lineWidth=r*0.1;g.beginPath();g.moveTo(cx-r*0.6,cy+r*0.6);g.lineTo(cx+r*0.55,cy-r*0.55);g.stroke();},
+  flame:function(g,cx,cy,r,col){g.fillStyle=col;g.beginPath();g.moveTo(cx,cy-r);g.bezierCurveTo(cx+r*0.9,cy-r*0.1,cx+r*0.5,cy+r,cx,cy+r);g.bezierCurveTo(cx-r*0.6,cy+r,cx-r*0.9,cy+r*0.1,cx,cy-r);g.fill();},
+  bag:function(g,cx,cy,r,col){g.fillStyle=col;roundRect(g,cx-r*0.85,cy-r*0.5,r*1.7,r*1.5,r*0.18);g.fill();g.lineWidth=r*0.18;g.strokeStyle=col;g.beginPath();g.arc(cx,cy-r*0.45,r*0.5,Math.PI,0);g.stroke();},
+  bell:function(g,cx,cy,r,col){g.fillStyle=col;g.beginPath();g.moveTo(cx-r*0.8,cy+r*0.5);g.quadraticCurveTo(cx-r*0.75,cy-r*0.8,cx,cy-r*0.9);g.quadraticCurveTo(cx+r*0.75,cy-r*0.8,cx+r*0.8,cy+r*0.5);g.closePath();g.fill();g.beginPath();g.arc(cx,cy+r*0.75,r*0.22,0,7);g.fill();},
+  check:function(g,cx,cy,r,col){g.strokeStyle=col;g.lineWidth=r*0.32;g.lineCap="round";g.lineJoin="round";g.beginPath();g.moveTo(cx-r*0.7,cy);g.lineTo(cx-r*0.15,cy+r*0.6);g.lineTo(cx+r*0.75,cy-r*0.6);g.stroke();},
+  paw:function(g,cx,cy,r,col){g.fillStyle=col;g.beginPath();g.arc(cx,cy+r*0.35,r*0.55,0,7);g.fill();for(var i=0;i<3;i++){var a=cx+(i-1)*r*0.55;g.beginPath();g.arc(a,cy-r*0.45,r*0.26,0,7);g.fill();}},
+  mail:function(g,cx,cy,r,col){g.fillStyle=col;roundRect(g,cx-r,cy-r*0.7,2*r,r*1.4,r*0.15);g.fill();g.strokeStyle="#00000040";g.lineWidth=r*0.14;g.lineJoin="round";g.beginPath();g.moveTo(cx-r*0.85,cy-r*0.5);g.lineTo(cx,cy+r*0.2);g.lineTo(cx+r*0.85,cy-r*0.5);g.stroke();}
+};
+function drawIcon(g,name,cx,cy,r,col){ var f=ICONS[name]; if(f){ g.save(); f(g,cx,cy,r,col||"#fff"); g.restore(); } }
 function classyRect(g,x,y,w,h,r){
   r=Math.min(r,w/2,h/2);
   g.beginPath();
@@ -3021,16 +3120,23 @@ function render(g2, exportSize){
   // tight label band: font is driven directly by size%, band hugs the text (~1.7× font)
   var labelFont = S.labelOn ? Math.max(8, Math.round(size*(S.labelSize/100)*0.050)) : 0;
   var labelSpace = S.labelOn ? Math.round(labelFont*1.7) : 0;
-  var avail = size - labelSpace;                 // square QR block size
+  // framed background (backdrop + white card) reserves an outer inset
+  var frameInset = S.frameOn ? Math.round(size*0.07) : 0;
+  var region = size - frameInset*2;               // area the QR block lives in
+  var avail = region - labelSpace;                // square QR block size
   var total = n + quiet*2;
   var unit = avail/total;
-  var topPad = (S.labelOn && S.labelPos==="top") ? labelSpace : 0;
-  var xoff = (size - avail)/2;                    // centre the QR block horizontally
+  var topPad = frameInset + ((S.labelOn && S.labelPos==="top") ? labelSpace : 0);
+  var xoff = frameInset + (region - avail)/2;     // centre the QR block horizontally
   var ox = xoff + quiet*unit, oy = topPad + quiet*unit;
 
   // background
   g.clearRect(0,0,size,size);
-  if (!S.transparent){ g.fillStyle = S.bg; g.fillRect(0,0,size,size); }
+  if (S.frameOn){
+    g.fillStyle = frameFill(g, size); g.fillRect(0,0,size,size);            // outer backdrop
+    g.fillStyle = S.transparent ? "#ffffff" : S.bg;                         // white card = QR bg
+    roundRect(g, frameInset, frameInset, region, region, region*0.055); g.fill();
+  } else if (!S.transparent){ g.fillStyle = S.bg; g.fillRect(0,0,size,size); }
 
   if (S.artImg){
     // ===== full-image "art QR" mode (media covers the entire code) =====
@@ -3081,6 +3187,24 @@ function render(g2, exportSize){
     g.restore();
   }
 
+  // built-in vector icon (logo = small / pictogram = large). Relies on ECC-H for recovery.
+  if (S.iconName && ICONS[S.iconName]){
+    var qarea = n*unit;
+    var frac = (S.iconKind==="pictogram") ? 0.30 : 0.20;
+    var ir = frac*qarea/2;                       // icon half-size
+    var icx = ox + qarea/2, icy = oy + qarea/2;
+    var bgc = S.transparent ? "#ffffff" : S.bg;
+    if (S.iconKind==="pictogram"){
+      // punch a clean shaped halo (bg colour), then the icon → "cut into" look, no box
+      drawIcon(g, S.iconName, icx, icy, ir*1.28, bgc);
+      drawIcon(g, S.iconName, icx, icy, ir, S.iconColor);
+    } else {
+      var pad = ir*0.28;
+      g.fillStyle = bgc; roundRect(g, icx-ir-pad, icy-ir-pad, (ir+pad)*2, (ir+pad)*2, ir*0.5); g.fill();
+      drawIcon(g, S.iconName, icx, icy, ir, S.iconColor);
+    }
+  }
+
   // animated overlay pass — a post-render layer so motion is ALWAYS visible, on any fill
   // (solid/gradient/art) and every browser. Clipped to the QR block; phase 0 = neutral so
   // exported PNG stays clean. WebM capture records the motion.
@@ -3128,9 +3252,9 @@ function render(g2, exportSize){
     g.fillStyle = S.transparent ? "#111111" : (luminance(S.bg)>140 ? "#111111" : "#ffffff");
     g.font = "700 "+labelFont+"px -apple-system,'Noto Sans KR',sans-serif";
     g.textAlign="center"; g.textBaseline="middle";
-    var baseY = (S.labelPos==="top") ? (labelSpace*0.5) : (avail + labelSpace*0.5);
+    var baseY = frameInset + ((S.labelPos==="top") ? (labelSpace*0.5) : (avail + labelSpace*0.5));
     var offPx = (S.labelOffset/100) * (size*0.14);   // fine up/down nudge (negative=up)
-    var ly = Math.max(labelFont*0.65, Math.min(size - labelFont*0.65, baseY + offPx));
+    var ly = Math.max(frameInset+labelFont*0.65, Math.min(size - frameInset - labelFont*0.65, baseY + offPx));
     g.fillText(S.labelText, size/2, ly);
   }
 }
@@ -3611,6 +3735,31 @@ $("labelText").addEventListener("input",function(e){S.labelText=e.target.value;r
 $("labelSize").addEventListener("input",function(e){S.labelSize=+e.target.value;$("labelSizeOut").textContent=e.target.value+"%";rerender();});
 $("labelOffset").addEventListener("input",function(e){S.labelOffset=+e.target.value;$("labelOffsetOut").textContent=e.target.value;rerender();});
 
+// ---- frame background & built-in icon ----
+(function(){
+  var names=["","heart","cross","star","wifi","bolt","play","location","music","camera","home","chat","gift","coffee","leaf","flame","bag","bell","check","paw","mail"];
+  var ko={"":"없음",heart:"하트",cross:"십자",star:"별",wifi:"와이파이",bolt:"번개",play:"플레이",location:"위치",music:"음악",camera:"카메라",home:"홈",chat:"채팅",gift:"선물",coffee:"커피",leaf:"잎",flame:"불꽃",bag:"쇼핑백",bell:"벨",check:"체크",paw:"발바닥",mail:"메일"};
+  var sel=$("iconName");
+  names.forEach(function(n){ var o=document.createElement("option"); o.value=n; o.textContent=ko[n]; sel.appendChild(o); });
+})();
+$("frameOn").addEventListener("change",function(e){ S.frameOn=e.target.checked; $("frameControls").style.display=e.target.checked?"block":"none"; rerender(); });
+$("frameModeSeg").addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b)return; Array.prototype.forEach.call(this.children,function(x){x.classList.remove("on");}); b.classList.add("on"); S.frameMode=b.dataset.fmode; $("frameBg2Wrap").style.display=(S.frameMode==="solid")?"none":"block"; rerender(); });
+$("frameBg1").addEventListener("input",function(e){ S.frameBg1=e.target.value; rerender(); });
+$("frameBg2").addEventListener("input",function(e){ S.frameBg2=e.target.value; rerender(); });
+$("iconName").addEventListener("change",function(e){ S.iconName=e.target.value; $("iconControls").style.display=e.target.value?"block":"none"; if(e.target.value&&S.ecc!=="H"){ setEcc("H"); } rerender(); });
+$("iconKindSeg").addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b)return; Array.prototype.forEach.call(this.children,function(x){x.classList.remove("on");}); b.classList.add("on"); S.iconKind=b.dataset.ikind; rerender(); });
+$("iconColor").addEventListener("input",function(e){ S.iconColor=e.target.value; rerender(); });
+function setEcc(v){ S.ecc=v; Array.prototype.forEach.call($("eccSeg").children,function(x){x.classList.toggle("on",x.dataset.ecc===v);}); $("eccOut").textContent=v+" ("+({L:"7%",M:"15%",Q:"25%",H:"30%"})[v]+")"; }
+function syncFrameIconUI(){
+  $("frameOn").checked=S.frameOn; $("frameControls").style.display=S.frameOn?"block":"none";
+  Array.prototype.forEach.call($("frameModeSeg").children,function(x){x.classList.toggle("on",x.dataset.fmode===S.frameMode);});
+  $("frameBg2Wrap").style.display=(S.frameMode==="solid")?"none":"block";
+  $("frameBg1").value=S.frameBg1; $("frameBg2").value=S.frameBg2;
+  $("iconName").value=S.iconName||""; $("iconControls").style.display=S.iconName?"block":"none";
+  Array.prototype.forEach.call($("iconKindSeg").children,function(x){x.classList.toggle("on",x.dataset.ikind===S.iconKind);});
+  $("iconColor").value=S.iconColor;
+}
+
 // export buttons
 $("dlPng").addEventListener("click",exportPNG);
 $("dlSvg").addEventListener("click",exportSVG);
@@ -3780,71 +3929,179 @@ $("featureChips").addEventListener("click",function(e){
   if(b.dataset.act==="art"){ setTimeout(function(){ $("artFile").click(); }, 350); }
 });
 
-// ---------- gallery presets ----------
-var PRESETS = [
-  {name:"네온 펄스", tag:"사이버 · 다크", s:{fill:"linear",fg1:"#7c5cff",fg2:"#22d3ee",angle:45,dot:"rounded",eye:"rounded",bg:"#0b0d12",transparent:false}},
-  {name:"스카이", tag:"청량한 하늘", s:{fill:"linear",fg1:"#38bdf8",fg2:"#4f46e5",angle:90,dot:"rounded",eye:"rounded",bg:"#ffffff",transparent:false}},
-  {name:"오션", tag:"딥 블루", s:{fill:"linear",fg1:"#06b6d4",fg2:"#1d4ed8",angle:120,dot:"dots",eye:"circle",bg:"#ffffff",transparent:false}},
-  {name:"오로라", tag:"오로라 빛", s:{fill:"linear",fg1:"#34d399",fg2:"#8b5cf6",angle:120,dot:"classy",eye:"leaf",bg:"#0b1020",transparent:false}},
-  {name:"선셋", tag:"따뜻한 노을", s:{fill:"linear",fg1:"#ff5c8a",fg2:"#ffb347",angle:120,dot:"dots",eye:"circle",bg:"#ffffff",transparent:false}},
-  {name:"미드나잇", tag:"심야 네온", s:{fill:"radial",fg1:"#22d3ee",fg2:"#3b5bff",dot:"classy",eye:"leaf",bg:"#0b1020",transparent:false}},
-  {name:"라벤더", tag:"부드러운 퍼플", s:{fill:"linear",fg1:"#a78bfa",fg2:"#7c3aed",angle:60,dot:"classy",eye:"leaf",bg:"#ffffff",transparent:false}},
-  {name:"에메랄드", tag:"자연 그린", s:{fill:"linear",fg1:"#10b981",fg2:"#0ea5e9",angle:90,dot:"dots",eye:"circle",bg:"#ffffff",transparent:false}},
-  {name:"코랄", tag:"산호빛 웜톤", s:{fill:"linear",fg1:"#fb7185",fg2:"#f97316",angle:45,dot:"rounded",eye:"rounded",bg:"#ffffff",transparent:false}},
-  {name:"사이버펑크", tag:"핑크×시안", s:{fill:"linear",fg1:"#ec4899",fg2:"#22d3ee",angle:135,dot:"rounded",eye:"rounded",bg:"#0b0d12",transparent:false}},
-  {name:"포레스트", tag:"딥 그린", s:{fill:"linear",fg1:"#15803d",fg2:"#065f46",angle:90,dot:"dots",eye:"circle",bg:"#ffffff",transparent:false}},
-  {name:"라즈베리", tag:"비비드", s:{fill:"linear",fg1:"#ff3d81",fg2:"#7c3aed",angle:135,dot:"rounded",eye:"rounded",bg:"#ffffff",transparent:false}},
-  {name:"바이올렛", tag:"퍼플×마젠타", s:{fill:"linear",fg1:"#7c3aed",fg2:"#db2777",angle:135,dot:"rounded",eye:"rounded",bg:"#ffffff",transparent:false}},
-  {name:"아쿠아", tag:"물빛 라디얼", s:{fill:"radial",fg1:"#22d3ee",fg2:"#0369a1",dot:"dots",eye:"circle",bg:"#ffffff",transparent:false}},
-  {name:"라임 네온", tag:"형광 라임", s:{fill:"linear",fg1:"#a3e635",fg2:"#16a34a",angle:90,dot:"dots",eye:"circle",bg:"#0b0d12",transparent:false}},
-  {name:"선라이즈", tag:"일출 라디얼", s:{fill:"radial",fg1:"#fb7185",fg2:"#f59e0b",dot:"dots",eye:"circle",bg:"#ffffff",transparent:false}},
-  {name:"골드 럭스", tag:"프리미엄", s:{fill:"linear",fg1:"#b8860b",fg2:"#ffd76a",angle:60,dot:"classy",eye:"leaf",bg:"#0b0d12",transparent:false}},
-  {name:"그래파이트", tag:"라이트 온 다크", s:{fill:"solid",fg1:"#e5e7eb",fg2:"#e5e7eb",dot:"square",eye:"square",bg:"#0b0d12",transparent:false}},
-  {name:"인디고", tag:"기하학 · 클래시", s:{fill:"linear",fg1:"#06b6d4",fg2:"#6366f1",angle:30,dot:"classy",eye:"square",bg:"#ffffff",transparent:false}},
-  {name:"모노 잉크", tag:"클래식 블랙", s:{fill:"solid",fg1:"#111111",fg2:"#111111",dot:"square",eye:"square",bg:"#ffffff",transparent:false}}
-];
+// ---------- gallery: categorised presets ----------
+var DKEYS=["fill","fg1","fg2","angle","transparent","bg","dot","eye","margin","ecc","anim","animKind","animSpeed","frameOn","frameMode","frameBg1","frameBg2","frameAngle","iconName","iconKind","iconColor"];
+var DDEF={fill:"solid",fg1:"#111111",fg2:"#111111",angle:45,transparent:false,bg:"#ffffff",dot:"square",eye:"square",margin:4,ecc:"H",anim:false,animKind:"shine",animSpeed:1,frameOn:false,frameMode:"solid",frameBg1:"#0e7a3b",frameBg2:"#0b3d22",frameAngle:135,iconName:"",iconKind:"logo",iconColor:"#ffffff"};
+function resetDesign(fullArt){ for(var k in DDEF) S[k]=DDEF[k]; S.logo=null; S.artImg=null; S.artIsVideo=false; if(fullArt && typeof removeArtVid==="function") removeArtVid(); }
+
+var CATS = {
+  standard:[
+    {name:"네온 펄스",tag:"사이버·다크",s:{fill:"linear",fg1:"#7c5cff",fg2:"#22d3ee",angle:45,dot:"rounded",eye:"rounded",bg:"#0b0d12"}},
+    {name:"스카이",tag:"청량한 하늘",s:{fill:"linear",fg1:"#38bdf8",fg2:"#4f46e5",angle:90,dot:"rounded",eye:"rounded",bg:"#ffffff"}},
+    {name:"오션",tag:"딥 블루",s:{fill:"linear",fg1:"#06b6d4",fg2:"#1d4ed8",angle:120,dot:"dots",eye:"circle",bg:"#ffffff"}},
+    {name:"오로라",tag:"오로라 빛",s:{fill:"linear",fg1:"#34d399",fg2:"#8b5cf6",angle:120,dot:"classy",eye:"leaf",bg:"#0b1020"}},
+    {name:"선셋",tag:"따뜻한 노을",s:{fill:"linear",fg1:"#ff5c8a",fg2:"#ffb347",angle:120,dot:"dots",eye:"circle",bg:"#ffffff"}},
+    {name:"라벤더",tag:"부드러운 퍼플",s:{fill:"linear",fg1:"#a78bfa",fg2:"#7c3aed",angle:60,dot:"classy",eye:"leaf",bg:"#ffffff"}},
+    {name:"에메랄드",tag:"자연 그린",s:{fill:"linear",fg1:"#10b981",fg2:"#0ea5e9",angle:90,dot:"dots",eye:"circle",bg:"#ffffff"}},
+    {name:"코랄",tag:"산호빛",s:{fill:"linear",fg1:"#fb7185",fg2:"#f97316",angle:45,dot:"rounded",eye:"rounded",bg:"#ffffff"}},
+    {name:"사이버펑크",tag:"핑크×시안",s:{fill:"linear",fg1:"#ec4899",fg2:"#22d3ee",angle:135,dot:"rounded",eye:"rounded",bg:"#0b0d12"}},
+    {name:"포레스트",tag:"딥 그린",s:{fill:"linear",fg1:"#15803d",fg2:"#065f46",angle:90,dot:"dots",eye:"circle",bg:"#ffffff"}},
+    {name:"바이올렛",tag:"퍼플×마젠타",s:{fill:"linear",fg1:"#7c3aed",fg2:"#db2777",angle:135,dot:"rounded",eye:"rounded",bg:"#ffffff"}},
+    {name:"아쿠아",tag:"물빛 라디얼",s:{fill:"radial",fg1:"#22d3ee",fg2:"#0369a1",dot:"dots",eye:"circle",bg:"#ffffff"}},
+    {name:"라임 네온",tag:"형광 라임",s:{fill:"linear",fg1:"#a3e635",fg2:"#16a34a",angle:90,dot:"dots",eye:"circle",bg:"#0b0d12"}},
+    {name:"골드 럭스",tag:"프리미엄",s:{fill:"linear",fg1:"#b8860b",fg2:"#ffd76a",angle:60,dot:"classy",eye:"leaf",bg:"#0b0d12"}},
+    {name:"모노 잉크",tag:"클래식",s:{fill:"solid",fg1:"#111111",bg:"#ffffff",dot:"square",eye:"square"}}
+  ],
+  animation:[
+    {name:"네온 샤인",tag:"샤인 ✨",s:{anim:true,animKind:"shine",fill:"linear",fg1:"#7c5cff",fg2:"#22d3ee",angle:45,dot:"rounded",eye:"rounded",bg:"#0b0d12"}},
+    {name:"오로라 회전",tag:"회전",s:{anim:true,animKind:"rotate",fill:"linear",fg1:"#34d399",fg2:"#8b5cf6",angle:120,dot:"classy",eye:"leaf",bg:"#0b1020"}},
+    {name:"펄스 코어",tag:"펄스",s:{anim:true,animKind:"pulse",fill:"radial",fg1:"#22d3ee",fg2:"#3b5bff",dot:"dots",eye:"circle",bg:"#0b1020"}},
+    {name:"스윕 코랄",tag:"스윕",s:{anim:true,animKind:"sweep",fill:"linear",fg1:"#fb7185",fg2:"#f97316",angle:60,dot:"rounded",eye:"rounded",bg:"#ffffff"}},
+    {name:"사이버 스윕",tag:"스윕·다크",s:{anim:true,animKind:"sweep",fill:"linear",fg1:"#ec4899",fg2:"#22d3ee",angle:120,dot:"rounded",eye:"rounded",bg:"#0b0d12"}},
+    {name:"스카이 샤인",tag:"샤인",s:{anim:true,animKind:"shine",fill:"linear",fg1:"#38bdf8",fg2:"#4f46e5",angle:90,dot:"rounded",eye:"rounded",bg:"#ffffff"}},
+    {name:"골드 회전",tag:"회전",s:{anim:true,animKind:"rotate",fill:"linear",fg1:"#b8860b",fg2:"#ffd76a",angle:60,dot:"classy",eye:"leaf",bg:"#0b0d12"}},
+    {name:"라임 펄스",tag:"펄스",s:{anim:true,animKind:"pulse",fill:"radial",fg1:"#a3e635",fg2:"#16a34a",dot:"dots",eye:"circle",bg:"#0b0d12"}},
+    {name:"바이올렛 샤인",tag:"샤인",s:{anim:true,animKind:"shine",fill:"linear",fg1:"#7c3aed",fg2:"#db2777",angle:135,dot:"rounded",eye:"rounded",bg:"#ffffff"}},
+    {name:"오션 스윕",tag:"스윕",s:{anim:true,animKind:"sweep",fill:"linear",fg1:"#06b6d4",fg2:"#1d4ed8",angle:100,dot:"dots",eye:"circle",bg:"#ffffff"}},
+    {name:"미드나잇 펄스",tag:"펄스",s:{anim:true,animKind:"pulse",fill:"radial",fg1:"#818cf8",fg2:"#1e1b4b",dot:"classy",eye:"leaf",bg:"#0b1020"}},
+    {name:"선라이즈 회전",tag:"회전",s:{anim:true,animKind:"rotate",fill:"radial",fg1:"#fb7185",fg2:"#f59e0b",dot:"dots",eye:"circle",bg:"#ffffff"}}
+  ],
+  logo:[
+    {name:"하트",tag:"로고",s:{iconName:"heart",iconKind:"logo",iconColor:"#ffffff",fill:"linear",fg1:"#ff3d81",fg2:"#7c3aed",angle:135,dot:"rounded",eye:"rounded",bg:"#0b0d12"}},
+    {name:"별",tag:"로고",s:{iconName:"star",iconKind:"logo",iconColor:"#111111",fill:"linear",fg1:"#f59e0b",fg2:"#b8860b",angle:60,dot:"classy",eye:"leaf",bg:"#ffffff"}},
+    {name:"와이파이",tag:"로고",s:{iconName:"wifi",iconKind:"logo",iconColor:"#ffffff",fill:"linear",fg1:"#06b6d4",fg2:"#1d4ed8",angle:120,dot:"dots",eye:"circle",bg:"#0b1020"}},
+    {name:"카메라",tag:"로고",s:{iconName:"camera",iconKind:"logo",iconColor:"#ffffff",fill:"linear",fg1:"#7c5cff",fg2:"#22d3ee",angle:45,dot:"rounded",eye:"rounded",bg:"#0b0d12"}},
+    {name:"뮤직",tag:"로고",s:{iconName:"music",iconKind:"logo",iconColor:"#ffffff",fill:"linear",fg1:"#ec4899",fg2:"#8b5cf6",angle:135,dot:"rounded",eye:"rounded",bg:"#0b0d12"}},
+    {name:"메일",tag:"로고",s:{iconName:"mail",iconKind:"logo",iconColor:"#111111",fill:"linear",fg1:"#38bdf8",fg2:"#4f46e5",angle:90,dot:"dots",eye:"circle",bg:"#ffffff"}},
+    {name:"채팅",tag:"로고",s:{iconName:"chat",iconKind:"logo",iconColor:"#ffffff",fill:"linear",fg1:"#10b981",fg2:"#0ea5e9",angle:90,dot:"rounded",eye:"rounded",bg:"#0b1020"}},
+    {name:"커피",tag:"로고",s:{iconName:"coffee",iconKind:"logo",iconColor:"#ffffff",fill:"solid",fg1:"#6f4e37",bg:"#f5efe6",dot:"classy",eye:"leaf"}},
+    {name:"위치",tag:"로고",s:{iconName:"location",iconKind:"logo",iconColor:"#ffffff",fill:"linear",fg1:"#ef4444",fg2:"#b91c1c",angle:120,dot:"rounded",eye:"rounded",bg:"#0b0d12"}},
+    {name:"선물",tag:"로고",s:{iconName:"gift",iconKind:"logo",iconColor:"#ffffff",fill:"linear",fg1:"#f43f5e",fg2:"#7c3aed",angle:60,dot:"rounded",eye:"rounded",bg:"#0b0d12"}},
+    {name:"벨",tag:"로고",s:{iconName:"bell",iconKind:"logo",iconColor:"#111111",fill:"linear",fg1:"#fbbf24",fg2:"#f97316",angle:90,dot:"dots",eye:"circle",bg:"#ffffff"}},
+    {name:"쇼핑백",tag:"로고",s:{iconName:"bag",iconKind:"logo",iconColor:"#ffffff",fill:"linear",fg1:"#8b5cf6",fg2:"#db2777",angle:135,dot:"rounded",eye:"rounded",bg:"#0b0d12"}}
+  ],
+  pictogram:[
+    {name:"제세동기(AED)",tag:"응급",s:{iconName:"heart",iconKind:"pictogram",iconColor:"#ffffff",fill:"solid",fg1:"#16a34a",bg:"#ffffff",dot:"dots",eye:"square",frameOn:true,frameMode:"solid",frameBg1:"#16a34a"}},
+    {name:"응급 십자",tag:"의료",s:{iconName:"cross",iconKind:"pictogram",iconColor:"#ffffff",fill:"solid",fg1:"#15803d",bg:"#ffffff",dot:"dots",eye:"square",frameOn:true,frameMode:"linear",frameBg1:"#166534",frameBg2:"#0b3d22",frameAngle:135}},
+    {name:"소화기",tag:"소방",s:{iconName:"flame",iconKind:"pictogram",iconColor:"#ffffff",fill:"solid",fg1:"#dc2626",bg:"#ffffff",dot:"dots",eye:"square",frameOn:true,frameMode:"solid",frameBg1:"#b91c1c"}},
+    {name:"와이파이 존",tag:"안내",s:{iconName:"wifi",iconKind:"pictogram",iconColor:"#ffffff",fill:"solid",fg1:"#2563eb",bg:"#ffffff",dot:"dots",eye:"square",frameOn:true,frameMode:"linear",frameBg1:"#1d4ed8",frameBg2:"#0b2a6b",frameAngle:120}},
+    {name:"별점",tag:"리뷰",s:{iconName:"star",iconKind:"pictogram",iconColor:"#ffffff",fill:"solid",fg1:"#f59e0b",bg:"#ffffff",dot:"dots",eye:"square",frameOn:true,frameMode:"solid",frameBg1:"#d97706"}},
+    {name:"음악",tag:"미디어",s:{iconName:"music",iconKind:"pictogram",iconColor:"#ffffff",fill:"solid",fg1:"#7c3aed",bg:"#ffffff",dot:"dots",eye:"square",frameOn:true,frameMode:"linear",frameBg1:"#6d28d9",frameBg2:"#2e1065",frameAngle:135}},
+    {name:"플레이",tag:"영상",s:{iconName:"play",iconKind:"pictogram",iconColor:"#ffffff",fill:"solid",fg1:"#ef4444",bg:"#ffffff",dot:"dots",eye:"square",frameOn:true,frameMode:"solid",frameBg1:"#991b1b"}},
+    {name:"위치 안내",tag:"길찾기",s:{iconName:"location",iconKind:"pictogram",iconColor:"#ffffff",fill:"solid",fg1:"#e11d48",bg:"#ffffff",dot:"dots",eye:"square",frameOn:true,frameMode:"linear",frameBg1:"#be123c",frameBg2:"#4c0519",frameAngle:120}},
+    {name:"홈",tag:"부동산",s:{iconName:"home",iconKind:"pictogram",iconColor:"#ffffff",fill:"solid",fg1:"#0d9488",bg:"#ffffff",dot:"dots",eye:"square",frameOn:true,frameMode:"solid",frameBg1:"#0f766e"}},
+    {name:"카페",tag:"F&B",s:{iconName:"coffee",iconKind:"pictogram",iconColor:"#ffffff",fill:"solid",fg1:"#6f4e37",bg:"#ffffff",dot:"dots",eye:"square",frameOn:true,frameMode:"linear",frameBg1:"#5b3a29",frameBg2:"#2e1c14",frameAngle:135}},
+    {name:"에코",tag:"친환경",s:{iconName:"leaf",iconKind:"pictogram",iconColor:"#ffffff",fill:"solid",fg1:"#22c55e",bg:"#ffffff",dot:"dots",eye:"square",frameOn:true,frameMode:"solid",frameBg1:"#15803d"}},
+    {name:"선물함",tag:"이벤트",s:{iconName:"gift",iconKind:"pictogram",iconColor:"#ffffff",fill:"solid",fg1:"#db2777",bg:"#ffffff",dot:"dots",eye:"square",frameOn:true,frameMode:"linear",frameBg1:"#be185d",frameBg2:"#500724",frameAngle:120}}
+  ],
+  frame:[
+    {name:"에메랄드 카드",tag:"프레임",s:{fill:"solid",fg1:"#0b3d22",bg:"#ffffff",dot:"rounded",eye:"rounded",frameOn:true,frameMode:"linear",frameBg1:"#16a34a",frameBg2:"#0b3d22",frameAngle:135}},
+    {name:"오션 카드",tag:"프레임",s:{fill:"solid",fg1:"#0b2a6b",bg:"#ffffff",dot:"dots",eye:"circle",frameOn:true,frameMode:"linear",frameBg1:"#1d4ed8",frameBg2:"#0b2a6b",frameAngle:120}},
+    {name:"선셋 카드",tag:"프레임",s:{fill:"solid",fg1:"#7c2d12",bg:"#ffffff",dot:"rounded",eye:"rounded",frameOn:true,frameMode:"linear",frameBg1:"#fb7185",frameBg2:"#f97316",frameAngle:120}},
+    {name:"바이올렛 카드",tag:"프레임",s:{fill:"solid",fg1:"#2e1065",bg:"#ffffff",dot:"classy",eye:"leaf",frameOn:true,frameMode:"linear",frameBg1:"#7c3aed",frameBg2:"#2e1065",frameAngle:135}},
+    {name:"미드나잇 카드",tag:"프레임",s:{fill:"solid",fg1:"#0b1020",bg:"#ffffff",dot:"dots",eye:"circle",frameOn:true,frameMode:"radial",frameBg1:"#22d3ee",frameBg2:"#0b1020"}},
+    {name:"로즈 카드",tag:"프레임",s:{fill:"solid",fg1:"#500724",bg:"#ffffff",dot:"rounded",eye:"rounded",frameOn:true,frameMode:"linear",frameBg1:"#f43f5e",frameBg2:"#9d174d",frameAngle:120}},
+    {name:"골드 카드",tag:"프레임",s:{fill:"solid",fg1:"#3a2a06",bg:"#fffdf5",dot:"classy",eye:"leaf",frameOn:true,frameMode:"linear",frameBg1:"#ffd76a",frameBg2:"#b8860b",frameAngle:60}},
+    {name:"틸 카드",tag:"프레임",s:{fill:"solid",fg1:"#083344",bg:"#ffffff",dot:"dots",eye:"circle",frameOn:true,frameMode:"linear",frameBg1:"#06b6d4",frameBg2:"#0e7490",frameAngle:120}},
+    {name:"라임 카드",tag:"프레임",s:{fill:"solid",fg1:"#14532d",bg:"#ffffff",dot:"dots",eye:"circle",frameOn:true,frameMode:"solid",frameBg1:"#65a30d"}},
+    {name:"모노 카드",tag:"프레임",s:{fill:"solid",fg1:"#111111",bg:"#ffffff",dot:"square",eye:"square",frameOn:true,frameMode:"solid",frameBg1:"#111111"}}
+  ]
+};
+var curCat="standard";
+function renderPreset(cv, ps){
+  var save={}; DKEYS.forEach(function(k){save[k]=S[k];}); var sl=S.logo, sa=S.artImg, sav=S.artIsVideo, sc=S.content;
+  resetDesign(false);
+  for(var k in ps) S[k]=ps[k];
+  var pm=S.margin; S.margin=Math.min(S.margin,2);
+  try{ render(cv.getContext("2d"), cv.width); }catch(e){}
+  S.margin=pm;
+  DKEYS.forEach(function(k){S[k]=save[k];}); S.logo=sl; S.artImg=sa; S.artIsVideo=sav; S.content=sc;
+}
 function buildGallery(){
-  var grid=$("galGrid"); grid.innerHTML="";
-  PRESETS.forEach(function(p,idx){
+  var grid=$("galGrid"), empty=$("galEmpty");
+  $("myqrBar").style.display = (curCat==="myqr") ? "flex" : "none";
+  grid.innerHTML=""; empty.style.display="none";
+  if(curCat==="myqr"){ renderMyQr(); return; }
+  var list=CATS[curCat]||[];
+  list.forEach(function(p){
     var card=document.createElement("div"); card.className="gal-card";
     card.innerHTML='<span class="use">편집하기 →</span><canvas width="300" height="300"></canvas><div class="name">'+p.name+'</div><div class="tag">'+p.tag+'</div>';
     grid.appendChild(card);
-    // render preset thumbnail using its own settings
-    var cv=card.querySelector("canvas");
-    renderPreset(cv, p.s);
+    renderPreset(card.querySelector("canvas"), p.s);
     card.addEventListener("click",function(){ applyPreset(p.s); });
   });
 }
-function renderPreset(cv, ps){
-  var save={}; for(var k in ps) save[k]=S[k];
-  for(var k2 in ps) S[k2]=ps[k2];
-  var pmargin=S.margin; S.margin=2;
-  render(cv.getContext("2d"), cv.width);
-  S.margin=pmargin;
-  for(var k3 in ps) S[k3]=save[k3];
-}
-function applyPreset(ps){
-  for(var k in ps) S[k]=ps[k];
-  // sync UI controls
+function syncStudioUI(){
   $("fg1").value=S.fg1; $("fg2").value=S.fg2; $("bg").value=S.bg; $("angle").value=S.angle;
   $("angleOut").textContent=S.angle+"°";
   $("transparent").checked=S.transparent; $("bgWrap").style.display=S.transparent?"none":"block";
   setSeg("fillSeg","fill",S.fill); setSeg("dotSeg","dot",S.dot); setSeg("eyeSeg","eye",S.eye);
   $("fg2Wrap").style.display = S.fill!=="solid"?"block":"none";
   $("angleWrap").style.display = S.fill==="linear"?"block":"none";
-  // switch to studio
+  var eccMap={L:"7%",M:"15%",Q:"25%",H:"30%"};
+  Array.prototype.forEach.call($("eccSeg").children,function(x){x.classList.toggle("on",x.dataset.ecc===S.ecc);});
+  $("eccOut").textContent=S.ecc+" ("+eccMap[S.ecc]+")";
+  $("anim").checked=S.anim; setSeg("animSeg","animKind",S.animKind);
+  $("artControls").style.display="none"; $("artLabel").textContent="＋ 이미지 / 영상 업로드 — QR 전체를 덮는 아트";
+  if($("logoClear")){ $("logoSizeWrap").style.display="none"; $("logoBgWrap").style.display="none"; $("logoClear").style.display="none"; $("logoLabel").textContent="＋ 로고 이미지 업로드 (PNG·JPG·SVG)"; $("logoFile").value=""; }
+  if(typeof syncFrameIconUI==="function") syncFrameIconUI();
+}
+function applyPreset(ps){
+  resetDesign(true);
+  for(var k in ps) S[k]=ps[k];
+  syncStudioUI();
   Array.prototype.forEach.call($("tabs").children,function(x){x.classList.toggle("active", x.dataset.view==="studio");});
   ["gallery","studio","ar","about"].forEach(function(v){ $("view-"+v).classList.toggle("active", v==="studio"); });
   rerender();
   toast("프리셋 적용됨 — 자유롭게 편집하세요");
 }
 function setSeg(id,key,val){
-  var el=$(id);
+  var el=$(id); if(!el) return;
   Array.prototype.forEach.call(el.children,function(x){
     var dk=Object.keys(x.dataset)[0];
     x.classList.toggle("on", x.dataset[dk]===val);
   });
 }
+// category tabs
+$("catTabs").addEventListener("click",function(e){
+  var b=e.target.closest("button"); if(!b) return;
+  Array.prototype.forEach.call(this.children,function(x){x.classList.remove("on");});
+  b.classList.add("on"); curCat=b.dataset.cat; buildGallery();
+});
+
+// ---------- My QR (local storage) ----------
+var MYKEY="aqr_myqr_v1";
+function loadMyQr(){ try{ return JSON.parse(localStorage.getItem(MYKEY)||"[]"); }catch(e){ return []; } }
+function storeMyQr(a){ try{ localStorage.setItem(MYKEY, JSON.stringify(a)); }catch(e){ toast("저장 공간이 부족합니다"); } }
+function snapshotDesign(){ var o={content:S.content}; DKEYS.forEach(function(k){o[k]=S[k];}); return o; }
+function currentThumb(){ var c=document.createElement("canvas"); c.width=c.height=260; var pm=S.margin; if(S.margin>3)S.margin=3; try{ render(c.getContext("2d"),260); }catch(e){} S.margin=pm; return c.toDataURL("image/jpeg",0.7); }
+function saveCurrentQr(){
+  var arr=loadMyQr();
+  if(arr.length>=60){ toast("최대 60개까지 저장됩니다"); return; }
+  var name=(S.content||"").replace(/^https?:\/\//i,"").slice(0,24)||"내 QR";
+  arr.unshift({id:"q"+(arr.length)+"_"+name.length+"_"+(S.fg1||"")+Math.round(S.angle||0), name:name, d:snapshotDesign(), thumb:currentThumb()});
+  storeMyQr(arr); toast("My QR에 저장됨"); if(curCat==="myqr") renderMyQr();
+}
+function renderMyQr(){
+  var grid=$("galGrid"), empty=$("galEmpty"); grid.innerHTML="";
+  var arr=loadMyQr();
+  if(!arr.length){ empty.style.display="block"; empty.innerHTML="아직 저장된 QR이 없습니다.<br>스튜디오에서 디자인을 만든 뒤 <b>‘＋ 현재 디자인 저장’</b>을 누르세요."; return; }
+  empty.style.display="none";
+  arr.forEach(function(item,i){
+    var card=document.createElement("div"); card.className="gal-card";
+    card.innerHTML='<span class="del" data-i="'+i+'">삭제 ✕</span><span class="use">불러오기 →</span><img src="'+item.thumb+'" style="width:100%;border-radius:8px;display:block;background:#fff"/><div class="name">'+ (item.name||"내 QR") +'</div><div class="tag">저장된 디자인</div>';
+    grid.appendChild(card);
+    card.addEventListener("click",function(ev){
+      if(ev.target.closest(".del")){ ev.stopPropagation(); var a=loadMyQr(); a.splice(i,1); storeMyQr(a); renderMyQr(); toast("삭제됨"); return; }
+      var d=item.d; resetDesign(true); for(var k in d){ if(k==="content") S.content=d[k]; else S[k]=d[k]; }
+      $("content").value=S.content||""; syncStudioUI();
+      Array.prototype.forEach.call($("tabs").children,function(x){x.classList.toggle("active", x.dataset.view==="studio");});
+      ["gallery","studio","ar","about"].forEach(function(v){ $("view-"+v).classList.toggle("active", v==="studio"); });
+      rerender(); toast("불러왔습니다 — 자유롭게 편집하세요");
+    });
+  });
+}
+$("saveMyQr").addEventListener("click",saveCurrentQr);
 
 // ---------- init ----------
 if (typeof qrcode === "undefined"){
