@@ -474,7 +474,7 @@
   <footer>
     <div>Aesthetic QR Studio · LemioCode 컨셉을 오픈소스로 재구현 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.03-p</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.03-q</b></div>
   </footer>
 </div>
 
@@ -2895,13 +2895,13 @@ function makeFill(g, x0, y0, size){
 function drawModule(g, x, y, s, style, nb){
   switch(style){
     case "dots":
-      // isolated circles, sized to nearly touch → keeps high ink coverage for scanning
+      // round dots (scan-safe coverage); distinct from classy which is leaf-shaped
       g.beginPath(); g.arc(x+s/2, y+s/2, s*0.5, 0, Math.PI*2); g.fill(); break;
     case "rounded":
       drawConnected(g, x, y, s, nb, s*0.35); break;
     case "classy":
-      // isolated modules become full circles; connected runs keep square joins
-      drawConnected(g, x, y, s, nb, s*0.5); break;
+      // leaf-style: two opposite corners rounded, two sharp — distinct from dots/rounded
+      classyRect(g, x, y, s+0.4, s+0.4, s*0.55); g.fill(); break;
     case "diamond":
       g.beginPath();
       g.moveTo(x+s/2,y+s*0.04); g.lineTo(x+s*0.96,y+s/2); g.lineTo(x+s/2,y+s*0.96); g.lineTo(x+s*0.04,y+s/2);
@@ -3162,10 +3162,10 @@ function makeArtFill(g, x0, y0, size){
 function drawArtMark(g, cx, cy, r, shape){
   switch(shape){
     case "square":  g.fillRect(cx-r, cy-r, r*2, r*2); break;
-    case "rounded": roundRect(g, cx-r, cy-r, r*2, r*2, r*0.55); g.fill(); break;
-    case "classy":  roundRect(g, cx-r, cy-r, r*2, r*2, r*0.9); g.fill(); break;
+    case "rounded": roundRect(g, cx-r, cy-r, r*2, r*2, r*0.4); g.fill(); break;
+    case "classy":  classyRect(g, cx-r, cy-r, r*2, r*2, r*1.1); g.fill(); break;  // leaf (2 rounded corners)
     case "diamond": g.beginPath(); g.moveTo(cx,cy-r*1.15); g.lineTo(cx+r*1.15,cy); g.lineTo(cx,cy+r*1.15); g.lineTo(cx-r*1.15,cy); g.closePath(); g.fill(); break;
-    default:        g.beginPath(); g.arc(cx, cy, r, 0, Math.PI*2); g.fill();  // dots
+    default:        g.beginPath(); g.arc(cx, cy, r, 0, Math.PI*2); g.fill();  // dots (circle)
   }
 }
 // LemioCode-style blending, client-side: the artwork stays BRIGHT and fills the whole QR;
@@ -3319,12 +3319,16 @@ function svgModule(x,y,U,style,nb){
   switch(style){
     case "dots": return '<circle cx="'+(x+U/2)+'" cy="'+(y+U/2)+'" r="'+(U*0.5)+'"/>';
     case "rounded": return '<path d="'+connectedPath(x,y,U,nb,U*0.35)+'"/>';
-    case "classy": return '<path d="'+connectedPath(x,y,U,nb,U*0.5)+'"/>';
+    case "classy": return '<path d="'+classyLeafPath(x,y,U,U*0.55)+'"/>';
     case "diamond": return '<path d="M'+(x+U/2)+' '+(y+U*0.04)+'L'+(x+U*0.96)+' '+(y+U/2)+'L'+(x+U/2)+' '+(y+U*0.96)+'L'+(x+U*0.04)+' '+(y+U/2)+'Z"/>';
     default: return '<rect x="'+x+'" y="'+y+'" width="'+U+'" height="'+U+'"/>';
   }
 }
 // SVG connected rounding — mirrors canvas drawConnected()
+function classyLeafPath(x,y,s,r){
+  r=Math.min(r,s/2);
+  return 'M'+(x+r)+' '+y+'H'+(x+s)+'V'+(y+s-r)+'A'+r+' '+r+' 0 0 1 '+(x+s-r)+' '+(y+s)+'H'+x+'V'+(y+r)+'A'+r+' '+r+' 0 0 1 '+(x+r)+' '+y+'Z';
+}
 function connectedPath(x,y,s,nb,rr){
   nb = nb || {};
   var r=Math.min(rr,s/2);
