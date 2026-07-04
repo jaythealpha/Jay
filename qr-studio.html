@@ -544,7 +544,7 @@
   <footer>
     <div>Aesthetic QR Studio · LemioCode 컨셉을 오픈소스로 재구현 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.03-v</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.03-w</b></div>
   </footer>
 </div>
 
@@ -2933,7 +2933,9 @@ function buildMatrix(text, ecc, minVer){
 }
 var _cache = { key:"", data:null };
 function getMatrix(){
-  var minVer = S.artImg ? S.artDensity : 0;   // denser (smaller modules) for art QR
+  // denser (smaller modules) for art QR; also for centre content so the fixed-size
+  // wordmark/emoji block covers a smaller fraction of modules → stays within ECC-H budget
+  var minVer = S.artImg ? S.artDensity : ((S.centerMode!=="none" && S.centerText) ? 6 : 0);
   var key = S.content + "|" + S.ecc + "|" + minVer;
   if (key !== _cache.key){
     try { _cache.data = buildMatrix(S.content || " ", S.ecc, minVer); _cache.key = key; }
@@ -3215,7 +3217,7 @@ function render(g2, exportSize){
       var fs = isz*0.52;
       g.font = "800 "+fs+"px -apple-system,'Noto Sans KR',Pretendard,sans-serif";
       var tw = g.measureText(S.centerText).width;
-      var maxW = qarea*0.62;
+      var maxW = qarea*0.5;
       while (fs>10 && tw>maxW){ fs*=0.92; g.font="800 "+fs+"px -apple-system,'Noto Sans KR',Pretendard,sans-serif"; tw=g.measureText(S.centerText).width; }
       var padX = fs*0.55, padY = fs*0.42;
       var pw = tw+padX*2, ph = fs+padY*2;
@@ -3952,9 +3954,22 @@ $("featureChips").addEventListener("click",function(e){
 });
 
 // ---------- gallery: categorised presets ----------
-var DKEYS=["fill","fg1","fg2","angle","transparent","bg","dot","eye","margin","ecc","anim","animKind","animSpeed","frameOn","frameMode","frameBg1","frameBg2","frameAngle","centerMode","centerText","centerColor","centerScale"];
-var DDEF={fill:"solid",fg1:"#111111",fg2:"#111111",angle:45,transparent:false,bg:"#ffffff",dot:"square",eye:"square",margin:4,ecc:"H",anim:false,animKind:"shine",animSpeed:1,frameOn:false,frameMode:"solid",frameBg1:"#0e7a3b",frameBg2:"#0b3d22",frameAngle:135,centerMode:"none",centerText:"",centerColor:"#111111",centerScale:24};
+var DKEYS=["fill","fg1","fg2","angle","transparent","bg","dot","eye","margin","ecc","anim","animKind","animSpeed","frameOn","frameMode","frameBg1","frameBg2","frameAngle","centerMode","centerText","centerColor","centerScale","artVisibility","artDensity","artInvert"];
+var DDEF={fill:"solid",fg1:"#111111",fg2:"#111111",angle:45,transparent:false,bg:"#ffffff",dot:"square",eye:"square",margin:4,ecc:"H",anim:false,animKind:"shine",animSpeed:1,frameOn:false,frameMode:"solid",frameBg1:"#0e7a3b",frameBg2:"#0b3d22",frameAngle:135,centerMode:"none",centerText:"",centerColor:"#111111",centerScale:24,artVisibility:70,artDensity:6,artInvert:false};
 function resetDesign(fullArt){ for(var k in DDEF) S[k]=DDEF[k]; S.logo=null; S.artImg=null; S.artIsVideo=false; if(fullArt && typeof removeArtVid==="function") removeArtVid(); }
+// load real web images (CORS-enabled host) for image-based gallery presets
+var IMGCACHE={};
+function getArtImg(url, cb){
+  if(!url){ if(cb)cb(null); return null; }
+  var e=IMGCACHE[url];
+  if(e){ if(e.ready){ if(cb)cb(e.img); return e.img; } if(cb)e.cbs.push(cb); return null; }
+  e=IMGCACHE[url]={img:new Image(),ready:false,cbs:cb?[cb]:[]};
+  e.img.crossOrigin="anonymous";
+  e.img.onload=function(){ e.ready=true; var cbs=e.cbs; e.cbs=[]; cbs.forEach(function(f){try{f(e.img);}catch(x){}}); };
+  e.img.onerror=function(){ e.ready=false; e.cbs=[]; };
+  e.img.src=url;
+  return null;
+}
 
 var CATS = {
   standard:[
@@ -3975,31 +3990,31 @@ var CATS = {
     {name:"모노 잉크",tag:"클래식",s:{fill:"solid",fg1:"#111111",bg:"#ffffff",dot:"square",eye:"square"}}
   ],
   animation:[
-    {name:"네온 샤인",tag:"샤인 ✨",s:{anim:true,animKind:"shine",fill:"linear",fg1:"#7c5cff",fg2:"#22d3ee",angle:45,dot:"rounded",eye:"rounded",bg:"#0b0d12"}},
-    {name:"오로라 회전",tag:"회전",s:{anim:true,animKind:"rotate",fill:"linear",fg1:"#34d399",fg2:"#8b5cf6",angle:120,dot:"classy",eye:"leaf",bg:"#0b1020"}},
-    {name:"펄스 코어",tag:"펄스",s:{anim:true,animKind:"pulse",fill:"radial",fg1:"#22d3ee",fg2:"#3b5bff",dot:"dots",eye:"circle",bg:"#0b1020"}},
-    {name:"스윕 코랄",tag:"스윕",s:{anim:true,animKind:"sweep",fill:"linear",fg1:"#fb7185",fg2:"#f97316",angle:60,dot:"rounded",eye:"rounded",bg:"#ffffff"}},
-    {name:"사이버 스윕",tag:"스윕·다크",s:{anim:true,animKind:"sweep",fill:"linear",fg1:"#ec4899",fg2:"#22d3ee",angle:120,dot:"rounded",eye:"rounded",bg:"#0b0d12"}},
-    {name:"스카이 샤인",tag:"샤인",s:{anim:true,animKind:"shine",fill:"linear",fg1:"#38bdf8",fg2:"#4f46e5",angle:90,dot:"rounded",eye:"rounded",bg:"#ffffff"}},
-    {name:"골드 회전",tag:"회전",s:{anim:true,animKind:"rotate",fill:"linear",fg1:"#b8860b",fg2:"#ffd76a",angle:60,dot:"classy",eye:"leaf",bg:"#0b0d12"}},
-    {name:"라임 펄스",tag:"펄스",s:{anim:true,animKind:"pulse",fill:"radial",fg1:"#a3e635",fg2:"#16a34a",dot:"dots",eye:"circle",bg:"#0b0d12"}},
-    {name:"바이올렛 샤인",tag:"샤인",s:{anim:true,animKind:"shine",fill:"linear",fg1:"#7c3aed",fg2:"#db2777",angle:135,dot:"rounded",eye:"rounded",bg:"#ffffff"}},
-    {name:"오션 스윕",tag:"스윕",s:{anim:true,animKind:"sweep",fill:"linear",fg1:"#06b6d4",fg2:"#1d4ed8",angle:100,dot:"dots",eye:"circle",bg:"#ffffff"}},
-    {name:"미드나잇 펄스",tag:"펄스",s:{anim:true,animKind:"pulse",fill:"radial",fg1:"#818cf8",fg2:"#1e1b4b",dot:"classy",eye:"leaf",bg:"#0b1020"}},
-    {name:"선라이즈 회전",tag:"회전",s:{anim:true,animKind:"rotate",fill:"radial",fg1:"#fb7185",fg2:"#f59e0b",dot:"dots",eye:"circle",bg:"#ffffff"}}
+    {name:"오션 웨이브",tag:"이미지·스윕",s:{artUrl:"https://picsum.photos/seed/ocean77/520/520",anim:true,animKind:"sweep",fg1:"#0b3d6b",dot:"dots",eye:"square",artVisibility:66}},
+    {name:"포레스트",tag:"이미지·샤인",s:{artUrl:"https://picsum.photos/seed/forest12/520/520",anim:true,animKind:"shine",fg1:"#0b3d22",dot:"dots",eye:"square",artVisibility:66}},
+    {name:"선셋 시티",tag:"이미지·회전",s:{artUrl:"https://picsum.photos/seed/city88/520/520",anim:true,animKind:"rotate",fg1:"#7c2d12",dot:"dots",eye:"square",artVisibility:66}},
+    {name:"마운틴",tag:"이미지·펄스",s:{artUrl:"https://picsum.photos/seed/mountain5/520/520",anim:true,animKind:"pulse",fg1:"#0b2a3d",dot:"dots",eye:"square",artVisibility:66}},
+    {name:"플라워",tag:"이미지·샤인",s:{artUrl:"https://picsum.photos/seed/flower34/520/520",anim:true,animKind:"shine",fg1:"#7c1d4b",dot:"dots",eye:"square",artVisibility:66}},
+    {name:"네온 스트리트",tag:"이미지·스윕",s:{artUrl:"https://picsum.photos/seed/neon21/520/520",anim:true,animKind:"sweep",fg1:"#3b0b6b",dot:"dots",eye:"square",artVisibility:66}},
+    {name:"비치",tag:"이미지·회전",s:{artUrl:"https://picsum.photos/seed/beach9/520/520",anim:true,animKind:"rotate",fg1:"#0b4d5b",dot:"dots",eye:"square",artVisibility:66}},
+    {name:"데저트",tag:"이미지·샤인",s:{artUrl:"https://picsum.photos/seed/desert3/520/520",anim:true,animKind:"shine",fg1:"#5b3a0b",dot:"dots",eye:"square",artVisibility:66}},
+    {name:"스노우",tag:"이미지·펄스",s:{artUrl:"https://picsum.photos/seed/snow15/520/520",anim:true,animKind:"pulse",fg1:"#1e3a5b",dot:"dots",eye:"square",artVisibility:64}},
+    {name:"어반",tag:"이미지·스윕",s:{artUrl:"https://picsum.photos/seed/urban42/520/520",anim:true,animKind:"sweep",fg1:"#1b1b2e",dot:"dots",eye:"square",artVisibility:66}},
+    {name:"트로피컬",tag:"이미지·샤인",s:{artUrl:"https://picsum.photos/seed/tropic7/520/520",anim:true,animKind:"shine",fg1:"#0b5d3d",dot:"dots",eye:"square",artVisibility:66}},
+    {name:"갤럭시",tag:"이미지·회전",s:{artUrl:"https://picsum.photos/seed/galaxy2/520/520",anim:true,animKind:"rotate",fg1:"#2e0b5b",dot:"dots",eye:"square",artVisibility:64}}
   ],
   logo:[
     {name:"ACME",tag:"텍스트 로고",s:{fill:"solid",fg1:"#e11d48",bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"text",centerText:"ACME",centerColor:"#e11d48",centerScale:30}},
     {name:"NOVA",tag:"텍스트 로고",s:{fill:"linear",fg1:"#2563eb",fg2:"#4f46e5",angle:120,dot:"dots",eye:"circle",bg:"#ffffff",centerMode:"text",centerText:"NOVA",centerColor:"#1d4ed8",centerScale:30}},
     {name:"PIXEL",tag:"텍스트 로고",s:{fill:"linear",fg1:"#7c3aed",fg2:"#db2777",angle:135,dot:"rounded",eye:"rounded",bg:"#ffffff",centerMode:"text",centerText:"PIXEL",centerColor:"#7c3aed",centerScale:28}},
     {name:"ORBIT",tag:"텍스트 로고",s:{fill:"linear",fg1:"#0d9488",fg2:"#0e7490",angle:90,dot:"dots",eye:"circle",bg:"#ffffff",centerMode:"text",centerText:"ORBIT",centerColor:"#0d9488",centerScale:28}},
-    {name:"LUMEN",tag:"다크 로고",s:{fill:"solid",fg1:"#f59e0b",bg:"#111111",dot:"classy",eye:"leaf",centerMode:"text",centerText:"LUMEN",centerColor:"#f59e0b",centerScale:28}},
+    {name:"LUMEN",tag:"다크 로고",s:{fill:"solid",fg1:"#f59e0b",bg:"#111111",dot:"rounded",eye:"rounded",centerMode:"text",centerText:"LUMEN",centerColor:"#f59e0b",centerScale:22}},
     {name:"AERO",tag:"텍스트 로고",s:{fill:"linear",fg1:"#38bdf8",fg2:"#2563eb",angle:100,dot:"rounded",eye:"rounded",bg:"#ffffff",centerMode:"text",centerText:"AERO",centerColor:"#0284c7",centerScale:30}},
     {name:"KODE",tag:"텍스트 로고",s:{fill:"solid",fg1:"#16a34a",bg:"#ffffff",dot:"square",eye:"square",centerMode:"text",centerText:"KODE",centerColor:"#15803d",centerScale:30}},
     {name:"BLOOM",tag:"텍스트 로고",s:{fill:"linear",fg1:"#ec4899",fg2:"#f43f5e",angle:120,dot:"rounded",eye:"rounded",bg:"#ffffff",centerMode:"text",centerText:"BLOOM",centerColor:"#db2777",centerScale:26}},
     {name:"SONIC",tag:"텍스트 로고",s:{fill:"linear",fg1:"#6366f1",fg2:"#8b5cf6",angle:135,dot:"dots",eye:"circle",bg:"#ffffff",centerMode:"text",centerText:"SONIC",centerColor:"#4f46e5",centerScale:28}},
     {name:"ZEN",tag:"모노 로고",s:{fill:"solid",fg1:"#111111",bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"text",centerText:"ZEN",centerColor:"#111111",centerScale:30}},
-    {name:"VERTEX",tag:"다크 로고",s:{fill:"solid",fg1:"#a78bfa",bg:"#0b0d12",dot:"classy",eye:"leaf",centerMode:"text",centerText:"VERTEX",centerColor:"#c4b5fd",centerScale:26}},
+    {name:"VERTEX",tag:"다크 로고",s:{fill:"solid",fg1:"#a78bfa",bg:"#0b0d12",dot:"rounded",eye:"rounded",centerMode:"text",centerText:"VERTEX",centerColor:"#c4b5fd",centerScale:22}},
     {name:"WAVE",tag:"텍스트 로고",s:{fill:"linear",fg1:"#06b6d4",fg2:"#0369a1",angle:120,dot:"dots",eye:"circle",bg:"#ffffff",centerMode:"text",centerText:"WAVE",centerColor:"#0e7490",centerScale:30}}
   ],
   pictogram:[
@@ -4034,6 +4049,7 @@ function renderPreset(cv, ps, phase){
   var save={}; DKEYS.forEach(function(k){save[k]=S[k];}); var sl=S.logo, sa=S.artImg, sav=S.artIsVideo, sc=S.content, sp=_phase;
   resetDesign(false);
   for(var k in ps) S[k]=ps[k];
+  if(ps.artUrl){ var im=getArtImg(ps.artUrl); if(im){ S.artImg=im; S.artIsVideo=false; } }
   if(phase!=null) _phase=phase;
   var pm=S.margin; S.margin=Math.min(S.margin,2);
   try{ render(cv.getContext("2d"), cv.width); }catch(e){}
@@ -4066,6 +4082,7 @@ function buildGallery(){
     var cv=card.querySelector("canvas");
     renderPreset(cv, p.s);
     if(animate) galItems.push({cv:cv, ps:p.s});
+    else if(p.s.artUrl){ (function(cvv,pss){ getArtImg(pss.artUrl, function(){ renderPreset(cvv, pss); }); })(cv,p.s); }
     card.addEventListener("click",function(){ applyPreset(p.s); });
   });
   if(animate && galItems.length) startGalAnim();
@@ -4089,11 +4106,12 @@ function applyPreset(ps){
   stopGalAnim();
   resetDesign(true);
   for(var k in ps) S[k]=ps[k];
+  if(ps.artUrl){ getArtImg(ps.artUrl, function(img){ if(img){ S.artImg=img; S.artIsVideo=false; $("artControls").style.display="block"; $("artLabel").textContent="✓ 이미지 적용됨(웹) — 변경하려면 클릭"; rerender(); } }); }
   syncStudioUI();
   Array.prototype.forEach.call($("tabs").children,function(x){x.classList.toggle("active", x.dataset.view==="studio");});
   ["gallery","studio","ar","about"].forEach(function(v){ $("view-"+v).classList.toggle("active", v==="studio"); });
   rerender();
-  toast("프리셋 적용됨 — 자유롭게 편집하세요");
+  toast(ps.artUrl?"이미지 프리셋 적용 — 이미지 로딩 중…":"프리셋 적용됨 — 자유롭게 편집하세요");
 }
 function setSeg(id,key,val){
   var el=$(id); if(!el) return;
