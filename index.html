@@ -544,7 +544,7 @@
   <footer>
     <div>Aesthetic QR Studio · LemioCode 컨셉을 오픈소스로 재구현 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.03-u</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.03-v</b></div>
   </footer>
 </div>
 
@@ -3795,6 +3795,7 @@ $("tabs").addEventListener("click",function(e){
   ["gallery","studio","ar","about"].forEach(function(v){ $("view-"+v).classList.toggle("active", v===b.dataset.view); });
   if(b.dataset.view==="studio") rerender();
   if(b.dataset.view==="ar") AR.refresh(); else AR.leave();
+  if(b.dataset.view==="gallery"){ if(curCat==="animation" && typeof startGalAnim==="function") startGalAnim(); } else if(typeof stopGalAnim==="function"){ stopGalAnim(); }
 });
 
 // ---------- AR (marker-based: detect a QR in the camera, overlay 3D content) ----------
@@ -4029,28 +4030,45 @@ var CATS = {
   ]
 };
 var curCat="standard";
-function renderPreset(cv, ps){
-  var save={}; DKEYS.forEach(function(k){save[k]=S[k];}); var sl=S.logo, sa=S.artImg, sav=S.artIsVideo, sc=S.content;
+function renderPreset(cv, ps, phase){
+  var save={}; DKEYS.forEach(function(k){save[k]=S[k];}); var sl=S.logo, sa=S.artImg, sav=S.artIsVideo, sc=S.content, sp=_phase;
   resetDesign(false);
   for(var k in ps) S[k]=ps[k];
+  if(phase!=null) _phase=phase;
   var pm=S.margin; S.margin=Math.min(S.margin,2);
   try{ render(cv.getContext("2d"), cv.width); }catch(e){}
   S.margin=pm;
-  DKEYS.forEach(function(k){S[k]=save[k];}); S.logo=sl; S.artImg=sa; S.artIsVideo=sav; S.content=sc;
+  DKEYS.forEach(function(k){S[k]=save[k];}); S.logo=sl; S.artImg=sa; S.artIsVideo=sav; S.content=sc; _phase=sp;
+}
+// live-animate the Animation category thumbnails so customers see real motion
+var galItems=[], galRaf=null, galLast=0;
+function stopGalAnim(){ if(galRaf){ cancelAnimationFrame(galRaf); galRaf=null; } }
+function startGalAnim(){
+  stopGalAnim(); var t0=null;
+  function step(ts){
+    if(t0==null)t0=ts;
+    if(ts-galLast>=42){ galLast=ts; var ph=((ts-t0)%3200)/3200; for(var i=0;i<galItems.length;i++){ renderPreset(galItems[i].cv, galItems[i].ps, ph); } }
+    galRaf=requestAnimationFrame(step);
+  }
+  galRaf=requestAnimationFrame(step);
 }
 function buildGallery(){
   var grid=$("galGrid"), empty=$("galEmpty");
   $("myqrBar").style.display = (curCat==="myqr") ? "flex" : "none";
-  grid.innerHTML=""; empty.style.display="none";
+  grid.innerHTML=""; empty.style.display="none"; stopGalAnim(); galItems=[];
   if(curCat==="myqr"){ renderMyQr(); return; }
   var list=CATS[curCat]||[];
+  var animate=(curCat==="animation");
   list.forEach(function(p){
     var card=document.createElement("div"); card.className="gal-card";
     card.innerHTML='<span class="use">편집하기 →</span><canvas width="300" height="300"></canvas><div class="name">'+p.name+'</div><div class="tag">'+p.tag+'</div>';
     grid.appendChild(card);
-    renderPreset(card.querySelector("canvas"), p.s);
+    var cv=card.querySelector("canvas");
+    renderPreset(cv, p.s);
+    if(animate) galItems.push({cv:cv, ps:p.s});
     card.addEventListener("click",function(){ applyPreset(p.s); });
   });
+  if(animate && galItems.length) startGalAnim();
 }
 function syncStudioUI(){
   $("fg1").value=S.fg1; $("fg2").value=S.fg2; $("bg").value=S.bg; $("angle").value=S.angle;
@@ -4068,6 +4086,7 @@ function syncStudioUI(){
   if(typeof syncFrameIconUI==="function") syncFrameIconUI();
 }
 function applyPreset(ps){
+  stopGalAnim();
   resetDesign(true);
   for(var k in ps) S[k]=ps[k];
   syncStudioUI();
