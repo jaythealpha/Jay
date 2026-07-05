@@ -591,7 +591,7 @@
   <footer>
     <div>Aesthetic QR Studio · LemioCode 컨셉을 오픈소스로 재구현 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.05-c</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.05-d</b></div>
   </footer>
 </div>
 
@@ -3688,6 +3688,11 @@ function updateMeta(){
   if(!data){ $("metaVer").textContent="—"; $("metaScan").textContent="⚠ 데이터 길이 초과"; $("metaScan").style.color="#ff5c8a"; return; }
   $("metaVer").textContent = "버전 "+data.version+" · "+data.n+"×"+data.n;
   $("metaEcc").textContent = "ECC "+S.ecc;
+  if (S.aiArt){
+    $("metaScan").textContent="🤖 AI 아트 QR 적용 중 — 디자인 옵션은 반영되지 않습니다 ('AI 아트 제거' 후 편집)";
+    $("metaScan").style.color="#ffcc4d";
+    return;
+  }
   if (S.artImg){
     var msg = (S.artIsVideo?"🎬 영상 아트 QR":"🖼️ 이미지 아트 QR");
     if (S.artVisibility > 70) { $("metaScan").textContent="⚠ "+msg+" · 노출도 높음(스캔 테스트 권장)"; $("metaScan").style.color="#ffcc4d"; }
@@ -3701,7 +3706,7 @@ function updateMeta(){
   if (Math.min(cr,cr2) < 2.6) warn.push("대비 낮음");
   var maxLogo = ({L:14,M:18,Q:24,H:30})[S.ecc];
   if (S.logo && S.logoSize > maxLogo-4) warn.push("로고 큼");
-  if (S.dot === "diamond") warn.push("장식용 모듈(스캔 테스트 권장)");
+  if (S.dot === "diamond" || S.dot === "classy") warn.push("장식용 모듈(스캔 테스트 권장)");
   if (warn.length){ $("metaScan").textContent="⚠ "+warn.join(" · "); $("metaScan").style.color="#ffcc4d"; }
   else { $("metaScan").textContent="✓ 스캔 양호"; $("metaScan").style.color="#3ddc97"; }
 }
@@ -3775,10 +3780,21 @@ var _tt=null;
 function toast(msg){ var t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(_tt); _tt=setTimeout(function(){t.classList.remove("show");},1900); }
 
 // ---------- bind UI ----------
-function segBind(id, key, cb){
+// While an AI art QR is applied, the generated image IS the QR — vector design options
+// (module shape, colours, gradient, eyes…) can't affect it. Tell the user instead of
+// silently ignoring the click.
+var _aiNoticeAt=0;
+function aiNotice(){
+  if(!S.aiArt) return false;
+  var now=Date.now();
+  if(now-_aiNoticeAt>2500){ _aiNoticeAt=now; toast("AI 아트 QR 적용 중 — 디자인 옵션을 쓰려면 'AI 아트 제거'를 누르세요"); }
+  return true;
+}
+function segBind(id, key, cb, deadUnderAi){
   var el=$(id);
   el.addEventListener("click", function(e){
     var b=e.target.closest("button"); if(!b) return;
+    if(deadUnderAi) aiNotice();     // frame/label still compose around AI art — only warn for dead controls
     Array.prototype.forEach.call(el.children,function(x){x.classList.remove("on");});
     b.classList.add("on");
     S[key]=b.dataset[Object.keys(b.dataset)[0]];
@@ -3786,12 +3802,18 @@ function segBind(id, key, cb){
     rerender();
   });
 }
-segBind("dotSeg","dot");
-segBind("eyeSeg","eye");
-segBind("animSeg","animKind");
+segBind("dotSeg","dot",null,true);
+segBind("eyeSeg","eye",null,true);
+segBind("animSeg","animKind",null,true);
 segBind("labelPosSeg","labelPos");
 
-$("content").addEventListener("input", function(e){ S.content=e.target.value; rerender(); });
+$("content").addEventListener("input", function(e){
+  S.content=e.target.value;
+  // the generated AI image encodes the OLD content — keeping it would show a QR that
+  // points somewhere else. Invalidate it and ask the user to regenerate.
+  if(S.aiArt){ S.aiArt=null; $("aiClear").style.display="none"; aiStatus("내용이 변경되어 AI 아트가 제거되었습니다 — 새 내용으로 다시 생성하세요."); toast("내용 변경 → AI 아트 제거됨 (다시 생성 필요)"); }
+  rerender();
+});
 
 $("eccSeg").addEventListener("click",function(e){
   var b=e.target.closest("button"); if(!b) return;
@@ -3802,6 +3824,7 @@ $("eccSeg").addEventListener("click",function(e){
 });
 
 $("fillSeg").addEventListener("click",function(e){
+  aiNotice();
   var b=e.target.closest("button"); if(!b) return;
   Array.prototype.forEach.call(this.children,function(x){x.classList.remove("on");});
   b.classList.add("on"); S.fill=b.dataset.fill;
@@ -3813,11 +3836,11 @@ $("fillSeg").addEventListener("click",function(e){
 // init fill visibility
 $("fg2Wrap").style.display="none"; $("angleWrap").style.display="none";
 
-$("fg1").addEventListener("input",function(e){S.fg1=e.target.value;rerender();});
-$("fg2").addEventListener("input",function(e){S.fg2=e.target.value;rerender();});
-$("bg").addEventListener("input",function(e){S.bg=e.target.value;rerender();});
+$("fg1").addEventListener("input",function(e){aiNotice();S.fg1=e.target.value;rerender();});
+$("fg2").addEventListener("input",function(e){aiNotice();S.fg2=e.target.value;rerender();});
+$("bg").addEventListener("input",function(e){aiNotice();S.bg=e.target.value;rerender();});
 $("angle").addEventListener("input",function(e){S.angle=+e.target.value;$("angleOut").textContent=e.target.value+"°";rerender();});
-$("margin").addEventListener("input",function(e){S.margin=+e.target.value;$("marginOut").textContent=e.target.value;rerender();});
+$("margin").addEventListener("input",function(e){aiNotice();S.margin=+e.target.value;$("marginOut").textContent=e.target.value;rerender();});
 
 $("transparent").addEventListener("change",function(e){
   S.transparent=e.target.checked;
