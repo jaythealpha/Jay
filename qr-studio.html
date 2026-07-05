@@ -212,6 +212,7 @@
       <button data-cat="logo">Logo</button>
       <button data-cat="pictogram">Pictogram</button>
       <button data-cat="frame">Frame</button>
+      <button data-cat="usecase">활용</button>
       <button data-cat="myqr">★ My QR</button>
     </div>
     <div id="myqrBar" style="display:none;margin:0 0 14px;display:none;align-items:center;gap:10px;flex-wrap:wrap">
@@ -654,7 +655,7 @@
   <footer>
     <div>Aesthetic QR Studio · LemioCode 컨셉을 오픈소스로 재구현 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.05-f</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.05-g</b></div>
   </footer>
 </div>
 
@@ -3934,13 +3935,16 @@ function buildContent(){
   else { pv.style.display="block"; pv.textContent="인코딩될 내용: "+(v.length>140 ? v.slice(0,140)+"…" : v); }
 }
 var CTFORMS = { wifi:"ctWifi", vcard:"ctVcard", tel:"ctTel", sms:"ctSms", email:"ctEmail", geo:"ctGeo" };
+function selectCType(ct){
+  CT = ct;
+  Array.prototype.forEach.call($("ctypeSeg").children, function(x){x.classList.toggle("on", x.dataset.ct===ct);});
+  $("ctRaw").style.display = (ct==="url"||ct==="text") ? "block" : "none";
+  $("ctRawLbl").textContent = (ct==="text") ? "텍스트" : "URL";
+  for (var k in CTFORMS){ $(CTFORMS[k]).style.display = (ct===k) ? "block" : "none"; }
+}
 $("ctypeSeg").addEventListener("click", function(e){
   var b=e.target.closest("button"); if(!b) return;
-  Array.prototype.forEach.call(this.children, function(x){x.classList.remove("on");});
-  b.classList.add("on"); CT=b.dataset.ct;
-  $("ctRaw").style.display = (CT==="url"||CT==="text") ? "block" : "none";
-  $("ctRawLbl").textContent = (CT==="text") ? "텍스트" : "URL";
-  for (var k in CTFORMS){ $(CTFORMS[k]).style.display = (CT===k) ? "block" : "none"; }
+  selectCType(b.dataset.ct);
   buildContent();
 });
 ["content","wifiSsid","wifiPass","vcName","vcTel","vcEmail","vcOrg","vcUrl","telNum","smsNum","smsMsg","emTo","emSubj","emBody","geoLat","geoLng"].forEach(function(id){
@@ -4415,8 +4419,8 @@ $("featureChips").addEventListener("click",function(e){
 });
 
 // ---------- gallery: categorised presets ----------
-var DKEYS=["fill","fg1","fg2","angle","transparent","bg","dot","eye","margin","ecc","anim","animKind","animSpeed","frameOn","frameStyle","frameMode","frameBg1","frameBg2","frameAngle","centerMode","centerText","centerColor","centerScale","artVisibility","artDensity","artInvert"];
-var DDEF={fill:"solid",fg1:"#111111",fg2:"#111111",angle:45,transparent:false,bg:"#ffffff",dot:"square",eye:"square",margin:4,ecc:"H",anim:false,animKind:"shine",animSpeed:1,frameOn:false,frameStyle:"card",frameMode:"solid",frameBg1:"#0e7a3b",frameBg2:"#0b3d22",frameAngle:135,centerMode:"none",centerText:"",centerColor:"#111111",centerScale:24,artVisibility:70,artDensity:6,artInvert:false};
+var DKEYS=["fill","fg1","fg2","angle","transparent","bg","dot","eye","margin","ecc","anim","animKind","animSpeed","frameOn","frameStyle","frameMode","frameBg1","frameBg2","frameAngle","centerMode","centerText","centerColor","centerScale","artVisibility","artDensity","artInvert","labelOn","labelText","labelSize","labelPos","labelOffset"];
+var DDEF={fill:"solid",fg1:"#111111",fg2:"#111111",angle:45,transparent:false,bg:"#ffffff",dot:"square",eye:"square",margin:4,ecc:"H",anim:false,animKind:"shine",animSpeed:1,frameOn:false,frameStyle:"card",frameMode:"solid",frameBg1:"#0e7a3b",frameBg2:"#0b3d22",frameAngle:135,centerMode:"none",centerText:"",centerColor:"#111111",centerScale:24,artVisibility:70,artDensity:6,artInvert:false,labelOn:false,labelText:"SCAN ME",labelSize:100,labelPos:"bottom",labelOffset:0};
 function resetDesign(fullArt){ for(var k in DDEF) S[k]=DDEF[k]; S.logo=null; S.artImg=null; S.artIsVideo=false; S.artIsGif=false; S.aiArt=null; if(fullArt && typeof removeArtVid==="function") removeArtVid(); }
 // load real web images (CORS-enabled host) for image-based gallery presets
 var IMGCACHE={};
@@ -4589,6 +4593,16 @@ var CATS = {
     {name:"에메랄드 카드",tag:"컬러 카드",s:{fill:"solid",fg1:"#0b3d22",bg:"#ffffff",dot:"rounded",eye:"rounded",frameOn:true,frameStyle:"card",frameMode:"linear",frameBg1:"#16a34a",frameBg2:"#0b3d22",frameAngle:135}},
     {name:"선셋 카드",tag:"컬러 카드",s:{fill:"solid",fg1:"#7c2d12",bg:"#ffffff",dot:"rounded",eye:"rounded",frameOn:true,frameStyle:"card",frameMode:"linear",frameBg1:"#fb7185",frameBg2:"#f97316",frameAngle:120}},
     {name:"모노 카드",tag:"컬러 카드",s:{fill:"solid",fg1:"#111111",bg:"#ffffff",dot:"square",eye:"square",frameOn:true,frameStyle:"card",frameMode:"solid",frameBg1:"#111111"}}
+  ],
+  usecase:[
+    {name:"카페 Wi-Fi",tag:"스캔 → 와이파이 자동 접속",s:{fill:"solid",fg1:"#5b3a1a",bg:"#fffaf2",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"☕",centerScale:26,frameOn:true,frameStyle:"wood"},ct:"wifi",fields:{wifiSsid:"MyCafe_WiFi",wifiPass:"cafe1234"}},
+    {name:"디지털 명함",tag:"스캔 → 연락처 저장",s:{fill:"linear",fg1:"#2563eb",fg2:"#4f46e5",angle:120,dot:"dots",eye:"circle",bg:"#ffffff",frameOn:true,frameStyle:"shadow",frameMode:"linear",frameBg1:"#1d4ed8",frameBg2:"#0b2a6b",frameAngle:120},ct:"vcard",fields:{vcName:"홍길동",vcTel:"010-1234-5678",vcEmail:"hong@company.com",vcOrg:"회사명"}},
+    {name:"전화 문의",tag:"스캔 → 바로 전화",s:{fill:"solid",fg1:"#15803d",bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"📞",centerScale:28,frameOn:true,frameStyle:"card",frameMode:"solid",frameBg1:"#15803d"},ct:"tel",fields:{telNum:"010-1234-5678"}},
+    {name:"문자 참여",tag:"스캔 → 문자 작성",s:{fill:"solid",fg1:"#6d28d9",bg:"#ffffff",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"💬",centerScale:28},ct:"sms",fields:{smsNum:"010-1234-5678",smsMsg:"이벤트 참여합니다"}},
+    {name:"이메일 문의",tag:"스캔 → 메일 작성",s:{fill:"solid",fg1:"#0e7490",bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"✉️",centerScale:28},ct:"email",fields:{emTo:"contact@company.com",emSubj:"문의드립니다"}},
+    {name:"매장 위치",tag:"스캔 → 지도 열기",s:{fill:"solid",fg1:"#b91c1c",bg:"#ffffff",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"📍",centerScale:28,frameOn:true,frameStyle:"card",frameMode:"solid",frameBg1:"#b91c1c"},ct:"geo",fields:{geoLat:"37.5665",geoLng:"126.9780"}},
+    {name:"쿠폰 텍스트",tag:"스캔 → 쿠폰 코드 표시",s:{fill:"linear",fg1:"#db2777",fg2:"#f97316",angle:120,dot:"rounded",eye:"rounded",bg:"#ffffff",centerMode:"emoji",centerText:"🎁",centerScale:26},ct:"text",fields:{content:"10% 할인 쿠폰: WELCOME10"}},
+    {name:"리뷰 남기기",tag:"스캔 → 리뷰 페이지",s:{fill:"solid",fg1:"#d97706",bg:"#ffffff",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"⭐",centerScale:28,labelOn:true,labelText:"리뷰 남기기"},ct:"url",fields:{content:"https://jay-inky.vercel.app"}}
   ]
 };
 var curCat="standard";
@@ -4631,7 +4645,7 @@ function buildGallery(){
     renderPreset(cv, p.s);
     if(animate) galItems.push({cv:cv, ps:p.s});
     else if(p.s.artUrl){ (function(cvv,pss){ getArtImg(pss.artUrl, function(){ renderPreset(cvv, pss); }); })(cv,p.s); }
-    card.addEventListener("click",function(){ applyPreset(p.s); });
+    card.addEventListener("click",function(){ applyPreset(p.s, p); });
   });
   if(animate && galItems.length) startGalAnim();
 }
@@ -4646,16 +4660,25 @@ function syncStudioUI(){
   Array.prototype.forEach.call($("eccSeg").children,function(x){x.classList.toggle("on",x.dataset.ecc===S.ecc);});
   $("eccOut").textContent=S.ecc+" ("+eccMap[S.ecc]+")";
   $("anim").checked=S.anim; setSeg("animSeg","animKind",S.animKind);
+  $("labelOn").checked=S.labelOn; $("labelText").value=S.labelText||"SCAN ME";
+  $("labelSize").value=S.labelSize; $("labelSizeOut").textContent=S.labelSize+"%";
+  setSeg("labelPosSeg","lpos",S.labelPos); $("labelOffset").value=S.labelOffset; $("labelOffsetOut").textContent=S.labelOffset;
   $("artControls").style.display="none"; $("artLabel").textContent="＋ 이미지 / 영상 업로드 — QR 전체를 덮는 아트";
   if($("logoClear")){ $("logoSizeWrap").style.display="none"; $("logoBgWrap").style.display="none"; $("logoClear").style.display="none"; $("logoLabel").textContent="＋ 로고 이미지 업로드 (PNG·JPG·SVG)"; $("logoFile").value=""; }
   if(typeof syncFrameIconUI==="function") syncFrameIconUI();
 }
-function applyPreset(ps){
+function applyPreset(ps, meta){
   stopGalAnim();
   resetDesign(true);
   for(var k in ps) S[k]=ps[k];
   if(ps.scene){ S.artImg=makeScene(ps.scene); S.artIsVideo=false; }
   else if(ps.artUrl){ getArtImg(ps.artUrl, function(img){ if(img){ S.artImg=img; S.artIsVideo=false; $("artControls").style.display="block"; $("artLabel").textContent="✓ 이미지 적용됨(웹) — 변경하려면 클릭"; rerender(); } }); }
+  // use-case presets carry a connection type + prefilled form fields (e.g. Wi-Fi SSID)
+  if(meta && meta.ct){
+    selectCType(meta.ct);
+    if(meta.fields){ for(var f in meta.fields){ var el=$(f); if(el) el.value=meta.fields[f]; } }
+    buildContent();
+  }
   syncStudioUI();
   if(ps.scene){ $("artControls").style.display="block"; $("artLabel").textContent="✓ 장면 아트 적용됨 — 내 이미지/영상/GIF로 교체하려면 클릭"; }
   openRelevantGroups(ps);
@@ -4684,12 +4707,24 @@ function loadMyQr(){ try{ return JSON.parse(localStorage.getItem(MYKEY)||"[]"); 
 function storeMyQr(a){ try{ localStorage.setItem(MYKEY, JSON.stringify(a)); }catch(e){ toast("저장 공간이 부족합니다"); } }
 function snapshotDesign(){ var o={content:S.content}; DKEYS.forEach(function(k){o[k]=S[k];}); return o; }
 function currentThumb(){ var c=document.createElement("canvas"); c.width=c.height=260; var pm=S.margin; if(S.margin>3)S.margin=3; try{ render(c.getContext("2d"),260); }catch(e){} S.margin=pm; return c.toDataURL("image/jpeg",0.7); }
+// bake the (CORS-clean) AI art image to a compact JPEG data-URL so it can live in localStorage
+function bakeAiArt(){
+  if(!S.aiArt) return null;
+  try{
+    var c=document.createElement("canvas"); c.width=c.height=512;
+    c.getContext("2d").drawImage(S.aiArt,0,0,512,512);
+    return c.toDataURL("image/jpeg",0.85);
+  }catch(e){ return null; }
+}
 function saveCurrentQr(){
   var arr=loadMyQr();
   if(arr.length>=60){ toast("최대 60개까지 저장됩니다"); return; }
-  var name=(S.content||"").replace(/^https?:\/\//i,"").slice(0,24)||"내 QR";
-  arr.unshift({id:"q"+(arr.length)+"_"+name.length+"_"+(S.fg1||"")+Math.round(S.angle||0), name:name, d:snapshotDesign(), thumb:currentThumb()});
-  storeMyQr(arr); toast("My QR에 저장됨"); if(curCat==="myqr") renderMyQr();
+  var ai=bakeAiArt();
+  var name=(ai?"AI·":"")+((S.content||"").replace(/^https?:\/\//i,"").slice(0,24)||"내 QR");
+  var item={id:"q"+(arr.length)+"_"+name.length+"_"+(S.fg1||"")+Math.round(S.angle||0), name:name, d:snapshotDesign(), thumb:currentThumb()};
+  if(ai) item.ai=ai;
+  arr.unshift(item);
+  storeMyQr(arr); toast(ai?"AI 아트 QR이 My QR에 저장됨":"My QR에 저장됨"); if(curCat==="myqr") renderMyQr();
 }
 function renderMyQr(){
   var grid=$("galGrid"), empty=$("galEmpty"); grid.innerHTML="";
@@ -4704,6 +4739,11 @@ function renderMyQr(){
       if(ev.target.closest(".del")){ ev.stopPropagation(); var a=loadMyQr(); a.splice(i,1); storeMyQr(a); renderMyQr(); toast("삭제됨"); return; }
       var d=item.d; resetDesign(true); for(var k in d){ if(k==="content") S.content=d[k]; else S[k]=d[k]; }
       $("content").value=S.content||""; syncStudioUI();
+      if(item.ai){
+        var im=new Image();
+        im.onload=function(){ S.aiArt=im; $("aiClear").style.display="block"; aiStatus("저장된 AI 아트 QR을 불러왔습니다."); render(ctx,EXPORT); updateMeta(); };
+        im.src=item.ai;
+      }
       Array.prototype.forEach.call($("tabs").children,function(x){x.classList.toggle("active", x.dataset.view==="studio");});
       ["gallery","studio","ar","about"].forEach(function(v){ $("view-"+v).classList.toggle("active", v==="studio"); });
       rerender(); toast("불러왔습니다 — 자유롭게 편집하세요");
