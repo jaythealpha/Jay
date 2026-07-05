@@ -111,6 +111,10 @@
   .toggle input:checked+span{background:linear-gradient(135deg,var(--acc),var(--acc2))}
   .toggle input:checked+span::before{transform:translateX(20px)}
   .hint{font-size:11px;color:var(--mut2);margin-top:8px;line-height:1.5}
+  .picto-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;margin-top:6px}
+  .picto-grid button{aspect-ratio:1;font-size:20px;line-height:1;background:var(--bg2);border:1px solid var(--line2);border-radius:8px;cursor:pointer;padding:0;transition:.1s}
+  .picto-grid button.on{border-color:var(--acc);background:linear-gradient(135deg,rgba(124,92,255,.25),rgba(34,211,238,.18))}
+  .picto-grid button:hover{border-color:var(--acc)}
   .file-btn{display:block;text-align:center;background:var(--bg2);border:1px dashed var(--line2);border-radius:9px;padding:12px;font-size:12.5px;color:var(--mut);cursor:pointer;transition:.15s}
   .file-btn:hover{border-color:var(--acc);color:var(--txt)}
   input[type=file]{display:none}
@@ -259,11 +263,11 @@
           </div>
         </details>
 
-        <details class="grp" open>
-          <summary><svg class="ic" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="10" r="2" fill="currentColor"/><path d="M4 18l5-5 3 3 4-4 4 4" stroke="currentColor" stroke-width="2" fill="none"/></svg>이미지 · 영상 아트 QR<span style="margin-left:8px;font-size:10px;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--acc),var(--acc3));padding:2px 7px;border-radius:20px">핵심</span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
+        <details class="grp" id="grpArt" open>
+          <summary><svg class="ic" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="10" r="2" fill="currentColor"/><path d="M4 18l5-5 3 3 4-4 4 4" stroke="currentColor" stroke-width="2" fill="none"/></svg>이미지 · 영상 · GIF 아트 QR<span style="margin-left:8px;font-size:10px;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--acc),var(--acc3));padding:2px 7px;border-radius:20px">핵심</span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
           <div class="body">
-            <label class="file-btn" for="artFile" id="artLabel">＋ 이미지 / 영상 업로드 — QR 전체를 덮는 아트</label>
-            <input type="file" id="artFile" accept="image/*,video/*" />
+            <label class="file-btn" for="artFile" id="artLabel">＋ 이미지 / 영상 / GIF 업로드 — QR 전체를 덮는 아트</label>
+            <input type="file" id="artFile" accept="image/*,image/gif,video/*" />
             <div id="artControls" style="display:none">
               <label class="fld">
                 <div class="lbl">아트 노출도 <b id="artVisOut">72%</b></div>
@@ -350,7 +354,7 @@
           </div>
         </details>
 
-        <details class="grp">
+        <details class="grp" id="grpLogo">
           <summary><svg class="ic" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"/><circle cx="8.5" cy="10.5" r="1.5" fill="currentColor"/><path d="M4 17l5-4 4 3 3-2 4 3" stroke="currentColor" stroke-width="2" fill="none"/></svg>로고<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
           <div class="body">
             <label class="file-btn" for="logoFile" id="logoLabel">＋ 로고 이미지 업로드 (PNG·JPG·SVG)</label>
@@ -367,7 +371,7 @@
           </div>
         </details>
 
-        <details class="grp">
+        <details class="grp" id="grpAnim">
           <summary><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>애니메이션<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
           <div class="body">
             <div class="switch">
@@ -421,25 +425,38 @@
           </div>
         </details>
 
-        <details class="grp">
-          <summary><svg class="ic" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" stroke-width="2"/><rect x="8" y="8" width="8" height="8" rx="2" fill="currentColor"/></svg>프레임 배경 & 아이콘<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
+        <details class="grp" id="grpFrame">
+          <summary><svg class="ic" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" stroke-width="2"/><rect x="8" y="8" width="8" height="8" rx="2" fill="currentColor"/></svg>프레임 & 픽토그램<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
           <div class="body">
             <div class="switch">
-              <div class="lbl" style="margin:0">프레임 배경(카드)</div>
+              <div class="lbl" style="margin:0">프레임(액자)</div>
               <label class="toggle"><input type="checkbox" id="frameOn" /><span></span></label>
             </div>
             <div id="frameControls" style="display:none">
               <label class="fld">
-                <div class="lbl">배경 채우기</div>
-                <div class="seg" id="frameModeSeg">
-                  <button data-fmode="solid" class="on">단색</button>
-                  <button data-fmode="linear">선형</button>
-                  <button data-fmode="radial">원형</button>
+                <div class="lbl">프레임 스타일</div>
+                <div class="seg wrap" id="frameStyleSeg">
+                  <button data-fstyle="card" class="on">카드</button>
+                  <button data-fstyle="wood">우드</button>
+                  <button data-fstyle="gold">골드 액자</button>
+                  <button data-fstyle="polaroid">폴라로이드</button>
+                  <button data-fstyle="shadow">섀도우박스</button>
+                  <button data-fstyle="neon">네온</button>
                 </div>
               </label>
-              <div class="row2">
-                <label class="fld"><div class="lbl">배경색 1</div><input type="color" id="frameBg1" value="#16a34a" /></label>
-                <label class="fld" id="frameBg2Wrap"><div class="lbl">배경색 2</div><input type="color" id="frameBg2" value="#0b3d22" /></label>
+              <div id="frameBgFields">
+                <label class="fld">
+                  <div class="lbl">배경 채우기</div>
+                  <div class="seg" id="frameModeSeg">
+                    <button data-fmode="solid" class="on">단색</button>
+                    <button data-fmode="linear">선형</button>
+                    <button data-fmode="radial">원형</button>
+                  </div>
+                </label>
+                <div class="row2">
+                  <label class="fld"><div class="lbl">배경색 1</div><input type="color" id="frameBg1" value="#16a34a" /></label>
+                  <label class="fld" id="frameBg2Wrap"><div class="lbl">배경색 2</div><input type="color" id="frameBg2" value="#0b3d22" /></label>
+                </div>
               </div>
             </div>
             <div style="height:1px;background:var(--line);margin:16px 0"></div>
@@ -448,7 +465,7 @@
               <div class="seg" id="centerModeSeg">
                 <button data-cmode="none" class="on">없음</button>
                 <button data-cmode="text">텍스트 로고</button>
-                <button data-cmode="emoji">이모지 픽토그램</button>
+                <button data-cmode="emoji">픽토그램</button>
               </div>
             </label>
             <div id="centerControls" style="display:none">
@@ -457,6 +474,10 @@
                 <input type="text" id="centerText" value="BRAND" maxlength="16" />
                 <div class="hint" id="centerTextHint">기업/브랜드명을 입력하세요(짧을수록 선명).</div>
               </label>
+              <div class="fld" id="pictoPickerWrap" style="display:none">
+                <div class="lbl">픽토그램 소스 — 클릭해서 변경</div>
+                <div id="pictoPicker" class="picto-grid"></div>
+              </div>
               <label class="fld" id="centerColorWrap">
                 <div class="lbl">텍스트 색</div>
                 <input type="color" id="centerColor" value="#111111" />
@@ -544,7 +565,7 @@
   <footer>
     <div>Aesthetic QR Studio · LemioCode 컨셉을 오픈소스로 재구현 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.03-w</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.04-a</b></div>
   </footer>
 </div>
 
@@ -2887,11 +2908,13 @@ var S = {
   // ---- full-image "art QR" (LemioCode-style: media covers the whole code) ----
   artImg: null,        // HTMLImageElement or HTMLVideoElement used as full background
   artIsVideo: false,   // true when the uploaded media is a video → animated QR
+  artIsGif: false,     // true when the uploaded media is an animated GIF → animated QR
   artVisibility: 72,   // % — higher = artwork shows more, lower = more scannable
   artInvert: false,    // invert dark/light overlay (for dark artworks)
   artDensity: 6,       // min QR version for art (higher = more, smaller modules; finer look)
   // ---- framed background (LemioCode-style card on a coloured backdrop) ----
   frameOn: false,      // draw an outer backdrop + white rounded card around the QR
+  frameStyle: "card",  // card | wood | gold | polaroid | shadow | neon
   frameMode: "solid",  // solid | linear | radial  (backdrop fill)
   frameBg1: "#0e7a3b",
   frameBg2: "#0b3d22",
@@ -2972,6 +2995,59 @@ function frameFill(g, size){
   if (S.frameMode==="linear"){ var a=S.frameAngle*Math.PI/180, cx=size/2, cy=size/2, r=size/2, dx=Math.cos(a)*r, dy=Math.sin(a)*r; grad=g.createLinearGradient(cx-dx,cy-dy,cx+dx,cy+dy); }
   else { grad=g.createRadialGradient(size/2,size/2,0,size/2,size/2,size*0.72); }
   grad.addColorStop(0,S.frameBg1); grad.addColorStop(1,S.frameBg2); return grad;
+}
+// draw the framed background + a real decorative "picture frame" border around the QR card.
+// fi = frameInset (outer band), rg = region (card size). QR block is centred inside the card.
+function drawFrameBackground(g, size, fi, rg){
+  var bg = S.transparent ? "#ffffff" : S.bg;
+  var x=fi, y=fi, w=rg, h=rg;
+  var style = S.frameStyle||"card";
+  function fillRoundCard(rad){ g.fillStyle=bg; roundRect(g,x,y,w,h,rad); g.fill(); }
+  if (style==="wood"){
+    // warm wood backdrop with plank grain, bevelled inner edge, white QR card
+    var wg=g.createLinearGradient(0,0,size,size); wg.addColorStop(0,"#8a5a2b"); wg.addColorStop(.5,"#a9713a"); wg.addColorStop(1,"#6f4420");
+    g.fillStyle=wg; g.fillRect(0,0,size,size);
+    g.strokeStyle="rgba(60,35,12,0.28)"; g.lineWidth=Math.max(1,size*0.004);
+    for(var gy=0; gy<size; gy+=Math.max(6,size*0.03)){ g.beginPath(); g.moveTo(0,gy+Math.sin(gy)*2); g.lineTo(size,gy); g.stroke(); }
+    g.fillStyle="rgba(255,240,220,0.25)"; roundRect(g,x-fi*0.28,y-fi*0.28,w+fi*0.56,h+fi*0.56,fi*0.3); g.fill();
+    g.fillStyle="rgba(50,28,8,0.5)"; roundRect(g,x-fi*0.10,y-fi*0.10,w+fi*0.20,h+fi*0.20,fi*0.22); g.fill();
+    fillRoundCard(rg*0.02);
+  } else if (style==="gold"){
+    // dark gallery wall + layered ornate gold frame
+    g.fillStyle="#1a140b"; g.fillRect(0,0,size,size);
+    function band(inset,col){ g.fillStyle=col; roundRect(g,x-inset,y-inset,w+inset*2,h+inset*2,fi*0.18); g.fill(); }
+    band(fi*0.62,"#8a6a1e"); band(fi*0.46,"#e8c25a");
+    var gg=g.createLinearGradient(x,y,x+w,y+h); gg.addColorStop(0,"#fff2b0"); gg.addColorStop(.5,"#c99a2e"); gg.addColorStop(1,"#f6d879");
+    band(fi*0.30, "#000"); g.fillStyle=gg; roundRect(g,x-fi*0.30,y-fi*0.30,w+fi*0.60,h+fi*0.60,fi*0.16); g.fill();
+    band(fi*0.10,"#6b4e12");
+    fillRoundCard(rg*0.01);
+  } else if (style==="polaroid"){
+    // soft grey wall, glossy white polaroid with wide bottom margin + shadow
+    g.fillStyle="#e9ebef"; g.fillRect(0,0,size,size);
+    g.save(); g.shadowColor="rgba(0,0,0,0.28)"; g.shadowBlur=size*0.03; g.shadowOffsetY=size*0.012;
+    g.fillStyle="#ffffff"; roundRect(g, x-fi*0.5, y-fi*0.5, w+fi, h+fi*1.1, fi*0.12); g.fill(); g.restore();
+    g.fillStyle="#fafafa"; roundRect(g,x,y,w,h,rg*0.01); g.fill();
+    fillRoundCard(rg*0.01);
+  } else if (style==="shadow"){
+    // passe-partout: coloured outer frame, cream mat, inner bevel line, QR card
+    g.fillStyle = frameFill(g, size); g.fillRect(0,0,size,size);
+    g.fillStyle="#f4efe6"; roundRect(g,x-fi*0.34,y-fi*0.34,w+fi*0.68,h+fi*0.68,fi*0.12); g.fill();
+    g.strokeStyle="rgba(0,0,0,0.18)"; g.lineWidth=Math.max(1,size*0.003);
+    roundRect(g,x-fi*0.06,y-fi*0.06,w+fi*0.12,h+fi*0.12,rg*0.02); g.stroke();
+    fillRoundCard(rg*0.02);
+  } else if (style==="neon"){
+    // dark scene + glowing neon rounded border
+    g.fillStyle="#070712"; g.fillRect(0,0,size,size);
+    var neon = S.frameBg1||"#22d3ee";
+    g.save(); g.shadowColor=neon; g.shadowBlur=size*0.05; g.strokeStyle=neon; g.lineWidth=Math.max(2,size*0.012);
+    roundRect(g,x-fi*0.2,y-fi*0.2,w+fi*0.4,h+fi*0.4,fi*0.5); g.stroke();
+    g.shadowBlur=size*0.02; g.stroke(); g.restore();
+    fillRoundCard(rg*0.05);
+  } else {
+    // "card": original coloured/gradient backdrop + white rounded card
+    g.fillStyle = frameFill(g, size); g.fillRect(0,0,size,size);
+    fillRoundCard(rg*0.055);
+  }
 }
 function makeFill(g, x0, y0, size){
   if (S.fill==="solid") return S.fg1;
@@ -3145,9 +3221,7 @@ function render(g2, exportSize){
   // background
   g.clearRect(0,0,size,size);
   if (S.frameOn){
-    g.fillStyle = frameFill(g, size); g.fillRect(0,0,size,size);            // outer backdrop
-    g.fillStyle = S.transparent ? "#ffffff" : S.bg;                         // white card = QR bg
-    roundRect(g, frameInset, frameInset, region, region, region*0.055); g.fill();
+    drawFrameBackground(g, size, frameInset, region);
   } else if (!S.transparent){ g.fillStyle = S.bg; g.fillRect(0,0,size,size); }
 
   if (S.artImg){
@@ -3344,16 +3418,19 @@ function drawArtLayer(g, ox, oy, unit, n, m){
   var markFill = makeArtFill(g, ox, oy, area);   // template colour/gradient, luminance-capped to scan
   function roleDark(rr,cc){ return m[rr][cc] !== S.artInvert; }
 
-  // 2) per-cell luminance bias (helps binarisation without hiding the artwork). Kept modest
-  //    so the image stays clear; the small crisp marks + bias together keep it scannable.
-  var bias = (1-vis)*0.40;               // vis .2→.32 … .92→.032
-  if (bias > 0.02){
-    for (var r0=0;r0<n;r0++){
-      for (var c0=0;c0<n;c0++){
-        if (isFinder(r0,c0,n)) continue;
-        g.fillStyle = "rgba("+(roleDark(r0,c0)?"0,0,0":"255,255,255")+","+bias+")";
-        g.fillRect(ox+c0*unit, oy+r0*unit, unit+0.6, unit+0.6);
-      }
+  // 2) per-cell luminance bias (helps binarisation without hiding the artwork). ASYMMETRIC:
+  //    dark cells get a modest darkening (image still shows through them); light cells get a
+  //    stronger white lift with a floor, so light modules stay light even over DARK scene
+  //    regions (deep sea, night sky) — otherwise the scanner can't tell light from dark there.
+  var darkBias = Math.max((1-vis)*0.40, 0.30); // floor: dark modules read even over BRIGHT scenes (snow)
+  var lightBias = Math.max(darkBias, 0.42);    // guarantee light modules read even over DARK scenes (night)
+  for (var r0=0;r0<n;r0++){
+    for (var c0=0;c0<n;c0++){
+      if (isFinder(r0,c0,n)) continue;
+      var dk=roleDark(r0,c0), bv=dk?darkBias:lightBias;
+      if (bv<=0.02) continue;
+      g.fillStyle = "rgba("+(dk?"0,0,0":"255,255,255")+","+bv+")";
+      g.fillRect(ox+c0*unit, oy+r0*unit, unit+0.6, unit+0.6);
     }
   }
 
@@ -3556,7 +3633,7 @@ function startAnim(){
   _raf=requestAnimationFrame(step);
 }
 function stopAnim(){ if(_raf){cancelAnimationFrame(_raf);_raf=null;} _phase=0; }
-function isAnimating(){ return S.anim || S.artIsVideo; }
+function isAnimating(){ return S.anim || S.artIsVideo || S.artIsGif; }
 function rerender(){
   if(isAnimating()){ startAnim(); } else { stopAnim(); render(ctx,EXPORT); }
   updateMeta();
@@ -3683,20 +3760,37 @@ $("logoClear").addEventListener("click",function(){
   rerender();
 });
 
-// ---- image/video art QR ----
+// ---- image/video/gif art QR ----
 var _artVid=null;  // current uploaded <video> element (kept in DOM so Safari decodes frames)
-function removeArtVid(){ if(_artVid){ try{_artVid.pause();}catch(e){} try{_artVid.remove();}catch(e){} _artVid=null; } }
+var _artGif=null;  // current uploaded animated-GIF <img> (kept live so frames advance)
+function removeArtVid(){ if(_artVid){ try{_artVid.pause();}catch(e){} try{_artVid.remove();}catch(e){} _artVid=null; } if(_artGif){ try{_artGif.remove();}catch(e){} _artGif=null; } }
 function clearArt(){
   removeArtVid();
-  S.artImg=null; S.artIsVideo=false; $("artFile").value="";
+  S.artImg=null; S.artIsVideo=false; S.artIsGif=false; $("artFile").value="";
   $("artControls").style.display="none";
-  $("artLabel").textContent="＋ 이미지 / 영상 업로드 — QR 전체를 덮는 아트";
+  $("artLabel").textContent="＋ 이미지 / 영상 / GIF 업로드 — QR 전체를 덮는 아트";
   rerender();
 }
 $("artFile").addEventListener("change",function(e){
   var f=e.target.files[0]; if(!f) return;
   var url=URL.createObjectURL(f);
-  if (/^video\//.test(f.type)){
+  if (f.type==="image/gif"){
+    // animated GIF: keep a LIVE <img> in the DOM so its frames keep advancing;
+    // drawImage samples the current frame each render, and the anim loop drives redraws.
+    removeArtVid();
+    var gi=new Image();
+    gi.style.cssText="position:absolute;left:-9px;top:-9px;width:1px;height:1px;opacity:0;pointer-events:none";
+    gi.onload=function(){
+      document.body.appendChild(gi); _artGif=gi;
+      S.artImg=gi; S.artIsVideo=false; S.artIsGif=true;
+      $("artControls").style.display="block";
+      $("artLabel").textContent="✓ GIF 업로드됨 (애니메이션 QR) — 변경하려면 클릭";
+      if(S.ecc!=="H") toast("아트 QR은 ECC-H 권장");
+      rerender();
+    };
+    gi.onerror=function(){ toast("GIF를 불러오지 못했어요"); };
+    gi.src=url;
+  } else if (/^video\//.test(f.type)){
     removeArtVid();
     var v=document.createElement("video");
     v.muted=true; v.defaultMuted=true; v.loop=true; v.autoplay=true; v.playsInline=true;
@@ -3758,29 +3852,57 @@ $("labelOffset").addEventListener("input",function(e){S.labelOffset=+e.target.va
 
 // ---- frame background & centre content (text logo / emoji pictogram) ----
 $("frameOn").addEventListener("change",function(e){ S.frameOn=e.target.checked; $("frameControls").style.display=e.target.checked?"block":"none"; rerender(); });
-$("frameModeSeg").addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b)return; Array.prototype.forEach.call(this.children,function(x){x.classList.remove("on");}); b.classList.add("on"); S.frameMode=b.dataset.fmode; $("frameBg2Wrap").style.display=(S.frameMode==="solid")?"none":"block"; rerender(); });
+// only "card"/"shadow"/"neon" use the backdrop colour fields; wood/gold/polaroid are self-styled
+function frameStyleVis(){ var s=S.frameStyle||"card"; $("frameBgFields").style.display=(s==="card"||s==="shadow"||s==="neon")?"block":"none"; $("frameBg2Wrap").style.display=(S.frameMode!=="solid"&&(s==="card"||s==="shadow"))?"block":"none"; }
+$("frameStyleSeg").addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b)return; Array.prototype.forEach.call(this.children,function(x){x.classList.remove("on");}); b.classList.add("on"); S.frameStyle=b.dataset.fstyle; frameStyleVis(); rerender(); });
+$("frameModeSeg").addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b)return; Array.prototype.forEach.call(this.children,function(x){x.classList.remove("on");}); b.classList.add("on"); S.frameMode=b.dataset.fmode; frameStyleVis(); rerender(); });
 $("frameBg1").addEventListener("input",function(e){ S.frameBg1=e.target.value; rerender(); });
 $("frameBg2").addEventListener("input",function(e){ S.frameBg2=e.target.value; rerender(); });
+
+// pictogram source library — click a symbol to swap the centre pictogram
+var PICTOS=["🧯","🏥","🚑","📶","⭐","🎁","☕","🍔","🍕","🍺","📍","🎵","🎧","🏠","🌿","📷","🅿️","🚻","♿","🛗","🔋","💡","🛎️","🎬","🎟️","🛒","💳","📞","✉️","🌐","📅","🕐","🔑","🎯","🏆","❤️","👍","🔥","✨","🎉","🐶","🐱","🌸","🌊","⛰️","🏖️","🎨","💼"];
+function buildPictoPicker(){
+  var box=$("pictoPicker"); if(!box) return; box.innerHTML="";
+  PICTOS.forEach(function(sym){
+    var b=document.createElement("button"); b.type="button"; b.textContent=sym;
+    if(sym===S.centerText) b.classList.add("on");
+    b.addEventListener("click",function(){ S.centerText=sym; $("centerText").value=sym; if(S.ecc!=="H") setEcc("H"); Array.prototype.forEach.call(box.children,function(x){x.classList.toggle("on",x.textContent===sym);}); rerender(); });
+    box.appendChild(b);
+  });
+}
+function syncPictoSel(){ var box=$("pictoPicker"); if(!box) return; Array.prototype.forEach.call(box.children,function(x){x.classList.toggle("on",x.textContent===S.centerText);}); }
 function centerUIvis(){
-  var on=S.centerMode!=="none";
+  var on=S.centerMode!=="none", emoji=(S.centerMode==="emoji");
   $("centerControls").style.display=on?"block":"none";
   $("centerColorWrap").style.display=(S.centerMode==="text")?"block":"none";
-  $("centerTextLbl").textContent=(S.centerMode==="emoji")?"이모지":"로고 텍스트";
-  $("centerTextHint").textContent=(S.centerMode==="emoji")?"이모지 하나를 입력/붙여넣기 (예: 🧯 ⭐ ☕ 📶 🎁)":"기업/브랜드명을 입력하세요(짧을수록 선명).";
+  $("centerTextLbl").textContent=emoji?"픽토그램(직접 입력도 가능)":"로고 텍스트";
+  $("centerTextHint").textContent=emoji?"아래에서 픽토그램을 고르거나 이모지를 붙여넣으세요.":"기업/브랜드명을 입력하세요(짧을수록 선명).";
+  $("pictoPickerWrap").style.display=emoji?"block":"none";
+  if(emoji) syncPictoSel();
 }
-$("centerModeSeg").addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b)return; Array.prototype.forEach.call(this.children,function(x){x.classList.remove("on");}); b.classList.add("on"); S.centerMode=b.dataset.cmode; if(S.centerMode!=="none"){ if(!S.centerText) S.centerText=(S.centerMode==="emoji")?"⭐":"BRAND"; $("centerText").value=S.centerText; if(S.ecc!=="H") setEcc("H"); } centerUIvis(); rerender(); });
-$("centerText").addEventListener("input",function(e){ S.centerText=e.target.value; rerender(); });
+$("centerModeSeg").addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b)return; Array.prototype.forEach.call(this.children,function(x){x.classList.remove("on");}); b.classList.add("on"); S.centerMode=b.dataset.cmode; if(S.centerMode!=="none"){ if(!S.centerText || (S.centerMode==="emoji")!==/\p{Emoji}/u.test(S.centerText||"a")) S.centerText=(S.centerMode==="emoji")?"⭐":"BRAND"; $("centerText").value=S.centerText; if(S.ecc!=="H") setEcc("H"); } centerUIvis(); rerender(); });
+$("centerText").addEventListener("input",function(e){ S.centerText=e.target.value; syncPictoSel(); rerender(); });
 $("centerColor").addEventListener("input",function(e){ S.centerColor=e.target.value; rerender(); });
 $("centerScale").addEventListener("input",function(e){ S.centerScale=+e.target.value; $("centerScaleOut").textContent=e.target.value+"%"; rerender(); });
 function setEcc(v){ S.ecc=v; Array.prototype.forEach.call($("eccSeg").children,function(x){x.classList.toggle("on",x.dataset.ecc===v);}); $("eccOut").textContent=v+" ("+({L:"7%",M:"15%",Q:"25%",H:"30%"})[v]+")"; }
 function syncFrameIconUI(){
   $("frameOn").checked=S.frameOn; $("frameControls").style.display=S.frameOn?"block":"none";
+  Array.prototype.forEach.call($("frameStyleSeg").children,function(x){x.classList.toggle("on",x.dataset.fstyle===(S.frameStyle||"card"));});
   Array.prototype.forEach.call($("frameModeSeg").children,function(x){x.classList.toggle("on",x.dataset.fmode===S.frameMode);});
-  $("frameBg2Wrap").style.display=(S.frameMode==="solid")?"none":"block";
   $("frameBg1").value=S.frameBg1; $("frameBg2").value=S.frameBg2;
+  frameStyleVis();
   Array.prototype.forEach.call($("centerModeSeg").children,function(x){x.classList.toggle("on",x.dataset.cmode===S.centerMode);});
   $("centerText").value=S.centerText||""; $("centerColor").value=S.centerColor; $("centerScale").value=S.centerScale; $("centerScaleOut").textContent=S.centerScale+"%";
   centerUIvis();
+}
+// open the studio control groups relevant to a chosen preset so its editable options are visible
+function openRelevantGroups(ps){
+  function setOpen(id,v){ var el=$(id); if(el){ if(v) el.setAttribute("open",""); else el.removeAttribute("open"); } }
+  var isArt=!!(ps.scene||ps.artUrl), isLogo=(ps.centerMode==="text"), isPicto=(ps.centerMode==="emoji"), isFrame=!!ps.frameOn;
+  setOpen("grpArt", isArt);
+  setOpen("grpAnim", isArt||ps.anim);
+  setOpen("grpLogo", isLogo);
+  setOpen("grpFrame", isLogo||isPicto||isFrame);
 }
 
 // export buttons
@@ -3954,9 +4076,9 @@ $("featureChips").addEventListener("click",function(e){
 });
 
 // ---------- gallery: categorised presets ----------
-var DKEYS=["fill","fg1","fg2","angle","transparent","bg","dot","eye","margin","ecc","anim","animKind","animSpeed","frameOn","frameMode","frameBg1","frameBg2","frameAngle","centerMode","centerText","centerColor","centerScale","artVisibility","artDensity","artInvert"];
-var DDEF={fill:"solid",fg1:"#111111",fg2:"#111111",angle:45,transparent:false,bg:"#ffffff",dot:"square",eye:"square",margin:4,ecc:"H",anim:false,animKind:"shine",animSpeed:1,frameOn:false,frameMode:"solid",frameBg1:"#0e7a3b",frameBg2:"#0b3d22",frameAngle:135,centerMode:"none",centerText:"",centerColor:"#111111",centerScale:24,artVisibility:70,artDensity:6,artInvert:false};
-function resetDesign(fullArt){ for(var k in DDEF) S[k]=DDEF[k]; S.logo=null; S.artImg=null; S.artIsVideo=false; if(fullArt && typeof removeArtVid==="function") removeArtVid(); }
+var DKEYS=["fill","fg1","fg2","angle","transparent","bg","dot","eye","margin","ecc","anim","animKind","animSpeed","frameOn","frameStyle","frameMode","frameBg1","frameBg2","frameAngle","centerMode","centerText","centerColor","centerScale","artVisibility","artDensity","artInvert"];
+var DDEF={fill:"solid",fg1:"#111111",fg2:"#111111",angle:45,transparent:false,bg:"#ffffff",dot:"square",eye:"square",margin:4,ecc:"H",anim:false,animKind:"shine",animSpeed:1,frameOn:false,frameStyle:"card",frameMode:"solid",frameBg1:"#0e7a3b",frameBg2:"#0b3d22",frameAngle:135,centerMode:"none",centerText:"",centerColor:"#111111",centerScale:24,artVisibility:70,artDensity:6,artInvert:false};
+function resetDesign(fullArt){ for(var k in DDEF) S[k]=DDEF[k]; S.logo=null; S.artImg=null; S.artIsVideo=false; S.artIsGif=false; if(fullArt && typeof removeArtVid==="function") removeArtVid(); }
 // load real web images (CORS-enabled host) for image-based gallery presets
 var IMGCACHE={};
 function getArtImg(url, cb){
@@ -3969,6 +4091,90 @@ function getArtImg(url, cb){
   e.img.onerror=function(){ e.ready=false; e.cbs=[]; };
   e.img.src=url;
   return null;
+}
+
+// ---- procedural themed scenes ----------------------------------------------
+// Random web photos were unrecognisable behind the QR dots. These are hand-drawn,
+// high-contrast illustrations baked to a canvas: instantly readable subjects
+// (ocean, sunset, forest, city, galaxy…) that stay clear under the module overlay
+// and need no network. Cached by kind. Used as the art image for animation examples.
+var SCENES={};
+function makeScene(kind){
+  if(SCENES[kind]) return SCENES[kind];
+  var W=560, c=document.createElement("canvas"); c.width=c.height=W;
+  var g=c.getContext("2d");
+  function lin(y0,y1,stops){ var gr=g.createLinearGradient(0,y0,0,y1); stops.forEach(function(s){gr.addColorStop(s[0],s[1]);}); return gr; }
+  function sun(x,y,r,col,glow){ var rg=g.createRadialGradient(x,y,0,x,y,r*(glow||2.4)); rg.addColorStop(0,col); rg.addColorStop(.4,col); rg.addColorStop(1,"rgba(255,255,255,0)"); g.fillStyle=rg; g.beginPath(); g.arc(x,y,r*(glow||2.4),0,7); g.fill(); g.fillStyle=col; g.beginPath(); g.arc(x,y,r,0,7); g.fill(); }
+  function hills(base,amp,col,seedy){ g.fillStyle=col; g.beginPath(); g.moveTo(0,W); for(var x=0;x<=W;x+=8){ var yv=base+Math.sin((x/W)*6.28+seedy)*amp+Math.sin((x/W)*15+seedy)*amp*0.3; g.lineTo(x,yv); } g.lineTo(W,W); g.closePath(); g.fill(); }
+  function stars(n,mx){ g.fillStyle="#ffffff"; for(var i=0;i<n;i++){ var x=(i*137.5)%W, y=(i*91.7)%mx, s=(i%3)*0.6+0.5; g.globalAlpha=0.4+(i%5)*0.12; g.beginPath(); g.arc(x,y,s,0,7); g.fill(); } g.globalAlpha=1; }
+  switch(kind){
+    case "ocean":
+      g.fillStyle=lin(0,W,[[0,"#2aa7e0"],[.5,"#7fd8 f5".replace(" ","")],[.5,"#0a4f8a"],[1,"#062a52"]]); g.fillRect(0,0,W,W);
+      sun(W*0.72,W*0.26,34,"#fff3c4",2.6);
+      g.strokeStyle="rgba(255,255,255,0.35)"; g.lineWidth=3;
+      for(var i=0;i<7;i++){ g.beginPath(); var yy=W*0.56+i*26; for(var x=0;x<=W;x+=10){ g.lineTo(x,yy+Math.sin(x/38+i)*5); } g.stroke(); }
+      break;
+    case "sunset":
+      g.fillStyle=lin(0,W,[[0,"#3a1c71"],[.45,"#d76d77"],[.75,"#ffaf7b"],[1,"#ffd7a0"]]); g.fillRect(0,0,W,W);
+      sun(W*0.5,W*0.52,60,"#fff1b8",2.2);
+      hills(W*0.72,26,"#7a2f4f",0.6); hills(W*0.82,20,"#4a1530",2.0);
+      break;
+    case "forest":
+      g.fillStyle=lin(0,W,[[0,"#bfeaa0"],[.4,"#5fae52"],[1,"#0f5c2e"]]); g.fillRect(0,0,W,W);
+      sun(W*0.24,W*0.22,28,"#fdffd0",2.2);
+      g.fillStyle="#0c4a26"; for(var t=0;t<7;t++){ var tx=40+t*80, th=150+((t*53)%90); g.beginPath(); g.moveTo(tx,W); g.lineTo(tx-34,W-th*0.4); g.lineTo(tx-16,W-th*0.4); g.lineTo(tx-30,W-th*0.72); g.lineTo(tx-12,W-th*0.72); g.lineTo(tx,W-th); g.lineTo(tx+12,W-th*0.72); g.lineTo(tx+30,W-th*0.72); g.lineTo(tx+16,W-th*0.4); g.lineTo(tx+34,W-th*0.4); g.closePath(); g.fill(); }
+      break;
+    case "mountain":
+      g.fillStyle=lin(0,W,[[0,"#87b8e8"],[.55,"#d6e6f5"],[1,"#eef4fa"]]); g.fillRect(0,0,W,W);
+      sun(W*0.78,W*0.2,26,"#fffbe0",2.2);
+      g.fillStyle="#5b6b82"; g.beginPath(); g.moveTo(0,W); g.lineTo(W*0.28,W*0.34); g.lineTo(W*0.5,W*0.62); g.lineTo(W*0.72,W*0.28); g.lineTo(W,W); g.closePath(); g.fill();
+      g.fillStyle="#ffffff"; g.beginPath(); g.moveTo(W*0.28,W*0.34); g.lineTo(W*0.22,W*0.46); g.lineTo(W*0.35,W*0.46); g.closePath(); g.moveTo(W*0.72,W*0.28); g.lineTo(W*0.66,W*0.41); g.lineTo(W*0.79,W*0.41); g.closePath(); g.fill();
+      break;
+    case "flower":
+      g.fillStyle=lin(0,W,[[0,"#ffe3f0"],[1,"#ff9ec4"]]); g.fillRect(0,0,W,W);
+      g.translate(W/2,W/2); g.fillStyle="#ff5c8a"; for(var p=0;p<8;p++){ g.rotate(6.2832/8); g.beginPath(); g.ellipse(0,-120,52,100,0,0,7); g.fill(); } g.fillStyle="#ffd23f"; g.beginPath(); g.arc(0,0,58,0,7); g.fill(); g.setTransform(1,0,0,1,0,0);
+      break;
+    case "neon":
+      g.fillStyle="#0a0a1a"; g.fillRect(0,0,W,W);
+      g.strokeStyle="rgba(0,255,255,0.5)"; g.lineWidth=2; for(var l=0;l<12;l++){ var yy=W*0.55+l*22; g.beginPath(); g.moveTo(0,yy); g.lineTo(W,yy); g.stroke(); var xx=l*(W/12); g.beginPath(); g.moveTo(W/2+(xx-W/2)*2.5,W*0.55); g.lineTo(xx,W); g.stroke(); }
+      g.strokeStyle="#ff2fd0"; g.lineWidth=5; g.beginPath(); g.arc(W*0.5,W*0.34,60,3.14,6.28); g.stroke();
+      break;
+    case "beach":
+      g.fillStyle=lin(0,W,[[0,"#6fc7 f0".replace(" ","")],[.45,"#bfe9ff"],[.45,"#2f8fd0"],[.62,"#1e6fb0"],[.62,"#f2d79b"],[1,"#e0b877"]]); g.fillRect(0,0,W,W);
+      sun(W*0.5,W*0.24,40,"#fff2b0",2.4);
+      break;
+    case "desert":
+      g.fillStyle=lin(0,W,[[0,"#ffd18a"],[.5,"#ff9e5e"],[.5,"#e08a3c"],[1,"#a85a1e"]]); g.fillRect(0,0,W,W);
+      sun(W*0.5,W*0.42,50,"#fff0c0",2.0);
+      hills(W*0.6,30,"#c9702e",0.4); hills(W*0.74,26,"#9c4f18",2.4);
+      break;
+    case "snow":
+      g.fillStyle=lin(0,W,[[0,"#3f6ea8"],[.45,"#7ba3d0"],[.55,"#cfe3f5"],[1,"#eef6fc"]]); g.fillRect(0,0,W,W);
+      g.fillStyle="#2a4a72"; for(var pk=0;pk<3;pk++){ var mx2=90+pk*190; g.beginPath(); g.moveTo(mx2-140,W*0.62); g.lineTo(mx2,W*0.24); g.lineTo(mx2+140,W*0.62); g.closePath(); g.fill(); }
+      hills(W*0.66,24,"#dbe9f7",0.5); hills(W*0.8,20,"#ffffff",2.1);
+      g.fillStyle="#ffffff"; for(var s=0;s<50;s++){ var x=(s*97)%W, y=(s*53)%(W*0.55), r=1.6+(s%3); g.beginPath(); g.arc(x,y,r,0,7); g.fill(); }
+      break;
+    case "city":
+      g.fillStyle=lin(0,W,[[0,"#1a2a5e"],[.5,"#c56b8a"],[1,"#ffb17a"]]); g.fillRect(0,0,W,W);
+      sun(W*0.5,W*0.56,44,"#ffd98a",1.8);
+      for(var b=0;b<9;b++){ var bx=b*(W/9), bw=W/9-6, bh=120+((b*67)%220); g.fillStyle=b%2?"#101830":"#1a2440"; g.fillRect(bx,W-bh,bw,bh); g.fillStyle="rgba(255,220,120,0.8)"; for(var wy=W-bh+10;wy<W-10;wy+=22){ for(var wx=bx+6;wx<bx+bw-6;wx+=16){ if((wx+wy)%3) g.fillRect(wx,wy,6,10); } } }
+      break;
+    case "tropical":
+      g.fillStyle=lin(0,W,[[0,"#22d3c5"],[.5,"#0ea5b7"],[.5,"#0b6f8a"],[1,"#064a63"]]); g.fillRect(0,0,W,W);
+      sun(W*0.28,W*0.26,34,"#fff0b0",2.4);
+      g.strokeStyle="#0a3b1e"; g.lineWidth=10; g.beginPath(); g.moveTo(W*0.74,W); g.quadraticCurveTo(W*0.66,W*0.5,W*0.78,W*0.28); g.stroke();
+      g.fillStyle="#0c5a2e"; for(var f=0;f<6;f++){ g.save(); g.translate(W*0.78,W*0.28); g.rotate(f*1.05); g.beginPath(); g.ellipse(46,0,50,16,0,0,7); g.fill(); g.restore(); }
+      break;
+    case "galaxy":
+      g.fillStyle=lin(0,W,[[0,"#241a52"],[.5,"#3a2a78"],[1,"#1a1240"]]); g.fillRect(0,0,W,W);
+      var ng=g.createRadialGradient(W*0.5,W*0.44,10,W*0.5,W*0.44,W*0.55); ng.addColorStop(0,"rgba(230,190,255,0.95)"); ng.addColorStop(.4,"rgba(150,110,240,0.6)"); ng.addColorStop(1,"rgba(40,26,90,0)"); g.fillStyle=ng; g.fillRect(0,0,W,W);
+      var ng2=g.createRadialGradient(W*0.32,W*0.62,6,W*0.32,W*0.62,W*0.3); ng2.addColorStop(0,"rgba(120,220,255,0.7)"); ng2.addColorStop(1,"rgba(40,26,90,0)"); g.fillStyle=ng2; g.fillRect(0,0,W,W);
+      stars(160,W);
+      break;
+    default:
+      g.fillStyle=lin(0,W,[[0,"#334155"],[1,"#0f172a"]]); g.fillRect(0,0,W,W);
+  }
+  SCENES[kind]=c; return c;
 }
 
 var CATS = {
@@ -3990,18 +4196,18 @@ var CATS = {
     {name:"모노 잉크",tag:"클래식",s:{fill:"solid",fg1:"#111111",bg:"#ffffff",dot:"square",eye:"square"}}
   ],
   animation:[
-    {name:"오션 웨이브",tag:"이미지·스윕",s:{artUrl:"https://picsum.photos/seed/ocean77/520/520",anim:true,animKind:"sweep",fg1:"#0b3d6b",dot:"dots",eye:"square",artVisibility:66}},
-    {name:"포레스트",tag:"이미지·샤인",s:{artUrl:"https://picsum.photos/seed/forest12/520/520",anim:true,animKind:"shine",fg1:"#0b3d22",dot:"dots",eye:"square",artVisibility:66}},
-    {name:"선셋 시티",tag:"이미지·회전",s:{artUrl:"https://picsum.photos/seed/city88/520/520",anim:true,animKind:"rotate",fg1:"#7c2d12",dot:"dots",eye:"square",artVisibility:66}},
-    {name:"마운틴",tag:"이미지·펄스",s:{artUrl:"https://picsum.photos/seed/mountain5/520/520",anim:true,animKind:"pulse",fg1:"#0b2a3d",dot:"dots",eye:"square",artVisibility:66}},
-    {name:"플라워",tag:"이미지·샤인",s:{artUrl:"https://picsum.photos/seed/flower34/520/520",anim:true,animKind:"shine",fg1:"#7c1d4b",dot:"dots",eye:"square",artVisibility:66}},
-    {name:"네온 스트리트",tag:"이미지·스윕",s:{artUrl:"https://picsum.photos/seed/neon21/520/520",anim:true,animKind:"sweep",fg1:"#3b0b6b",dot:"dots",eye:"square",artVisibility:66}},
-    {name:"비치",tag:"이미지·회전",s:{artUrl:"https://picsum.photos/seed/beach9/520/520",anim:true,animKind:"rotate",fg1:"#0b4d5b",dot:"dots",eye:"square",artVisibility:66}},
-    {name:"데저트",tag:"이미지·샤인",s:{artUrl:"https://picsum.photos/seed/desert3/520/520",anim:true,animKind:"shine",fg1:"#5b3a0b",dot:"dots",eye:"square",artVisibility:66}},
-    {name:"스노우",tag:"이미지·펄스",s:{artUrl:"https://picsum.photos/seed/snow15/520/520",anim:true,animKind:"pulse",fg1:"#1e3a5b",dot:"dots",eye:"square",artVisibility:64}},
-    {name:"어반",tag:"이미지·스윕",s:{artUrl:"https://picsum.photos/seed/urban42/520/520",anim:true,animKind:"sweep",fg1:"#1b1b2e",dot:"dots",eye:"square",artVisibility:66}},
-    {name:"트로피컬",tag:"이미지·샤인",s:{artUrl:"https://picsum.photos/seed/tropic7/520/520",anim:true,animKind:"shine",fg1:"#0b5d3d",dot:"dots",eye:"square",artVisibility:66}},
-    {name:"갤럭시",tag:"이미지·회전",s:{artUrl:"https://picsum.photos/seed/galaxy2/520/520",anim:true,animKind:"rotate",fg1:"#2e0b5b",dot:"dots",eye:"square",artVisibility:64}}
+    {name:"오션 웨이브",tag:"바다·스윕",s:{scene:"ocean",anim:true,animKind:"sweep",fg1:"#062a52",dot:"dots",eye:"square",artVisibility:70}},
+    {name:"선셋",tag:"노을·샤인",s:{scene:"sunset",anim:true,animKind:"shine",fg1:"#4a1530",dot:"dots",eye:"square",artVisibility:70}},
+    {name:"포레스트",tag:"숲·펄스",s:{scene:"forest",anim:true,animKind:"pulse",fg1:"#0f5c2e",dot:"dots",eye:"square",artVisibility:70}},
+    {name:"마운틴",tag:"설산·스윕",s:{scene:"mountain",anim:true,animKind:"sweep",fg1:"#3b4a63",dot:"dots",eye:"square",artVisibility:70}},
+    {name:"플라워",tag:"꽃·회전",s:{scene:"flower",anim:true,animKind:"rotate",fg1:"#c01f5b",dot:"dots",eye:"square",artVisibility:70}},
+    {name:"네온 시티",tag:"네온·스윕",s:{scene:"neon",anim:true,animKind:"sweep",fg1:"#12123a",dot:"dots",eye:"square",artVisibility:70}},
+    {name:"비치",tag:"해변·샤인",s:{scene:"beach",anim:true,animKind:"shine",fg1:"#1e6fb0",dot:"dots",eye:"square",artVisibility:70}},
+    {name:"데저트",tag:"사막·펄스",s:{scene:"desert",anim:true,animKind:"pulse",fg1:"#7a3d12",dot:"dots",eye:"square",artVisibility:70}},
+    {name:"스노우",tag:"설경·펄스",s:{scene:"snow",anim:true,animKind:"pulse",fg1:"#5b7fa8",dot:"dots",eye:"square",artVisibility:70}},
+    {name:"시티 스카이",tag:"도시·스윕",s:{scene:"city",anim:true,animKind:"sweep",fg1:"#101830",dot:"dots",eye:"square",artVisibility:70}},
+    {name:"트로피컬",tag:"열대·회전",s:{scene:"tropical",anim:true,animKind:"rotate",fg1:"#064a63",dot:"dots",eye:"square",artVisibility:70}},
+    {name:"갤럭시",tag:"은하·회전",s:{scene:"galaxy",anim:true,animKind:"rotate",fg1:"#1b1240",dot:"dots",eye:"square",artVisibility:70}}
   ],
   logo:[
     {name:"ACME",tag:"텍스트 로고",s:{fill:"solid",fg1:"#e11d48",bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"text",centerText:"ACME",centerColor:"#e11d48",centerScale:30}},
@@ -4032,29 +4238,32 @@ var CATS = {
     {name:"주차",tag:"교통",s:{fill:"solid",fg1:"#2563eb",bg:"#ffffff",dot:"dots",eye:"square",centerMode:"emoji",centerText:"🅿️",centerScale:32,frameOn:true,frameMode:"solid",frameBg1:"#1e40af"}}
   ],
   frame:[
-    {name:"에메랄드 카드",tag:"프레임",s:{fill:"solid",fg1:"#0b3d22",bg:"#ffffff",dot:"rounded",eye:"rounded",frameOn:true,frameMode:"linear",frameBg1:"#16a34a",frameBg2:"#0b3d22",frameAngle:135}},
-    {name:"오션 카드",tag:"프레임",s:{fill:"solid",fg1:"#0b2a6b",bg:"#ffffff",dot:"dots",eye:"circle",frameOn:true,frameMode:"linear",frameBg1:"#1d4ed8",frameBg2:"#0b2a6b",frameAngle:120}},
-    {name:"선셋 카드",tag:"프레임",s:{fill:"solid",fg1:"#7c2d12",bg:"#ffffff",dot:"rounded",eye:"rounded",frameOn:true,frameMode:"linear",frameBg1:"#fb7185",frameBg2:"#f97316",frameAngle:120}},
-    {name:"바이올렛 카드",tag:"프레임",s:{fill:"solid",fg1:"#2e1065",bg:"#ffffff",dot:"classy",eye:"leaf",frameOn:true,frameMode:"linear",frameBg1:"#7c3aed",frameBg2:"#2e1065",frameAngle:135}},
-    {name:"미드나잇 카드",tag:"프레임",s:{fill:"solid",fg1:"#0b1020",bg:"#ffffff",dot:"dots",eye:"circle",frameOn:true,frameMode:"radial",frameBg1:"#22d3ee",frameBg2:"#0b1020"}},
-    {name:"로즈 카드",tag:"프레임",s:{fill:"solid",fg1:"#500724",bg:"#ffffff",dot:"rounded",eye:"rounded",frameOn:true,frameMode:"linear",frameBg1:"#f43f5e",frameBg2:"#9d174d",frameAngle:120}},
-    {name:"골드 카드",tag:"프레임",s:{fill:"solid",fg1:"#3a2a06",bg:"#fffdf5",dot:"classy",eye:"leaf",frameOn:true,frameMode:"linear",frameBg1:"#ffd76a",frameBg2:"#b8860b",frameAngle:60}},
-    {name:"틸 카드",tag:"프레임",s:{fill:"solid",fg1:"#083344",bg:"#ffffff",dot:"dots",eye:"circle",frameOn:true,frameMode:"linear",frameBg1:"#06b6d4",frameBg2:"#0e7490",frameAngle:120}},
-    {name:"라임 카드",tag:"프레임",s:{fill:"solid",fg1:"#14532d",bg:"#ffffff",dot:"dots",eye:"circle",frameOn:true,frameMode:"solid",frameBg1:"#65a30d"}},
-    {name:"모노 카드",tag:"프레임",s:{fill:"solid",fg1:"#111111",bg:"#ffffff",dot:"square",eye:"square",frameOn:true,frameMode:"solid",frameBg1:"#111111"}}
+    {name:"골드 액자",tag:"미술관 액자",s:{fill:"solid",fg1:"#3a2a06",bg:"#fffdf5",dot:"classy",eye:"leaf",frameOn:true,frameStyle:"gold"}},
+    {name:"우드 프레임",tag:"원목 액자",s:{fill:"solid",fg1:"#5b3a1a",bg:"#fffaf2",dot:"rounded",eye:"rounded",frameOn:true,frameStyle:"wood"}},
+    {name:"폴라로이드",tag:"인생네컷 감성",s:{fill:"solid",fg1:"#111111",bg:"#ffffff",dot:"rounded",eye:"rounded",frameOn:true,frameStyle:"polaroid"}},
+    {name:"네온 프레임",tag:"글로우 액자",s:{fill:"linear",fg1:"#22d3ee",fg2:"#7c5cff",angle:120,bg:"#0b0d12",dot:"dots",eye:"circle",frameOn:true,frameStyle:"neon",frameBg1:"#22d3ee"}},
+    {name:"핑크 네온",tag:"글로우 액자",s:{fill:"linear",fg1:"#ff2fd0",fg2:"#ffb347",angle:120,bg:"#0b0712",dot:"dots",eye:"circle",frameOn:true,frameStyle:"neon",frameBg1:"#ff2fd0"}},
+    {name:"섀도우박스",tag:"파스파르투",s:{fill:"solid",fg1:"#0b3d22",bg:"#ffffff",dot:"rounded",eye:"rounded",frameOn:true,frameStyle:"shadow",frameMode:"linear",frameBg1:"#16a34a",frameBg2:"#0b3d22",frameAngle:135}},
+    {name:"블루 섀도우박스",tag:"파스파르투",s:{fill:"solid",fg1:"#0b2a6b",bg:"#ffffff",dot:"dots",eye:"circle",frameOn:true,frameStyle:"shadow",frameMode:"linear",frameBg1:"#1d4ed8",frameBg2:"#0b2a6b",frameAngle:120}},
+    {name:"우드 픽토",tag:"원목+픽토그램",s:{fill:"solid",fg1:"#5b3a1a",bg:"#fffaf2",dot:"rounded",eye:"rounded",frameOn:true,frameStyle:"wood",centerMode:"emoji",centerText:"🌿",centerScale:26}},
+    {name:"골드 브랜드",tag:"액자+로고",s:{fill:"solid",fg1:"#6b4e12",bg:"#fffdf5",dot:"classy",eye:"leaf",frameOn:true,frameStyle:"gold",centerMode:"text",centerText:"LUXE",centerColor:"#6b4e12",centerScale:22}},
+    {name:"에메랄드 카드",tag:"컬러 카드",s:{fill:"solid",fg1:"#0b3d22",bg:"#ffffff",dot:"rounded",eye:"rounded",frameOn:true,frameStyle:"card",frameMode:"linear",frameBg1:"#16a34a",frameBg2:"#0b3d22",frameAngle:135}},
+    {name:"선셋 카드",tag:"컬러 카드",s:{fill:"solid",fg1:"#7c2d12",bg:"#ffffff",dot:"rounded",eye:"rounded",frameOn:true,frameStyle:"card",frameMode:"linear",frameBg1:"#fb7185",frameBg2:"#f97316",frameAngle:120}},
+    {name:"모노 카드",tag:"컬러 카드",s:{fill:"solid",fg1:"#111111",bg:"#ffffff",dot:"square",eye:"square",frameOn:true,frameStyle:"card",frameMode:"solid",frameBg1:"#111111"}}
   ]
 };
 var curCat="standard";
 function renderPreset(cv, ps, phase){
-  var save={}; DKEYS.forEach(function(k){save[k]=S[k];}); var sl=S.logo, sa=S.artImg, sav=S.artIsVideo, sc=S.content, sp=_phase;
+  var save={}; DKEYS.forEach(function(k){save[k]=S[k];}); var sl=S.logo, sa=S.artImg, sav=S.artIsVideo, sag=S.artIsGif, sc=S.content, sp=_phase;
   resetDesign(false);
   for(var k in ps) S[k]=ps[k];
-  if(ps.artUrl){ var im=getArtImg(ps.artUrl); if(im){ S.artImg=im; S.artIsVideo=false; } }
+  if(ps.scene){ S.artImg=makeScene(ps.scene); S.artIsVideo=false; }
+  else if(ps.artUrl){ var im=getArtImg(ps.artUrl); if(im){ S.artImg=im; S.artIsVideo=false; } }
   if(phase!=null) _phase=phase;
   var pm=S.margin; S.margin=Math.min(S.margin,2);
   try{ render(cv.getContext("2d"), cv.width); }catch(e){}
   S.margin=pm;
-  DKEYS.forEach(function(k){S[k]=save[k];}); S.logo=sl; S.artImg=sa; S.artIsVideo=sav; S.content=sc; _phase=sp;
+  DKEYS.forEach(function(k){S[k]=save[k];}); S.logo=sl; S.artImg=sa; S.artIsVideo=sav; S.artIsGif=sag; S.content=sc; _phase=sp;
 }
 // live-animate the Animation category thumbnails so customers see real motion
 var galItems=[], galRaf=null, galLast=0;
@@ -4106,8 +4315,11 @@ function applyPreset(ps){
   stopGalAnim();
   resetDesign(true);
   for(var k in ps) S[k]=ps[k];
-  if(ps.artUrl){ getArtImg(ps.artUrl, function(img){ if(img){ S.artImg=img; S.artIsVideo=false; $("artControls").style.display="block"; $("artLabel").textContent="✓ 이미지 적용됨(웹) — 변경하려면 클릭"; rerender(); } }); }
+  if(ps.scene){ S.artImg=makeScene(ps.scene); S.artIsVideo=false; }
+  else if(ps.artUrl){ getArtImg(ps.artUrl, function(img){ if(img){ S.artImg=img; S.artIsVideo=false; $("artControls").style.display="block"; $("artLabel").textContent="✓ 이미지 적용됨(웹) — 변경하려면 클릭"; rerender(); } }); }
   syncStudioUI();
+  if(ps.scene){ $("artControls").style.display="block"; $("artLabel").textContent="✓ 장면 아트 적용됨 — 내 이미지/영상/GIF로 교체하려면 클릭"; }
+  openRelevantGroups(ps);
   Array.prototype.forEach.call($("tabs").children,function(x){x.classList.toggle("active", x.dataset.view==="studio");});
   ["gallery","studio","ar","about"].forEach(function(v){ $("view-"+v).classList.toggle("active", v==="studio"); });
   rerender();
@@ -4167,6 +4379,7 @@ if (typeof qrcode === "undefined"){
 } else {
   render(ctx, EXPORT);
   updateMeta();
+  buildPictoPicker();
   buildGallery();
   AR.init();
 }
