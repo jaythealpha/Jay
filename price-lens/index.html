@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#08101f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="프라이스 렌즈">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏷️</text></svg>">
 <title>프라이스 렌즈 — 라벨을 찍으면 최저가가 보입니다</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -156,6 +160,28 @@
 
   .tips-row { display: flex; gap: 8px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
   .chip { font-size: 12px; color: var(--ink-2); background: var(--card); border: 1px solid var(--line-solid); padding: 6px 11px; border-radius: 999px; }
+
+  /* ---------- Text search (no photo) ---------- */
+  .text-search { display: flex; gap: 8px; }
+  .text-search input {
+    flex: 1; min-width: 0; padding: 13px 14px; border-radius: 12px; font-family: inherit; font-size: 15px;
+    background: var(--card); border: 1px solid var(--line-solid); color: var(--ink-1);
+  }
+  .text-search input::placeholder { color: var(--ink-3); }
+  .text-search input:focus { outline: none; border-color: var(--mint); }
+  .text-search .btn { padding: 12px 16px; font-size: 14px; flex: none; }
+  .or-divider { display: flex; align-items: center; gap: 12px; margin: 20px 0 12px; color: var(--ink-3); font-size: 12px; font-weight: 700; }
+  .or-divider::before, .or-divider::after { content: ""; flex: 1; height: 1px; background: var(--grid); }
+
+  /* ---------- Condition filter chips ---------- */
+  .filters { display: flex; gap: 7px; margin-bottom: 8px; flex-wrap: wrap; }
+  .fchip {
+    font-size: 12px; font-weight: 700; padding: 6px 13px; border-radius: 999px; cursor: pointer;
+    background: var(--card-2); border: 1px solid var(--line-solid); color: var(--ink-2); transition: .15s;
+    font-family: inherit;
+  }
+  .fchip:hover { border-color: var(--mint); }
+  .fchip.on { background: rgba(53,208,165,.14); color: var(--mint); border-color: rgba(53,208,165,.4); }
 
   /* ---------- Loading ---------- */
   .loading { text-align: center; padding: 60px 20px; }
@@ -452,6 +478,12 @@
       <span class="chip">🚫 반사 피하기</span>
     </div>
 
+    <div class="or-divider">또는 사진 없이 검색</div>
+    <div class="text-search">
+      <input id="queryInput" placeholder="상품명이나 품번 입력 (예: 바스키아 골프 베스트)" enterkeyhint="search">
+      <button class="btn btn-primary" id="btnTextSearch">🔎 가격 찾기</button>
+    </div>
+
     <p class="disclaimer" style="margin-top:22px">
       API 키가 없어도 <b style="color:var(--mint-soft)">데모 보기</b>로 리포트를 체험할 수 있어요.<br>
       <button class="btn btn-ghost" id="btnDemo" style="margin-top:10px;padding:10px 16px;font-size:14px">🛍️ 데모 가격 리포트 보기</button>
@@ -673,14 +705,24 @@ function runLoadSteps(withSearch) {
 
 async function analyze() {
   if (!capturedForApi) { toast('먼저 라벨을 촬영하거나 불러오세요.', true); return; }
-  show('loading');
+  runAnalysis({ image: capturedForApi }, capturedDataUrl);
+}
 
+/* 사진 없이 상품명/품번 텍스트로 검색 */
+function analyzeQuery(q) {
+  const query = String(q || '').trim();
+  if (!query) { toast('상품명이나 품번을 입력해 주세요.', true); return; }
+  runAnalysis({ query }, '');
+}
+
+async function runAnalysis(input, photo) {
+  show('loading');
   const key = store.key();
   runLoadSteps(!!key);
   try {
     let data;
     if (key) {
-      data = await callClaude(key, store.model(), capturedForApi);
+      data = await callClaude(key, store.model(), input);
     } else {
       await new Promise(r => setTimeout(r, 2600));
       data = DEMO_DATA;
@@ -689,11 +731,13 @@ async function analyze() {
     clearInterval(loadTimer);
 
     if (data && data.found === false) {
-      toast(data.reason || '라벨을 인식하지 못했어요. 품번/가격표가 보이게 다시 찍어주세요.', true);
+      toast(data.reason || (input.image
+        ? '라벨을 인식하지 못했어요. 품번/가격표가 보이게 다시 찍어주세요.'
+        : '상품을 찾지 못했어요. 검색어를 더 구체적으로 입력해 주세요.'), true);
       show('capture');
       return;
     }
-    const session = saveSession(data, capturedDataUrl);
+    const session = saveSession(data, photo);
     renderResult(session);
     show('result');
   } catch (e) {
@@ -749,7 +793,14 @@ const JSON_SCHEMA = `{
   "sources": [ { "title": "참고한 페이지 제목", "url": "https://..." } ]   // 3~6개
 }`;
 
-async function callClaude(key, model, base64) {
+async function callClaude(key, model, input) {
+  const content = [];
+  if (input.image) {
+    content.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: input.image } });
+    content.push({ type: 'text', text: `이 라벨의 상품을 식별하고, 웹 검색으로 현재 인터넷 판매가(최저가 오름차순)와 최근 1년 가격 추이를 조사한 뒤 다음 JSON 스키마로만 응답하세요. 오늘 날짜: ${todayStr()}\n\n${JSON_SCHEMA}` });
+  } else {
+    content.push({ type: 'text', text: `라벨 사진 없이 사용자가 직접 입력한 검색어입니다: "${input.query}"\n이 검색어로 상품을 식별하고(라벨 판독 단계는 건너뜀), 웹 검색으로 현재 인터넷 판매가(최저가 오름차순)와 최근 1년 가격 추이를 조사한 뒤 다음 JSON 스키마로만 응답하세요. tagPrice는 검색에서 정가를 확인한 경우에만 채우세요. 오늘 날짜: ${todayStr()}\n\n${JSON_SCHEMA}` });
+  }
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -763,13 +814,7 @@ async function callClaude(key, model, base64) {
       max_tokens: 8000,
       system: SYSTEM_PROMPT,
       tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 6 }],
-      messages: [{
-        role: 'user',
-        content: [
-          { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64 } },
-          { type: 'text', text: `이 라벨의 상품을 식별하고, 웹 검색으로 현재 인터넷 판매가(최저가 오름차순)와 최근 1년 가격 추이를 조사한 뒤 다음 JSON 스키마로만 응답하세요. 오늘 날짜: ${todayStr()}\n\n${JSON_SCHEMA}` },
-        ],
-      }],
+      messages: [{ role: 'user', content }],
     }),
   });
 
@@ -989,23 +1034,20 @@ function sec(en, ko) {
   return `<h3 class="sec"><span class="en">${esc(en)}</span><span class="ko">${esc(ko)}</span></h3>`;
 }
 
-function renderResult(session) {
-  const d = session.data || {};
-  const confMap = { high: '높음', medium: '보통', low: '낮음' };
-  const confClass = d.confidence === 'low' ? 'low' : '';
-
-  // ----- listings: 오름차순 정렬 (가격 없는 항목은 뒤로) -----
-  const listings = (Array.isArray(d.listings) ? d.listings : [])
-    .map(l => ({ ...l, price: Number(l.price) }))
-    .sort((a, b) => (isFinite(a.price) ? a.price : Infinity) - (isFinite(b.price) ? b.price : Infinity));
-  const best = listings.find(l => isFinite(l.price));
+let currentListings = [];
+function classifyCond(l) {
+  const c = String(l.condition || '');
+  if (/중고|리퍼/.test(c)) return 'used';
+  if (/새/.test(c)) return 'new';
+  return 'etc';
+}
+/* 필터된 목록 기준으로 순위·최저가 배지·차액을 다시 계산해 그린다 */
+function listingsHtml(arr) {
+  if (!arr.length) return `<div class="empty-listings"><span class="big">🔍</span>
+    검색에서 확인된 판매처가 없어요.<br>아래 <b>바로 검색</b> 링크로 직접 확인해 보세요.</div>`;
+  const best = arr.find(l => isFinite(l.price));
   const bestPrice = best ? best.price : null;
-
-  const tag = Number(d.tagPrice);
-  const hasTag = isFinite(tag) && tag > 0;
-  const discount = (hasTag && bestPrice) ? Math.round((1 - bestPrice / tag) * 100) : null;
-
-  const listingHtml = listings.length ? listings.map((l, i) => {
+  return arr.map((l, i) => {
     const isBest = isFinite(l.price) && l.price === bestPrice;
     const url = safeUrl(l.url);
     const meta = [l.condition && l.condition !== '불명' ? l.condition : '', l.shipping && l.shipping !== '불명' ? l.shipping : '', l.note || '']
@@ -1024,8 +1066,33 @@ function renderResult(session) {
         ${url ? `<a class="go" href="${esc(url)}" target="_blank" rel="noopener noreferrer">바로가기 →</a>` : ''}
       </div>
     </div>`;
-  }).join('') : `<div class="empty-listings"><span class="big">🔍</span>
-    검색에서 확인된 판매처가 없어요.<br>아래 <b>바로 검색</b> 링크로 직접 확인해 보세요.</div>`;
+  }).join('');
+}
+
+function renderResult(session) {
+  const d = session.data || {};
+  const confMap = { high: '높음', medium: '보통', low: '낮음' };
+  const confClass = d.confidence === 'low' ? 'low' : '';
+
+  // ----- listings: 오름차순 정렬 (가격 없는 항목은 뒤로) -----
+  const listings = (Array.isArray(d.listings) ? d.listings : [])
+    .map(l => ({ ...l, price: Number(l.price) }))
+    .sort((a, b) => (isFinite(a.price) ? a.price : Infinity) - (isFinite(b.price) ? b.price : Infinity));
+  const best = listings.find(l => isFinite(l.price));
+  const bestPrice = best ? best.price : null;
+
+  const tag = Number(d.tagPrice);
+  const hasTag = isFinite(tag) && tag > 0;
+  const discount = (hasTag && bestPrice) ? Math.round((1 - bestPrice / tag) * 100) : null;
+
+  currentListings = listings;
+  const conds = new Set(listings.map(classifyCond));
+  const showFilters = listings.length > 1 && (conds.has('used') || conds.size > 1);
+  const filterHtml = showFilters ? `<div class="filters" id="condFilters">
+      <button class="fchip on" data-f="all">전체 ${listings.length}</button>
+      ${conds.has('new') ? `<button class="fchip" data-f="new">새상품 ${listings.filter(l => classifyCond(l) === 'new').length}</button>` : ''}
+      ${conds.has('used') ? `<button class="fchip" data-f="used">중고·리퍼 ${listings.filter(l => classifyCond(l) === 'used').length}</button>` : ''}
+    </div>` : '';
 
   // ----- 1년 추이 차트 -----
   const hist = d.history || {};
@@ -1107,7 +1174,8 @@ function renderResult(session) {
     <!-- price comparison -->
     <div class="card">
       ${sec('Live Prices', '실시간 가격 비교 · 최저가순')}
-      ${listingHtml}
+      ${filterHtml}
+      <div id="listWrap">${listingsHtml(listings)}</div>
       ${listings.length ? `<p class="foot-note">조회 시점 기준이며 옵션·쿠폰에 따라 달라질 수 있어요. 링크는 새 탭으로 열립니다.</p>` : ''}
     </div>
 
@@ -1132,7 +1200,11 @@ function renderResult(session) {
     <!-- quick search -->
     ${quickHtml ? `<div class="card">${sec('Search Direct', '바로 검색')}
       <div class="quick-grid">${quickHtml}</div>
-      <p class="foot-note">검색어: <b style="color:var(--ink-2)">${esc(decodeURIComponent(q))}</b> — 각 쇼핑몰 검색 결과로 바로 이동해요.</p>
+      <div class="text-search" style="margin-top:14px">
+        <input id="requeryInput" value="${esc(decodeURIComponent(q))}" enterkeyhint="search" aria-label="검색어 수정">
+        <button class="btn btn-mint" id="btnRequery">🔄 다시 조회</button>
+      </div>
+      <p class="foot-note">검색어를 다듬어 다시 조회하면 더 정확한 가격을 찾을 수 있어요. 위 링크는 각 쇼핑몰 검색 결과로 바로 이동합니다.</p>
     </div>` : ''}
 
     <!-- sources -->
@@ -1145,6 +1217,25 @@ function renderResult(session) {
     </div>
   `;
   wireChartHover();
+
+  // condition filter chips
+  const cf = $('#condFilters');
+  if (cf) cf.addEventListener('click', (e) => {
+    const chip = e.target.closest('.fchip');
+    if (!chip) return;
+    cf.querySelectorAll('.fchip').forEach(c => c.classList.toggle('on', c === chip));
+    const f = chip.getAttribute('data-f');
+    const arr = f === 'all' ? currentListings : currentListings.filter(l => classifyCond(l) === f);
+    $('#listWrap').innerHTML = listingsHtml(arr);
+  });
+
+  // 검색어 수정 후 재조회
+  const rq = $('#btnRequery');
+  if (rq) {
+    rq.addEventListener('click', () => analyzeQuery($('#requeryInput').value));
+    $('#requeryInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') analyzeQuery(e.target.value); });
+  }
+
   currentSession = session;
 }
 let currentSession = null;
@@ -1237,13 +1328,14 @@ const DEMO_DATA = {
   searchQuery: '바스키아 브루클린 라임 골프 베스트',
   summary: '바스키아 아트웍을 활용한 골프 웨어 라인의 22SS 시즌 베스트. 시즌이 지나 온라인에서 큰 폭으로 할인 판매 중입니다.',
   listings: [
+    { site: '번개장터', title: '바스키아 브루클린 골프 베스트 100 (택포)', price: 45000, shipping: '무료배송', condition: '중고', url: 'https://m.bunjang.co.kr/search/products?q=%EB%B0%94%EC%8A%A4%ED%82%A4%EC%95%84%20%EA%B3%A8%ED%94%84%20%EB%B2%A0%EC%8A%A4%ED%8A%B8', note: '착용감 거의 없음' },
     { site: '네이버쇼핑 (스마트스토어)', title: '바스키아브루클린 라임 골프베스트 오프화이트', price: 59000, shipping: '무료배송', condition: '새상품', url: 'https://search.shopping.naver.com/search/all?query=%EB%B0%94%EC%8A%A4%ED%82%A4%EC%95%84%20%EB%B8%8C%EB%A3%A8%ED%81%B4%EB%A6%B0%20%EA%B3%A8%ED%94%84%20%EB%B2%A0%EC%8A%A4%ED%8A%B8', note: '' },
     { site: 'G마켓', title: '[바스키아 브루클린] 22SS 라임 베스트', price: 69300, shipping: '배송비 3,000원', condition: '새상품', url: 'https://browse.gmarket.co.kr/search?keyword=%EB%B0%94%EC%8A%A4%ED%82%A4%EC%95%84%20%EA%B3%A8%ED%94%84%20%EB%B2%A0%EC%8A%A4%ED%8A%B8', note: '쿠폰 적용가' },
     { site: '11번가', title: '바스키아브루클린 골프 니트 베스트', price: 72000, shipping: '무료배송', condition: '새상품', url: 'https://search.11st.co.kr/Search.tmall?kwd=%EB%B0%94%EC%8A%A4%ED%82%A4%EC%95%84%20%EA%B3%A8%ED%94%84%20%EB%B2%A0%EC%8A%A4%ED%8A%B8', note: '동일 모델 다른 색상 포함' },
     { site: '롯데온', title: '바스키아 브루클린 골프 베스트 22SS', price: 89000, shipping: '무료배송', condition: '새상품', url: 'https://www.lotteon.com/search/search/search.ecn?render=search&q=%EB%B0%94%EC%8A%A4%ED%82%A4%EC%95%84%20%EA%B3%A8%ED%94%84%20%EB%B2%A0%EC%8A%A4%ED%8A%B8', note: '' },
     { site: '브랜드 공식몰', title: '22SS 라임 골프 베스트', price: 175000, shipping: '무료배송', condition: '새상품', url: 'https://www.google.com/search?q=%EB%B0%94%EC%8A%A4%ED%82%A4%EC%95%84%20%EB%B8%8C%EB%A3%A8%ED%81%B4%EB%A6%B0%20%EA%B3%B5%EC%8B%9D%EB%AA%B0', note: '시즌오프 50%' },
   ],
-  priceInsight: '정가 35만원 대비 최저 5만 9천원(-83%)까지 내려온 전형적인 이월 상품입니다. 시즌이 두 번 지나 재고 소진 단계라 추가 하락 폭은 크지 않을 것으로 보여요. 사이즈가 맞다면 지금 구매해도 좋은 가격대입니다.',
+  priceInsight: '정가 35만원 대비 새상품 최저 5만 9천원(-83%), 중고는 4만 5천원까지 내려온 전형적인 이월 상품입니다. 시즌이 두 번 지나 재고 소진 단계라 추가 하락 폭은 크지 않을 것으로 보여요. 사이즈가 맞다면 지금 구매해도 좋은 가격대입니다.',
   history: {
     points: [
       { month: '2025-07', price: 198000 }, { month: '2025-08', price: 189000 },
@@ -1275,6 +1367,8 @@ $('#btnGallery').addEventListener('click', () => $('#fileInput').click());
 $('#fileInput').addEventListener('change', (e) => handleFile(e.target.files[0]));
 $('#btnRetake').addEventListener('click', () => { resetCapture(); startCamera(); });
 $('#btnAnalyze').addEventListener('click', analyze);
+$('#btnTextSearch').addEventListener('click', () => analyzeQuery($('#queryInput').value));
+$('#queryInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') analyzeQuery(e.target.value); });
 $('#btnDemo').addEventListener('click', () => {
   clearInterval(loadTimer);
   show('loading'); runLoadSteps(false);
