@@ -34,6 +34,30 @@ python3 -m http.server 8000
 
 GitHub Pages로 배포된 경우: `https://<user>.github.io/<repo>/price-lens/`
 
+## ▲ Vercel로 배포하기
+
+정적 사이트라 빌드 없이 바로 배포됩니다. `price-lens/vercel.json`에 보안 헤더(카메라 권한 포함)가 설정되어 있습니다.
+
+**방법 A — Vercel Git 연동 (권장, 클릭만으로 끝)**
+
+1. [vercel.com/new](https://vercel.com/new) → **Import** → GitHub 저장소 `jaythealpha/Jay` 선택
+2. **Root Directory**를 `price-lens`로 지정 (Framework Preset: Other, 빌드 명령 없음)
+3. **Deploy** — 이후 저장소에 push할 때마다 자동으로 재배포됩니다
+4. 배포 주소 예: `https://<project>.vercel.app/` (HTTPS라 카메라 촬영도 바로 동작)
+
+**방법 B — GitHub Actions 수동 배포**
+
+`.github/workflows/vercel-price-lens.yml` 워크플로가 포함되어 있습니다.
+
+1. [vercel.com/account/tokens](https://vercel.com/account/tokens)에서 토큰 발급
+2. 저장소 **Settings → Secrets and variables → Actions**에 아래 3개 시크릿 등록
+   - `VERCEL_TOKEN` — 발급한 토큰
+   - `VERCEL_ORG_ID` — Vercel 팀 ID (`team_...`)
+   - `VERCEL_PROJECT_ID` — Vercel 프로젝트 ID (`prj_...`)
+3. GitHub **Actions 탭 → Deploy Price Lens to Vercel → Run workflow**로 실행 (production/preview 선택 가능)
+
+시크릿이 없으면 워크플로는 배포를 건너뛰기만 하고 실패하지 않습니다.
+
 ## 🔑 실제 인식·가격 검색 켜기 (선택)
 
 1. [console.anthropic.com](https://console.anthropic.com/settings/keys) 에서 API 키 발급
