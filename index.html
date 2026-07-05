@@ -111,6 +111,7 @@
   .toggle input:checked+span{background:linear-gradient(135deg,var(--acc),var(--acc2))}
   .toggle input:checked+span::before{transform:translateX(20px)}
   .hint{font-size:11px;color:var(--mut2);margin-top:8px;line-height:1.5}
+  #aiStyleSeg button{flex:1 1 28%;min-width:0}   /* 9 presets → balanced 3×3 grid */
   .picto-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;margin-top:6px}
   .picto-grid button{aspect-ratio:1;font-size:20px;line-height:1;background:var(--bg2);border:1px solid var(--line2);border-radius:8px;cursor:pointer;padding:0;transition:.1s}
   .picto-grid button.on{border-color:var(--acc);background:linear-gradient(135deg,rgba(124,92,255,.25),rgba(34,211,238,.18))}
@@ -305,6 +306,9 @@
                 <button data-p="photorealistic mountain landscape at golden hour, dramatic clouds, crisp air, 8k, high detail">실사 풍경</button>
                 <button data-p="cherry blossom garden in spring, petals drifting in the wind, soft pink tones, japanese art style">벚꽃</button>
                 <button data-p="deep space nebula with vivid purple and cyan cosmic clouds, sparkling stars, astrophotography style">우주</button>
+                <button data-p="autumn forest with golden and crimson maple leaves, morning mist, warm sunlight through trees, high detail">가을 숲</button>
+                <button data-p="snowy mountain village at dusk, warm lights in windows, falling snow, cozy winter atmosphere, high detail">겨울 마을</button>
+                <button data-p="fantasy castle floating among clouds, epic scale, dramatic lighting, concept art, highly detailed">판타지</button>
               </div>
             </label>
             <div class="row2" style="margin-top:8px">
@@ -591,7 +595,7 @@
   <footer>
     <div>Aesthetic QR Studio · LemioCode 컨셉을 오픈소스로 재구현 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.05-d</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.05-e</b></div>
   </footer>
 </div>
 
@@ -3339,39 +3343,60 @@ function render(g2, exportSize){
   // The moving light-sheen is only for SOLID/GRADIENT QRs (they have no other motion). ART QRs
   // get their motion from the moving image itself (Ken-Burns / video / GIF); stacking a sheen
   // on the art veil only tips borderline frames out of scan range, so we skip it for art.
-  if (S.anim && !S.artImg && !S.aiArt){
+  if (S.anim && !S.artImg && !S.aiArt && _phase>0.004){
     var bs = avail, bx0 = xoff, by0 = topPad, ccx = bx0+bs/2, ccy = by0+bs/2, t = _phase;
+    // strength adapts to background: bright bg tolerates a strong sheen; dark bg gets a
+    // slightly softer one (white over dark modules erodes contrast faster there).
+    var AA = (S.transparent || luminance(S.bg)>140) ? 0.40 : 0.30;
     g.save();
-    g.beginPath(); g.rect(bx0, by0, bs, bs); g.clip();
-    // source-over with capped alpha: a visible moving sheen that keeps dark modules dark
-    // enough that EVERY animated frame still scans (verified).
+    // clip to the QR block MINUS the three finder patterns (even-odd carve-out): the sheen can
+    // be strong over data modules (ECC-H absorbs partial washes) but finders must stay pristine
+    // or the detector loses the code entirely.
+    g.beginPath(); g.rect(bx0, by0, bs, bs);
+    var fpos=[[0,0],[0,n-7],[n-7,0]];
+    for (var fi=0; fi<3; fi++){
+      g.rect(ox+fpos[fi][1]*unit-unit*0.6, oy+fpos[fi][0]*unit-unit*0.6, unit*8.2, unit*8.2);
+    }
+    g.clip("evenodd");
     if (S.animKind==="pulse"){
-      var pr = bs*(0.16 + 0.42*(0.5+0.5*Math.sin(t*Math.PI*2)));
+      // breathing glow + a bright expanding ring racing outward
+      var ph = 0.5+0.5*Math.sin(t*6.2832);
+      var pr = bs*(0.18 + 0.45*ph);
       var rg = g.createRadialGradient(ccx, ccy, 0, ccx, ccy, pr);
-      rg.addColorStop(0, "rgba(255,255,255,0.22)");
-      rg.addColorStop(0.7, "rgba(255,255,255,0.06)");
+      rg.addColorStop(0, "rgba(255,255,255,"+(AA*0.85)+")");
+      rg.addColorStop(0.75, "rgba(255,255,255,"+(AA*0.22)+")");
       rg.addColorStop(1, "rgba(255,255,255,0)");
       g.fillStyle = rg; g.fillRect(bx0, by0, bs, bs);
+      var ringR = bs*(0.10 + 0.62*t);
+      g.strokeStyle = "rgba(255,255,255,"+(AA*(1-t)*1.2)+")";
+      g.lineWidth = Math.max(2, bs*0.014);
+      g.beginPath(); g.arc(ccx, ccy, ringR, 0, 6.2832); g.stroke();
     } else if (S.animKind==="rotate"){
-      g.translate(ccx, ccy); g.rotate(t*Math.PI*2);
-      var band = bs*0.42;
-      var rg2 = g.createLinearGradient(-band, 0, band, 0);
-      rg2.addColorStop(0, "rgba(255,255,255,0)");
-      rg2.addColorStop(0.5, "rgba(255,255,255,0.26)");
-      rg2.addColorStop(1, "rgba(255,255,255,0)");
-      g.fillStyle = rg2; g.fillRect(-bs, -bs, bs*2, bs*2);
+      // radar wedge sweeping a full turn — unmistakably rotating
+      g.translate(ccx, ccy); g.rotate(t*6.2832);
+      var wgrad = g.createLinearGradient(0, 0, bs*0.78, 0);
+      wgrad.addColorStop(0, "rgba(255,255,255,"+AA+")");
+      wgrad.addColorStop(1, "rgba(255,255,255,0)");
+      g.fillStyle = wgrad;
+      g.beginPath(); g.moveTo(0,0); g.arc(0, 0, bs*0.80, -0.45, 0.45); g.closePath(); g.fill();
+      // faint counter-trail so the sweep reads as motion, not a static wedge
+      g.rotate(-0.9);
+      g.globalAlpha = 0.4;
+      g.beginPath(); g.moveTo(0,0); g.arc(0, 0, bs*0.80, -0.35, 0.35); g.closePath(); g.fill();
+      g.globalAlpha = 1;
     } else if (S.animKind==="sweep"){
-      var band2 = bs*0.4, p2 = bx0 - band2 + t*(bs + 2*band2);
+      // wide coloured band marching across
+      var band2 = bs*0.36, p2 = bx0 - band2 + t*(bs + 2*band2);
       var sg2 = g.createLinearGradient(p2-band2, by0, p2+band2, by0+bs);
       sg2.addColorStop(0, "rgba(255,255,255,0)");
-      sg2.addColorStop(0.5, hexA(S.fill==="solid"? "#ffffff" : S.fg2, 0.26));
+      sg2.addColorStop(0.5, hexA(S.fill==="solid" ? "#ffffff" : S.fg2, AA));
       sg2.addColorStop(1, "rgba(255,255,255,0)");
       g.fillStyle = sg2; g.fillRect(bx0, by0, bs, bs);
-    } else { // shine (default): diagonal light band
-      var band3 = bs*0.36, cxp = bx0 - band3 + t*(bs + 2*band3);
+    } else { // shine (default): one narrow, BRIGHT diagonal glint — high peak, small wash area
+      var band3 = bs*0.20, cxp = bx0 - band3 + t*(bs + 2*band3);
       var sg = g.createLinearGradient(cxp-band3, by0, cxp+band3, by0+bs);
       sg.addColorStop(0, "rgba(255,255,255,0)");
-      sg.addColorStop(0.5, "rgba(255,255,255,0.28)");
+      sg.addColorStop(0.5, "rgba(255,255,255,"+AA+")");
       sg.addColorStop(1, "rgba(255,255,255,0)");
       g.fillStyle = sg; g.fillRect(bx0, by0, bs, bs);
     }
@@ -4003,10 +4028,10 @@ function aiVerify(url, prompt, scale){
       var rr=(typeof jsQR!=="undefined")?jsQR(dd.data,Z,Z):null;
       okScan=!!(rr && rr.data===S.content);
     }catch(e){ okScan=null; }
-    if(okScan===false && AI.tries<2){
+    if(okScan===false && AI.tries<3){
       AI.tries++;
-      aiStatus("스캔 실패 → 대비를 올려 재생성 ("+AI.tries+"/2)…");
-      aiCreate(prompt, Math.min(2.6, scale+0.3));
+      aiStatus("스캔 실패 → 대비를 한 단계 올려 재생성 ("+AI.tries+"/3)…");
+      aiCreate(prompt, Math.min(2.2, scale+0.35));
       return;
     }
     S.aiArt=img; AI.busy=false; $("aiGo").disabled=false; $("aiClear").style.display="block";
@@ -4025,7 +4050,7 @@ $("aiGo").addEventListener("click",function(){
   if(!prompt){ toast("프롬프트를 입력하거나 스타일 프리셋을 클릭하세요"); $("aiPrompt").focus(); return; }
   AI.busy=true; AI.tries=0; $("aiGo").disabled=true;
   if(S.ecc!=="H") setEcc("H");
-  aiCreate(prompt, 1.5);
+  aiCreate(prompt, 1.1);
 });
 $("aiStyleSeg").addEventListener("click",function(e){
   var b=e.target.closest("button"); if(!b) return;

@@ -66,7 +66,7 @@ export default async function handler(req, res) {
     const input = {
       prompt: prompt,
       negative_prompt: "ugly, disfigured, low quality, blurry, nsfw, text, watermark, deformed",
-      num_inference_steps: 30,
+      num_inference_steps: 40,
       guidance_scale: 7.5,
       batch_size: 1
     };
