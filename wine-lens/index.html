@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#2a0a12">
+<title>와인 렌즈 — 라벨을 찍으면 와인이 말을 겁니다</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --bg: #1a0710;
+    --bg2: #2a0a12;
+    --card: #2e1119;
+    --card-2: #3a1622;
+    --line: #4a2230;
+    --wine: #8e1e3c;
+    --wine-light: #c0395c;
+    --gold: #e8c37e;
+    --gold-soft: #f3ddad;
+    --green: #5fd0a0;
+    --blue: #7cc4e8;
+    --purple: #b490d8;
+    --text: #f6ecec;
+    --muted: #c3a9af;
+    --muted2: #8f7278;
+    --shadow: 0 18px 50px rgba(0,0,0,.45);
+  }
+
+  html, body { height: 100%; }
+  body {
+    font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+    background:
+      radial-gradient(1200px 700px at 15% -10%, #3d0f1e 0%, transparent 55%),
+      radial-gradient(1000px 700px at 110% 10%, #2c1030 0%, transparent 50%),
+      var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.55;
+    overflow-x: hidden;
+  }
+  ::selection { background: var(--wine-light); color: #fff; }
+
+  /* ---------- Layout ---------- */
+  .app { max-width: 720px; margin: 0 auto; padding: 0 16px calc(120px + env(safe-area-inset-bottom)); }
+
+  header.topbar {
+    position: sticky; top: 0; z-index: 40;
+    display: flex; align-items: center; gap: 12px;
+    padding: calc(14px + env(safe-area-inset-top)) 16px 14px;
+    max-width: 720px; margin: 0 auto;
+    background: linear-gradient(180deg, rgba(26,7,16,.96) 60%, rgba(26,7,16,0));
+    backdrop-filter: blur(8px);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: -.02em; }
+  .brand .logo {
+    width: 38px; height: 38px; border-radius: 12px; flex: none;
+    display: grid; place-items: center; font-size: 20px;
+    background: linear-gradient(145deg, var(--wine) 0%, #5c1226 100%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.15), 0 6px 16px rgba(142,30,60,.4);
+  }
+  .brand b { font-size: 18px; }
+  .brand small { display: block; font-size: 11px; color: var(--muted2); font-weight: 600; letter-spacing: .02em; }
+  .topbar .spacer { flex: 1; }
+  .icon-btn {
+    width: 42px; height: 42px; border-radius: 12px; flex: none;
+    border: 1px solid var(--line); background: var(--card);
+    color: var(--gold-soft); font-size: 18px; cursor: pointer;
+    display: grid; place-items: center; transition: .15s;
+  }
+  .icon-btn:hover { background: var(--card-2); border-color: var(--gold); }
+  .icon-btn.badge { position: relative; }
+  .icon-btn .count {
+    position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px; padding: 0 5px;
+    border-radius: 9px; background: var(--wine-light); color: #fff; font-size: 11px; font-weight: 800;
+    display: grid; place-items: center; box-shadow: 0 2px 6px rgba(0,0,0,.4);
+  }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    border: none; border-radius: 14px; font-family: inherit; font-weight: 800; font-size: 16px;
+    padding: 14px 20px; cursor: pointer; transition: transform .12s, filter .15s, background .15s;
+    color: #fff;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn-primary { background: linear-gradient(135deg, var(--wine-light), var(--wine)); box-shadow: 0 10px 26px rgba(142,30,60,.45); }
+  .btn-primary:hover { filter: brightness(1.08); }
+  .btn-gold { background: linear-gradient(135deg, var(--gold), #cf9f52); color: #3a1608; box-shadow: 0 10px 24px rgba(232,195,126,.3); }
+  .btn-ghost { background: var(--card); border: 1px solid var(--line); color: var(--text); }
+  .btn-ghost:hover { background: var(--card-2); }
+  .btn.block { width: 100%; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* ---------- Screens ---------- */
+  .screen { display: none; animation: fade .35s ease both; }
+  .screen.active { display: block; }
+  @keyframes fade { from { opacity: 0; transform: translateY(8px);} to { opacity: 1; transform: none; } }
+
+  /* ---------- Hero / Capture ---------- */
+  .hero { text-align: center; padding: 26px 6px 10px; }
+  .hero h1 { font-size: 27px; font-weight: 900; letter-spacing: -.03em; line-height: 1.25; }
+  .hero h1 .accent { background: linear-gradient(120deg, var(--gold-soft), var(--gold)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero p { color: var(--muted); margin-top: 10px; font-size: 14.5px; }
+
+  .capture-card {
+    margin-top: 18px; border-radius: 22px; overflow: hidden;
+    background: var(--card); border: 1px solid var(--line); box-shadow: var(--shadow);
+  }
+  .cam-stage {
+    position: relative; aspect-ratio: 3/4; max-height: 60vh; background: #0e0409;
+    display: grid; place-items: center; overflow: hidden;
+  }
+  .cam-stage video, .cam-stage img.preview {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  }
+  .cam-placeholder { text-align: center; color: var(--muted2); padding: 24px; }
+  .cam-placeholder .big { font-size: 54px; filter: grayscale(.2); }
+  .cam-placeholder p { margin-top: 10px; font-size: 13.5px; }
+  /* label framing guide */
+  .frame-guide {
+    position: absolute; inset: 12% 22%; border: 2px dashed rgba(232,195,126,.55);
+    border-radius: 16px; pointer-events: none;
+  }
+  .frame-guide::after {
+    content: "라벨을 이 안에 맞춰주세요"; position: absolute; left: 50%; bottom: -30px; transform: translateX(-50%);
+    white-space: nowrap; font-size: 11.5px; color: rgba(243,221,173,.75); font-weight: 700;
+  }
+  .cam-tools {
+    display: flex; align-items: center; justify-content: center; gap: 22px;
+    padding: 16px; background: linear-gradient(180deg, var(--card), var(--card-2));
+  }
+  .shutter {
+    width: 74px; height: 74px; border-radius: 50%; cursor: pointer; flex: none;
+    border: 4px solid var(--gold-soft); background: radial-gradient(circle at 50% 40%, #fff 0 30%, var(--wine-light) 32% 100%);
+    box-shadow: 0 6px 18px rgba(0,0,0,.5); transition: transform .1s;
+  }
+  .shutter:active { transform: scale(.92); }
+  .round-tool {
+    width: 50px; height: 50px; border-radius: 50%; border: 1px solid var(--line);
+    background: var(--card); color: var(--gold-soft); font-size: 20px; cursor: pointer; display: grid; place-items: center;
+  }
+  .round-tool:hover { background: var(--card-2); }
+
+  .capture-actions { padding: 14px 16px 18px; display: none; gap: 10px; }
+  .capture-actions.show { display: flex; }
+  .capture-actions .btn { flex: 1; }
+
+  .tips-row { display: flex; gap: 8px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
+  .chip { font-size: 12px; color: var(--muted); background: var(--card); border: 1px solid var(--line); padding: 6px 11px; border-radius: 999px; }
+
+  /* ---------- Loading ---------- */
+  .loading { text-align: center; padding: 60px 20px; }
+  .glass {
+    width: 90px; height: 90px; margin: 0 auto 22px; position: relative;
+  }
+  .glass .fill {
+    position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%);
+    width: 46px; height: 46px; border-radius: 0 0 24px 24px;
+    background: linear-gradient(180deg, var(--wine-light), var(--wine));
+    animation: swirl 1.4s ease-in-out infinite;
+  }
+  .glass::before {
+    content: "🍷"; font-size: 84px; position: absolute; inset: 0; display: grid; place-items: center; filter: drop-shadow(0 6px 10px rgba(0,0,0,.4));
+  }
+  @keyframes swirl { 0%,100%{ transform: translateX(-50%) rotate(-6deg);} 50%{ transform: translateX(-50%) rotate(6deg);} }
+  .loading h2 { font-size: 19px; margin-bottom: 8px; }
+  .loading .step { color: var(--muted); font-size: 14px; min-height: 22px; transition: .3s; }
+  .bar { width: 220px; height: 6px; margin: 20px auto 0; border-radius: 999px; background: var(--card-2); overflow: hidden; }
+  .bar > i { display: block; height: 100%; width: 40%; border-radius: 999px; background: linear-gradient(90deg, var(--gold), var(--wine-light)); animation: slide 1.3s ease-in-out infinite; }
+  @keyframes slide { 0%{ margin-left: -40%; } 100%{ margin-left: 100%; } }
+
+  /* ---------- Result infographic ---------- */
+  .result { padding-top: 6px; }
+  .ig-hero {
+    border-radius: 22px; overflow: hidden; box-shadow: var(--shadow);
+    background:
+      linear-gradient(180deg, rgba(20,5,11,.05) 0%, rgba(20,5,11,.75) 78%, rgba(20,5,11,.96) 100%),
+      linear-gradient(135deg, #5c1226, #2a0a12);
+    position: relative; border: 1px solid var(--line);
+  }
+  .ig-hero .photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .34; }
+  .ig-hero .inner { position: relative; padding: 22px 20px 20px; }
+  .ig-badges { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 12px; }
+  .tag { font-size: 11.5px; font-weight: 800; padding: 5px 10px; border-radius: 999px; letter-spacing: .01em; }
+  .tag.type { background: rgba(232,195,126,.16); color: var(--gold-soft); border: 1px solid rgba(232,195,126,.35); }
+  .tag.conf { background: rgba(95,208,160,.14); color: var(--green); border: 1px solid rgba(95,208,160,.3); }
+  .tag.conf.low { background: rgba(239,71,111,.14); color: #ff8fa8; border-color: rgba(239,71,111,.35); }
+  .ig-hero h2 { font-size: 25px; font-weight: 900; letter-spacing: -.02em; line-height: 1.2; }
+  .ig-hero .producer { color: var(--gold-soft); font-weight: 700; margin-top: 4px; font-size: 15px; }
+  .ig-hero .meta { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 14px; }
+  .ig-hero .meta .m { min-width: 70px; }
+  .ig-hero .meta .m span { display: block; font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+  .ig-hero .meta .m b { font-size: 17px; color: #fff; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+  .grid .full { grid-column: 1 / -1; }
+  .panel {
+    background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 16px 16px 15px;
+  }
+  .panel h3 { font-size: 13px; color: var(--gold); text-transform: uppercase; letter-spacing: .06em; display: flex; align-items: center; gap: 7px; margin-bottom: 10px; }
+  .panel h3 .e { font-size: 16px; }
+  .panel p { font-size: 14px; color: var(--text); }
+  .panel p.muted { color: var(--muted); }
+
+  /* price gauge */
+  .price-big { font-size: 26px; font-weight: 900; color: var(--gold-soft); }
+  .price-sub { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+
+  /* stat bars */
+  .stat { margin-top: 11px; }
+  .stat:first-of-type { margin-top: 4px; }
+  .stat .lab { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--muted); margin-bottom: 5px; }
+  .stat .lab b { color: var(--text); font-weight: 700; }
+  .track { height: 8px; border-radius: 999px; background: var(--card-2); overflow: hidden; }
+  .track > i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--wine), var(--wine-light)); transition: width .6s cubic-bezier(.2,.7,.3,1); }
+
+  /* grape / pairing pills */
+  .pills { display: flex; flex-wrap: wrap; gap: 7px; }
+  .pill { font-size: 13px; padding: 7px 12px; border-radius: 12px; background: var(--card-2); border: 1px solid var(--line); }
+  .pill .e { margin-right: 5px; }
+
+  /* timeline */
+  .timeline { position: relative; margin-left: 6px; padding-left: 18px; }
+  .timeline::before { content: ""; position: absolute; left: 4px; top: 4px; bottom: 4px; width: 2px; background: linear-gradient(var(--wine-light), transparent); }
+  .tl-item { position: relative; padding-bottom: 14px; }
+  .tl-item:last-child { padding-bottom: 0; }
+  .tl-item::before { content: ""; position: absolute; left: -18px; top: 5px; width: 9px; height: 9px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 3px rgba(232,195,126,.18); }
+  .tl-item .yr { font-weight: 800; color: var(--gold-soft); font-size: 13.5px; }
+  .tl-item .tx { font-size: 13.5px; color: var(--muted); }
+
+  /* tips list */
+  ul.tips { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+  ul.tips li { display: flex; gap: 9px; font-size: 13.8px; color: var(--text); }
+  ul.tips li .e { flex: none; }
+
+  .result-actions { display: flex; gap: 10px; margin-top: 16px; }
+  .result-actions .btn { flex: 1; }
+
+  .disclaimer { font-size: 11.5px; color: var(--muted2); text-align: center; margin-top: 16px; line-height: 1.5; }
+
+  /* ---------- History drawer ---------- */
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.55); backdrop-filter: blur(3px); z-index: 60; opacity: 0; pointer-events: none; transition: .25s; }
+  .overlay.show { opacity: 1; pointer-events: auto; }
+  .drawer {
+    position: fixed; top: 0; right: 0; bottom: 0; width: min(400px, 88vw); z-index: 70;
+    background: var(--bg2); border-left: 1px solid var(--line); box-shadow: -20px 0 60px rgba(0,0,0,.5);
+    transform: translateX(100%); transition: transform .3s cubic-bezier(.2,.8,.2,1);
+    display: flex; flex-direction: column;
+  }
+  .drawer.show { transform: none; }
+  .drawer .dh { display: flex; align-items: center; gap: 10px; padding: calc(16px + env(safe-area-inset-top)) 16px 14px; border-bottom: 1px solid var(--line); }
+  .drawer .dh h3 { font-size: 17px; font-weight: 800; }
+  .drawer .dh .spacer { flex: 1; }
+  .drawer .list { overflow-y: auto; padding: 12px; flex: 1; display: flex; flex-direction: column; gap: 10px; }
+  .sess {
+    display: flex; gap: 12px; align-items: center; padding: 10px; border-radius: 14px;
+    background: var(--card); border: 1px solid var(--line); cursor: pointer; transition: .15s;
+  }
+  .sess:hover { background: var(--card-2); border-color: var(--gold); }
+  .sess .thumb { width: 52px; height: 52px; border-radius: 11px; object-fit: cover; flex: none; background: var(--card-2); }
+  .sess .info { flex: 1; min-width: 0; }
+  .sess .info b { display: block; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sess .info span { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+  .sess .del { color: var(--muted2); font-size: 18px; padding: 6px; border: none; background: none; cursor: pointer; border-radius: 8px; }
+  .sess .del:hover { color: #ff8fa8; background: rgba(239,71,111,.12); }
+  .empty-hist { text-align: center; color: var(--muted2); padding: 60px 20px; font-size: 14px; }
+  .empty-hist .big { font-size: 44px; display: block; margin-bottom: 12px; }
+
+  /* ---------- Modal (settings) ---------- */
+  .modal-card {
+    position: fixed; left: 50%; top: 50%; transform: translate(-50%,-46%) scale(.96); z-index: 80;
+    width: min(440px, 92vw); max-height: 86vh; overflow-y: auto; opacity: 0; pointer-events: none; transition: .25s;
+    background: var(--bg2); border: 1px solid var(--line); border-radius: 20px; padding: 22px; box-shadow: var(--shadow);
+  }
+  .modal-card.show { opacity: 1; pointer-events: auto; transform: translate(-50%,-50%) scale(1); }
+  .modal-card h3 { font-size: 19px; font-weight: 800; margin-bottom: 4px; }
+  .modal-card .sub { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
+  label.field { display: block; margin-bottom: 16px; }
+  label.field .lbl { font-size: 13px; font-weight: 700; color: var(--gold-soft); margin-bottom: 7px; display: block; }
+  label.field input, label.field select {
+    width: 100%; padding: 12px 14px; border-radius: 12px; font-family: inherit; font-size: 15px;
+    background: var(--card); border: 1px solid var(--line); color: var(--text);
+  }
+  label.field input:focus, label.field select:focus { outline: none; border-color: var(--gold); }
+  label.field .hint { font-size: 11.5px; color: var(--muted2); margin-top: 6px; line-height: 1.5; }
+  label.field .hint a { color: var(--gold); }
+  .modal-card .row { display: flex; gap: 10px; margin-top: 6px; }
+  .modal-card .row .btn { flex: 1; }
+  .keystat { font-size: 12px; padding: 8px 12px; border-radius: 10px; background: var(--card); border: 1px solid var(--line); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .keystat.ok { color: var(--green); border-color: rgba(95,208,160,.3); }
+  .keystat.no { color: var(--muted); }
+
+  /* toast */
+  .toast {
+    position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%) translateY(20px);
+    background: #111; border: 1px solid var(--line); color: #fff; padding: 12px 18px; border-radius: 12px;
+    font-size: 14px; font-weight: 600; z-index: 90; opacity: 0; pointer-events: none; transition: .25s; box-shadow: var(--shadow);
+    max-width: 90vw; text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.err { border-color: var(--wine-light); }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">🍷</div>
+    <div>
+      <b>와인 렌즈</b>
+      <small>Wine Lens · 라벨 스캔 인포그래픽</small>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <button class="icon-btn badge" id="btnHistory" title="스캔 기록">🗂️<span class="count hidden" id="histCount">0</span></button>
+  <button class="icon-btn" id="btnSettings" title="설정">⚙️</button>
+</header>
+
+<div class="app">
+
+  <!-- ========== CAPTURE SCREEN ========== -->
+  <section class="screen active" id="screen-capture">
+    <div class="hero">
+      <h1>와인 라벨을 찍으면<br><span class="accent">한 잔의 이야기</span>가 펼쳐집니다</h1>
+      <p>빈티지 · 가격대 · 히스토리 · 스토리 · 와이너리 · 테이스팅 · 페어링까지<br>세션별 인포그래픽으로 정리해 드려요.</p>
+    </div>
+
+    <div class="capture-card">
+      <div class="cam-stage" id="camStage">
+        <div class="cam-placeholder" id="camPlaceholder">
+          <div class="big">📷</div>
+          <p>아래 셔터를 누르면 카메라가 켜집니다<br>또는 갤러리에서 사진을 불러오세요</p>
+        </div>
+        <video id="video" playsinline autoplay muted class="hidden"></video>
+        <img id="preview" class="preview hidden" alt="촬영한 라벨">
+        <div class="frame-guide hidden" id="frameGuide"></div>
+      </div>
+
+      <div class="cam-tools" id="camTools">
+        <button class="round-tool" id="btnGallery" title="갤러리">🖼️</button>
+        <button class="shutter" id="btnShutter" title="촬영"></button>
+        <button class="round-tool" id="btnFlip" title="카메라 전환">🔄</button>
+      </div>
+
+      <div class="capture-actions" id="captureActions">
+        <button class="btn btn-ghost" id="btnRetake">↺ 다시 찍기</button>
+        <button class="btn btn-primary" id="btnAnalyze">✨ 분석하기</button>
+      </div>
+    </div>
+
+    <div class="tips-row">
+      <span class="chip">💡 밝은 곳에서</span>
+      <span class="chip">🔍 라벨 정면으로</span>
+      <span class="chip">🚫 반사 피하기</span>
+    </div>
+
+    <p class="disclaimer" style="margin-top:22px">
+      API 키가 없어도 <b style="color:var(--gold-soft)">데모 보기</b>로 인포그래픽을 체험할 수 있어요.<br>
+      <button class="btn btn-ghost" id="btnDemo" style="margin-top:10px;padding:10px 16px;font-size:14px">🍇 데모 인포그래픽 보기</button>
+    </p>
+  </section>
+
+  <!-- ========== LOADING SCREEN ========== -->
+  <section class="screen" id="screen-loading">
+    <div class="loading">
+      <div class="glass"><div class="fill"></div></div>
+      <h2>라벨을 읽는 중…</h2>
+      <div class="step" id="loadStep">사진을 정리하고 있어요</div>
+      <div class="bar"><i></i></div>
+    </div>
+  </section>
+
+  <!-- ========== RESULT SCREEN ========== -->
+  <section class="screen" id="screen-result">
+    <div class="result" id="resultBody"><!-- rendered --></div>
+    <div class="result-actions">
+      <button class="btn btn-ghost" id="btnNewScan">📷 새 스캔</button>
+      <button class="btn btn-gold" id="btnShare">📤 공유</button>
+    </div>
+    <p class="disclaimer">
+      ⚠️ 정보는 라벨 인식 기반 AI 추정으로, 실제 빈티지·가격·평점과 다를 수 있습니다. 구매·시음 전 공식 정보를 확인하세요.
+    </p>
+  </section>
+
+</div>
+
+<!-- ========== History drawer ========== -->
+<div class="overlay" id="overlay"></div>
+<aside class="drawer" id="drawer">
+  <div class="dh">
+    <h3>🗂️ 스캔 기록</h3>
+    <div class="spacer"></div>
+    <button class="icon-btn" id="btnClearAll" title="전체 삭제">🗑️</button>
+    <button class="icon-btn" id="btnCloseDrawer">✕</button>
+  </div>
+  <div class="list" id="histList"></div>
+</aside>
+
+<!-- ========== Settings modal ========== -->
+<div class="modal-card" id="settingsModal">
+  <h3>⚙️ 설정</h3>
+  <p class="sub">Claude 비전 API로 실제 라벨을 인식합니다. 키는 <b>이 브라우저에만</b> 저장되며 서버로 전송되지 않습니다.</p>
+
+  <div class="keystat no" id="keyStat">🔑 API 키가 설정되지 않았어요 (데모 모드)</div>
+
+  <label class="field">
+    <span class="lbl">Anthropic API 키</span>
+    <input type="password" id="apiKeyInput" placeholder="sk-ant-..." autocomplete="off">
+    <span class="hint">
+      <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>에서 발급.
+      브라우저에서 직접 호출하므로 개인용 키만 사용하세요.
+    </span>
+  </label>
+
+  <label class="field">
+    <span class="lbl">인식 모델</span>
+    <select id="modelSelect">
+      <option value="claude-sonnet-5">Claude Sonnet 5 (권장 · 빠름)</option>
+      <option value="claude-opus-4-8">Claude Opus 4.8 (정밀)</option>
+      <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 (저비용)</option>
+    </select>
+  </label>
+
+  <div class="row">
+    <button class="btn btn-ghost" id="btnSettingsCancel">닫기</button>
+    <button class="btn btn-primary" id="btnSaveKey">저장</button>
+  </div>
+</div>
+
+<input type="file" id="fileInput" accept="image/*" capture="environment" class="hidden">
+<canvas id="canvas" class="hidden"></canvas>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+/* =========================================================
+   와인 렌즈 — 자체 완결형 라벨 스캔 인포그래픽 앱
+   - 카메라/갤러리 촬영 → Claude 비전으로 인식 → 인포그래픽
+   - 세션(스캔)별 localStorage 저장 + 히스토리
+   ========================================================= */
+
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => document.querySelectorAll(s);
+
+const store = {
+  key:   () => localStorage.getItem('wl_apikey') || '',
+  model: () => localStorage.getItem('wl_model') || 'claude-sonnet-5',
+  setKey:   (v) => v ? localStorage.setItem('wl_apikey', v) : localStorage.removeItem('wl_apikey'),
+  setModel: (v) => localStorage.setItem('wl_model', v),
+  sessions: () => { try { return JSON.parse(localStorage.getItem('wl_sessions') || '[]'); } catch { return []; } },
+  saveSessions: (arr) => localStorage.setItem('wl_sessions', JSON.stringify(arr)),
+};
+
+let stream = null;           // MediaStream
+let facing = 'environment';  // camera facing
+let capturedDataUrl = null;  // full-res preview (data URL)
+let capturedForApi = null;   // downsized base64 (no prefix)
+
+/* ---------- Screen switching ---------- */
+function show(id) {
+  $$('.screen').forEach(s => s.classList.remove('active'));
+  $('#screen-' + id).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ---------- Toast ---------- */
+let toastT;
+function toast(msg, isErr) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.toggle('err', !!isErr);
+  t.classList.add('show');
+  clearTimeout(toastT);
+  toastT = setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+/* ================= CAMERA ================= */
+async function startCamera() {
+  stopCamera();
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: facing }, width: { ideal: 1920 }, height: { ideal: 1440 } },
+      audio: false,
+    });
+    const v = $('#video');
+    v.srcObject = stream;
+    v.classList.remove('hidden');
+    $('#preview').classList.add('hidden');
+    $('#camPlaceholder').classList.add('hidden');
+    $('#frameGuide').classList.remove('hidden');
+    await v.play().catch(() => {});
+  } catch (e) {
+    toast('카메라를 열 수 없어요. 갤러리에서 사진을 선택해 주세요.', true);
+    $('#fileInput').click();
+  }
+}
+function stopCamera() {
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  const v = $('#video');
+  if (v) { v.srcObject = null; }
+}
+
+/* Capture current video frame */
+function captureFrame() {
+  const v = $('#video');
+  if (!v.videoWidth) { toast('카메라가 아직 준비되지 않았어요.', true); return; }
+  const canvas = $('#canvas');
+  canvas.width = v.videoWidth;
+  canvas.height = v.videoHeight;
+  canvas.getContext('2d').drawImage(v, 0, 0);
+  setCaptured(canvas.toDataURL('image/jpeg', 0.92));
+  stopCamera();
+}
+
+/* Set captured image (from camera or file) and prep API-size copy */
+function setCaptured(dataUrl) {
+  capturedDataUrl = dataUrl;
+  const img = $('#preview');
+  img.src = dataUrl;
+  img.classList.remove('hidden');
+  $('#video').classList.add('hidden');
+  $('#camPlaceholder').classList.add('hidden');
+  $('#frameGuide').classList.add('hidden');
+  $('#camTools').classList.add('hidden');
+  $('#captureActions').classList.add('show');
+
+  // build downsized base64 for API (max 1280px)
+  const tmp = new Image();
+  tmp.onload = () => {
+    const max = 1280;
+    let { width: w, height: h } = tmp;
+    if (Math.max(w, h) > max) {
+      const r = max / Math.max(w, h); w = Math.round(w * r); h = Math.round(h * r);
+    }
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    c.getContext('2d').drawImage(tmp, 0, 0, w, h);
+    capturedForApi = c.toDataURL('image/jpeg', 0.82).split(',')[1];
+  };
+  tmp.src = dataUrl;
+}
+
+function resetCapture() {
+  capturedDataUrl = null; capturedForApi = null;
+  $('#preview').classList.add('hidden');
+  $('#captureActions').classList.remove('show');
+  $('#camTools').classList.remove('hidden');
+  $('#camPlaceholder').classList.remove('hidden');
+}
+
+/* ================= ANALYSIS ================= */
+const LOAD_STEPS = [
+  '사진을 정리하고 있어요',
+  '라벨의 글자를 읽는 중',
+  '와이너리와 빈티지를 조회하는 중',
+  '히스토리와 스토리를 엮는 중',
+  '테이스팅 노트를 정리하는 중',
+  '인포그래픽을 그리는 중',
+];
+let loadTimer;
+function runLoadSteps() {
+  let i = 0;
+  $('#loadStep').textContent = LOAD_STEPS[0];
+  clearInterval(loadTimer);
+  loadTimer = setInterval(() => {
+    i = Math.min(i + 1, LOAD_STEPS.length - 1);
+    $('#loadStep').textContent = LOAD_STEPS[i];
+  }, 1600);
+}
+
+async function analyze() {
+  if (!capturedForApi) { toast('먼저 라벨을 촬영하거나 불러오세요.', true); return; }
+  show('loading');
+  runLoadSteps();
+
+  const key = store.key();
+  try {
+    let data;
+    if (key) {
+      data = await callClaude(key, store.model(), capturedForApi);
+    } else {
+      await new Promise(r => setTimeout(r, 2600));
+      data = DEMO_DATA;
+      toast('데모 모드입니다. 실제 인식은 설정에서 API 키를 등록하세요.');
+    }
+    clearInterval(loadTimer);
+
+    if (data && data.found === false) {
+      toast(data.reason || '라벨을 인식하지 못했어요. 더 선명한 사진으로 다시 시도해 주세요.', true);
+      show('capture');
+      return;
+    }
+    const session = saveSession(data, capturedDataUrl);
+    renderResult(session);
+    show('result');
+  } catch (e) {
+    clearInterval(loadTimer);
+    console.error(e);
+    toast('분석 중 오류: ' + (e.message || e), true);
+    show('capture');
+  }
+}
+
+/* ---------- Claude vision call ---------- */
+const SYSTEM_PROMPT =
+`당신은 세계 와인 전문가(소믈리에 겸 와인 역사가)입니다. 제공된 와인 라벨 사진을 분석해
+와인 애호가에게 유용한 정보를 한국어로 정리합니다. 라벨에서 읽히지 않는 사실은 일반적인
+와인 지식과 해당 생산자/지역/품종의 특성으로 합리적으로 추정하되, 불확실하면 겸손하게 표현합니다.
+반드시 아래 JSON 스키마 하나만 출력하고, 코드펜스나 다른 텍스트는 절대 붙이지 마세요.`;
+
+const JSON_SCHEMA = `{
+  "found": true,                       // 라벨을 와인으로 인식했으면 true, 아니면 false
+  "reason": "",                        // found=false일 때 이유
+  "confidence": "high|medium|low",     // 라벨 인식 확신도
+  "name": "와인명(라벨 표기 그대로)",
+  "producer": "생산자/와이너리 이름",
+  "type": "레드|화이트|로제|스파클링|디저트|주정강화 등",
+  "vintage": "빈티지 연도 또는 'NV'/미상",
+  "region": "지역/아펠라시옹",
+  "country": "국가",
+  "grapes": ["주요 포도 품종", "..."],
+  "alcohol": "도수 예: 13.5%",
+  "priceRange": "예상 소매가 범위(원화), 예: 3~5만원",
+  "priceNote": "가격 관련 한 줄 코멘트(가성비/희소성 등)",
+  "body": 0, "tannin": 0, "acidity": 0, "sweetness": 0,  // 0~100 정수, 화이트는 tannin 낮게
+  "tastingNotes": "향과 맛 묘사 2~3문장",
+  "history": [ {"year":"연도/시기","text":"사건"}, ... ],  // 와인/생산자 히스토리 2~4개
+  "story": "이 와인/빈티지에 얽힌 흥미로운 스토리 2~3문장",
+  "winery": "와이너리 소개 2~3문장(설립, 규모, 철학, 유명세)",
+  "foodPairing": ["🥩 음식1","🧀 음식2","..."],  // 이모지 포함 3~5개
+  "servingTemp": "권장 서빙 온도 예: 16~18℃",
+  "decant": "디캔팅 권장 여부/시간",
+  "aging": "적정 음용 시기/숙성 잠재력",
+  "tips": ["와인 애호가를 위한 실전 팁 3~4개(구매/보관/서빙/유사 와인 추천 등)"]
+}`;
+
+async function callClaude(key, model, base64) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: 2200,
+      system: SYSTEM_PROMPT,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64 } },
+          { type: 'text', text: `이 와인 라벨을 분석해 다음 JSON 스키마로만 응답하세요.\n\n${JSON_SCHEMA}` },
+        ],
+      }],
+    }),
+  });
+
+  if (!res.ok) {
+    let msg = `API 오류 (${res.status})`;
+    try { const j = await res.json(); if (j.error?.message) msg += ': ' + j.error.message; } catch {}
+    if (res.status === 401) msg = 'API 키가 올바르지 않아요. 설정을 확인하세요.';
+    throw new Error(msg);
+  }
+  const j = await res.json();
+  const text = (j.content || []).map(c => c.text || '').join('').trim();
+  return parseJson(text);
+}
+
+function parseJson(text) {
+  // strip code fences, grab first {...} block
+  let t = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+  const s = t.indexOf('{'), e = t.lastIndexOf('}');
+  if (s !== -1 && e !== -1) t = t.slice(s, e + 1);
+  return JSON.parse(t);
+}
+
+/* ================= SESSIONS ================= */
+function saveSession(data, photo) {
+  const sessions = store.sessions();
+  const session = {
+    id: 's' + sessions.length + '_' + performance.now().toString(36).replace('.', ''),
+    at: new Date().toISOString(),
+    photo: photo || '',
+    data,
+  };
+  sessions.unshift(session);
+  if (sessions.length > 40) sessions.length = 40; // cap
+  store.saveSessions(sessions);
+  updateHistBadge();
+  return session;
+}
+function deleteSession(id) {
+  store.saveSessions(store.sessions().filter(s => s.id !== id));
+  renderHistory(); updateHistBadge();
+}
+function updateHistBadge() {
+  const n = store.sessions().length;
+  const b = $('#histCount');
+  b.textContent = n;
+  b.classList.toggle('hidden', n === 0);
+}
+
+/* ================= RENDER RESULT ================= */
+function esc(s) { return String(s ?? '').replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m])); }
+
+function statBar(label, val, unit) {
+  const v = Math.max(0, Math.min(100, Number(val) || 0));
+  return `<div class="stat"><div class="lab"><span>${esc(label)}</span><b>${esc(unit || '')}</b></div>
+    <div class="track"><i style="width:${v}%"></i></div></div>`;
+}
+
+function renderResult(session) {
+  const d = session.data || {};
+  const confMap = { high: '높음', medium: '보통', low: '낮음' };
+  const confClass = d.confidence === 'low' ? 'low' : '';
+  const grapes = (d.grapes || []).map(g => `<span class="pill"><span class="e">🍇</span>${esc(g)}</span>`).join('') || '<span class="pill muted">정보 없음</span>';
+  const pairing = (d.foodPairing || []).map(f => `<span class="pill">${esc(f)}</span>`).join('') || '<span class="pill muted">정보 없음</span>';
+  const history = (d.history || []).map(h => `<div class="tl-item"><span class="yr">${esc(h.year)}</span><div class="tx">${esc(h.text)}</div></div>`).join('') || '<p class="muted">기록 정보가 없습니다.</p>';
+  const tips = (d.tips || []).map(t => `<li><span class="e">✨</span><span>${esc(t)}</span></li>`).join('') || '<li class="muted">추가 팁이 없습니다.</li>';
+
+  const bodyStats =
+    statBar('바디 Body', d.body, d.body >= 66 ? '풀' : d.body >= 33 ? '미디엄' : '라이트') +
+    statBar('탄닌 Tannin', d.tannin, d.tannin >= 66 ? '강함' : d.tannin >= 33 ? '중간' : '부드러움') +
+    statBar('산도 Acidity', d.acidity, d.acidity >= 66 ? '높음' : d.acidity >= 33 ? '중간' : '낮음') +
+    statBar('당도 Sweetness', d.sweetness, d.sweetness >= 66 ? '스위트' : d.sweetness >= 33 ? '오프드라이' : '드라이');
+
+  $('#resultBody').innerHTML = `
+    <div class="ig-hero">
+      ${session.photo ? `<img class="photo" src="${session.photo}" alt="">` : ''}
+      <div class="inner">
+        <div class="ig-badges">
+          ${d.type ? `<span class="tag type">🍷 ${esc(d.type)}</span>` : ''}
+          <span class="tag conf ${confClass}">인식 확신도 ${confMap[d.confidence] || '보통'}</span>
+        </div>
+        <h2>${esc(d.name || '이름 미상 와인')}</h2>
+        ${d.producer ? `<div class="producer">${esc(d.producer)}</div>` : ''}
+        <div class="meta">
+          <div class="m"><span>빈티지</span><b>${esc(d.vintage || '—')}</b></div>
+          <div class="m"><span>지역</span><b>${esc(d.region || d.country || '—')}</b></div>
+          <div class="m"><span>도수</span><b>${esc(d.alcohol || '—')}</b></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="panel">
+        <h3><span class="e">💰</span> 예상 가격대</h3>
+        <div class="price-big">${esc(d.priceRange || '정보 없음')}</div>
+        ${d.priceNote ? `<div class="price-sub">${esc(d.priceNote)}</div>` : ''}
+      </div>
+      <div class="panel">
+        <h3><span class="e">🌍</span> 원산지</h3>
+        <p><b>${esc(d.country || '—')}</b></p>
+        <p class="muted">${esc(d.region || '')}</p>
+      </div>
+
+      <div class="panel full">
+        <h3><span class="e">📊</span> 맛의 프로필</h3>
+        ${bodyStats}
+      </div>
+
+      <div class="panel full">
+        <h3><span class="e">🍇</span> 포도 품종</h3>
+        <div class="pills">${grapes}</div>
+      </div>
+
+      <div class="panel full">
+        <h3><span class="e">👃</span> 테이스팅 노트</h3>
+        <p>${esc(d.tastingNotes || '정보 없음')}</p>
+      </div>
+
+      <div class="panel full">
+        <h3><span class="e">🍽️</span> 음식 페어링</h3>
+        <div class="pills">${pairing}</div>
+        <div class="grid" style="margin-top:12px;gap:8px">
+          <div class="panel" style="padding:11px 13px"><h3 style="margin-bottom:5px"><span class="e">🌡️</span> 서빙</h3><p>${esc(d.servingTemp || '—')}</p></div>
+          <div class="panel" style="padding:11px 13px"><h3 style="margin-bottom:5px"><span class="e">🫙</span> 디캔팅</h3><p>${esc(d.decant || '—')}</p></div>
+        </div>
+      </div>
+
+      <div class="panel full">
+        <h3><span class="e">🕰️</span> 히스토리</h3>
+        <div class="timeline">${history}</div>
+      </div>
+
+      <div class="panel full">
+        <h3><span class="e">📖</span> 스토리</h3>
+        <p>${esc(d.story || '정보 없음')}</p>
+      </div>
+
+      <div class="panel full">
+        <h3><span class="e">🏰</span> 와이너리</h3>
+        <p>${esc(d.winery || '정보 없음')}</p>
+      </div>
+
+      <div class="panel full">
+        <h3><span class="e">⏳</span> 음용 시기 · 숙성</h3>
+        <p>${esc(d.aging || '정보 없음')}</p>
+      </div>
+
+      <div class="panel full">
+        <h3><span class="e">💡</span> 애호가를 위한 팁</h3>
+        <ul class="tips">${tips}</ul>
+      </div>
+    </div>
+  `;
+  currentSession = session;
+}
+let currentSession = null;
+
+/* ================= HISTORY UI ================= */
+function fmtDate(iso) {
+  try {
+    const dt = new Date(iso);
+    return `${dt.getFullYear()}.${String(dt.getMonth()+1).padStart(2,'0')}.${String(dt.getDate()).padStart(2,'0')} ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
+  } catch { return ''; }
+}
+function renderHistory() {
+  const list = $('#histList');
+  const sessions = store.sessions();
+  if (!sessions.length) {
+    list.innerHTML = `<div class="empty-hist"><span class="big">🍷</span>아직 스캔한 와인이 없어요.<br>첫 라벨을 찍어보세요!</div>`;
+    return;
+  }
+  list.innerHTML = sessions.map(s => {
+    const d = s.data || {};
+    return `<div class="sess" data-id="${s.id}">
+      ${s.photo ? `<img class="thumb" src="${s.photo}" alt="">` : `<div class="thumb" style="display:grid;place-items:center;font-size:22px">🍷</div>`}
+      <div class="info">
+        <b>${esc(d.name || '이름 미상 와인')}</b>
+        <span>${esc(d.producer || '')}${d.vintage ? ' · ' + esc(d.vintage) : ''}</span>
+        <span style="color:var(--muted2);font-size:11px">${fmtDate(s.at)}</span>
+      </div>
+      <button class="del" data-del="${s.id}" title="삭제">🗑️</button>
+    </div>`;
+  }).join('');
+}
+function openDrawer() { renderHistory(); $('#overlay').classList.add('show'); $('#drawer').classList.add('show'); }
+function closeDrawer() { $('#drawer').classList.remove('show'); if (!$('#settingsModal').classList.contains('show')) $('#overlay').classList.remove('show'); }
+
+/* ================= SETTINGS UI ================= */
+function openSettings() {
+  $('#apiKeyInput').value = store.key();
+  $('#modelSelect').value = store.model();
+  refreshKeyStat();
+  $('#overlay').classList.add('show');
+  $('#settingsModal').classList.add('show');
+}
+function closeSettings() { $('#settingsModal').classList.remove('show'); if (!$('#drawer').classList.contains('show')) $('#overlay').classList.remove('show'); }
+function refreshKeyStat() {
+  const el = $('#keyStat');
+  if (store.key()) { el.className = 'keystat ok'; el.textContent = '✅ API 키가 설정되어 실제 인식이 작동합니다'; }
+  else { el.className = 'keystat no'; el.textContent = '🔑 API 키가 설정되지 않았어요 (데모 모드)'; }
+}
+
+/* ================= SHARE ================= */
+async function shareResult() {
+  if (!currentSession) return;
+  const d = currentSession.data || {};
+  const text = `🍷 ${d.name || '와인'} ${d.vintage || ''}\n` +
+    `${d.producer || ''} · ${d.region || d.country || ''}\n` +
+    `💰 ${d.priceRange || ''}\n👃 ${d.tastingNotes || ''}\n\n— 와인 렌즈로 스캔`;
+  try {
+    if (navigator.share) { await navigator.share({ title: d.name || '와인 렌즈', text }); }
+    else { await navigator.clipboard.writeText(text); toast('클립보드에 복사했어요!'); }
+  } catch (e) { /* cancelled */ }
+}
+
+/* ================= FILE INPUT ================= */
+function handleFile(file) {
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { toast('이미지 파일을 선택해 주세요.', true); return; }
+  const reader = new FileReader();
+  reader.onload = () => { stopCamera(); setCaptured(reader.result); };
+  reader.readAsDataURL(file);
+}
+
+/* ================= DEMO DATA ================= */
+const DEMO_DATA = {
+  found: true, confidence: 'high',
+  name: 'Château Margaux',
+  producer: 'Château Margaux (샤토 마고)',
+  type: '레드',
+  vintage: '2015',
+  region: '마고 (Margaux), 보르도',
+  country: '프랑스',
+  grapes: ['카베르네 소비뇽', '메를로', '쁘띠 베르도', '카베르네 프랑'],
+  alcohol: '13.5%',
+  priceRange: '90~130만원',
+  priceNote: '보르도 1등급(프리미에 크뤼) 그레이트 빈티지로 투자·수집 가치 높음',
+  body: 88, tannin: 78, acidity: 62, sweetness: 6,
+  tastingNotes: '블랙커런트와 제비꽃, 삼나무·연필심의 우아한 향. 실키한 탄닌과 긴 여운, 완벽한 균형감이 인상적입니다.',
+  history: [
+    { year: '1152', text: '마고 지역에서 와인 재배가 시작된 것으로 기록' },
+    { year: '1855', text: '보르도 그랑 크뤼 등급에서 최고 등급(프리미에 크뤼) 선정' },
+    { year: '2015', text: '보르도의 전설적 빈티지 — 이상적 기후로 완숙한 포도 수확' },
+  ],
+  story: '2015 빈티지는 온화한 봄과 뜨거운 여름이 만든 균형이 돋보이는 해로, 평론가들이 "고전적 마고의 재현"이라 극찬했습니다. 고(故) 폴 퐁탈리에 총괄이 마지막으로 완성한 빈티지 중 하나로도 의미가 깊습니다.',
+  winery: '1152년까지 거슬러 올라가는 유서 깊은 샤토로, 신고전주의 양식의 상징적 건축물로도 유명합니다. 265ha 부지 중 약 100ha에서 포도를 재배하며, 세계에서 가장 존경받는 와인 생산자 중 하나입니다.',
+  foodPairing: ['🥩 숙성 스테이크', '🦆 오리 콩피', '🧀 하드 치즈', '🍄 트러플 요리'],
+  servingTemp: '16~18℃',
+  decant: '음용 1~2시간 전 디캔팅 권장',
+  aging: '지금도 훌륭하나 2030~2050년까지 숙성 잠재력 보유',
+  tips: [
+    '개봉 후 시간이 지날수록 향이 열리니 서두르지 마세요.',
+    '세울 수 없다면 눕혀서 12~14℃ 어두운 곳에 보관하세요.',
+    '비슷한 스타일을 찾는다면 Château Palmer, Pauillac 1등급을 참고하세요.',
+    '영 빈티지는 넓은 보르도 글라스를 사용하면 향이 잘 삽니다.',
+  ],
+};
+
+/* ================= EVENT WIRING ================= */
+$('#btnShutter').addEventListener('click', () => {
+  if (stream) captureFrame();
+  else startCamera();
+});
+$('#btnFlip').addEventListener('click', () => { facing = facing === 'environment' ? 'user' : 'environment'; startCamera(); });
+$('#btnGallery').addEventListener('click', () => $('#fileInput').click());
+$('#fileInput').addEventListener('change', (e) => handleFile(e.target.files[0]));
+$('#btnRetake').addEventListener('click', () => { resetCapture(); startCamera(); });
+$('#btnAnalyze').addEventListener('click', analyze);
+$('#btnDemo').addEventListener('click', () => { capturedForApi = 'demo'; capturedDataUrl = ''; const k = store.key(); store.setKey(''); analyze(); if (k) store.setKey(k); });
+
+$('#btnNewScan').addEventListener('click', () => { resetCapture(); show('capture'); });
+$('#btnShare').addEventListener('click', shareResult);
+
+$('#btnHistory').addEventListener('click', openDrawer);
+$('#btnCloseDrawer').addEventListener('click', closeDrawer);
+$('#btnClearAll').addEventListener('click', () => {
+  if (!store.sessions().length) return;
+  if (confirm('스캔 기록을 모두 삭제할까요?')) { store.saveSessions([]); renderHistory(); updateHistBadge(); }
+});
+$('#histList').addEventListener('click', (e) => {
+  const del = e.target.closest('[data-del]');
+  if (del) { e.stopPropagation(); deleteSession(del.getAttribute('data-del')); return; }
+  const sess = e.target.closest('.sess');
+  if (sess) {
+    const s = store.sessions().find(x => x.id === sess.getAttribute('data-id'));
+    if (s) { renderResult(s); closeDrawer(); show('result'); }
+  }
+});
+
+$('#btnSettings').addEventListener('click', openSettings);
+$('#btnSettingsCancel').addEventListener('click', closeSettings);
+$('#btnSaveKey').addEventListener('click', () => {
+  store.setKey($('#apiKeyInput').value.trim());
+  store.setModel($('#modelSelect').value);
+  refreshKeyStat();
+  toast(store.key() ? '설정을 저장했어요.' : '데모 모드로 전환했어요.');
+  closeSettings();
+});
+
+$('#overlay').addEventListener('click', () => { closeDrawer(); closeSettings(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeDrawer(); closeSettings(); } });
+
+// Stop camera when tab hidden (battery / privacy)
+document.addEventListener('visibilitychange', () => { if (document.hidden) stopCamera(); });
+
+/* ================= INIT ================= */
+updateHistBadge();
+</script>
+</body>
+</html>
