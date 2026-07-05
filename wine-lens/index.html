@@ -3,38 +3,46 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#2a0a12">
+<meta name="theme-color" content="#1c0a11">
 <title>와인 렌즈 — 라벨을 찍으면 와인이 말을 겁니다</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
   :root {
-    --bg: #1a0710;
-    --bg2: #2a0a12;
-    --card: #2e1119;
-    --card-2: #3a1622;
-    --line: #4a2230;
+    /* surfaces */
+    --bg: #170610;
+    --bg2: #241017;
+    --card: #2a121b;
+    --card-2: #351724;
+    --line: #45202e;
+    /* brand */
     --wine: #8e1e3c;
     --wine-light: #c0395c;
-    --gold: #e8c37e;
-    --gold-soft: #f3ddad;
+    --gold: #dca54d;          /* data mark — validated ≥3:1 on card surface */
+    --gold-soft: #edd9ae;
+    --gold-dim: #9a7a45;
     --green: #5fd0a0;
-    --blue: #7cc4e8;
-    --purple: #b490d8;
-    --text: #f6ecec;
-    --muted: #c3a9af;
-    --muted2: #8f7278;
+    /* ink (text tokens — text never wears data color) */
+    --ink-1: #f7eef0;
+    --ink-2: #cbb3ba;
+    --ink-3: #937681;
+    /* chart chrome */
+    --grid: rgba(247,238,240,.09);
+    --track: rgba(220,165,77,.16);   /* lighter step of gold ramp */
+    --hairline: rgba(220,165,77,.32);
     --shadow: 0 18px 50px rgba(0,0,0,.45);
+    --serif: "Noto Serif KR", "Nanum Myeongjo", Georgia, "Times New Roman", serif;
+    --sans: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
   }
 
   html, body { height: 100%; }
   body {
-    font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+    font-family: var(--sans);
     background:
-      radial-gradient(1200px 700px at 15% -10%, #3d0f1e 0%, transparent 55%),
-      radial-gradient(1000px 700px at 110% 10%, #2c1030 0%, transparent 50%),
+      radial-gradient(1200px 700px at 15% -10%, #3a0e1d 0%, transparent 55%),
+      radial-gradient(1000px 700px at 110% 10%, #2a0f2e 0%, transparent 50%),
       var(--bg);
-    color: var(--text);
+    color: var(--ink-1);
     min-height: 100vh;
     line-height: 1.55;
     overflow-x: hidden;
@@ -49,7 +57,7 @@
     display: flex; align-items: center; gap: 12px;
     padding: calc(14px + env(safe-area-inset-top)) 16px 14px;
     max-width: 720px; margin: 0 auto;
-    background: linear-gradient(180deg, rgba(26,7,16,.96) 60%, rgba(26,7,16,0));
+    background: linear-gradient(180deg, rgba(23,6,16,.96) 60%, rgba(23,6,16,0));
     backdrop-filter: blur(8px);
   }
   .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: -.02em; }
@@ -60,7 +68,7 @@
     box-shadow: inset 0 1px 0 rgba(255,255,255,.15), 0 6px 16px rgba(142,30,60,.4);
   }
   .brand b { font-size: 18px; }
-  .brand small { display: block; font-size: 11px; color: var(--muted2); font-weight: 600; letter-spacing: .02em; }
+  .brand small { display: block; font-size: 11px; color: var(--ink-3); font-weight: 600; letter-spacing: .02em; }
   .topbar .spacer { flex: 1; }
   .icon-btn {
     width: 42px; height: 42px; border-radius: 12px; flex: none;
@@ -86,8 +94,8 @@
   .btn:active { transform: scale(.97); }
   .btn-primary { background: linear-gradient(135deg, var(--wine-light), var(--wine)); box-shadow: 0 10px 26px rgba(142,30,60,.45); }
   .btn-primary:hover { filter: brightness(1.08); }
-  .btn-gold { background: linear-gradient(135deg, var(--gold), #cf9f52); color: #3a1608; box-shadow: 0 10px 24px rgba(232,195,126,.3); }
-  .btn-ghost { background: var(--card); border: 1px solid var(--line); color: var(--text); }
+  .btn-gold { background: linear-gradient(135deg, #e9c987, #c99b4a); color: #3a1608; box-shadow: 0 10px 24px rgba(220,165,77,.28); }
+  .btn-ghost { background: var(--card); border: 1px solid var(--line); color: var(--ink-1); }
   .btn-ghost:hover { background: var(--card-2); }
   .btn.block { width: 100%; }
   .btn:disabled { opacity: .5; cursor: not-allowed; }
@@ -101,7 +109,7 @@
   .hero { text-align: center; padding: 26px 6px 10px; }
   .hero h1 { font-size: 27px; font-weight: 900; letter-spacing: -.03em; line-height: 1.25; }
   .hero h1 .accent { background: linear-gradient(120deg, var(--gold-soft), var(--gold)); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .hero p { color: var(--muted); margin-top: 10px; font-size: 14.5px; }
+  .hero p { color: var(--ink-2); margin-top: 10px; font-size: 14.5px; }
 
   .capture-card {
     margin-top: 18px; border-radius: 22px; overflow: hidden;
@@ -114,17 +122,16 @@
   .cam-stage video, .cam-stage img.preview {
     position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
   }
-  .cam-placeholder { text-align: center; color: var(--muted2); padding: 24px; }
+  .cam-placeholder { text-align: center; color: var(--ink-3); padding: 24px; }
   .cam-placeholder .big { font-size: 54px; filter: grayscale(.2); }
   .cam-placeholder p { margin-top: 10px; font-size: 13.5px; }
-  /* label framing guide */
   .frame-guide {
-    position: absolute; inset: 12% 22%; border: 2px dashed rgba(232,195,126,.55);
+    position: absolute; inset: 12% 22%; border: 2px dashed rgba(220,165,77,.55);
     border-radius: 16px; pointer-events: none;
   }
   .frame-guide::after {
     content: "라벨을 이 안에 맞춰주세요"; position: absolute; left: 50%; bottom: -30px; transform: translateX(-50%);
-    white-space: nowrap; font-size: 11.5px; color: rgba(243,221,173,.75); font-weight: 700;
+    white-space: nowrap; font-size: 11.5px; color: rgba(237,217,174,.75); font-weight: 700;
   }
   .cam-tools {
     display: flex; align-items: center; justify-content: center; gap: 22px;
@@ -147,97 +154,206 @@
   .capture-actions .btn { flex: 1; }
 
   .tips-row { display: flex; gap: 8px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
-  .chip { font-size: 12px; color: var(--muted); background: var(--card); border: 1px solid var(--line); padding: 6px 11px; border-radius: 999px; }
+  .chip { font-size: 12px; color: var(--ink-2); background: var(--card); border: 1px solid var(--line); padding: 6px 11px; border-radius: 999px; }
 
   /* ---------- Loading ---------- */
   .loading { text-align: center; padding: 60px 20px; }
-  .glass {
-    width: 90px; height: 90px; margin: 0 auto 22px; position: relative;
-  }
+  .glass { width: 90px; height: 90px; margin: 0 auto 22px; position: relative; }
   .glass .fill {
     position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%);
     width: 46px; height: 46px; border-radius: 0 0 24px 24px;
     background: linear-gradient(180deg, var(--wine-light), var(--wine));
     animation: swirl 1.4s ease-in-out infinite;
   }
-  .glass::before {
-    content: "🍷"; font-size: 84px; position: absolute; inset: 0; display: grid; place-items: center; filter: drop-shadow(0 6px 10px rgba(0,0,0,.4));
-  }
+  .glass::before { content: "🍷"; font-size: 84px; position: absolute; inset: 0; display: grid; place-items: center; filter: drop-shadow(0 6px 10px rgba(0,0,0,.4)); }
   @keyframes swirl { 0%,100%{ transform: translateX(-50%) rotate(-6deg);} 50%{ transform: translateX(-50%) rotate(6deg);} }
   .loading h2 { font-size: 19px; margin-bottom: 8px; }
-  .loading .step { color: var(--muted); font-size: 14px; min-height: 22px; transition: .3s; }
+  .loading .step { color: var(--ink-2); font-size: 14px; min-height: 22px; transition: .3s; }
   .bar { width: 220px; height: 6px; margin: 20px auto 0; border-radius: 999px; background: var(--card-2); overflow: hidden; }
   .bar > i { display: block; height: 100%; width: 40%; border-radius: 999px; background: linear-gradient(90deg, var(--gold), var(--wine-light)); animation: slide 1.3s ease-in-out infinite; }
   @keyframes slide { 0%{ margin-left: -40%; } 100%{ margin-left: 100%; } }
 
-  /* ---------- Result infographic ---------- */
+  /* =====================================================
+     RESULT — infographic design system
+     ===================================================== */
   .result { padding-top: 6px; }
-  .ig-hero {
-    border-radius: 22px; overflow: hidden; box-shadow: var(--shadow);
-    background:
-      linear-gradient(180deg, rgba(20,5,11,.05) 0%, rgba(20,5,11,.75) 78%, rgba(20,5,11,.96) 100%),
-      linear-gradient(135deg, #5c1226, #2a0a12);
-    position: relative; border: 1px solid var(--line);
+
+  /* --- label plate hero --- */
+  .plate {
+    position: relative; border-radius: 20px; overflow: hidden; box-shadow: var(--shadow);
+    background: linear-gradient(160deg, #4a1226 0%, #260a15 62%, #1c0710 100%);
+    border: 1px solid var(--line);
   }
-  .ig-hero .photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .34; }
-  .ig-hero .inner { position: relative; padding: 22px 20px 20px; }
-  .ig-badges { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 12px; }
-  .tag { font-size: 11.5px; font-weight: 800; padding: 5px 10px; border-radius: 999px; letter-spacing: .01em; }
-  .tag.type { background: rgba(232,195,126,.16); color: var(--gold-soft); border: 1px solid rgba(232,195,126,.35); }
-  .tag.conf { background: rgba(95,208,160,.14); color: var(--green); border: 1px solid rgba(95,208,160,.3); }
-  .tag.conf.low { background: rgba(239,71,111,.14); color: #ff8fa8; border-color: rgba(239,71,111,.35); }
-  .ig-hero h2 { font-size: 25px; font-weight: 900; letter-spacing: -.02em; line-height: 1.2; }
-  .ig-hero .producer { color: var(--gold-soft); font-weight: 700; margin-top: 4px; font-size: 15px; }
-  .ig-hero .meta { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 14px; }
-  .ig-hero .meta .m { min-width: 70px; }
-  .ig-hero .meta .m span { display: block; font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
-  .ig-hero .meta .m b { font-size: 17px; color: #fff; }
-
-  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
-  .grid .full { grid-column: 1 / -1; }
-  .panel {
-    background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 16px 16px 15px;
+  .plate .photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .22; filter: saturate(.85); }
+  .plate .veil { position: absolute; inset: 0; background: radial-gradient(120% 90% at 50% 0%, transparent 30%, rgba(18,4,10,.88) 100%); }
+  .plate .frame {
+    position: relative; margin: 10px; padding: 26px 20px 22px; text-align: center;
+    border: 1px solid var(--hairline); border-radius: 14px;
   }
-  .panel h3 { font-size: 13px; color: var(--gold); text-transform: uppercase; letter-spacing: .06em; display: flex; align-items: center; gap: 7px; margin-bottom: 10px; }
-  .panel h3 .e { font-size: 16px; }
-  .panel p { font-size: 14px; color: var(--text); }
-  .panel p.muted { color: var(--muted); }
+  .plate .frame::before {
+    content: ""; position: absolute; inset: 4px; border: 1px solid rgba(220,165,77,.14); border-radius: 11px; pointer-events: none;
+  }
+  .plate .kicker {
+    font-size: 11px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase;
+    color: var(--gold-soft); margin-bottom: 12px;
+  }
+  .plate .orn { display: flex; align-items: center; gap: 10px; justify-content: center; margin: 0 auto 12px; max-width: 240px; }
+  .plate .orn::before, .plate .orn::after { content: ""; flex: 1; height: 1px; background: var(--hairline); }
+  .plate .orn i { width: 5px; height: 5px; background: var(--gold); transform: rotate(45deg); }
+  .plate h2 {
+    font-family: var(--serif); font-weight: 700; font-size: 27px; line-height: 1.22;
+    letter-spacing: .01em; color: var(--ink-1);
+  }
+  .plate .producer { margin-top: 7px; font-size: 13px; font-weight: 600; color: var(--ink-2); letter-spacing: .04em; }
+  .plate .vintage { margin-top: 14px; font-size: 46px; font-weight: 700; letter-spacing: .02em; color: var(--gold-soft); line-height: 1; }
+  .plate .vintage small { display: block; font-size: 10.5px; font-weight: 700; letter-spacing: .3em; color: var(--ink-3); margin-top: 6px; text-transform: uppercase; }
+  .plate .origin { margin-top: 14px; font-size: 13.5px; color: var(--ink-2); }
+  .plate .origin b { color: var(--ink-1); font-weight: 700; }
+  .plate .badges { display: flex; gap: 7px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
+  .tag { font-size: 11px; font-weight: 700; padding: 5px 11px; border-radius: 999px; letter-spacing: .06em; }
+  .tag.type { background: rgba(220,165,77,.13); color: var(--gold-soft); border: 1px solid var(--hairline); }
+  .tag.conf { background: rgba(95,208,160,.1); color: var(--green); border: 1px solid rgba(95,208,160,.3); }
+  .tag.conf.low { background: rgba(239,71,111,.1); color: #ff8fa8; border-color: rgba(239,71,111,.35); }
 
-  /* price gauge */
-  .price-big { font-size: 26px; font-weight: 900; color: var(--gold-soft); }
-  .price-sub { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  /* --- KPI row --- */
+  .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px; }
+  .kpi { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 13px 12px 12px; text-align: center; }
+  .kpi .k-label { font-size: 10.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
+  .kpi .k-value { margin-top: 5px; font-size: 17px; font-weight: 800; color: var(--ink-1); letter-spacing: -.01em; line-height: 1.25; }
+  .kpi .k-sub { margin-top: 2px; font-size: 11px; color: var(--ink-3); }
 
-  /* stat bars */
-  .stat { margin-top: 11px; }
-  .stat:first-of-type { margin-top: 4px; }
-  .stat .lab { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--muted); margin-bottom: 5px; }
-  .stat .lab b { color: var(--text); font-weight: 700; }
-  .track { height: 8px; border-radius: 999px; background: var(--card-2); overflow: hidden; }
-  .track > i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--wine), var(--wine-light)); transition: width .6s cubic-bezier(.2,.7,.3,1); }
+  /* --- cards & section headers --- */
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 18px 18px 17px; margin-top: 12px; }
+  .sec { display: flex; align-items: baseline; gap: 10px; margin-bottom: 15px; }
+  .sec .en { font-size: 10.5px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--gold); white-space: nowrap; }
+  .sec .ko { font-size: 15px; font-weight: 800; color: var(--ink-1); white-space: nowrap; }
+  .sec::after { content: ""; flex: 1; height: 1px; background: var(--grid); transform: translateY(-3px); }
+  .card p.body { font-size: 14px; color: var(--ink-2); line-height: 1.75; }
+  .card p.body b, .card p.body strong { color: var(--ink-1); }
 
-  /* grape / pairing pills */
+  /* --- taste profile scales --- */
+  .scale { padding: 11px 0 13px; }
+  .scale + .scale { border-top: 1px solid var(--grid); }
+  .scale-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 9px; }
+  .scale-head .name { font-size: 13px; font-weight: 700; color: var(--ink-1); }
+  .scale-head .name small { font-size: 10px; font-weight: 600; letter-spacing: .1em; color: var(--ink-3); margin-left: 6px; text-transform: uppercase; }
+  .scale-head .read { font-size: 12.5px; font-weight: 700; color: var(--gold-soft); }
+  .scale-track { position: relative; height: 14px; }
+  .scale-track .rail { position: absolute; left: 0; right: 0; top: 5px; height: 4px; border-radius: 999px; background: var(--track); }
+  .scale-track .tick { position: absolute; top: 3px; width: 1px; height: 8px; background: var(--grid); }
+  .scale-track .fill { position: absolute; left: 0; top: 5px; height: 4px; border-radius: 999px; background: var(--gold); transition: width .7s cubic-bezier(.2,.7,.3,1); }
+  .scale-track .dot {
+    position: absolute; top: 50%; width: 12px; height: 12px; border-radius: 50%;
+    background: var(--gold); border: 2px solid var(--card); box-shadow: 0 0 0 1px rgba(220,165,77,.35);
+    transform: translate(-50%, -50%); transition: left .7s cubic-bezier(.2,.7,.3,1);
+  }
+  .scale-anchors { display: flex; justify-content: space-between; margin-top: 6px; font-size: 10.5px; color: var(--ink-3); font-weight: 600; letter-spacing: .04em; }
+
+  /* --- price tier meter --- */
+  .price-lead { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+  .price-lead .val { font-size: 27px; font-weight: 800; color: var(--ink-1); letter-spacing: -.01em; }
+  .price-lead .note { font-size: 12.5px; color: var(--ink-2); }
+  .tiers { display: flex; gap: 2px; margin-top: 13px; }
+  .tiers .seg { flex: 1; height: 8px; background: var(--track); }
+  .tiers .seg.on { background: var(--gold); }
+  .tiers .seg:first-child { border-radius: 999px 0 0 999px; }
+  .tiers .seg:last-child { border-radius: 0 999px 999px 0; }
+  .tier-labels { display: flex; margin-top: 7px; }
+  .tier-labels span { flex: 1; text-align: center; font-size: 10px; color: var(--ink-3); font-weight: 600; letter-spacing: .02em; }
+  .tier-labels span.on { color: var(--gold-soft); font-weight: 800; }
+
+  /* --- drink window band --- */
+  .window { position: relative; height: 58px; margin-top: 8px; }
+  .window .rail { position: absolute; left: 0; right: 0; top: 28px; height: 6px; border-radius: 999px; background: var(--track); }
+  .window .band { position: absolute; top: 28px; height: 6px; border-radius: 999px; background: linear-gradient(90deg, rgba(220,165,77,.45), var(--gold) 55%, rgba(220,165,77,.45)); }
+  .window .peak {
+    position: absolute; top: 31px; width: 11px; height: 11px; background: var(--gold-soft);
+    transform: translate(-50%, -50%) rotate(45deg); border: 2px solid var(--card); box-shadow: 0 0 0 1px var(--hairline);
+  }
+  .window .peak-label { position: absolute; top: 2px; transform: translateX(-50%); font-size: 10.5px; font-weight: 800; color: var(--gold-soft); letter-spacing: .04em; white-space: nowrap; }
+  .window .peak-label::after { content: ""; position: absolute; left: 50%; top: 15px; width: 1px; height: 8px; background: var(--hairline); }
+  .window .now { position: absolute; top: 22px; width: 1px; height: 18px; background: var(--ink-2); }
+  .window .now-label { position: absolute; top: 44px; transform: translateX(-50%); font-size: 10px; font-weight: 700; color: var(--ink-2); }
+  .window .yr { position: absolute; top: 44px; font-size: 10.5px; color: var(--ink-3); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .window .yr.start { left: 0; }
+  .window .yr.end { right: 0; }
+  .aging-text { margin-top: 10px; font-size: 12.5px; color: var(--ink-2); }
+
+  /* --- serving row --- */
+  .serve-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .serve { background: var(--card-2); border: 1px solid var(--line); border-radius: 14px; padding: 12px 13px; }
+  .serve .s-label { font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+  .serve .s-value { margin-top: 4px; font-size: 14.5px; font-weight: 800; color: var(--ink-1); }
+  .serve .s-sub { font-size: 11.5px; color: var(--ink-2); margin-top: 2px; line-height: 1.5; }
+  .temp-scale { position: relative; height: 26px; margin-top: 9px; }
+  .temp-scale .rail { position: absolute; left: 0; right: 0; top: 4px; height: 4px; border-radius: 999px; background: var(--track); }
+  .temp-scale .band { position: absolute; top: 4px; height: 4px; border-radius: 999px; background: var(--gold); }
+  .temp-scale .lo, .temp-scale .hi { position: absolute; top: 14px; font-size: 9.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .temp-scale .lo { left: 0; } .temp-scale .hi { right: 0; }
+
+  /* --- pills (grapes) --- */
   .pills { display: flex; flex-wrap: wrap; gap: 7px; }
-  .pill { font-size: 13px; padding: 7px 12px; border-radius: 12px; background: var(--card-2); border: 1px solid var(--line); }
-  .pill .e { margin-right: 5px; }
+  .pill {
+    font-size: 12.5px; font-weight: 600; padding: 7px 13px; border-radius: 999px;
+    background: var(--card-2); border: 1px solid var(--line); color: var(--ink-1);
+    display: inline-flex; align-items: center; gap: 7px;
+  }
+  .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--gold); flex: none; }
 
-  /* timeline */
-  .timeline { position: relative; margin-left: 6px; padding-left: 18px; }
-  .timeline::before { content: ""; position: absolute; left: 4px; top: 4px; bottom: 4px; width: 2px; background: linear-gradient(var(--wine-light), transparent); }
-  .tl-item { position: relative; padding-bottom: 14px; }
-  .tl-item:last-child { padding-bottom: 0; }
-  .tl-item::before { content: ""; position: absolute; left: -18px; top: 5px; width: 9px; height: 9px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 3px rgba(232,195,126,.18); }
-  .tl-item .yr { font-weight: 800; color: var(--gold-soft); font-size: 13.5px; }
-  .tl-item .tx { font-size: 13.5px; color: var(--muted); }
+  /* --- pairing grid --- */
+  .pair-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .pair {
+    display: flex; align-items: center; gap: 10px; padding: 11px 12px;
+    background: var(--card-2); border: 1px solid var(--line); border-radius: 13px;
+  }
+  .pair .pe { font-size: 20px; flex: none; width: 34px; height: 34px; display: grid; place-items: center; background: rgba(220,165,77,.1); border-radius: 10px; }
+  .pair .pt { font-size: 13px; font-weight: 600; color: var(--ink-1); line-height: 1.35; }
 
-  /* tips list */
-  ul.tips { list-style: none; display: flex; flex-direction: column; gap: 9px; }
-  ul.tips li { display: flex; gap: 9px; font-size: 13.8px; color: var(--text); }
-  ul.tips li .e { flex: none; }
+  /* --- timeline --- */
+  .timeline { position: relative; margin-left: 3px; padding-left: 20px; }
+  .timeline::before { content: ""; position: absolute; left: 3px; top: 6px; bottom: 6px; width: 1px; background: var(--grid); }
+  .tl-item { position: relative; padding-bottom: 16px; }
+  .tl-item:last-child { padding-bottom: 2px; }
+  .tl-item::before {
+    content: ""; position: absolute; left: -20.5px; top: 6px; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--gold); border: 2px solid var(--card);
+    box-shadow: 0 0 0 1px var(--hairline);
+  }
+  .tl-item .yr { font-size: 12px; font-weight: 800; color: var(--gold-soft); letter-spacing: .06em; font-variant-numeric: tabular-nums; }
+  .tl-item .tx { font-size: 13.5px; color: var(--ink-2); margin-top: 2px; line-height: 1.65; }
 
-  .result-actions { display: flex; gap: 10px; margin-top: 16px; }
+  /* --- editorial (story / winery) --- */
+  .editorial { border-left: 2px solid var(--hairline); padding-left: 14px; }
+  .editorial p { font-size: 14px; color: var(--ink-2); line-height: 1.8; }
+  .editorial p::first-letter { color: var(--gold-soft); font-weight: 700; }
+
+  /* --- numbered tips --- */
+  ol.tips { list-style: none; counter-reset: tip; display: flex; flex-direction: column; }
+  ol.tips li {
+    counter-increment: tip; display: flex; gap: 13px; padding: 11px 0; font-size: 13.5px; color: var(--ink-2); line-height: 1.65;
+  }
+  ol.tips li + li { border-top: 1px solid var(--grid); }
+  ol.tips li::before {
+    content: counter(tip, decimal-leading-zero); flex: none;
+    font-size: 12px; font-weight: 800; color: var(--gold); letter-spacing: .05em;
+    font-variant-numeric: tabular-nums; padding-top: 1.5px;
+  }
+
+  /* --- colophon --- */
+  .colophon { text-align: center; margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--grid); }
+  .colophon .wm { font-size: 10.5px; font-weight: 800; letter-spacing: .3em; color: var(--gold-dim); text-transform: uppercase; }
+  .colophon .meta { margin-top: 5px; font-size: 11px; color: var(--ink-3); }
+
+  .result-actions { display: flex; gap: 10px; margin-top: 18px; }
   .result-actions .btn { flex: 1; }
+  .disclaimer { font-size: 11.5px; color: var(--ink-3); text-align: center; margin-top: 16px; line-height: 1.5; }
 
-  .disclaimer { font-size: 11.5px; color: var(--muted2); text-align: center; margin-top: 16px; line-height: 1.5; }
+  @media (max-width: 400px) {
+    .plate h2 { font-size: 23px; }
+    .plate .vintage { font-size: 40px; }
+    .kpi .k-value { font-size: 15px; }
+    .pair-grid { grid-template-columns: 1fr; }
+  }
 
   /* ---------- History drawer ---------- */
   .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.55); backdrop-filter: blur(3px); z-index: 60; opacity: 0; pointer-events: none; transition: .25s; }
@@ -261,10 +377,10 @@
   .sess .thumb { width: 52px; height: 52px; border-radius: 11px; object-fit: cover; flex: none; background: var(--card-2); }
   .sess .info { flex: 1; min-width: 0; }
   .sess .info b { display: block; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .sess .info span { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
-  .sess .del { color: var(--muted2); font-size: 18px; padding: 6px; border: none; background: none; cursor: pointer; border-radius: 8px; }
+  .sess .info span { font-size: 12px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+  .sess .del { color: var(--ink-3); font-size: 18px; padding: 6px; border: none; background: none; cursor: pointer; border-radius: 8px; }
   .sess .del:hover { color: #ff8fa8; background: rgba(239,71,111,.12); }
-  .empty-hist { text-align: center; color: var(--muted2); padding: 60px 20px; font-size: 14px; }
+  .empty-hist { text-align: center; color: var(--ink-3); padding: 60px 20px; font-size: 14px; }
   .empty-hist .big { font-size: 44px; display: block; margin-bottom: 12px; }
 
   /* ---------- Modal (settings) ---------- */
@@ -275,21 +391,21 @@
   }
   .modal-card.show { opacity: 1; pointer-events: auto; transform: translate(-50%,-50%) scale(1); }
   .modal-card h3 { font-size: 19px; font-weight: 800; margin-bottom: 4px; }
-  .modal-card .sub { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
+  .modal-card .sub { color: var(--ink-2); font-size: 13px; margin-bottom: 18px; }
   label.field { display: block; margin-bottom: 16px; }
   label.field .lbl { font-size: 13px; font-weight: 700; color: var(--gold-soft); margin-bottom: 7px; display: block; }
   label.field input, label.field select {
     width: 100%; padding: 12px 14px; border-radius: 12px; font-family: inherit; font-size: 15px;
-    background: var(--card); border: 1px solid var(--line); color: var(--text);
+    background: var(--card); border: 1px solid var(--line); color: var(--ink-1);
   }
   label.field input:focus, label.field select:focus { outline: none; border-color: var(--gold); }
-  label.field .hint { font-size: 11.5px; color: var(--muted2); margin-top: 6px; line-height: 1.5; }
+  label.field .hint { font-size: 11.5px; color: var(--ink-3); margin-top: 6px; line-height: 1.5; }
   label.field .hint a { color: var(--gold); }
   .modal-card .row { display: flex; gap: 10px; margin-top: 6px; }
   .modal-card .row .btn { flex: 1; }
   .keystat { font-size: 12px; padding: 8px 12px; border-radius: 10px; background: var(--card); border: 1px solid var(--line); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
   .keystat.ok { color: var(--green); border-color: rgba(95,208,160,.3); }
-  .keystat.no { color: var(--muted); }
+  .keystat.no { color: var(--ink-2); }
 
   /* toast */
   .toast {
@@ -626,15 +742,19 @@ const JSON_SCHEMA = `{
   "alcohol": "도수 예: 13.5%",
   "priceRange": "예상 소매가 범위(원화), 예: 3~5만원",
   "priceNote": "가격 관련 한 줄 코멘트(가성비/희소성 등)",
+  "priceTier": 3,                      // 1~5 정수: 1 데일리(~2만원) 2 캐주얼(2~5만) 3 프리미엄(5~15만) 4 파인(15~50만) 5 아이콘(50만+)
   "body": 0, "tannin": 0, "acidity": 0, "sweetness": 0,  // 0~100 정수, 화이트는 tannin 낮게
   "tastingNotes": "향과 맛 묘사 2~3문장",
+  "drinkFrom": 2020,                   // 음용 권장 시작 연도(정수), 미상이면 null
+  "drinkPeak": 2027,                   // 정점 연도(정수), 미상이면 null
+  "drinkUntil": 2035,                  // 음용 권장 마지막 연도(정수), 미상이면 null
   "history": [ {"year":"연도/시기","text":"사건"}, ... ],  // 와인/생산자 히스토리 2~4개
   "story": "이 와인/빈티지에 얽힌 흥미로운 스토리 2~3문장",
   "winery": "와이너리 소개 2~3문장(설립, 규모, 철학, 유명세)",
   "foodPairing": ["🥩 음식1","🧀 음식2","..."],  // 이모지 포함 3~5개
   "servingTemp": "권장 서빙 온도 예: 16~18℃",
   "decant": "디캔팅 권장 여부/시간",
-  "aging": "적정 음용 시기/숙성 잠재력",
+  "aging": "적정 음용 시기/숙성 잠재력 한 줄",
   "tips": ["와인 애호가를 위한 실전 팁 3~4개(구매/보관/서빙/유사 와인 추천 등)"]
 }`;
 
@@ -708,106 +828,225 @@ function updateHistBadge() {
 
 /* ================= RENDER RESULT ================= */
 function esc(s) { return String(s ?? '').replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m])); }
+function clamp01(v) { return Math.max(0, Math.min(100, Number(v) || 0)); }
 
-function statBar(label, val, unit) {
-  const v = Math.max(0, Math.min(100, Number(val) || 0));
-  return `<div class="stat"><div class="lab"><span>${esc(label)}</span><b>${esc(unit || '')}</b></div>
-    <div class="track"><i style="width:${v}%"></i></div></div>`;
+/* anchored taste scale: label + track(ticks/fill/dot) + anchors + direct-labeled reading */
+function scaleRow(nameKo, nameEn, val, anchors, words) {
+  const v = clamp01(val);
+  const read = words[v >= 66 ? 2 : v >= 33 ? 1 : 0];
+  const ticks = [25, 50, 75].map(p => `<span class="tick" style="left:${p}%"></span>`).join('');
+  return `<div class="scale">
+    <div class="scale-head">
+      <span class="name">${esc(nameKo)}<small>${esc(nameEn)}</small></span>
+      <span class="read">${esc(read)}</span>
+    </div>
+    <div class="scale-track">
+      <span class="rail"></span>${ticks}
+      <span class="fill" style="width:${v}%"></span>
+      <span class="dot" style="left:${v}%"></span>
+    </div>
+    <div class="scale-anchors"><span>${esc(anchors[0])}</span><span>${esc(anchors[1])}</span></div>
+  </div>`;
+}
+
+const TIER_NAMES = ['데일리', '캐주얼', '프리미엄', '파인', '아이콘'];
+function priceMeter(tier) {
+  const t = Math.round(Number(tier));
+  if (!(t >= 1 && t <= 5)) return '';
+  const segs = TIER_NAMES.map((_, i) => `<span class="seg${i === t - 1 ? ' on' : ''}"></span>`).join('');
+  const labels = TIER_NAMES.map((n, i) => `<span class="${i === t - 1 ? 'on' : ''}">${n}</span>`).join('');
+  return `<div class="tiers">${segs}</div><div class="tier-labels">${labels}</div>`;
+}
+
+/* drink window band: now-marker + peak diamond on a year axis */
+function drinkWindow(d) {
+  const f = parseInt(d.drinkFrom), p = parseInt(d.drinkPeak), u = parseInt(d.drinkUntil);
+  if (!f || !u || u <= f) return '';
+  const yNow = new Date().getFullYear();
+  const start = Math.min(f, yNow), end = Math.max(u, yNow);
+  const span = end - start;
+  if (span < 1 || span > 120) return '';
+  const pct = (y) => (y - start) / span * 100;
+  const fx = (n) => n.toFixed(1);
+  const peak = (p && p >= f && p <= u) ? p : null;
+  const nowIn = yNow >= start && yNow <= end;
+  const nowPct = pct(yNow);
+  // label collision: the now-label suppresses an end-year label it would overlap
+  const showStartYr = !nowIn || nowPct > 14;
+  const showEndYr = !nowIn || nowPct < 86;
+  const peakPct = peak ? Math.max(9, Math.min(91, pct(peak))) : 0; // keep peak label inside the card
+  return `<div class="window">
+    <span class="rail"></span>
+    <span class="band" style="left:${fx(pct(f))}%;width:${fx((u - f) / span * 100)}%"></span>
+    ${peak ? `<span class="peak" style="left:${fx(pct(peak))}%"></span>
+      <span class="peak-label" style="left:${fx(peakPct)}%">정점 ${peak}</span>` : ''}
+    ${nowIn ? `<span class="now" style="left:${fx(nowPct)}%"></span>
+      <span class="now-label" style="left:${fx(nowPct)}%">지금 ${yNow}</span>` : ''}
+    ${showStartYr ? `<span class="yr start">${start}</span>` : ''}
+    ${showEndYr ? `<span class="yr end">${end}</span>` : ''}
+  </div>`;
+}
+
+/* serving temp band on a 0–22℃ axis, parsed from "16~18℃" style text */
+function tempScale(text) {
+  const m = String(text || '').match(/(\d+(?:\.\d+)?)\s*[~\-–]\s*(\d+(?:\.\d+)?)/);
+  if (!m) return '';
+  const lo = parseFloat(m[1]), hi = parseFloat(m[2]);
+  if (!(lo >= 0 && hi <= 25 && hi > lo)) return '';
+  const MAX = 22;
+  const l = (lo / MAX * 100).toFixed(1), w = ((hi - lo) / MAX * 100).toFixed(1);
+  return `<div class="temp-scale">
+    <span class="rail"></span>
+    <span class="band" style="left:${l}%;width:${w}%"></span>
+    <span class="lo">0℃</span><span class="hi">${MAX}℃</span>
+  </div>`;
+}
+
+function sec(en, ko) {
+  return `<h3 class="sec"><span class="en">${esc(en)}</span><span class="ko">${esc(ko)}</span></h3>`;
 }
 
 function renderResult(session) {
   const d = session.data || {};
   const confMap = { high: '높음', medium: '보통', low: '낮음' };
   const confClass = d.confidence === 'low' ? 'low' : '';
-  const grapes = (d.grapes || []).map(g => `<span class="pill"><span class="e">🍇</span>${esc(g)}</span>`).join('') || '<span class="pill muted">정보 없음</span>';
-  const pairing = (d.foodPairing || []).map(f => `<span class="pill">${esc(f)}</span>`).join('') || '<span class="pill muted">정보 없음</span>';
-  const history = (d.history || []).map(h => `<div class="tl-item"><span class="yr">${esc(h.year)}</span><div class="tx">${esc(h.text)}</div></div>`).join('') || '<p class="muted">기록 정보가 없습니다.</p>';
-  const tips = (d.tips || []).map(t => `<li><span class="e">✨</span><span>${esc(t)}</span></li>`).join('') || '<li class="muted">추가 팁이 없습니다.</li>';
 
-  const bodyStats =
-    statBar('바디 Body', d.body, d.body >= 66 ? '풀' : d.body >= 33 ? '미디엄' : '라이트') +
-    statBar('탄닌 Tannin', d.tannin, d.tannin >= 66 ? '강함' : d.tannin >= 33 ? '중간' : '부드러움') +
-    statBar('산도 Acidity', d.acidity, d.acidity >= 66 ? '높음' : d.acidity >= 33 ? '중간' : '낮음') +
-    statBar('당도 Sweetness', d.sweetness, d.sweetness >= 66 ? '스위트' : d.sweetness >= 33 ? '오프드라이' : '드라이');
+  const grapes = (d.grapes || []).map(g => `<span class="pill">${esc(g)}</span>`).join('')
+    || '<p class="body">품종 정보가 없습니다.</p>';
+  const pairing = (d.foodPairing || []).map(f => {
+    const s = String(f).trim();
+    const m = s.match(/^(\p{Extended_Pictographic}[️‍\p{Extended_Pictographic}]*)\s*(.*)$/u);
+    const emoji = m && m[2] ? m[1] : '🍽️';
+    const label = m && m[2] ? m[2] : s;
+    return `<div class="pair"><span class="pe">${esc(emoji)}</span><span class="pt">${esc(label)}</span></div>`;
+  }).join('') || '<p class="body">페어링 정보가 없습니다.</p>';
+  const history = (d.history || []).map(h =>
+    `<div class="tl-item"><span class="yr">${esc(h.year)}</span><div class="tx">${esc(h.text)}</div></div>`
+  ).join('') || '<p class="body">기록 정보가 없습니다.</p>';
+  const tips = (d.tips || []).map(t => `<li>${esc(t)}</li>`).join('');
+
+  const scales =
+    scaleRow('바디', 'Body', d.body, ['라이트', '풀'], ['라이트', '미디엄', '풀바디']) +
+    scaleRow('탄닌', 'Tannin', d.tannin, ['부드러움', '단단함'], ['부드러움', '중간', '단단함']) +
+    scaleRow('산도', 'Acidity', d.acidity, ['낮음', '높음'], ['낮음', '중간', '높음']) +
+    scaleRow('당도', 'Sweetness', d.sweetness, ['드라이', '스위트'], ['드라이', '오프드라이', '스위트']);
+
+  const win = drinkWindow(d);
+  const temp = tempScale(d.servingTemp);
+  const isNV = !d.vintage || /nv|미상/i.test(String(d.vintage));
 
   $('#resultBody').innerHTML = `
-    <div class="ig-hero">
+    <!-- label plate -->
+    <div class="plate">
       ${session.photo ? `<img class="photo" src="${session.photo}" alt="">` : ''}
-      <div class="inner">
-        <div class="ig-badges">
-          ${d.type ? `<span class="tag type">🍷 ${esc(d.type)}</span>` : ''}
-          <span class="tag conf ${confClass}">인식 확신도 ${confMap[d.confidence] || '보통'}</span>
-        </div>
-        <h2>${esc(d.name || '이름 미상 와인')}</h2>
+      <div class="veil"></div>
+      <div class="frame">
+        <div class="kicker">Wine Lens · Scan Report</div>
         ${d.producer ? `<div class="producer">${esc(d.producer)}</div>` : ''}
-        <div class="meta">
-          <div class="m"><span>빈티지</span><b>${esc(d.vintage || '—')}</b></div>
-          <div class="m"><span>지역</span><b>${esc(d.region || d.country || '—')}</b></div>
-          <div class="m"><span>도수</span><b>${esc(d.alcohol || '—')}</b></div>
+        <div class="orn"><i></i></div>
+        <h2>${esc(d.name || '이름 미상 와인')}</h2>
+        <div class="vintage">${isNV ? 'NV' : esc(d.vintage)}<small>Vintage</small></div>
+        <div class="origin">${d.region ? `<b>${esc(d.region)}</b>` : ''}${d.region && d.country ? ' · ' : ''}${esc(d.country || '')}</div>
+        <div class="badges">
+          ${d.type ? `<span class="tag type">${esc(d.type)} 와인</span>` : ''}
+          <span class="tag conf ${confClass}">인식 확신도 ${confMap[d.confidence] || '보통'}</span>
         </div>
       </div>
     </div>
 
-    <div class="grid">
-      <div class="panel">
-        <h3><span class="e">💰</span> 예상 가격대</h3>
-        <div class="price-big">${esc(d.priceRange || '정보 없음')}</div>
-        ${d.priceNote ? `<div class="price-sub">${esc(d.priceNote)}</div>` : ''}
+    <!-- KPI row -->
+    <div class="kpis">
+      <div class="kpi">
+        <div class="k-label">예상가</div>
+        <div class="k-value">${esc(d.priceRange || '—')}</div>
       </div>
-      <div class="panel">
-        <h3><span class="e">🌍</span> 원산지</h3>
-        <p><b>${esc(d.country || '—')}</b></p>
-        <p class="muted">${esc(d.region || '')}</p>
+      <div class="kpi">
+        <div class="k-label">도수</div>
+        <div class="k-value">${esc(d.alcohol || '—')}</div>
       </div>
+      <div class="kpi">
+        <div class="k-label">정점 시기</div>
+        <div class="k-value">${d.drinkPeak ? esc(d.drinkPeak) : '—'}</div>
+        ${d.drinkPeak ? '<div class="k-sub">음용 최적</div>' : ''}
+      </div>
+    </div>
 
-      <div class="panel full">
-        <h3><span class="e">📊</span> 맛의 프로필</h3>
-        ${bodyStats}
+    <!-- price -->
+    <div class="card">
+      ${sec('Price Position', '가격 포지션')}
+      <div class="price-lead">
+        <span class="val">${esc(d.priceRange || '정보 없음')}</span>
       </div>
+      ${d.priceNote ? `<p class="body" style="font-size:12.5px">${esc(d.priceNote)}</p>` : ''}
+      ${priceMeter(d.priceTier)}
+    </div>
 
-      <div class="panel full">
-        <h3><span class="e">🍇</span> 포도 품종</h3>
-        <div class="pills">${grapes}</div>
-      </div>
+    <!-- taste profile -->
+    <div class="card">
+      ${sec('Taste Profile', '맛 프로필')}
+      ${scales}
+    </div>
 
-      <div class="panel full">
-        <h3><span class="e">👃</span> 테이스팅 노트</h3>
-        <p>${esc(d.tastingNotes || '정보 없음')}</p>
-      </div>
+    <!-- tasting notes -->
+    <div class="card">
+      ${sec('Tasting Notes', '테이스팅 노트')}
+      <div class="editorial"><p>${esc(d.tastingNotes || '정보 없음')}</p></div>
+    </div>
 
-      <div class="panel full">
-        <h3><span class="e">🍽️</span> 음식 페어링</h3>
-        <div class="pills">${pairing}</div>
-        <div class="grid" style="margin-top:12px;gap:8px">
-          <div class="panel" style="padding:11px 13px"><h3 style="margin-bottom:5px"><span class="e">🌡️</span> 서빙</h3><p>${esc(d.servingTemp || '—')}</p></div>
-          <div class="panel" style="padding:11px 13px"><h3 style="margin-bottom:5px"><span class="e">🫙</span> 디캔팅</h3><p>${esc(d.decant || '—')}</p></div>
+    <!-- drink window + serving -->
+    <div class="card">
+      ${sec('Serving Guide', '서빙 가이드')}
+      ${win ? win : ''}
+      ${d.aging ? `<p class="aging-text">${esc(d.aging)}</p>` : ''}
+      <div class="serve-grid" style="margin-top:14px">
+        <div class="serve">
+          <div class="s-label">Temperature</div>
+          <div class="s-value">${esc(d.servingTemp || '—')}</div>
+          ${temp}
+        </div>
+        <div class="serve">
+          <div class="s-label">Decanting</div>
+          <div class="s-sub" style="margin-top:6px">${esc(d.decant || '—')}</div>
         </div>
       </div>
+    </div>
 
-      <div class="panel full">
-        <h3><span class="e">🕰️</span> 히스토리</h3>
-        <div class="timeline">${history}</div>
-      </div>
+    <!-- grapes -->
+    <div class="card">
+      ${sec('Grapes', '포도 품종')}
+      <div class="pills">${grapes}</div>
+    </div>
 
-      <div class="panel full">
-        <h3><span class="e">📖</span> 스토리</h3>
-        <p>${esc(d.story || '정보 없음')}</p>
-      </div>
+    <!-- pairing -->
+    <div class="card">
+      ${sec('Food Pairing', '음식 페어링')}
+      <div class="pair-grid">${pairing}</div>
+    </div>
 
-      <div class="panel full">
-        <h3><span class="e">🏰</span> 와이너리</h3>
-        <p>${esc(d.winery || '정보 없음')}</p>
-      </div>
+    <!-- history -->
+    <div class="card">
+      ${sec('History', '히스토리')}
+      <div class="timeline">${history}</div>
+    </div>
 
-      <div class="panel full">
-        <h3><span class="e">⏳</span> 음용 시기 · 숙성</h3>
-        <p>${esc(d.aging || '정보 없음')}</p>
-      </div>
+    <!-- story -->
+    <div class="card">
+      ${sec('Story', '스토리')}
+      <div class="editorial"><p>${esc(d.story || '정보 없음')}</p></div>
+    </div>
 
-      <div class="panel full">
-        <h3><span class="e">💡</span> 애호가를 위한 팁</h3>
-        <ul class="tips">${tips}</ul>
-      </div>
+    <!-- winery -->
+    <div class="card">
+      ${sec('The Winery', '와이너리')}
+      <div class="editorial"><p>${esc(d.winery || '정보 없음')}</p></div>
+    </div>
+
+    ${tips ? `<div class="card">${sec('Pro Tips', '애호가를 위한 팁')}<ol class="tips">${tips}</ol></div>` : ''}
+
+    <!-- colophon -->
+    <div class="colophon">
+      <div class="wm">Wine Lens</div>
+      <div class="meta">${fmtDate(session.at)} 스캔 · 인식 확신도 ${confMap[d.confidence] || '보통'} · AI 추정 정보</div>
     </div>
   `;
   currentSession = session;
@@ -835,7 +1074,7 @@ function renderHistory() {
       <div class="info">
         <b>${esc(d.name || '이름 미상 와인')}</b>
         <span>${esc(d.producer || '')}${d.vintage ? ' · ' + esc(d.vintage) : ''}</span>
-        <span style="color:var(--muted2);font-size:11px">${fmtDate(s.at)}</span>
+        <span style="color:var(--ink-3);font-size:11px">${fmtDate(s.at)}</span>
       </div>
       <button class="del" data-del="${s.id}" title="삭제">🗑️</button>
     </div>`;
@@ -894,8 +1133,10 @@ const DEMO_DATA = {
   alcohol: '13.5%',
   priceRange: '90~130만원',
   priceNote: '보르도 1등급(프리미에 크뤼) 그레이트 빈티지로 투자·수집 가치 높음',
+  priceTier: 5,
   body: 88, tannin: 78, acidity: 62, sweetness: 6,
   tastingNotes: '블랙커런트와 제비꽃, 삼나무·연필심의 우아한 향. 실키한 탄닌과 긴 여운, 완벽한 균형감이 인상적입니다.',
+  drinkFrom: 2023, drinkPeak: 2035, drinkUntil: 2050,
   history: [
     { year: '1152', text: '마고 지역에서 와인 재배가 시작된 것으로 기록' },
     { year: '1855', text: '보르도 그랑 크뤼 등급에서 최고 등급(프리미에 크뤼) 선정' },
@@ -906,7 +1147,7 @@ const DEMO_DATA = {
   foodPairing: ['🥩 숙성 스테이크', '🦆 오리 콩피', '🧀 하드 치즈', '🍄 트러플 요리'],
   servingTemp: '16~18℃',
   decant: '음용 1~2시간 전 디캔팅 권장',
-  aging: '지금도 훌륭하나 2030~2050년까지 숙성 잠재력 보유',
+  aging: '지금도 훌륭하나 2035년 전후 정점, 2050년까지 숙성 잠재력 보유',
   tips: [
     '개봉 후 시간이 지날수록 향이 열리니 서두르지 마세요.',
     '세울 수 없다면 눕혀서 12~14℃ 어두운 곳에 보관하세요.',
