@@ -285,7 +285,7 @@
               </div>
               <button class="btn sec" id="artClear" style="margin-top:12px;flex:none;width:100%">아트 제거</button>
             </div>
-            <div class="hint" id="artHint">Stable Diffusion+ControlNet 기반 AI 아트 QR을 <b>서버 없이</b> 재현합니다. 업로드한 이미지가 QR 전체에 깔리고, 그 위 도트 패턴으로 스캔됩니다. <b>영상</b>을 올리면 애니메이션 QR이 되고 <b>애니메이션 저장</b>으로 WebM 출력됩니다. (오류정정 <b>H</b> 권장)</div>
+            <div class="hint" id="artHint">LemioCode(AI 아트 QR)의 원리를 <b>서버 없이</b> 재현합니다. 도트를 덮어씌우지 않고, 이미지의 <b>밝기를 모듈별로 조절(멀티플라이·스크린)</b>해 QR을 이미지에 <b>녹여넣습니다</b> — 사진은 그대로 보이고 QR은 밝고 어두운 타일로 새겨집니다. <b>노출도</b>로 선명도↔스캔 균형을 조절하세요. <b>영상·GIF</b>를 올리거나 <b>정적 이미지+애니메이션</b>을 켜면 움직이는 아트 QR이 되고 <b>애니메이션 저장</b>으로 WebM 출력됩니다. (오류정정 <b>H</b> 권장)</div>
           </div>
         </details>
 
@@ -565,7 +565,7 @@
   <footer>
     <div>Aesthetic QR Studio · LemioCode 컨셉을 오픈소스로 재구현 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.04-c</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.04-d</b></div>
   </footer>
 </div>
 
@@ -3410,22 +3410,18 @@ function drawArtMark(g, cx, cy, r, shape){
 // shrinks the dots + fades the bias (more artwork). Finders stay solid.
 function drawArtLayer(g, ox, oy, unit, n, m){
   var area = n*unit;
-  // 1) artwork covers the whole module area — at full strength (no heavy veil).
-  //    "Living photo" (움짤): when animation is on and the media is a STILL image (not a
-  //    video/GIF, which already move), apply a Ken-Burns zoom+drift to the image so it
-  //    visibly moves while the QR marks below stay FIXED → every frame still scans.
-  //    zoom stays ≥1.10 so the ≤0.045 pan never exposes a blank edge.
+  // 1) artwork covers the whole module area at FULL strength — the photo stays fully visible.
+  //    "Living photo" (움짤): a still image that is animating gets a Ken-Burns zoom+drift so it
+  //    visibly moves while the fixed QR modulation below keeps every frame scannable.
   var ok;
-  var artMoving = S.artImg && (S.anim || S.artIsVideo || S.artIsGif);   // any moving art (image/video/gif)
-  var moveImg = S.anim && S.artImg && !S.artIsVideo && !S.artIsGif;      // still image → Ken-Burns motion
+  var artMoving = S.artImg && (S.anim || S.artIsVideo || S.artIsGif);   // any moving art
+  var moveImg = S.anim && S.artImg && !S.artIsVideo && !S.artIsGif;      // still image → Ken-Burns
   if (moveImg){
-    // gentle breathing zoom + tiny drift: enough to read as a living photo, small enough
-    // that the tone under each fixed module barely shifts (so frames keep scanning).
     var tt = _phase*6.28318;
-    var z = 1.09 + 0.05*Math.sin(tt);
+    var z = 1.10 + 0.06*Math.sin(tt);
     var dw = area*z, dh = area*z;
-    var dx = ox - (dw-area)/2 + Math.sin(tt)*area*0.028;
-    var dy = oy - (dh-area)/2 + Math.cos(tt*0.85)*area*0.024;
+    var dx = ox - (dw-area)/2 + Math.sin(tt)*area*0.035;
+    var dy = oy - (dh-area)/2 + Math.cos(tt*0.85)*area*0.030;
     g.save(); g.beginPath(); g.rect(ox,oy,area,area); g.clip();
     ok = drawCover(g, S.artImg, dx, dy, dw, dh);
     g.restore();
@@ -3435,41 +3431,43 @@ function drawArtLayer(g, ox, oy, unit, n, m){
   if (!ok){ g.fillStyle="#0b0d12"; g.fillRect(ox,oy,area,area); }
 
   var vis = Math.max(0.2, Math.min(0.92, S.artVisibility/100));
-  // Apply the chosen template colour/gradient to the QR marks (dark role); light role stays
-  // white. This keeps the selected template/gradient visible in art mode instead of forcing
-  // mono ink. artInvert swaps roles for dark artworks.
-  var markFill = makeArtFill(g, ox, oy, area);   // template colour/gradient, luminance-capped to scan
+  var markFill = makeArtFill(g, ox, oy, area);
   function roleDark(rr,cc){ return m[rr][cc] !== S.artInvert; }
 
-  // 2) per-cell luminance bias (helps binarisation without hiding the artwork). ASYMMETRIC:
-  //    dark cells get a modest darkening (image still shows through them); light cells get a
-  //    stronger white lift with a floor, so light modules stay light even over DARK scene
-  //    regions (deep sea, night sky) — otherwise the scanner can't tell light from dark there.
-  // moving art flows different tones under each cell every frame → a stronger, more opaque
-  // veil is needed so modules stay readable at ANY underlying tone (the image still clearly
-  // moves through the veil). Still art keeps the lighter, image-forward veil.
-  var darkBias = Math.max((1-vis)*0.40, artMoving?0.46:0.30);
-  var lightBias = Math.max(darkBias, artMoving?0.56:0.42);
-  for (var r0=0;r0<n;r0++){
-    for (var c0=0;c0<n;c0++){
-      if (isFinder(r0,c0,n)) continue;
-      var dk=roleDark(r0,c0), bv=dk?darkBias:lightBias;
-      if (bv<=0.02) continue;
-      g.fillStyle = "rgba("+(dk?"0,0,0":"255,255,255")+","+bv+")";
-      g.fillRect(ox+c0*unit, oy+r0*unit, unit+0.6, unit+0.6);
-    }
-  }
+  // 2) ===== LemioCode-style luminance MODULATION (not an opaque dot grid) =====
+  //    Instead of stamping solid marks that hide the photo, we blend the QR into the image:
+  //      dark modules  → "multiply" the cell by a dark grey  → darkens but keeps texture+colour
+  //      light modules → "screen"   the cell toward white    → brightens but keeps texture+colour
+  //    The photo stays clearly visible everywhere; the QR reads as a subtle darker/lighter tile
+  //    pattern woven INTO the image. Multiplicative blending is proportional, so contrast holds
+  //    at any underlying tone — which also makes it robust while the image moves.
+  //    "artVisibility" trades image fidelity vs scan margin: high = gentle push (more raw image),
+  //    low = strong push (more contrast). Moving art keeps a firmer floor.
+  var strength = 1 - vis*0.5;                       // vis .2→.90 … .92→.54
+  if (artMoving) strength = Math.max(strength, 0.66);
+  var darkMul  = Math.max(0.14, 1 - strength*0.88); // multiply factor for dark cells
+  var lightScr = Math.min(0.92, strength*0.90);     // screen factor for light cells
+  var ext = unit*0.03;                               // slight overlap so cells tile seamlessly
+  // dark cells → multiply toward dark
+  g.globalCompositeOperation = "multiply";
+  var dv = Math.round(darkMul*255); g.fillStyle = "rgb("+dv+","+dv+","+dv+")";
+  for (var r0=0;r0<n;r0++){ for (var c0=0;c0<n;c0++){ if(isFinder(r0,c0,n))continue; if(!roleDark(r0,c0))continue; g.fillRect(ox+c0*unit-ext, oy+r0*unit-ext, unit+2*ext, unit+2*ext); } }
+  // light cells → screen toward white
+  g.globalCompositeOperation = "screen";
+  var lv = Math.round(lightScr*255); g.fillStyle = "rgb("+lv+","+lv+","+lv+")";
+  for (var r1=0;r1<n;r1++){ for (var c1=0;c1<n;c1++){ if(isFinder(r1,c1,n))continue; if(roleDark(r1,c1))continue; g.fillRect(ox+c1*unit-ext, oy+r1*unit-ext, unit+2*ext, unit+2*ext); } }
+  g.globalCompositeOperation = "source-over";
 
-  // 3) small crisp centre marks — finer, image-forward look (more artwork shows between them).
-  //    Shape follows the selected module style; radius shrinks with visibility.
-  var dotR = unit*(0.40 - vis*0.13);     // vis .2→.374 … .92→.28
-  if (artMoving) dotR = Math.max(dotR, unit*0.40);   // near-solid centres so the sampled module centre reads at ANY frame
+  // 3) small, semi-transparent centre CORES — firm up the sampled module centre for reliable
+  //    scanning without hiding the image (small radius + low alpha, shape follows module style).
+  var coreR = unit*(0.28 - vis*0.07);                // small: vis .2→.266 … .92→.216
+  var coreA = artMoving ? 0.48 : 0.26;               // faint cores → less visible grid, image reads cleaner
   for (var r=0;r<n;r++){
     for (var c=0;c<n;c++){
       if (isFinder(r,c,n)) continue;
       var cx = ox+c*unit+unit/2, cy = oy+r*unit+unit/2;
-      g.fillStyle = roleDark(r,c) ? markFill : "#ffffff";
-      drawArtMark(g, cx, cy, dotR, S.dot);
+      g.fillStyle = roleDark(r,c) ? "rgba(12,14,20,"+coreA+")" : "rgba(255,255,255,"+coreA+")";
+      drawArtMark(g, cx, cy, coreR, S.dot);
     }
   }
 
