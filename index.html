@@ -285,7 +285,33 @@
               </div>
               <button class="btn sec" id="artClear" style="margin-top:12px;flex:none;width:100%">아트 제거</button>
             </div>
-            <div class="hint" id="artHint">LemioCode(AI 아트 QR)의 원리를 <b>서버 없이</b> 재현합니다. 도트를 덮어씌우지 않고, 이미지의 <b>밝기를 모듈별로 조절(멀티플라이·스크린)</b>해 QR을 이미지에 <b>녹여넣습니다</b> — 사진은 그대로 보이고 QR은 밝고 어두운 타일로 새겨집니다. <b>노출도</b>로 선명도↔스캔 균형을 조절하세요. <b>영상·GIF</b>를 올리거나 <b>정적 이미지+애니메이션</b>을 켜면 움직이는 아트 QR이 되고 <b>애니메이션 저장</b>으로 WebM 출력됩니다. (오류정정 <b>H</b> 권장)</div>
+            <div class="hint" id="artHint">LemioCode(AI 아트 QR)의 원리를 <b>서버 없이</b> 재현하는 <b>즉시·무료</b> 모드입니다. 이미지의 <b>밝기를 모듈별로 조절(멀티플라이·스크린)</b>해 QR을 이미지에 녹여넣습니다. <b>영상·GIF</b>를 올리거나 <b>정적 이미지+애니메이션</b>을 켜면 움직이는 아트 QR이 됩니다. 최고 품질이 필요하면 아래 <b>AI 생성(서버)</b>을 사용하세요.</div>
+          </div>
+        </details>
+
+        <details class="grp" id="grpAI" open>
+          <summary><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 5.8L20 10l-5.6 2.2L12 18l-2.4-5.8L4 10l5.6-2.2L12 2z" fill="currentColor"/><circle cx="19" cy="17" r="2.4" fill="currentColor"/><circle cx="5.5" cy="18.5" r="1.6" fill="currentColor"/></svg>AI 아트 QR<span style="margin-left:8px;font-size:10px;font-weight:700;color:#fff;background:linear-gradient(135deg,#f43f5e,#f97316);padding:2px 7px;border-radius:20px">서버 생성 · lemio급</span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
+          <div class="body">
+            <label class="fld">
+              <div class="lbl">프롬프트 (영어 권장 — 그릴 장면을 서술)</div>
+              <input type="text" id="aiPrompt" maxlength="300" placeholder="예: watercolor ocean sunset, soft pastel colors" />
+            </label>
+            <label class="fld">
+              <div class="lbl">스타일 프리셋 (클릭하면 프롬프트 입력)</div>
+              <div class="seg" id="aiStyleSeg">
+                <button data-p="watercolor painting of a serene lake and mountains, soft pastel colors, dreamy atmosphere, high detail">수채화</button>
+                <button data-p="cyberpunk neon city street at night, glowing signs, rain reflections, cinematic lighting, high detail">네온 시티</button>
+                <button data-p="impressionist oil painting of a sunflower field at sunset, thick brush strokes, warm golden light">유화</button>
+                <button data-p="photorealistic mountain landscape at golden hour, dramatic clouds, crisp air, 8k, high detail">실사 풍경</button>
+                <button data-p="cherry blossom garden in spring, petals drifting in the wind, soft pink tones, japanese art style">벚꽃</button>
+                <button data-p="deep space nebula with vivid purple and cyan cosmic clouds, sparkling stars, astrophotography style">우주</button>
+              </div>
+            </label>
+            <div class="row2" style="margin-top:8px">
+              <button class="btn" id="aiGo">✨ AI로 생성 (5~30초)</button>
+              <button class="btn sec" id="aiClear" style="display:none">AI 아트 제거</button>
+            </div>
+            <div class="hint" id="aiStatus">Stable Diffusion + ControlNet(QR 전용)으로 <b>이미지를 처음부터 QR 명암 구조에 맞춰 생성</b>합니다 — lemio와 동일한 방식이라 모듈 격자가 보이지 않습니다. 생성 후 자동으로 <b>스캔 검증</b>하고, 실패하면 대비를 올려 재시도합니다. (서버에 <b>REPLICATE_API_TOKEN</b> 등록 필요, 이미지당 약 $0.02)</div>
           </div>
         </details>
 
@@ -565,7 +591,7 @@
   <footer>
     <div>Aesthetic QR Studio · LemioCode 컨셉을 오픈소스로 재구현 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.05-a</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.05-b</b></div>
   </footer>
 </div>
 
@@ -2907,6 +2933,7 @@ var S = {
   labelOffset: 0,      // -100..100 fine vertical nudge (negative = up)
   // ---- full-image "art QR" (LemioCode-style: media covers the whole code) ----
   artImg: null,        // HTMLImageElement or HTMLVideoElement used as full background
+  aiArt: null,         // server-generated (SD+ControlNet) art QR image — the image IS the QR
   artIsVideo: false,   // true when the uploaded media is a video → animated QR
   artIsGif: false,     // true when the uploaded media is an animated GIF → animated QR
   artVisibility: 72,   // % — higher = artwork shows more, lower = more scannable
@@ -3225,7 +3252,12 @@ function render(g2, exportSize){
     drawFrameBackground(g, size, frameInset, region);
   } else if (!S.transparent){ g.fillStyle = S.bg; g.fillRect(0,0,size,size); }
 
-  if (S.artImg){
+  if (S.aiArt){
+    // ===== server-generated AI art QR (SD+ControlNet): the image IS the QR, quiet zone baked in =====
+    g.save(); g.beginPath(); g.rect(xoff, topPad, avail, avail); g.clip();
+    try { g.drawImage(S.aiArt, xoff, topPad, avail, avail); } catch(e){}
+    g.restore();
+  } else if (S.artImg){
     // ===== full-image "art QR" mode (media covers the entire code) =====
     drawArtLayer(g, ox, oy, unit, n, m);
   } else {
@@ -3260,7 +3292,7 @@ function render(g2, exportSize){
   }
 
   // logo
-  if (S.logo){
+  if (S.logo && !S.aiArt){
     var ls = (S.logoSize/100) * (n*unit);
     var lx = ox + (n*unit-ls)/2, ly = oy + (n*unit-ls)/2;
     if (S.logoPad){
@@ -3275,7 +3307,7 @@ function render(g2, exportSize){
   }
 
   // centre content — text wordmark (Logo) or emoji symbol (Pictogram). Relies on ECC-H.
-  if (S.centerMode!=="none" && S.centerText){
+  if (!S.aiArt && S.centerMode!=="none" && S.centerText){
     var qarea = n*unit;
     var isz = (S.centerScale/100) * qarea;
     var icx = ox + qarea/2, icy = oy + qarea/2;
@@ -3307,7 +3339,7 @@ function render(g2, exportSize){
   // The moving light-sheen is only for SOLID/GRADIENT QRs (they have no other motion). ART QRs
   // get their motion from the moving image itself (Ken-Burns / video / GIF); stacking a sheen
   // on the art veil only tips borderline frames out of scan range, so we skip it for art.
-  if (S.anim && !S.artImg){
+  if (S.anim && !S.artImg && !S.aiArt){
     var bs = avail, bx0 = xoff, by0 = topPad, ccx = bx0+bs/2, ccy = by0+bs/2, t = _phase;
     g.save();
     g.beginPath(); g.rect(bx0, by0, bs, bs); g.clip();
@@ -3707,6 +3739,7 @@ function exportPNG(){
   off.toBlob(function(b){ download(URL.createObjectURL(b), "aesthetic-qr.png"); toast("PNG 저장됨"); if(was) startAnim(); }, "image/png");
 }
 function exportSVG(){
+  if(S.aiArt){ toast("AI 아트 QR은 PNG로 저장하세요 (SVG는 벡터 전용)"); return; }
   var svg=toSVG(); if(!svg){toast("생성 실패");return;}
   var blob=new Blob([svg],{type:"image/svg+xml"});
   download(URL.createObjectURL(blob), "aesthetic-qr.svg"); toast("SVG 저장됨");
@@ -3829,6 +3862,7 @@ function clearArt(){
 }
 $("artFile").addEventListener("change",function(e){
   var f=e.target.files[0]; if(!f) return;
+  if(S.aiArt){ S.aiArt=null; $("aiClear").style.display="none"; }
   var url=URL.createObjectURL(f);
   if (f.type==="image/gif"){
     // animated GIF: keep a LIVE <img> in the DOM so its frames keep advancing;
@@ -3896,6 +3930,90 @@ $("artVis").addEventListener("input",function(e){ S.artVisibility=+e.target.valu
 $("artDensity").addEventListener("input",function(e){ S.artDensity=+e.target.value; $("artDensityOut").textContent=({4:"성김",5:"약간 성김",6:"보통",7:"촘촘",8:"더 촘촘",9:"매우 촘촘",10:"최대"})[e.target.value]||"보통"; rerender(); });
 $("artInvert").addEventListener("change",function(e){ S.artInvert=e.target.checked; rerender(); });
 $("artClear").addEventListener("click",clearArt);
+
+// ---- AI art QR (server: Stable Diffusion + ControlNet via /api/art-qr) ----
+// create → poll → client-side jsQR scan verification → auto-retry with higher
+// conditioning scale on failure. The token stays server-side; the browser only
+// talks to our own /api endpoint.
+var AI = { busy:false, tries:0 };
+function aiStatus(t){ $("aiStatus").innerHTML=t; }
+function aiFail(d){
+  AI.busy=false; $("aiGo").disabled=false;
+  var msg;
+  if(d && d.error==="no_token") msg="서버에 <b>REPLICATE_API_TOKEN</b>이 없습니다 — Vercel → Settings → Environment Variables에 등록 후 <b>재배포</b>하세요.";
+  else if(d && d.error==="network") msg="네트워크 오류 — 배포된 사이트(https)에서만 작동합니다. 잠시 후 다시 시도하세요.";
+  else if(d && d.error==="timeout") msg="시간 초과(2분) — 다시 시도해 주세요.";
+  else msg="생성 실패: "+((d&&(d.detail||d.error))||"알 수 없는 오류")+" <br>모델 스키마 오류라면 Vercel 환경변수 <b>REPLICATE_MODEL</b>로 다른 QR ControlNet 모델을 지정할 수 있습니다.";
+  aiStatus("⚠️ "+msg);
+}
+function aiCreate(prompt, scale){
+  aiStatus("생성 요청 중… (대비 "+scale.toFixed(2)+")");
+  fetch("/api/art-qr",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({content:S.content,prompt:prompt,scale:scale})})
+    .then(function(r){ return r.json(); })
+    .then(function(d){ if(d.error){ aiFail(d); return; } aiPoll(d.id, prompt, scale, Date.now()); })
+    .catch(function(){ aiFail({error:"network"}); });
+}
+function aiPoll(id, prompt, scale, t0){
+  fetch("/api/art-qr?id="+encodeURIComponent(id))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.error){ aiFail(d); return; }
+      if(d.status==="succeeded" && d.output){ aiVerify(d.output, prompt, scale); return; }
+      if(d.status==="failed" || d.status==="canceled"){ aiFail({error:"generation_failed",detail:d.detail}); return; }
+      var el=Math.round((Date.now()-t0)/1000);
+      if(el>120){ aiFail({error:"timeout"}); return; }
+      aiStatus("🎨 AI 생성 중… "+el+"초 (보통 5~30초, 첫 요청은 콜드스타트로 더 걸릴 수 있음)");
+      setTimeout(function(){ aiPoll(id, prompt, scale, t0); }, 2000);
+    })
+    .catch(function(){ aiFail({error:"network"}); });
+}
+function aiVerify(url, prompt, scale){
+  aiStatus("🔍 스캔 검증 중…");
+  var img=new Image(); img.crossOrigin="anonymous";
+  img.onload=function(){
+    var okScan=null;  // true/false/null(unknown — e.g. CORS taint)
+    try{
+      var Z=768, c=document.createElement("canvas"); c.width=c.height=Z;
+      var gg=c.getContext("2d"); gg.fillStyle="#fff"; gg.fillRect(0,0,Z,Z); gg.drawImage(img,0,0,Z,Z);
+      var dd=gg.getImageData(0,0,Z,Z);
+      var rr=(typeof jsQR!=="undefined")?jsQR(dd.data,Z,Z):null;
+      okScan=!!(rr && rr.data===S.content);
+    }catch(e){ okScan=null; }
+    if(okScan===false && AI.tries<2){
+      AI.tries++;
+      aiStatus("스캔 실패 → 대비를 올려 재생성 ("+AI.tries+"/2)…");
+      aiCreate(prompt, Math.min(2, scale+0.25));
+      return;
+    }
+    S.aiArt=img; AI.busy=false; $("aiGo").disabled=false; $("aiClear").style.display="block";
+    aiStatus(okScan===true ? "✅ 완료 — 스캔 검증 통과! PNG로 저장하세요."
+           : okScan===false ? "✅ 생성 완료 — 자동 검증은 실패했지만 휴대폰 스캔은 될 수 있어요. 안 되면 다시 생성하세요."
+           : "✅ 생성 완료 — 휴대폰으로 스캔 확인을 권장합니다.");
+    stopAnim(); render(ctx, EXPORT); updateMeta();
+    toast("AI 아트 QR 적용됨");
+  };
+  img.onerror=function(){ aiFail({error:"image_load",detail:"결과 이미지를 불러오지 못했습니다"}); };
+  img.src=url;
+}
+$("aiGo").addEventListener("click",function(){
+  if(AI.busy) return;
+  var prompt=($("aiPrompt").value||"").trim();
+  if(!prompt){ toast("프롬프트를 입력하거나 스타일 프리셋을 클릭하세요"); $("aiPrompt").focus(); return; }
+  AI.busy=true; AI.tries=0; $("aiGo").disabled=true;
+  if(S.ecc!=="H") setEcc("H");
+  aiCreate(prompt, 1.3);
+});
+$("aiStyleSeg").addEventListener("click",function(e){
+  var b=e.target.closest("button"); if(!b) return;
+  Array.prototype.forEach.call(this.children,function(x){x.classList.remove("on");});
+  b.classList.add("on");
+  $("aiPrompt").value=b.dataset.p;
+});
+$("aiClear").addEventListener("click",function(){
+  S.aiArt=null; $("aiClear").style.display="none";
+  aiStatus("AI 아트 제거됨 — 다시 생성할 수 있습니다.");
+  rerender();
+});
 
 // animation
 $("anim").addEventListener("change",function(e){ S.anim=e.target.checked; rerender(); });
@@ -4135,7 +4253,7 @@ $("featureChips").addEventListener("click",function(e){
 // ---------- gallery: categorised presets ----------
 var DKEYS=["fill","fg1","fg2","angle","transparent","bg","dot","eye","margin","ecc","anim","animKind","animSpeed","frameOn","frameStyle","frameMode","frameBg1","frameBg2","frameAngle","centerMode","centerText","centerColor","centerScale","artVisibility","artDensity","artInvert"];
 var DDEF={fill:"solid",fg1:"#111111",fg2:"#111111",angle:45,transparent:false,bg:"#ffffff",dot:"square",eye:"square",margin:4,ecc:"H",anim:false,animKind:"shine",animSpeed:1,frameOn:false,frameStyle:"card",frameMode:"solid",frameBg1:"#0e7a3b",frameBg2:"#0b3d22",frameAngle:135,centerMode:"none",centerText:"",centerColor:"#111111",centerScale:24,artVisibility:70,artDensity:6,artInvert:false};
-function resetDesign(fullArt){ for(var k in DDEF) S[k]=DDEF[k]; S.logo=null; S.artImg=null; S.artIsVideo=false; S.artIsGif=false; if(fullArt && typeof removeArtVid==="function") removeArtVid(); }
+function resetDesign(fullArt){ for(var k in DDEF) S[k]=DDEF[k]; S.logo=null; S.artImg=null; S.artIsVideo=false; S.artIsGif=false; S.aiArt=null; if(fullArt && typeof removeArtVid==="function") removeArtVid(); }
 // load real web images (CORS-enabled host) for image-based gallery presets
 var IMGCACHE={};
 function getArtImg(url, cb){
@@ -4311,7 +4429,7 @@ var CATS = {
 };
 var curCat="standard";
 function renderPreset(cv, ps, phase){
-  var save={}; DKEYS.forEach(function(k){save[k]=S[k];}); var sl=S.logo, sa=S.artImg, sav=S.artIsVideo, sag=S.artIsGif, sc=S.content, sp=_phase;
+  var save={}; DKEYS.forEach(function(k){save[k]=S[k];}); var sl=S.logo, sa=S.artImg, sav=S.artIsVideo, sag=S.artIsGif, sai=S.aiArt, sc=S.content, sp=_phase;
   resetDesign(false);
   for(var k in ps) S[k]=ps[k];
   if(ps.scene){ S.artImg=makeScene(ps.scene); S.artIsVideo=false; }
@@ -4320,7 +4438,7 @@ function renderPreset(cv, ps, phase){
   var pm=S.margin; S.margin=Math.min(S.margin,2);
   try{ render(cv.getContext("2d"), cv.width); }catch(e){}
   S.margin=pm;
-  DKEYS.forEach(function(k){S[k]=save[k];}); S.logo=sl; S.artImg=sa; S.artIsVideo=sav; S.artIsGif=sag; S.content=sc; _phase=sp;
+  DKEYS.forEach(function(k){S[k]=save[k];}); S.logo=sl; S.artImg=sa; S.artIsVideo=sav; S.artIsGif=sag; S.aiArt=sai; S.content=sc; _phase=sp;
 }
 // live-animate the Animation category thumbnails so customers see real motion
 var galItems=[], galRaf=null, galLast=0;
