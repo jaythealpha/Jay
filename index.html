@@ -565,7 +565,7 @@
   <footer>
     <div>Aesthetic QR Studio · LemioCode 컨셉을 오픈소스로 재구현 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.04-d</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.05-a</b></div>
   </footer>
 </div>
 
@@ -3193,6 +3193,7 @@ function leafRect(g,x,y,w,h,r){
 
 // ---------- main render ----------
 var _phase = 0; // 0..1 animation phase
+var _artSampleCv = document.createElement("canvas"); // reusable downsample buffer for adaptive art modulation
 function render(g2, exportSize){
   var g = g2 || ctx;
   var size = exportSize || EXPORT;
@@ -3417,11 +3418,13 @@ function drawArtLayer(g, ox, oy, unit, n, m){
   var artMoving = S.artImg && (S.anim || S.artIsVideo || S.artIsGif);   // any moving art
   var moveImg = S.anim && S.artImg && !S.artIsVideo && !S.artIsGif;      // still image → Ken-Burns
   if (moveImg){
+    // clearly visible Ken-Burns motion — the adaptive modulation below is recomputed from the
+    // ACTUAL pixels every frame, so big motion no longer risks scannability.
     var tt = _phase*6.28318;
-    var z = 1.10 + 0.06*Math.sin(tt);
+    var z = 1.14 + 0.09*Math.sin(tt);
     var dw = area*z, dh = area*z;
-    var dx = ox - (dw-area)/2 + Math.sin(tt)*area*0.035;
-    var dy = oy - (dh-area)/2 + Math.cos(tt*0.85)*area*0.030;
+    var dx = ox - (dw-area)/2 + Math.sin(tt)*area*0.05;
+    var dy = oy - (dh-area)/2 + Math.cos(tt*0.85)*area*0.042;
     g.save(); g.beginPath(); g.rect(ox,oy,area,area); g.clip();
     ok = drawCover(g, S.artImg, dx, dy, dw, dh);
     g.restore();
@@ -3434,34 +3437,62 @@ function drawArtLayer(g, ox, oy, unit, n, m){
   var markFill = makeArtFill(g, ox, oy, area);
   function roleDark(rr,cc){ return m[rr][cc] !== S.artInvert; }
 
-  // 2) ===== LemioCode-style luminance MODULATION (not an opaque dot grid) =====
-  //    Instead of stamping solid marks that hide the photo, we blend the QR into the image:
-  //      dark modules  → "multiply" the cell by a dark grey  → darkens but keeps texture+colour
-  //      light modules → "screen"   the cell toward white    → brightens but keeps texture+colour
-  //    The photo stays clearly visible everywhere; the QR reads as a subtle darker/lighter tile
-  //    pattern woven INTO the image. Multiplicative blending is proportional, so contrast holds
-  //    at any underlying tone — which also makes it robust while the image moves.
-  //    "artVisibility" trades image fidelity vs scan margin: high = gentle push (more raw image),
-  //    low = strong push (more contrast). Moving art keeps a firmer floor.
-  var strength = 1 - vis*0.5;                       // vis .2→.90 … .92→.54
-  if (artMoving) strength = Math.max(strength, 0.66);
-  var darkMul  = Math.max(0.14, 1 - strength*0.88); // multiply factor for dark cells
-  var lightScr = Math.min(0.92, strength*0.90);     // screen factor for light cells
-  var ext = unit*0.03;                               // slight overlap so cells tile seamlessly
-  // dark cells → multiply toward dark
-  g.globalCompositeOperation = "multiply";
-  var dv = Math.round(darkMul*255); g.fillStyle = "rgb("+dv+","+dv+","+dv+")";
-  for (var r0=0;r0<n;r0++){ for (var c0=0;c0<n;c0++){ if(isFinder(r0,c0,n))continue; if(!roleDark(r0,c0))continue; g.fillRect(ox+c0*unit-ext, oy+r0*unit-ext, unit+2*ext, unit+2*ext); } }
-  // light cells → screen toward white
-  g.globalCompositeOperation = "screen";
-  var lv = Math.round(lightScr*255); g.fillStyle = "rgb("+lv+","+lv+","+lv+")";
-  for (var r1=0;r1<n;r1++){ for (var c1=0;c1<n;c1++){ if(isFinder(r1,c1,n))continue; if(roleDark(r1,c1))continue; g.fillRect(ox+c1*unit-ext, oy+r1*unit-ext, unit+2*ext, unit+2*ext); } }
+  // 2) ===== ADAPTIVE luminance modulation (lemio-style: QR woven into the picture) =====
+  //    The real trick behind AI art QRs: a cell that ALREADY has the right tone is left
+  //    completely untouched — most of the photo stays raw. We downsample the just-drawn art
+  //    to 2×2 samples per module, measure each cell's centre luminance, and push ONLY the
+  //    non-conforming cells just far enough past the scan threshold (multiply toward dark /
+  //    screen toward white — both preserve the image's texture and colour inside the cell).
+  //    Because this measures the ACTUAL pixels each render, it stays correct for any image,
+  //    any frame of a video/GIF, and any Ken-Burns position.
+  var sc = _artSampleCv; var sn = n*2;
+  if (sc.width !== sn){ sc.width = sn; sc.height = sn; }
+  var sg2 = sc.getContext("2d", {willReadFrequently:true});
+  var px = null;
+  try {
+    sg2.drawImage(g.canvas, ox, oy, area, area, 0, 0, sn, sn);
+    px = sg2.getImageData(0, 0, sn, sn).data;
+  } catch(e){ /* tainted canvas etc. → fall back to uniform push below */ }
+
+  // contrast window: higher visibility → narrower push (more raw image). Moving art keeps a floor.
+  var C = 170 - vis*95;                        // vis .2→151 … .92→82.6
+  if (artMoving) C = Math.max(C, 120);
+  var MID = 132, Ld = MID - C/2, Ll = MID + C/2;
+  var ext = unit*0.02;
+  for (var r0=0;r0<n;r0++){
+    for (var c0=0;c0<n;c0++){
+      if (isFinder(r0,c0,n)) continue;
+      var dk = roleDark(r0,c0);
+      var L = 128;
+      if (px){
+        // average the 2×2 samples of this cell (≈ its centre-weighted tone)
+        var i00=((r0*2)*sn+(c0*2))*4, i01=i00+4, i10=i00+sn*4, i11=i10+4;
+        var lum=function(i){ return 0.299*px[i]+0.587*px[i+1]+0.114*px[i+2]; };
+        L = (lum(i00)+lum(i01)+lum(i10)+lum(i11))/4;
+      }
+      var x0=ox+c0*unit-ext, y0=oy+r0*unit-ext, w0=unit+2*ext;
+      if (dk){
+        if (L > Ld){                            // too bright for a dark module → multiply down
+          g.globalCompositeOperation = "multiply";
+          var mv = Math.round(255*Math.max(0.05, Ld/Math.max(L,1)));
+          g.fillStyle = "rgb("+mv+","+mv+","+mv+")";
+          g.fillRect(x0,y0,w0,w0);
+        }
+      } else {
+        if (L < Ll){                            // too dark for a light module → screen up
+          g.globalCompositeOperation = "screen";
+          var sv = Math.round(255*Math.min(0.95, (Ll-L)/Math.max(255-L,1)));
+          g.fillStyle = "rgb("+sv+","+sv+","+sv+")";
+          g.fillRect(x0,y0,w0,w0);
+        }
+      }
+    }
+  }
   g.globalCompositeOperation = "source-over";
 
-  // 3) small, semi-transparent centre CORES — firm up the sampled module centre for reliable
-  //    scanning without hiding the image (small radius + low alpha, shape follows module style).
-  var coreR = unit*(0.28 - vis*0.07);                // small: vis .2→.266 … .92→.216
-  var coreA = artMoving ? 0.48 : 0.26;               // faint cores → less visible grid, image reads cleaner
+  // 3) whisper-faint centre cores — a last-resort anchor at the exact sampling point of each
+  //    module. Kept very subtle so no dot grid is visible over the picture.
+  var coreR = unit*0.22, coreA = artMoving ? 0.30 : 0.18;
   for (var r=0;r<n;r++){
     for (var c=0;c<n;c++){
       if (isFinder(r,c,n)) continue;
