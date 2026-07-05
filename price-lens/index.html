@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#08101f">
+<title>프라이스 렌즈 — 라벨을 찍으면 최저가가 보입니다</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    /* surfaces */
+    --bg: #08101f;
+    --bg2: #0e192c;
+    --card: #141f33;
+    --card-2: #1b2942;
+    --line: #26375438;
+    --line-solid: #263754;
+    /* brand */
+    --blue: #3987e5;          /* data mark — validated ≥3:1 on card surface */
+    --blue-soft: #9ec5f4;
+    --blue-dim: #4d6da0;
+    --mint: #35d0a5;          /* price accent (최저가) */
+    --mint-soft: #a4ecd6;
+    --red-soft: #ff8fa8;
+    --good: #0ca30c;
+    /* ink (text tokens — text never wears data color) */
+    --ink-1: #f2f5fa;
+    --ink-2: #b4c1d6;
+    --ink-3: #7b8aa5;
+    /* chart chrome */
+    --grid: rgba(242,245,250,.08);
+    --track: rgba(57,135,229,.16);
+    --hairline: rgba(57,135,229,.32);
+    --shadow: 0 18px 50px rgba(0,0,0,.45);
+    --sans: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+  }
+
+  html, body { height: 100%; }
+  body {
+    font-family: var(--sans);
+    background:
+      radial-gradient(1200px 700px at 15% -10%, #12294d 0%, transparent 55%),
+      radial-gradient(1000px 700px at 110% 10%, #0c2b33 0%, transparent 50%),
+      var(--bg);
+    color: var(--ink-1);
+    min-height: 100vh;
+    line-height: 1.55;
+    overflow-x: hidden;
+  }
+  ::selection { background: var(--blue); color: #fff; }
+
+  /* ---------- Layout ---------- */
+  .app { max-width: 720px; margin: 0 auto; padding: 0 16px calc(120px + env(safe-area-inset-bottom)); }
+
+  header.topbar {
+    position: sticky; top: 0; z-index: 40;
+    display: flex; align-items: center; gap: 12px;
+    padding: calc(14px + env(safe-area-inset-top)) 16px 14px;
+    max-width: 720px; margin: 0 auto;
+    background: linear-gradient(180deg, rgba(8,16,31,.96) 60%, rgba(8,16,31,0));
+    backdrop-filter: blur(8px);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: -.02em; }
+  .brand .logo {
+    width: 38px; height: 38px; border-radius: 12px; flex: none;
+    display: grid; place-items: center; font-size: 20px;
+    background: linear-gradient(145deg, #1c5cab 0%, #0d366b 100%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.15), 0 6px 16px rgba(28,92,171,.4);
+  }
+  .brand b { font-size: 18px; }
+  .brand small { display: block; font-size: 11px; color: var(--ink-3); font-weight: 600; letter-spacing: .02em; }
+  .topbar .spacer { flex: 1; }
+  .icon-btn {
+    width: 42px; height: 42px; border-radius: 12px; flex: none;
+    border: 1px solid var(--line-solid); background: var(--card);
+    color: var(--blue-soft); font-size: 18px; cursor: pointer;
+    display: grid; place-items: center; transition: .15s;
+  }
+  .icon-btn:hover { background: var(--card-2); border-color: var(--blue); }
+  .icon-btn.badge { position: relative; }
+  .icon-btn .count {
+    position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px; padding: 0 5px;
+    border-radius: 9px; background: var(--blue); color: #fff; font-size: 11px; font-weight: 800;
+    display: grid; place-items: center; box-shadow: 0 2px 6px rgba(0,0,0,.4);
+  }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    border: none; border-radius: 14px; font-family: inherit; font-weight: 800; font-size: 16px;
+    padding: 14px 20px; cursor: pointer; transition: transform .12s, filter .15s, background .15s;
+    color: #fff; text-decoration: none;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn-primary { background: linear-gradient(135deg, #4a95ec, #1c5cab); box-shadow: 0 10px 26px rgba(28,92,171,.45); }
+  .btn-primary:hover { filter: brightness(1.08); }
+  .btn-mint { background: linear-gradient(135deg, #49e0b6, #1ba97f); color: #04281c; box-shadow: 0 10px 24px rgba(53,208,165,.28); }
+  .btn-ghost { background: var(--card); border: 1px solid var(--line-solid); color: var(--ink-1); }
+  .btn-ghost:hover { background: var(--card-2); }
+  .btn.block { width: 100%; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* ---------- Screens ---------- */
+  .screen { display: none; animation: fade .35s ease both; }
+  .screen.active { display: block; }
+  @keyframes fade { from { opacity: 0; transform: translateY(8px);} to { opacity: 1; transform: none; } }
+
+  /* ---------- Hero / Capture ---------- */
+  .hero { text-align: center; padding: 26px 6px 10px; }
+  .hero h1 { font-size: 27px; font-weight: 900; letter-spacing: -.03em; line-height: 1.25; }
+  .hero h1 .accent { background: linear-gradient(120deg, var(--mint-soft), var(--mint)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero p { color: var(--ink-2); margin-top: 10px; font-size: 14.5px; }
+
+  .capture-card {
+    margin-top: 18px; border-radius: 22px; overflow: hidden;
+    background: var(--card); border: 1px solid var(--line-solid); box-shadow: var(--shadow);
+  }
+  .cam-stage {
+    position: relative; aspect-ratio: 3/4; max-height: 60vh; background: #060b16;
+    display: grid; place-items: center; overflow: hidden;
+  }
+  .cam-stage video, .cam-stage img.preview {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  }
+  .cam-placeholder { text-align: center; color: var(--ink-3); padding: 24px; }
+  .cam-placeholder .big { font-size: 54px; filter: grayscale(.2); }
+  .cam-placeholder p { margin-top: 10px; font-size: 13.5px; }
+  .frame-guide {
+    position: absolute; inset: 12% 18%; border: 2px dashed rgba(53,208,165,.55);
+    border-radius: 16px; pointer-events: none;
+  }
+  .frame-guide::after {
+    content: "가격표/라벨을 이 안에 맞춰주세요"; position: absolute; left: 50%; bottom: -30px; transform: translateX(-50%);
+    white-space: nowrap; font-size: 11.5px; color: rgba(164,236,214,.8); font-weight: 700;
+  }
+  .cam-tools {
+    display: flex; align-items: center; justify-content: center; gap: 22px;
+    padding: 16px; background: linear-gradient(180deg, var(--card), var(--card-2));
+  }
+  .shutter {
+    width: 74px; height: 74px; border-radius: 50%; cursor: pointer; flex: none;
+    border: 4px solid var(--mint-soft); background: radial-gradient(circle at 50% 40%, #fff 0 30%, #1c5cab 32% 100%);
+    box-shadow: 0 6px 18px rgba(0,0,0,.5); transition: transform .1s;
+  }
+  .shutter:active { transform: scale(.92); }
+  .round-tool {
+    width: 50px; height: 50px; border-radius: 50%; border: 1px solid var(--line-solid);
+    background: var(--card); color: var(--blue-soft); font-size: 20px; cursor: pointer; display: grid; place-items: center;
+  }
+  .round-tool:hover { background: var(--card-2); }
+
+  .capture-actions { padding: 14px 16px 18px; display: none; gap: 10px; }
+  .capture-actions.show { display: flex; }
+  .capture-actions .btn { flex: 1; }
+
+  .tips-row { display: flex; gap: 8px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
+  .chip { font-size: 12px; color: var(--ink-2); background: var(--card); border: 1px solid var(--line-solid); padding: 6px 11px; border-radius: 999px; }
+
+  /* ---------- Loading ---------- */
+  .loading { text-align: center; padding: 60px 20px; }
+  .scan-ico { width: 90px; height: 90px; margin: 0 auto 22px; position: relative; font-size: 78px; display: grid; place-items: center; }
+  .scan-ico::after {
+    content: ""; position: absolute; left: 8%; right: 8%; top: 20%; height: 3px; border-radius: 999px;
+    background: linear-gradient(90deg, transparent, var(--mint), transparent);
+    animation: scanline 1.6s ease-in-out infinite;
+  }
+  @keyframes scanline { 0%,100% { top: 16%; } 50% { top: 82%; } }
+  .loading h2 { font-size: 19px; margin-bottom: 8px; }
+  .loading .step { color: var(--ink-2); font-size: 14px; min-height: 22px; transition: .3s; }
+  .loading .eta { color: var(--ink-3); font-size: 12px; margin-top: 10px; }
+  .bar { width: 220px; height: 6px; margin: 20px auto 0; border-radius: 999px; background: var(--card-2); overflow: hidden; }
+  .bar > i { display: block; height: 100%; width: 40%; border-radius: 999px; background: linear-gradient(90deg, var(--blue), var(--mint)); animation: slide 1.3s ease-in-out infinite; }
+  @keyframes slide { 0%{ margin-left: -40%; } 100%{ margin-left: 100%; } }
+
+  /* =====================================================
+     RESULT — price report design system
+     ===================================================== */
+  .result { padding-top: 6px; }
+
+  /* --- product plate hero --- */
+  .plate {
+    position: relative; border-radius: 20px; overflow: hidden; box-shadow: var(--shadow);
+    background: linear-gradient(160deg, #16305c 0%, #0c1a33 62%, #081020 100%);
+    border: 1px solid var(--line-solid);
+  }
+  .plate .photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .18; filter: saturate(.85); }
+  .plate .veil { position: absolute; inset: 0; background: radial-gradient(120% 90% at 50% 0%, transparent 30%, rgba(4,9,18,.9) 100%); }
+  .plate .frame {
+    position: relative; margin: 10px; padding: 24px 20px 20px; text-align: center;
+    border: 1px solid var(--hairline); border-radius: 14px;
+  }
+  .plate .kicker {
+    font-size: 11px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase;
+    color: var(--mint-soft); margin-bottom: 12px;
+  }
+  .plate .brand-name { font-size: 13px; font-weight: 700; color: var(--ink-2); letter-spacing: .08em; text-transform: uppercase; }
+  .plate h2 { font-weight: 800; font-size: 24px; line-height: 1.3; letter-spacing: -.01em; color: var(--ink-1); margin-top: 6px; }
+  .plate .code {
+    display: inline-block; margin-top: 12px; padding: 5px 13px; border-radius: 8px;
+    font-size: 13px; font-weight: 700; letter-spacing: .08em; font-variant-numeric: tabular-nums;
+    background: rgba(57,135,229,.13); color: var(--blue-soft); border: 1px solid var(--hairline);
+  }
+  .plate .badges { display: flex; gap: 7px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
+  .tag { font-size: 11px; font-weight: 700; padding: 5px 11px; border-radius: 999px; letter-spacing: .04em; }
+  .tag.spec { background: rgba(57,135,229,.13); color: var(--blue-soft); border: 1px solid var(--hairline); }
+  .tag.conf { background: rgba(53,208,165,.1); color: var(--mint); border: 1px solid rgba(53,208,165,.3); }
+  .tag.conf.low { background: rgba(239,71,111,.1); color: var(--red-soft); border-color: rgba(239,71,111,.35); }
+  .plate .summary { margin-top: 12px; font-size: 13px; color: var(--ink-2); line-height: 1.6; }
+
+  /* --- KPI row --- */
+  .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px; }
+  .kpi { background: var(--card); border: 1px solid var(--line-solid); border-radius: 16px; padding: 13px 12px 12px; text-align: center; }
+  .kpi .k-label { font-size: 10.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
+  .kpi .k-value { margin-top: 5px; font-size: 17px; font-weight: 800; color: var(--ink-1); letter-spacing: -.01em; line-height: 1.25; }
+  .kpi .k-value.mint { color: var(--mint); }
+  .kpi .k-sub { margin-top: 2px; font-size: 11px; color: var(--ink-3); }
+
+  /* --- cards & section headers --- */
+  .card { background: var(--card); border: 1px solid var(--line-solid); border-radius: 18px; padding: 18px 18px 17px; margin-top: 12px; }
+  .sec { display: flex; align-items: baseline; gap: 10px; margin-bottom: 15px; }
+  .sec .en { font-size: 10.5px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--blue); white-space: nowrap; }
+  .sec .ko { font-size: 15px; font-weight: 800; color: var(--ink-1); white-space: nowrap; }
+  .sec::after { content: ""; flex: 1; height: 1px; background: var(--grid); transform: translateY(-3px); }
+  .card p.body { font-size: 14px; color: var(--ink-2); line-height: 1.75; }
+  .card p.body b, .card p.body strong { color: var(--ink-1); }
+  .card .foot-note { font-size: 11.5px; color: var(--ink-3); margin-top: 12px; line-height: 1.55; }
+
+  /* --- price listings (ascending) --- */
+  .listing { display: flex; align-items: center; gap: 12px; padding: 13px 2px; }
+  .listing + .listing { border-top: 1px solid var(--grid); }
+  .listing .rank {
+    flex: none; width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center;
+    font-size: 12.5px; font-weight: 800; color: var(--ink-3); background: var(--card-2);
+    font-variant-numeric: tabular-nums;
+  }
+  .listing.best .rank { background: rgba(53,208,165,.15); color: var(--mint); }
+  .listing .l-info { flex: 1; min-width: 0; }
+  .listing .l-site { font-size: 14px; font-weight: 800; color: var(--ink-1); display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+  .listing .l-site .best-badge {
+    font-size: 10px; font-weight: 800; letter-spacing: .06em; padding: 2px 8px; border-radius: 999px;
+    background: rgba(53,208,165,.15); color: var(--mint); border: 1px solid rgba(53,208,165,.35);
+  }
+  .listing .l-title { font-size: 12px; color: var(--ink-3); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .listing .l-meta { font-size: 11.5px; color: var(--ink-3); margin-top: 2px; }
+  .listing .l-meta em { font-style: normal; color: var(--ink-2); }
+  .listing .l-right { flex: none; text-align: right; }
+  .listing .l-price { font-size: 16.5px; font-weight: 800; color: var(--ink-1); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+  .listing.best .l-price { color: var(--mint); }
+  .listing .l-diff { font-size: 11px; color: var(--ink-3); margin-top: 1px; font-variant-numeric: tabular-nums; }
+  .listing .go {
+    display: inline-flex; align-items: center; gap: 4px; margin-top: 6px;
+    font-size: 12px; font-weight: 700; color: var(--blue-soft); text-decoration: none;
+    padding: 5px 11px; border-radius: 999px; background: rgba(57,135,229,.12); border: 1px solid var(--hairline);
+    transition: .15s;
+  }
+  .listing .go:hover { background: rgba(57,135,229,.22); }
+  .empty-listings { text-align: center; color: var(--ink-3); font-size: 13.5px; padding: 22px 10px; line-height: 1.7; }
+  .empty-listings .big { font-size: 36px; display: block; margin-bottom: 8px; }
+
+  /* --- price history chart --- */
+  .chart-wrap { position: relative; }
+  .chart-wrap svg { display: block; width: 100%; height: auto; }
+  .chart-tip {
+    position: absolute; pointer-events: none; z-index: 5; opacity: 0; transition: opacity .12s;
+    background: #060b16; border: 1px solid var(--line-solid); border-radius: 10px;
+    padding: 8px 11px; font-size: 12px; line-height: 1.5; box-shadow: 0 8px 22px rgba(0,0,0,.5);
+    white-space: nowrap; transform: translate(-50%, calc(-100% - 12px));
+  }
+  .chart-tip.show { opacity: 1; }
+  .chart-tip .t-month { color: var(--ink-3); font-weight: 700; font-size: 11px; }
+  .chart-tip .t-price { color: var(--ink-1); font-weight: 800; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+  .chart-legend-row { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; }
+  .chart-legend-row .lg { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--ink-2); font-weight: 600; }
+  .chart-legend-row .lg i { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  .hist-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
+  .hstat { background: var(--card-2); border: 1px solid var(--line-solid); border-radius: 13px; padding: 10px 12px; }
+  .hstat .h-label { font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+  .hstat .h-value { margin-top: 3px; font-size: 14.5px; font-weight: 800; color: var(--ink-1); font-variant-numeric: tabular-nums; }
+  .hstat .h-sub { font-size: 10.5px; color: var(--ink-3); margin-top: 1px; }
+  details.hist-table { margin-top: 13px; }
+  details.hist-table summary {
+    cursor: pointer; font-size: 12.5px; font-weight: 700; color: var(--blue-soft); list-style: none;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  details.hist-table summary::-webkit-details-marker { display: none; }
+  details.hist-table summary::before { content: "▸"; transition: transform .15s; }
+  details.hist-table[open] summary::before { transform: rotate(90deg); }
+  details.hist-table table { width: 100%; margin-top: 10px; border-collapse: collapse; font-size: 12.5px; }
+  details.hist-table th, details.hist-table td { text-align: right; padding: 6px 8px; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
+  details.hist-table th { color: var(--ink-3); font-size: 11px; font-weight: 700; letter-spacing: .06em; }
+  details.hist-table td:first-child, details.hist-table th:first-child { text-align: left; color: var(--ink-2); }
+  details.hist-table td { color: var(--ink-1); }
+
+  /* --- quick search links --- */
+  .quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .quick {
+    display: flex; align-items: center; gap: 10px; padding: 12px 13px;
+    background: var(--card-2); border: 1px solid var(--line-solid); border-radius: 13px;
+    text-decoration: none; transition: .15s;
+  }
+  .quick:hover { border-color: var(--blue); background: #203152; }
+  .quick .qe { font-size: 18px; flex: none; width: 34px; height: 34px; display: grid; place-items: center; background: rgba(57,135,229,.1); border-radius: 10px; }
+  .quick .qt { min-width: 0; }
+  .quick .qt b { display: block; font-size: 13px; font-weight: 700; color: var(--ink-1); }
+  .quick .qt span { display: block; font-size: 10.5px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .quick .arrow { margin-left: auto; color: var(--ink-3); font-size: 13px; flex: none; }
+
+  /* --- insight editorial --- */
+  .editorial { border-left: 2px solid var(--hairline); padding-left: 14px; }
+  .editorial p { font-size: 14px; color: var(--ink-2); line-height: 1.8; }
+
+  /* --- sources --- */
+  ul.sources { list-style: none; display: flex; flex-direction: column; }
+  ul.sources li { padding: 8px 0; font-size: 12.5px; line-height: 1.5; display: flex; gap: 9px; }
+  ul.sources li + li { border-top: 1px solid var(--grid); }
+  ul.sources li::before { content: "↗"; color: var(--blue); font-weight: 800; flex: none; }
+  ul.sources a { color: var(--ink-2); text-decoration: none; word-break: break-all; }
+  ul.sources a:hover { color: var(--blue-soft); text-decoration: underline; }
+
+  /* --- colophon --- */
+  .colophon { text-align: center; margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--grid); }
+  .colophon .wm { font-size: 10.5px; font-weight: 800; letter-spacing: .3em; color: var(--blue-dim); text-transform: uppercase; }
+  .colophon .meta { margin-top: 5px; font-size: 11px; color: var(--ink-3); }
+
+  .result-actions { display: flex; gap: 10px; margin-top: 18px; }
+  .result-actions .btn { flex: 1; }
+  .disclaimer { font-size: 11.5px; color: var(--ink-3); text-align: center; margin-top: 16px; line-height: 1.5; }
+
+  @media (max-width: 400px) {
+    .plate h2 { font-size: 20px; }
+    .kpi .k-value { font-size: 15px; }
+    .quick-grid { grid-template-columns: 1fr; }
+    .hist-stats { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* ---------- History drawer ---------- */
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.55); backdrop-filter: blur(3px); z-index: 60; opacity: 0; pointer-events: none; transition: .25s; }
+  .overlay.show { opacity: 1; pointer-events: auto; }
+  .drawer {
+    position: fixed; top: 0; right: 0; bottom: 0; width: min(400px, 88vw); z-index: 70;
+    background: var(--bg2); border-left: 1px solid var(--line-solid); box-shadow: -20px 0 60px rgba(0,0,0,.5);
+    transform: translateX(100%); transition: transform .3s cubic-bezier(.2,.8,.2,1);
+    display: flex; flex-direction: column;
+  }
+  .drawer.show { transform: none; }
+  .drawer .dh { display: flex; align-items: center; gap: 10px; padding: calc(16px + env(safe-area-inset-top)) 16px 14px; border-bottom: 1px solid var(--line-solid); }
+  .drawer .dh h3 { font-size: 17px; font-weight: 800; }
+  .drawer .dh .spacer { flex: 1; }
+  .drawer .list { overflow-y: auto; padding: 12px; flex: 1; display: flex; flex-direction: column; gap: 10px; }
+  .sess {
+    display: flex; gap: 12px; align-items: center; padding: 10px; border-radius: 14px;
+    background: var(--card); border: 1px solid var(--line-solid); cursor: pointer; transition: .15s;
+  }
+  .sess:hover { background: var(--card-2); border-color: var(--blue); }
+  .sess .thumb { width: 52px; height: 52px; border-radius: 11px; object-fit: cover; flex: none; background: var(--card-2); }
+  .sess .info { flex: 1; min-width: 0; }
+  .sess .info b { display: block; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sess .info span { font-size: 12px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+  .sess .del { color: var(--ink-3); font-size: 18px; padding: 6px; border: none; background: none; cursor: pointer; border-radius: 8px; }
+  .sess .del:hover { color: var(--red-soft); background: rgba(239,71,111,.12); }
+  .empty-hist { text-align: center; color: var(--ink-3); padding: 60px 20px; font-size: 14px; }
+  .empty-hist .big { font-size: 44px; display: block; margin-bottom: 12px; }
+
+  /* ---------- Modal (settings) ---------- */
+  .modal-card {
+    position: fixed; left: 50%; top: 50%; transform: translate(-50%,-46%) scale(.96); z-index: 80;
+    width: min(440px, 92vw); max-height: 86vh; overflow-y: auto; opacity: 0; pointer-events: none; transition: .25s;
+    background: var(--bg2); border: 1px solid var(--line-solid); border-radius: 20px; padding: 22px; box-shadow: var(--shadow);
+  }
+  .modal-card.show { opacity: 1; pointer-events: auto; transform: translate(-50%,-50%) scale(1); }
+  .modal-card h3 { font-size: 19px; font-weight: 800; margin-bottom: 4px; }
+  .modal-card .sub { color: var(--ink-2); font-size: 13px; margin-bottom: 18px; }
+  label.field { display: block; margin-bottom: 16px; }
+  label.field .lbl { font-size: 13px; font-weight: 700; color: var(--mint-soft); margin-bottom: 7px; display: block; }
+  label.field input, label.field select {
+    width: 100%; padding: 12px 14px; border-radius: 12px; font-family: inherit; font-size: 15px;
+    background: var(--card); border: 1px solid var(--line-solid); color: var(--ink-1);
+  }
+  label.field input:focus, label.field select:focus { outline: none; border-color: var(--blue); }
+  label.field .hint { font-size: 11.5px; color: var(--ink-3); margin-top: 6px; line-height: 1.5; }
+  label.field .hint a { color: var(--blue-soft); }
+  .modal-card .row { display: flex; gap: 10px; margin-top: 6px; }
+  .modal-card .row .btn { flex: 1; }
+  .keystat { font-size: 12px; padding: 8px 12px; border-radius: 10px; background: var(--card); border: 1px solid var(--line-solid); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .keystat.ok { color: var(--mint); border-color: rgba(53,208,165,.3); }
+  .keystat.no { color: var(--ink-2); }
+
+  /* toast */
+  .toast {
+    position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%) translateY(20px);
+    background: #060b16; border: 1px solid var(--line-solid); color: #fff; padding: 12px 18px; border-radius: 12px;
+    font-size: 14px; font-weight: 600; z-index: 90; opacity: 0; pointer-events: none; transition: .25s; box-shadow: var(--shadow);
+    max-width: 90vw; text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.err { border-color: #e34948; }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">🏷️</div>
+    <div>
+      <b>프라이스 렌즈</b>
+      <small>Price Lens · 라벨 스캔 가격 비교</small>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <button class="icon-btn badge" id="btnHistory" title="스캔 기록">🗂️<span class="count hidden" id="histCount">0</span></button>
+  <button class="icon-btn" id="btnSettings" title="설정">⚙️</button>
+</header>
+
+<div class="app">
+
+  <!-- ========== CAPTURE SCREEN ========== -->
+  <section class="screen active" id="screen-capture">
+    <div class="hero">
+      <h1>옷 라벨을 찍으면<br><span class="accent">지금 인터넷 최저가</span>가 보입니다</h1>
+      <p>가격표·품질 라벨을 촬영하면 상품을 인식하고, 웹 검색으로<br>쇼핑몰별 현재가를 <b>최저가 오름차순</b> + <b>최근 1년 가격 추이</b>로 정리해 드려요.</p>
+    </div>
+
+    <div class="capture-card">
+      <div class="cam-stage" id="camStage">
+        <div class="cam-placeholder" id="camPlaceholder">
+          <div class="big">📷</div>
+          <p>아래 셔터를 누르면 카메라가 켜집니다<br>또는 갤러리에서 사진을 불러오세요</p>
+        </div>
+        <video id="video" playsinline autoplay muted class="hidden"></video>
+        <img id="preview" class="preview hidden" alt="촬영한 라벨">
+        <div class="frame-guide hidden" id="frameGuide"></div>
+      </div>
+
+      <div class="cam-tools" id="camTools">
+        <button class="round-tool" id="btnGallery" title="갤러리">🖼️</button>
+        <button class="shutter" id="btnShutter" title="촬영"></button>
+        <button class="round-tool" id="btnFlip" title="카메라 전환">🔄</button>
+      </div>
+
+      <div class="capture-actions" id="captureActions">
+        <button class="btn btn-ghost" id="btnRetake">↺ 다시 찍기</button>
+        <button class="btn btn-primary" id="btnAnalyze">💰 가격 찾기</button>
+      </div>
+    </div>
+
+    <div class="tips-row">
+      <span class="chip">🏷️ 가격표·품번이 보이게</span>
+      <span class="chip">💡 밝은 곳에서</span>
+      <span class="chip">🚫 반사 피하기</span>
+    </div>
+
+    <p class="disclaimer" style="margin-top:22px">
+      API 키가 없어도 <b style="color:var(--mint-soft)">데모 보기</b>로 리포트를 체험할 수 있어요.<br>
+      <button class="btn btn-ghost" id="btnDemo" style="margin-top:10px;padding:10px 16px;font-size:14px">🛍️ 데모 가격 리포트 보기</button>
+    </p>
+  </section>
+
+  <!-- ========== LOADING SCREEN ========== -->
+  <section class="screen" id="screen-loading">
+    <div class="loading">
+      <div class="scan-ico">🏷️</div>
+      <h2>라벨을 읽고 가격을 찾는 중…</h2>
+      <div class="step" id="loadStep">사진을 정리하고 있어요</div>
+      <div class="bar"><i></i></div>
+      <p class="eta" id="loadEta"></p>
+    </div>
+  </section>
+
+  <!-- ========== RESULT SCREEN ========== -->
+  <section class="screen" id="screen-result">
+    <div class="result" id="resultBody"><!-- rendered --></div>
+    <div class="result-actions">
+      <button class="btn btn-ghost" id="btnNewScan">📷 새 스캔</button>
+      <button class="btn btn-mint" id="btnShare">📤 공유</button>
+    </div>
+    <p class="disclaimer">
+      ⚠️ 가격·링크는 웹 검색 기반 AI 정리로, 조회 시점·옵션에 따라 실제와 다를 수 있습니다.
+      1년 추이는 검색 결과 기반 <b>추정치</b>입니다. 구매 전 판매처에서 최종 가격을 확인하세요.
+    </p>
+  </section>
+
+</div>
+
+<!-- ========== History drawer ========== -->
+<div class="overlay" id="overlay"></div>
+<aside class="drawer" id="drawer">
+  <div class="dh">
+    <h3>🗂️ 스캔 기록</h3>
+    <div class="spacer"></div>
+    <button class="icon-btn" id="btnClearAll" title="전체 삭제">🗑️</button>
+    <button class="icon-btn" id="btnCloseDrawer">✕</button>
+  </div>
+  <div class="list" id="histList"></div>
+</aside>
+
+<!-- ========== Settings modal ========== -->
+<div class="modal-card" id="settingsModal">
+  <h3>⚙️ 설정</h3>
+  <p class="sub">Claude 비전 + 웹 검색으로 실제 라벨 인식과 가격 조회를 합니다. 키는 <b>이 브라우저에만</b> 저장되며 별도 서버로 전송되지 않습니다.</p>
+
+  <div class="keystat no" id="keyStat">🔑 API 키가 설정되지 않았어요 (데모 모드)</div>
+
+  <label class="field">
+    <span class="lbl">Anthropic API 키</span>
+    <input type="password" id="apiKeyInput" placeholder="sk-ant-..." autocomplete="off">
+    <span class="hint">
+      <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>에서 발급.
+      브라우저에서 직접 호출하므로 개인용 키만 사용하세요. 가격 조회에는 웹 검색 도구 비용이 추가됩니다.
+    </span>
+  </label>
+
+  <label class="field">
+    <span class="lbl">모델</span>
+    <select id="modelSelect">
+      <option value="claude-sonnet-5">Claude Sonnet 5 (권장 · 빠름)</option>
+      <option value="claude-opus-4-8">Claude Opus 4.8 (정밀)</option>
+      <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 (저비용)</option>
+    </select>
+  </label>
+
+  <div class="row">
+    <button class="btn btn-ghost" id="btnSettingsCancel">닫기</button>
+    <button class="btn btn-primary" id="btnSaveKey">저장</button>
+  </div>
+</div>
+
+<input type="file" id="fileInput" accept="image/*" capture="environment" class="hidden">
+<canvas id="canvas" class="hidden"></canvas>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+/* =========================================================
+   프라이스 렌즈 — 자체 완결형 라벨 스캔 가격 비교 앱
+   - 카메라/갤러리 촬영 → Claude 비전 + 웹 검색으로 상품 인식·가격 조회
+   - 쇼핑몰별 현재가(최저가 오름차순) + 최근 1년 최저가 추이 차트
+   - 세션(스캔)별 localStorage 저장 + 히스토리
+   ========================================================= */
+
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => document.querySelectorAll(s);
+
+const store = {
+  key:   () => localStorage.getItem('pl_apikey') || '',
+  model: () => localStorage.getItem('pl_model') || 'claude-sonnet-5',
+  setKey:   (v) => v ? localStorage.setItem('pl_apikey', v) : localStorage.removeItem('pl_apikey'),
+  setModel: (v) => localStorage.setItem('pl_model', v),
+  sessions: () => { try { return JSON.parse(localStorage.getItem('pl_sessions') || '[]'); } catch { return []; } },
+  saveSessions: (arr) => localStorage.setItem('pl_sessions', JSON.stringify(arr)),
+};
+
+let stream = null;           // MediaStream
+let facing = 'environment';  // camera facing
+let capturedDataUrl = null;  // full-res preview (data URL)
+let capturedForApi = null;   // downsized base64 (no prefix)
+
+/* ---------- Screen switching ---------- */
+function show(id) {
+  $$('.screen').forEach(s => s.classList.remove('active'));
+  $('#screen-' + id).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ---------- Toast ---------- */
+let toastT;
+function toast(msg, isErr) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.toggle('err', !!isErr);
+  t.classList.add('show');
+  clearTimeout(toastT);
+  toastT = setTimeout(() => t.classList.remove('show'), 3600);
+}
+
+/* ================= CAMERA ================= */
+async function startCamera() {
+  stopCamera();
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: facing }, width: { ideal: 1920 }, height: { ideal: 1440 } },
+      audio: false,
+    });
+    const v = $('#video');
+    v.srcObject = stream;
+    v.classList.remove('hidden');
+    $('#preview').classList.add('hidden');
+    $('#camPlaceholder').classList.add('hidden');
+    $('#frameGuide').classList.remove('hidden');
+    await v.play().catch(() => {});
+  } catch (e) {
+    toast('카메라를 열 수 없어요. 갤러리에서 사진을 선택해 주세요.', true);
+    $('#fileInput').click();
+  }
+}
+function stopCamera() {
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  const v = $('#video');
+  if (v) { v.srcObject = null; }
+}
+
+/* Capture current video frame */
+function captureFrame() {
+  const v = $('#video');
+  if (!v.videoWidth) { toast('카메라가 아직 준비되지 않았어요.', true); return; }
+  const canvas = $('#canvas');
+  canvas.width = v.videoWidth;
+  canvas.height = v.videoHeight;
+  canvas.getContext('2d').drawImage(v, 0, 0);
+  setCaptured(canvas.toDataURL('image/jpeg', 0.92));
+  stopCamera();
+}
+
+/* Set captured image (from camera or file) and prep API-size copy */
+function setCaptured(dataUrl) {
+  capturedDataUrl = dataUrl;
+  const img = $('#preview');
+  img.src = dataUrl;
+  img.classList.remove('hidden');
+  $('#video').classList.add('hidden');
+  $('#camPlaceholder').classList.add('hidden');
+  $('#frameGuide').classList.add('hidden');
+  $('#camTools').classList.add('hidden');
+  $('#captureActions').classList.add('show');
+
+  // build downsized base64 for API (max 1400px — 품번 글자가 읽혀야 함)
+  const tmp = new Image();
+  tmp.onload = () => {
+    const max = 1400;
+    let { width: w, height: h } = tmp;
+    if (Math.max(w, h) > max) {
+      const r = max / Math.max(w, h); w = Math.round(w * r); h = Math.round(h * r);
+    }
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    c.getContext('2d').drawImage(tmp, 0, 0, w, h);
+    capturedForApi = c.toDataURL('image/jpeg', 0.85).split(',')[1];
+  };
+  tmp.src = dataUrl;
+}
+
+function resetCapture() {
+  capturedDataUrl = null; capturedForApi = null;
+  $('#preview').classList.add('hidden');
+  $('#captureActions').classList.remove('show');
+  $('#camTools').classList.remove('hidden');
+  $('#camPlaceholder').classList.remove('hidden');
+}
+
+/* ================= ANALYSIS ================= */
+const LOAD_STEPS = [
+  '사진을 정리하고 있어요',
+  '라벨의 글자를 읽는 중',
+  '브랜드와 품번을 식별하는 중',
+  '쇼핑몰 판매가를 웹에서 검색하는 중',
+  '가격을 최저가순으로 정리하는 중',
+  '최근 1년 가격 추이를 그리는 중',
+];
+let loadTimer;
+function runLoadSteps(withSearch) {
+  let i = 0;
+  $('#loadStep').textContent = LOAD_STEPS[0];
+  $('#loadEta').textContent = withSearch ? '실시간 웹 검색이 포함되어 30초~1분 정도 걸릴 수 있어요.' : '';
+  clearInterval(loadTimer);
+  loadTimer = setInterval(() => {
+    i = Math.min(i + 1, LOAD_STEPS.length - 1);
+    $('#loadStep').textContent = LOAD_STEPS[i];
+  }, withSearch ? 6000 : 1400);
+}
+
+async function analyze() {
+  if (!capturedForApi) { toast('먼저 라벨을 촬영하거나 불러오세요.', true); return; }
+  show('loading');
+
+  const key = store.key();
+  runLoadSteps(!!key);
+  try {
+    let data;
+    if (key) {
+      data = await callClaude(key, store.model(), capturedForApi);
+    } else {
+      await new Promise(r => setTimeout(r, 2600));
+      data = DEMO_DATA;
+      toast('데모 모드입니다. 실제 인식·가격 검색은 설정에서 API 키를 등록하세요.');
+    }
+    clearInterval(loadTimer);
+
+    if (data && data.found === false) {
+      toast(data.reason || '라벨을 인식하지 못했어요. 품번/가격표가 보이게 다시 찍어주세요.', true);
+      show('capture');
+      return;
+    }
+    const session = saveSession(data, capturedDataUrl);
+    renderResult(session);
+    show('result');
+  } catch (e) {
+    clearInterval(loadTimer);
+    console.error(e);
+    toast('분석 중 오류: ' + (e.message || e), true);
+    show('capture');
+  }
+}
+
+/* ---------- Claude vision + web search call ---------- */
+const SYSTEM_PROMPT =
+`당신은 대한민국 온라인 쇼핑 가격 비교 전문가입니다. 사용자가 촬영한 상품 라벨(의류 가격표, 품질표시 라벨 등)
+사진을 분석해 상품을 식별하고, 웹 검색 도구로 "현재 판매 중인 인터넷 가격"을 조사해 한국어로 정리합니다.
+
+작업 순서:
+1. 라벨에서 브랜드, 상품명, 품번(모델 코드), 사이즈, 색상, 정가(택가)를 최대한 정확히 읽습니다.
+2. 웹 검색 도구를 4~6회 사용해 현재 판매가를 조사합니다. 품번+브랜드, 상품명+최저가 등으로 검색하고,
+   네이버쇼핑·다나와·쿠팡·G마켓·11번가·무신사·크림(KREAM)·번개장터 등 한국 쇼핑몰 결과를 우선합니다.
+3. 검색 결과에서 실제로 확인된 가격과 URL만 listings에 담습니다. 가격을 지어내지 마세요.
+   정확히 같은 상품이 아니면 note에 "동일 모델 다른 색상" 등으로 표기합니다. 확인된 것이 없으면 listings는 빈 배열로 두세요.
+4. 최근 1년 최저가 추이는 검색에서 발견한 과거 가격 정보(세일 소식, 커뮤니티 글, 시세 그래프 언급 등)와
+   해당 카테고리의 일반적 할인 패턴을 근거로 "월별 추정치"를 만듭니다. note에 추정 근거를 씁니다.
+
+반드시 마지막에 아래 JSON 스키마 하나만 출력하세요. JSON 앞뒤에 다른 텍스트나 코드펜스를 붙이지 마세요.`;
+
+const JSON_SCHEMA = `{
+  "found": true,                          // 상품 라벨로 인식했으면 true, 아니면 false
+  "reason": "",                           // found=false일 때 이유
+  "confidence": "high|medium|low",        // 상품 식별 확신도
+  "brand": "브랜드명",
+  "productName": "상품명(한국어, 식별 가능한 만큼)",
+  "modelCode": "품번/모델코드 (없으면 '')",
+  "category": "카테고리 예: 남성 정장, 골프 베스트",
+  "color": "색상 (없으면 '')",
+  "size": "사이즈 (없으면 '')",
+  "tagPrice": 350000,                     // 라벨에 인쇄된 정가(원), 없으면 null
+  "searchQuery": "가격 검색에 가장 잘 맞는 대표 검색어",
+  "summary": "이 상품에 대한 한 줄 설명",
+  "listings": [                           // 검색으로 확인된 현재 판매가. 낮은 가격부터 정렬
+    { "site": "판매처 이름", "title": "판매 상품명", "price": 89000,
+      "shipping": "무료배송|배송비 3,000원|불명", "condition": "새상품|중고|리퍼|불명",
+      "url": "검색 결과의 실제 URL", "note": "옵션/유의사항 (없으면 '')" }
+  ],
+  "priceInsight": "현재 가격 상황 요약 2~3문장 (정가 대비 할인 폭, 지금 사도 좋은지, 어디가 유리한지)",
+  "history": {
+    "points": [ { "month": "2025-08", "price": 320000 }, "... 오래된 달부터 12~13개 (이번 달 포함)" ],
+    "low":  { "month": "2026-05", "price": 59000 },    // 1년 중 최저
+    "high": { "month": "2025-08", "price": 350000 },   // 1년 중 최고
+    "trend": "하락|상승|보합",
+    "note": "추정 근거 1~2문장 (무엇을 참고했는지, 추정치임을 명시)"
+  },
+  "sources": [ { "title": "참고한 페이지 제목", "url": "https://..." } ]   // 3~6개
+}`;
+
+async function callClaude(key, model, base64) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: 8000,
+      system: SYSTEM_PROMPT,
+      tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 6 }],
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64 } },
+          { type: 'text', text: `이 라벨의 상품을 식별하고, 웹 검색으로 현재 인터넷 판매가(최저가 오름차순)와 최근 1년 가격 추이를 조사한 뒤 다음 JSON 스키마로만 응답하세요. 오늘 날짜: ${todayStr()}\n\n${JSON_SCHEMA}` },
+        ],
+      }],
+    }),
+  });
+
+  if (!res.ok) {
+    let msg = `API 오류 (${res.status})`;
+    try { const j = await res.json(); if (j.error?.message) msg += ': ' + j.error.message; } catch {}
+    if (res.status === 401) msg = 'API 키가 올바르지 않아요. 설정을 확인하세요.';
+    if (res.status === 429) msg = '요청이 많아요. 잠시 후 다시 시도해 주세요.';
+    throw new Error(msg);
+  }
+  const j = await res.json();
+  if (j.stop_reason === 'max_tokens') throw new Error('응답이 너무 길어 잘렸어요. 다시 시도해 주세요.');
+  // 웹 검색 중간 텍스트가 섞일 수 있으므로: 마지막 텍스트 블록 → 전체 순으로 JSON 파싱 시도
+  const texts = (j.content || []).filter(c => c.type === 'text').map(c => c.text || '');
+  for (const t of [texts[texts.length - 1] || '', texts.join('\n')]) {
+    try { return parseJson(t); } catch {}
+  }
+  throw new Error('응답을 해석하지 못했어요. 다시 시도해 주세요.');
+}
+
+function parseJson(text) {
+  // strip code fences, grab outermost {...} block
+  let t = String(text).replace(/```json/gi, '').replace(/```/g, '').trim();
+  const s = t.indexOf('{'), e = t.lastIndexOf('}');
+  if (s === -1 || e === -1) throw new Error('no json');
+  return JSON.parse(t.slice(s, e + 1));
+}
+
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/* ================= SESSIONS ================= */
+function saveSession(data, photo) {
+  const sessions = store.sessions();
+  const session = {
+    id: 's' + sessions.length + '_' + performance.now().toString(36).replace('.', ''),
+    at: new Date().toISOString(),
+    photo: photo || '',
+    data,
+  };
+  sessions.unshift(session);
+  if (sessions.length > 30) sessions.length = 30; // cap (사진 포함이라 용량 주의)
+  try { store.saveSessions(sessions); } catch { /* localStorage full — 기록 없이 진행 */ }
+  updateHistBadge();
+  return session;
+}
+function deleteSession(id) {
+  store.saveSessions(store.sessions().filter(s => s.id !== id));
+  renderHistory(); updateHistBadge();
+}
+function updateHistBadge() {
+  const n = store.sessions().length;
+  const b = $('#histCount');
+  b.textContent = n;
+  b.classList.toggle('hidden', n === 0);
+}
+
+/* ================= FORMAT HELPERS ================= */
+function esc(s) { return String(s ?? '').replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m])); }
+function safeUrl(u) {
+  const s = String(u || '').trim();
+  return /^https?:\/\//i.test(s) ? s : '';
+}
+function won(n) {
+  const v = Number(n);
+  if (!isFinite(v)) return '—';
+  return '₩' + Math.round(v).toLocaleString('ko-KR');
+}
+function wonShort(n) {   // axis ticks: 12.9만 / 3,500
+  const v = Number(n);
+  if (!isFinite(v)) return '';
+  if (v >= 10000) {
+    const man = v / 10000;
+    return (man >= 100 ? Math.round(man).toLocaleString('ko-KR') : (Math.round(man * 10) / 10)) + '만';
+  }
+  return Math.round(v).toLocaleString('ko-KR');
+}
+function monthLabel(m) { // "2025-08" → "8월" (1월에는 연도 병기)
+  const mm = String(m || '').match(/^(\d{4})-(\d{1,2})$/);
+  if (!mm) return esc(m);
+  const mo = parseInt(mm[2], 10);
+  return mo === 1 ? `${mm[1].slice(2)}년 1월` : `${mo}월`;
+}
+function monthFull(m) {
+  const mm = String(m || '').match(/^(\d{4})-(\d{1,2})$/);
+  return mm ? `${mm[1]}년 ${parseInt(mm[2], 10)}월` : esc(m);
+}
+
+/* ================= PRICE HISTORY CHART =================
+   단일 시리즈 라인: 2px 라운드 라인 + 10% 영역 워시,
+   헤어라인 그리드, 최저/최고/현재만 직접 라벨(서페이스 링 마커),
+   호버 크로스헤어 + 툴팁, 표 보기 폴백 */
+function buildChart(hist) {
+  const pts = (hist?.points || [])
+    .map(p => ({ month: String(p.month || ''), price: Number(p.price) }))
+    .filter(p => /^\d{4}-\d{1,2}$/.test(p.month) && isFinite(p.price) && p.price > 0);
+  if (pts.length < 3) return null;
+
+  const W = 640, H = 250, M = { t: 26, r: 18, b: 34, l: 52 };
+  const iw = W - M.l - M.r, ih = H - M.t - M.b;
+  const prices = pts.map(p => p.price);
+  let lo = Math.min(...prices), hi = Math.max(...prices);
+  if (lo === hi) { lo *= 0.9; hi *= 1.1; }
+  const pad = (hi - lo) * 0.12;
+  lo = Math.max(0, lo - pad); hi = hi + pad;
+
+  // clean y ticks (4 steps, nice numbers)
+  const rawStep = (hi - lo) / 3;
+  const mag = Math.pow(10, Math.floor(Math.log10(rawStep)));
+  const step = [1, 2, 2.5, 5, 10].map(k => k * mag).find(s => s >= rawStep) || rawStep;
+  const y0 = Math.floor(lo / step) * step;
+  const yTicks = [];
+  for (let v = y0; v <= hi + step * 0.01; v += step) if (v >= 0) yTicks.push(v);
+  const yLo = yTicks[0], yHi = yTicks[yTicks.length - 1] || hi;
+
+  const x = (i) => M.l + (pts.length === 1 ? iw / 2 : i / (pts.length - 1) * iw);
+  const y = (v) => M.t + ih - (v - yLo) / (yHi - yLo) * ih;
+
+  const line = pts.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(p.price).toFixed(1)}`).join('');
+  const area = `${line}L${x(pts.length - 1).toFixed(1)},${(M.t + ih).toFixed(1)}L${x(0).toFixed(1)},${(M.t + ih).toFixed(1)}Z`;
+
+  const grid = yTicks.map(v =>
+    `<line x1="${M.l}" y1="${y(v).toFixed(1)}" x2="${W - M.r}" y2="${y(v).toFixed(1)}" stroke="var(--grid)" stroke-width="1"/>` +
+    `<text x="${M.l - 8}" y="${y(v).toFixed(1)}" text-anchor="end" dominant-baseline="middle" font-size="10.5" fill="var(--ink-3)" style="font-variant-numeric:tabular-nums">${wonShort(v)}</text>`
+  ).join('');
+
+  // x labels: 5개 내외만
+  const every = Math.max(1, Math.ceil(pts.length / 5));
+  const xLabels = pts.map((p, i) => {
+    if (i % every && i !== pts.length - 1) return '';
+    const anchor = i === 0 ? 'start' : i === pts.length - 1 ? 'end' : 'middle';
+    return `<text x="${x(i).toFixed(1)}" y="${H - 12}" text-anchor="${anchor}" font-size="10.5" fill="var(--ink-3)">${monthLabel(p.month)}</text>`;
+  }).join('');
+
+  // 직접 라벨: 최저 / 최고 / 현재만 (선별 라벨 원칙)
+  const iLo = prices.indexOf(Math.min(...prices));
+  const iHi = prices.indexOf(Math.max(...prices));
+  const iLast = pts.length - 1;
+  const marked = [...new Set([iLo, iHi, iLast])];
+  const markers = marked.map(i => {
+    const isLo = i === iLo, isLast = i === iLast && !isLo;
+    const cx = x(i), cy = y(pts[i].price);
+    const above = i === iHi || cy > M.t + ih * 0.55;
+    const ly = above ? cy - 11 : cy + 18;
+    const name = isLo ? '최저 ' : (i === iHi ? '최고 ' : '현재 ');
+    let anchor = 'middle', lx = cx;
+    if (cx < M.l + 40) { anchor = 'start'; lx = cx - 4; }
+    if (cx > W - M.r - 40) { anchor = 'end'; lx = cx + 4; }
+    return `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="4.5" fill="${isLo ? 'var(--mint)' : 'var(--blue)'}" stroke="var(--card)" stroke-width="2"/>` +
+      `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="${anchor}" font-size="10.5" font-weight="700" fill="${isLo ? 'var(--mint-soft)' : 'var(--ink-2)'}" style="font-variant-numeric:tabular-nums">${name}${wonShort(pts[i].price)}</text>`;
+  }).join('');
+
+  const svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="최근 1년 최저가 추이 차트">
+    ${grid}
+    <path d="${area}" fill="var(--blue)" opacity="0.10"/>
+    <path d="${line}" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <line id="chartXhair" x1="0" y1="${M.t}" x2="0" y2="${M.t + ih}" stroke="var(--ink-3)" stroke-width="1" opacity="0"/>
+    <circle id="chartHoverDot" r="5" fill="var(--blue)" stroke="var(--card)" stroke-width="2" opacity="0"/>
+    ${markers}
+    ${xLabels}
+    <rect id="chartHit" x="${M.l}" y="${M.t}" width="${iw}" height="${ih}" fill="transparent"/>
+  </svg>`;
+
+  return { svg, pts, geo: { W, H, M, iw, ih, x, y } };
+}
+
+let chartCtx = null; // {pts, geo} for hover
+function wireChartHover() {
+  const wrap = $('#chartWrap');
+  if (!wrap || !chartCtx) return;
+  const svg = wrap.querySelector('svg');
+  const hit = wrap.querySelector('#chartHit');
+  const xhair = wrap.querySelector('#chartXhair');
+  const dot = wrap.querySelector('#chartHoverDot');
+  const tip = $('#chartTip');
+  if (!svg || !hit) return;
+
+  const move = (clientX) => {
+    const { pts, geo } = chartCtx;
+    const rect = svg.getBoundingClientRect();
+    const scale = geo.W / rect.width;
+    const vx = (clientX - rect.left) * scale;
+    let best = 0, bd = Infinity;
+    pts.forEach((p, i) => { const d = Math.abs(geo.x(i) - vx); if (d < bd) { bd = d; best = i; } });
+    const p = pts[best], px = geo.x(best), py = geo.y(p.price);
+    xhair.setAttribute('x1', px); xhair.setAttribute('x2', px); xhair.setAttribute('opacity', '1');
+    dot.setAttribute('cx', px); dot.setAttribute('cy', py); dot.setAttribute('opacity', '1');
+    tip.innerHTML = `<div class="t-month">${monthFull(p.month)}</div><div class="t-price">${won(p.price)}</div>`;
+    tip.style.left = (px / scale) + 'px';
+    tip.style.top = (py / scale) + 'px';
+    tip.classList.add('show');
+  };
+  const leave = () => {
+    xhair.setAttribute('opacity', '0'); dot.setAttribute('opacity', '0');
+    tip.classList.remove('show');
+  };
+  hit.addEventListener('pointermove', (e) => move(e.clientX));
+  hit.addEventListener('pointerdown', (e) => move(e.clientX));
+  hit.addEventListener('pointerleave', leave);
+}
+
+/* ================= QUICK SEARCH LINKS ================= */
+const QUICK_SITES = [
+  { name: '네이버쇼핑', emoji: '🟢', url: (q) => `https://search.shopping.naver.com/search/all?query=${q}`, desc: '국내 최저가 비교' },
+  { name: '다나와',     emoji: '📊', url: (q) => `https://search.danawa.com/dsearch.php?query=${q}`, desc: '가격 비교·시세 그래프' },
+  { name: '쿠팡',       emoji: '🚀', url: (q) => `https://www.coupang.com/np/search?q=${q}`, desc: '로켓배송' },
+  { name: '구글 쇼핑',  emoji: '🔎', url: (q) => `https://www.google.com/search?tbm=shop&q=${q}`, desc: '해외 포함 검색' },
+  { name: '무신사',     emoji: '👕', url: (q) => `https://www.musinsa.com/search/goods?keyword=${q}`, desc: '패션 전문몰' },
+  { name: 'KREAM',      emoji: '💎', url: (q) => `https://kream.co.kr/search?keyword=${q}`, desc: '한정판 시세' },
+  { name: '번개장터',   emoji: '⚡', url: (q) => `https://m.bunjang.co.kr/search/products?q=${q}`, desc: '중고 시세' },
+];
+
+/* ================= RENDER RESULT ================= */
+function sec(en, ko) {
+  return `<h3 class="sec"><span class="en">${esc(en)}</span><span class="ko">${esc(ko)}</span></h3>`;
+}
+
+function renderResult(session) {
+  const d = session.data || {};
+  const confMap = { high: '높음', medium: '보통', low: '낮음' };
+  const confClass = d.confidence === 'low' ? 'low' : '';
+
+  // ----- listings: 오름차순 정렬 (가격 없는 항목은 뒤로) -----
+  const listings = (Array.isArray(d.listings) ? d.listings : [])
+    .map(l => ({ ...l, price: Number(l.price) }))
+    .sort((a, b) => (isFinite(a.price) ? a.price : Infinity) - (isFinite(b.price) ? b.price : Infinity));
+  const best = listings.find(l => isFinite(l.price));
+  const bestPrice = best ? best.price : null;
+
+  const tag = Number(d.tagPrice);
+  const hasTag = isFinite(tag) && tag > 0;
+  const discount = (hasTag && bestPrice) ? Math.round((1 - bestPrice / tag) * 100) : null;
+
+  const listingHtml = listings.length ? listings.map((l, i) => {
+    const isBest = isFinite(l.price) && l.price === bestPrice;
+    const url = safeUrl(l.url);
+    const meta = [l.condition && l.condition !== '불명' ? l.condition : '', l.shipping && l.shipping !== '불명' ? l.shipping : '', l.note || '']
+      .filter(Boolean).map(esc).join(' · ');
+    const diff = (!isBest && isFinite(l.price) && bestPrice) ? `최저가 +${won(l.price - bestPrice).slice(1)}` : '';
+    return `<div class="listing${isBest ? ' best' : ''}">
+      <span class="rank">${i + 1}</span>
+      <div class="l-info">
+        <div class="l-site">${esc(l.site || '판매처')}${isBest ? '<span class="best-badge">최저가</span>' : ''}</div>
+        ${l.title ? `<div class="l-title">${esc(l.title)}</div>` : ''}
+        ${meta ? `<div class="l-meta">${meta}</div>` : ''}
+      </div>
+      <div class="l-right">
+        <div class="l-price">${won(l.price)}</div>
+        ${diff ? `<div class="l-diff">${diff}</div>` : ''}
+        ${url ? `<a class="go" href="${esc(url)}" target="_blank" rel="noopener noreferrer">바로가기 →</a>` : ''}
+      </div>
+    </div>`;
+  }).join('') : `<div class="empty-listings"><span class="big">🔍</span>
+    검색에서 확인된 판매처가 없어요.<br>아래 <b>바로 검색</b> 링크로 직접 확인해 보세요.</div>`;
+
+  // ----- 1년 추이 차트 -----
+  const hist = d.history || {};
+  const chart = buildChart(hist);
+  chartCtx = chart ? { pts: chart.pts, geo: chart.geo } : null;
+  let histStats = '';
+  if (chart) {
+    const ps = chart.pts.map(p => p.price);
+    const loP = Math.min(...ps), hiP = Math.max(...ps);
+    const loM = chart.pts[ps.indexOf(loP)].month, hiM = chart.pts[ps.indexOf(hiP)].month;
+    const nowP = ps[ps.length - 1];
+    const chg = Math.round((nowP - ps[0]) / ps[0] * 100);
+    histStats = `<div class="hist-stats">
+      <div class="hstat"><div class="h-label">1년 최저</div><div class="h-value">${won(loP)}</div><div class="h-sub">${monthFull(loM)}</div></div>
+      <div class="hstat"><div class="h-label">1년 최고</div><div class="h-value">${won(hiP)}</div><div class="h-sub">${monthFull(hiM)}</div></div>
+      <div class="hstat"><div class="h-label">1년 변동</div><div class="h-value" style="color:${chg <= 0 ? 'var(--mint)' : 'var(--red-soft)'}">${chg > 0 ? '+' : ''}${chg}%</div><div class="h-sub">${esc(hist.trend || '')} 추세</div></div>
+    </div>`;
+  }
+  const histTable = chart ? `<details class="hist-table"><summary>표로 보기</summary>
+    <table><thead><tr><th>월</th><th>최저가(추정)</th></tr></thead><tbody>
+      ${chart.pts.map(p => `<tr><td>${monthFull(p.month)}</td><td>${won(p.price)}</td></tr>`).join('')}
+    </tbody></table></details>` : '';
+
+  // ----- 바로 검색 링크 -----
+  const q = encodeURIComponent(String(d.searchQuery || [d.brand, d.productName].filter(Boolean).join(' ') || d.modelCode || '').trim());
+  const quickHtml = q ? QUICK_SITES.map(s =>
+    `<a class="quick" href="${esc(s.url(q))}" target="_blank" rel="noopener noreferrer">
+      <span class="qe">${s.emoji}</span>
+      <span class="qt"><b>${esc(s.name)}</b><span>${esc(s.desc)}</span></span>
+      <span class="arrow">→</span>
+    </a>`).join('') : '';
+
+  // ----- 출처 -----
+  const sources = (Array.isArray(d.sources) ? d.sources : [])
+    .map(s => ({ title: s.title || s.url || '', url: safeUrl(s.url) }))
+    .filter(s => s.url);
+  const sourcesHtml = sources.length
+    ? `<ul class="sources">${sources.map(s => `<li><a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.title)}</a></li>`).join('')}</ul>`
+    : '';
+
+  const specs = [d.size && `사이즈 ${d.size}`, d.color, d.category].filter(Boolean);
+
+  $('#resultBody').innerHTML = `
+    <!-- product plate -->
+    <div class="plate">
+      ${session.photo ? `<img class="photo" src="${session.photo}" alt="">` : ''}
+      <div class="veil"></div>
+      <div class="frame">
+        <div class="kicker">Price Lens · Price Report</div>
+        ${d.brand ? `<div class="brand-name">${esc(d.brand)}</div>` : ''}
+        <h2>${esc(d.productName || '상품명 미상')}</h2>
+        ${d.modelCode ? `<div class="code">${esc(d.modelCode)}</div>` : ''}
+        <div class="badges">
+          ${specs.map(s => `<span class="tag spec">${esc(s)}</span>`).join('')}
+          <span class="tag conf ${confClass}">식별 확신도 ${confMap[d.confidence] || '보통'}</span>
+        </div>
+        ${d.summary ? `<p class="summary">${esc(d.summary)}</p>` : ''}
+      </div>
+    </div>
+
+    <!-- KPI row -->
+    <div class="kpis">
+      <div class="kpi">
+        <div class="k-label">라벨 정가</div>
+        <div class="k-value">${hasTag ? won(tag) : '—'}</div>
+      </div>
+      <div class="kpi">
+        <div class="k-label">인터넷 최저가</div>
+        <div class="k-value mint">${bestPrice ? won(bestPrice) : '—'}</div>
+        ${best ? `<div class="k-sub">${esc(best.site || '')}</div>` : ''}
+      </div>
+      <div class="kpi">
+        <div class="k-label">정가 대비</div>
+        <div class="k-value" style="color:${discount != null && discount > 0 ? 'var(--good)' : 'var(--ink-1)'}">${discount != null ? '-' + discount + '%' : '—'}</div>
+        ${discount != null ? '<div class="k-sub">할인</div>' : ''}
+      </div>
+    </div>
+
+    <!-- price comparison -->
+    <div class="card">
+      ${sec('Live Prices', '실시간 가격 비교 · 최저가순')}
+      ${listingHtml}
+      ${listings.length ? `<p class="foot-note">조회 시점 기준이며 옵션·쿠폰에 따라 달라질 수 있어요. 링크는 새 탭으로 열립니다.</p>` : ''}
+    </div>
+
+    <!-- 1-year history -->
+    <div class="card">
+      ${sec('1-Year Price History', '최근 1년 최저가 추이')}
+      ${chart ? `
+        <div class="chart-wrap" id="chartWrap">${chart.svg}<div class="chart-tip" id="chartTip"></div></div>
+        <div class="chart-legend-row">
+          <span class="lg"><i style="background:var(--blue)"></i>월별 최저가(추정)</span>
+          <span class="lg"><i style="background:var(--mint)"></i>1년 최저점</span>
+        </div>
+        ${histStats}
+        ${histTable}
+        ${hist.note ? `<p class="foot-note">📎 ${esc(hist.note)}</p>` : ''}
+      ` : `<p class="body">이 상품의 1년 가격 추이 데이터를 만들지 못했어요.</p>`}
+    </div>
+
+    <!-- insight -->
+    ${d.priceInsight ? `<div class="card">${sec('AI Insight', '지금 사도 될까?')}<div class="editorial"><p>${esc(d.priceInsight)}</p></div></div>` : ''}
+
+    <!-- quick search -->
+    ${quickHtml ? `<div class="card">${sec('Search Direct', '바로 검색')}
+      <div class="quick-grid">${quickHtml}</div>
+      <p class="foot-note">검색어: <b style="color:var(--ink-2)">${esc(decodeURIComponent(q))}</b> — 각 쇼핑몰 검색 결과로 바로 이동해요.</p>
+    </div>` : ''}
+
+    <!-- sources -->
+    ${sourcesHtml ? `<div class="card">${sec('Sources', '참고한 페이지')}${sourcesHtml}</div>` : ''}
+
+    <!-- colophon -->
+    <div class="colophon">
+      <div class="wm">Price Lens</div>
+      <div class="meta">${fmtDate(session.at)} 스캔 · 식별 확신도 ${confMap[d.confidence] || '보통'} · 웹 검색 기반 AI 정리</div>
+    </div>
+  `;
+  wireChartHover();
+  currentSession = session;
+}
+let currentSession = null;
+
+/* ================= HISTORY UI ================= */
+function fmtDate(iso) {
+  try {
+    const dt = new Date(iso);
+    return `${dt.getFullYear()}.${String(dt.getMonth()+1).padStart(2,'0')}.${String(dt.getDate()).padStart(2,'0')} ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
+  } catch { return ''; }
+}
+function renderHistory() {
+  const list = $('#histList');
+  const sessions = store.sessions();
+  if (!sessions.length) {
+    list.innerHTML = `<div class="empty-hist"><span class="big">🏷️</span>아직 스캔한 라벨이 없어요.<br>첫 가격표를 찍어보세요!</div>`;
+    return;
+  }
+  list.innerHTML = sessions.map(s => {
+    const d = s.data || {};
+    const ls = (Array.isArray(d.listings) ? d.listings : []).map(l => Number(l.price)).filter(isFinite);
+    const low = ls.length ? Math.min(...ls) : null;
+    return `<div class="sess" data-id="${s.id}">
+      ${s.photo ? `<img class="thumb" src="${s.photo}" alt="">` : `<div class="thumb" style="display:grid;place-items:center;font-size:22px">🏷️</div>`}
+      <div class="info">
+        <b>${esc(d.productName || '상품명 미상')}</b>
+        <span>${esc(d.brand || '')}${low ? ' · 최저 ' + won(low) : ''}</span>
+        <span style="color:var(--ink-3);font-size:11px">${fmtDate(s.at)}</span>
+      </div>
+      <button class="del" data-del="${s.id}" title="삭제">🗑️</button>
+    </div>`;
+  }).join('');
+}
+function openDrawer() { renderHistory(); $('#overlay').classList.add('show'); $('#drawer').classList.add('show'); }
+function closeDrawer() { $('#drawer').classList.remove('show'); if (!$('#settingsModal').classList.contains('show')) $('#overlay').classList.remove('show'); }
+
+/* ================= SETTINGS UI ================= */
+function openSettings() {
+  $('#apiKeyInput').value = store.key();
+  $('#modelSelect').value = store.model();
+  refreshKeyStat();
+  $('#overlay').classList.add('show');
+  $('#settingsModal').classList.add('show');
+}
+function closeSettings() { $('#settingsModal').classList.remove('show'); if (!$('#drawer').classList.contains('show')) $('#overlay').classList.remove('show'); }
+function refreshKeyStat() {
+  const el = $('#keyStat');
+  if (store.key()) { el.className = 'keystat ok'; el.textContent = '✅ API 키가 설정되어 실제 인식·가격 검색이 작동합니다'; }
+  else { el.className = 'keystat no'; el.textContent = '🔑 API 키가 설정되지 않았어요 (데모 모드)'; }
+}
+
+/* ================= SHARE ================= */
+async function shareResult() {
+  if (!currentSession) return;
+  const d = currentSession.data || {};
+  const ls = (Array.isArray(d.listings) ? d.listings : [])
+    .map(l => ({ ...l, price: Number(l.price) })).filter(l => isFinite(l.price))
+    .sort((a, b) => a.price - b.price);
+  const lines = ls.slice(0, 3).map((l, i) => `${i + 1}. ${l.site} ${won(l.price)}${safeUrl(l.url) ? ' ' + l.url : ''}`);
+  const text = `🏷️ ${[d.brand, d.productName].filter(Boolean).join(' ')}\n` +
+    (d.tagPrice ? `정가 ${won(d.tagPrice)}` : '') + (ls.length ? ` → 인터넷 최저가 ${won(ls[0].price)}\n` : '\n') +
+    (lines.length ? lines.join('\n') + '\n' : '') +
+    `\n— 프라이스 렌즈로 스캔`;
+  try {
+    if (navigator.share) { await navigator.share({ title: d.productName || '프라이스 렌즈', text }); }
+    else { await navigator.clipboard.writeText(text); toast('클립보드에 복사했어요!'); }
+  } catch (e) { /* cancelled */ }
+}
+
+/* ================= FILE INPUT ================= */
+function handleFile(file) {
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { toast('이미지 파일을 선택해 주세요.', true); return; }
+  const reader = new FileReader();
+  reader.onload = () => { stopCamera(); setCaptured(reader.result); };
+  reader.readAsDataURL(file);
+}
+
+/* ================= DEMO DATA =================
+   첨부 예시 라벨(바스키아 브루클린 22SS 골프 베스트) 기반 가상 시나리오 */
+const DEMO_DATA = {
+  found: true, confidence: 'high',
+  brand: '바스키아 브루클린',
+  productName: '22SS 라임 골프 베스트 (오프화이트)',
+  modelCode: '12233641457',
+  category: '골프 베스트',
+  color: '오프화이트',
+  size: '100',
+  tagPrice: 350000,
+  searchQuery: '바스키아 브루클린 라임 골프 베스트',
+  summary: '바스키아 아트웍을 활용한 골프 웨어 라인의 22SS 시즌 베스트. 시즌이 지나 온라인에서 큰 폭으로 할인 판매 중입니다.',
+  listings: [
+    { site: '네이버쇼핑 (스마트스토어)', title: '바스키아브루클린 라임 골프베스트 오프화이트', price: 59000, shipping: '무료배송', condition: '새상품', url: 'https://search.shopping.naver.com/search/all?query=%EB%B0%94%EC%8A%A4%ED%82%A4%EC%95%84%20%EB%B8%8C%EB%A3%A8%ED%81%B4%EB%A6%B0%20%EA%B3%A8%ED%94%84%20%EB%B2%A0%EC%8A%A4%ED%8A%B8', note: '' },
+    { site: 'G마켓', title: '[바스키아 브루클린] 22SS 라임 베스트', price: 69300, shipping: '배송비 3,000원', condition: '새상품', url: 'https://browse.gmarket.co.kr/search?keyword=%EB%B0%94%EC%8A%A4%ED%82%A4%EC%95%84%20%EA%B3%A8%ED%94%84%20%EB%B2%A0%EC%8A%A4%ED%8A%B8', note: '쿠폰 적용가' },
+    { site: '11번가', title: '바스키아브루클린 골프 니트 베스트', price: 72000, shipping: '무료배송', condition: '새상품', url: 'https://search.11st.co.kr/Search.tmall?kwd=%EB%B0%94%EC%8A%A4%ED%82%A4%EC%95%84%20%EA%B3%A8%ED%94%84%20%EB%B2%A0%EC%8A%A4%ED%8A%B8', note: '동일 모델 다른 색상 포함' },
+    { site: '롯데온', title: '바스키아 브루클린 골프 베스트 22SS', price: 89000, shipping: '무료배송', condition: '새상품', url: 'https://www.lotteon.com/search/search/search.ecn?render=search&q=%EB%B0%94%EC%8A%A4%ED%82%A4%EC%95%84%20%EA%B3%A8%ED%94%84%20%EB%B2%A0%EC%8A%A4%ED%8A%B8', note: '' },
+    { site: '브랜드 공식몰', title: '22SS 라임 골프 베스트', price: 175000, shipping: '무료배송', condition: '새상품', url: 'https://www.google.com/search?q=%EB%B0%94%EC%8A%A4%ED%82%A4%EC%95%84%20%EB%B8%8C%EB%A3%A8%ED%81%B4%EB%A6%B0%20%EA%B3%B5%EC%8B%9D%EB%AA%B0', note: '시즌오프 50%' },
+  ],
+  priceInsight: '정가 35만원 대비 최저 5만 9천원(-83%)까지 내려온 전형적인 이월 상품입니다. 시즌이 두 번 지나 재고 소진 단계라 추가 하락 폭은 크지 않을 것으로 보여요. 사이즈가 맞다면 지금 구매해도 좋은 가격대입니다.',
+  history: {
+    points: [
+      { month: '2025-07', price: 198000 }, { month: '2025-08', price: 189000 },
+      { month: '2025-09', price: 175000 }, { month: '2025-10', price: 149000 },
+      { month: '2025-11', price: 129000 }, { month: '2025-12', price: 119000 },
+      { month: '2026-01', price: 99000 },  { month: '2026-02', price: 89000 },
+      { month: '2026-03', price: 79000 },  { month: '2026-04', price: 69000 },
+      { month: '2026-05', price: 65000 },  { month: '2026-06', price: 62000 },
+      { month: '2026-07', price: 59000 },
+    ],
+    low: { month: '2026-07', price: 59000 },
+    high: { month: '2025-07', price: 198000 },
+    trend: '하락',
+    note: '데모용 예시 데이터입니다. 실제 사용 시 웹 검색에서 발견한 과거 가격 정보를 근거로 한 월별 추정치가 표시됩니다.',
+  },
+  sources: [
+    { title: '네이버쇼핑 검색 결과 (데모)', url: 'https://search.shopping.naver.com/search/all?query=%EB%B0%94%EC%8A%A4%ED%82%A4%EC%95%84%20%EB%B8%8C%EB%A3%A8%ED%81%B4%EB%A6%B0' },
+    { title: '다나와 검색 결과 (데모)', url: 'https://search.danawa.com/dsearch.php?query=%EB%B0%94%EC%8A%A4%ED%82%A4%EC%95%84%20%EA%B3%A8%ED%94%84%20%EB%B2%A0%EC%8A%A4%ED%8A%B8' },
+  ],
+};
+
+/* ================= EVENT WIRING ================= */
+$('#btnShutter').addEventListener('click', () => {
+  if (stream) captureFrame();
+  else startCamera();
+});
+$('#btnFlip').addEventListener('click', () => { facing = facing === 'environment' ? 'user' : 'environment'; startCamera(); });
+$('#btnGallery').addEventListener('click', () => $('#fileInput').click());
+$('#fileInput').addEventListener('change', (e) => handleFile(e.target.files[0]));
+$('#btnRetake').addEventListener('click', () => { resetCapture(); startCamera(); });
+$('#btnAnalyze').addEventListener('click', analyze);
+$('#btnDemo').addEventListener('click', () => {
+  clearInterval(loadTimer);
+  show('loading'); runLoadSteps(false);
+  setTimeout(() => {
+    clearInterval(loadTimer);
+    const session = saveSession(DEMO_DATA, '');
+    renderResult(session);
+    show('result');
+    toast('데모 리포트입니다. 실제 인식·가격 검색은 설정에서 API 키를 등록하세요.');
+  }, 2400);
+});
+
+$('#btnNewScan').addEventListener('click', () => { resetCapture(); show('capture'); });
+$('#btnShare').addEventListener('click', shareResult);
+
+$('#btnHistory').addEventListener('click', openDrawer);
+$('#btnCloseDrawer').addEventListener('click', closeDrawer);
+$('#btnClearAll').addEventListener('click', () => {
+  if (!store.sessions().length) return;
+  if (confirm('스캔 기록을 모두 삭제할까요?')) { store.saveSessions([]); renderHistory(); updateHistBadge(); }
+});
+$('#histList').addEventListener('click', (e) => {
+  const del = e.target.closest('[data-del]');
+  if (del) { e.stopPropagation(); deleteSession(del.getAttribute('data-del')); return; }
+  const sess = e.target.closest('.sess');
+  if (sess) {
+    const s = store.sessions().find(x => x.id === sess.getAttribute('data-id'));
+    if (s) { renderResult(s); closeDrawer(); show('result'); }
+  }
+});
+
+$('#btnSettings').addEventListener('click', openSettings);
+$('#btnSettingsCancel').addEventListener('click', closeSettings);
+$('#btnSaveKey').addEventListener('click', () => {
+  store.setKey($('#apiKeyInput').value.trim());
+  store.setModel($('#modelSelect').value);
+  refreshKeyStat();
+  toast(store.key() ? '설정을 저장했어요.' : '데모 모드로 전환했어요.');
+  closeSettings();
+});
+
+$('#overlay').addEventListener('click', () => { closeDrawer(); closeSettings(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeDrawer(); closeSettings(); } });
+
+// Stop camera when tab hidden (battery / privacy)
+document.addEventListener('visibilitychange', () => { if (document.hidden) stopCamera(); });
+
+/* ================= INIT ================= */
+updateHistBadge();
+</script>
+</body>
+</html>
