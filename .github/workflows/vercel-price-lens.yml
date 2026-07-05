@@ -1,0 +1,60 @@
+name: Deploy Price Lens to Vercel
+
+# price-lens/ 폴더를 Vercel 정적 사이트로 배포한다.
+# 필요 시크릿 (repo Settings → Secrets and variables → Actions):
+#   VERCEL_TOKEN      — vercel.com/account/tokens 에서 발급
+#   VERCEL_ORG_ID     — Vercel 팀/계정 ID (team_...)
+#   VERCEL_PROJECT_ID — Vercel 프로젝트 ID (prj_...)
+# 시크릿이 없으면 배포를 건너뛰고(성공 처리) 안내만 남긴다.
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 배포 환경
+        type: choice
+        options:
+          - production
+          - preview
+        default: production
+  push:
+    branches:
+      - claude/expand-korean-market-strategy-dPuXy # 기본 브랜치
+    paths:
+      - 'price-lens/**'
+
+concurrency:
+  group: vercel-price-lens
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check Vercel secrets
+        id: guard
+        run: |
+          if [ -n "${{ secrets.VERCEL_TOKEN }}" ] && [ -n "${{ secrets.VERCEL_ORG_ID }}" ] && [ -n "${{ secrets.VERCEL_PROJECT_ID }}" ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::VERCEL_TOKEN / VERCEL_ORG_ID / VERCEL_PROJECT_ID 시크릿이 없어 Vercel 배포를 건너뜁니다."
+          fi
+
+      - name: Deploy price-lens to Vercel
+        if: steps.guard.outputs.ok == 'true'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          FLAG="--prod"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.environment }}" = "preview" ]; then
+            FLAG=""
+          fi
+          npx vercel@latest deploy price-lens $FLAG --yes --token "$VERCEL_TOKEN" | tee deploy.log
+          echo "### 🏷️ Price Lens 배포 완료" >> "$GITHUB_STEP_SUMMARY"
+          echo "URL: $(tail -1 deploy.log)" >> "$GITHUB_STEP_SUMMARY"
