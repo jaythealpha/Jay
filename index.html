@@ -655,7 +655,7 @@
   <footer>
     <div>Aesthetic QR Studio · LemioCode 컨셉을 오픈소스로 재구현 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.05-g</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.05-h</b></div>
   </footer>
 </div>
 
@@ -3322,8 +3322,8 @@ function render(g2, exportSize){
     try { g.drawImage(S.aiArt, xoff, topPad, avail, avail); } catch(e){}
     g.restore();
   } else if (S.artImg){
-    // ===== full-image "art QR" mode (media covers the entire code) =====
-    drawArtLayer(g, ox, oy, unit, n, m);
+    // ===== lemio-style art QR: artwork fills the canvas, QR zone centred =====
+    drawArtLayer(g, size, n, m);
   } else {
     // ===== styled vector QR mode =====
     // fill style for modules
@@ -3465,13 +3465,15 @@ function render(g2, exportSize){
 
   // label
   if (S.labelOn && S.labelText){
-    g.fillStyle = S.transparent ? "#111111" : (luminance(S.bg)>140 ? "#111111" : "#ffffff");
+    if (S.artImg){ g.save(); g.shadowColor="rgba(0,0,0,0.8)"; g.shadowBlur=Math.max(2,labelFont*0.45); }
+    g.fillStyle = S.artImg ? "#ffffff" : (S.transparent ? "#111111" : (luminance(S.bg)>140 ? "#111111" : "#ffffff"));
     g.font = "700 "+labelFont+"px -apple-system,'Noto Sans KR',sans-serif";
     g.textAlign="center"; g.textBaseline="middle";
     var baseY = frameInset + ((S.labelPos==="top") ? (labelSpace*0.5) : (avail + labelSpace*0.5));
     var offPx = (S.labelOffset/100) * (size*0.14);   // fine up/down nudge (negative=up)
     var ly = Math.max(frameInset+labelFont*0.65, Math.min(size - frameInset - labelFont*0.65, baseY + offPx));
     g.fillText(S.labelText, size/2, ly);
+    if (S.artImg) g.restore();
   }
 }
 
@@ -3526,109 +3528,87 @@ function drawArtMark(g, cx, cy, r, shape){
 // solid dot there guarantees the read) plus a faint full-cell luminance bias. Result: the
 // image reads clearly across the entire code while staying scannable. Higher "visibility"
 // shrinks the dots + fades the bias (more artwork). Finders stay solid.
-function drawArtLayer(g, ox, oy, unit, n, m){
-  var area = n*unit;
-  // 1) artwork covers the whole module area at FULL strength — the photo stays fully visible.
-  //    "Living photo" (움짤): a still image that is animating gets a Ken-Burns zoom+drift so it
-  //    visibly moves while the fixed QR modulation below keeps every frame scannable.
-  var ok;
-  var artMoving = S.artImg && (S.anim || S.artIsVideo || S.artIsGif);   // any moving art
-  var moveImg = S.anim && S.artImg && !S.artIsVideo && !S.artIsGif;      // still image → Ken-Burns
-  if (moveImg){
-    // clearly visible Ken-Burns motion — the adaptive modulation below is recomputed from the
-    // ACTUAL pixels every frame, so big motion no longer risks scannability.
-    var tt = _phase*6.28318;
-    var z = 1.14 + 0.09*Math.sin(tt);
-    var dw = area*z, dh = area*z;
-    var dx = ox - (dw-area)/2 + Math.sin(tt)*area*0.05;
-    var dy = oy - (dh-area)/2 + Math.cos(tt*0.85)*area*0.042;
-    g.save(); g.beginPath(); g.rect(ox,oy,area,area); g.clip();
-    ok = drawCover(g, S.artImg, dx, dy, dw, dh);
-    g.restore();
-  } else {
-    ok = drawCover(g, S.artImg, ox, oy, area, area);
-  }
-  if (!ok){ g.fillStyle="#0b0d12"; g.fillRect(ox,oy,area,area); }
-
+// ================= lemio-style art QR =================
+// Composition matches the lemiocode gallery: the artwork fills the ENTIRE canvas; the QR sits
+// in a centred zone wrapped by a clean ring (the quiet zone). Inside, the image shows through
+// a pastel veil and the data reads as crisp OPAQUE micro-dots at module centres, with finders,
+// alignment patterns and the timing row drawn solid. Safari-safe by construction: source-over
+// fills only — no blend modes, no pixel sampling.
+var APOS=[[],[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58]];
+function drawArtLayer(g, size, n, m){
   var vis = Math.max(0.2, Math.min(0.92, S.artVisibility/100));
-  var markFill = makeArtFill(g, ox, oy, area);
-  function roleDark(rr,cc){ return m[rr][cc] !== S.artInvert; }
+  var inv = S.artInvert;
+  var moveImg = S.anim && !S.artIsVideo && !S.artIsGif;
 
-  // 2) ===== ADAPTIVE luminance modulation (lemio-style: QR woven into the picture) =====
-  //    The real trick behind AI art QRs: a cell that ALREADY has the right tone is left
-  //    completely untouched — most of the photo stays raw. We downsample the just-drawn art
-  //    to 2×2 samples per module, measure each cell's centre luminance, and push ONLY the
-  //    non-conforming cells just far enough past the scan threshold (multiply toward dark /
-  //    screen toward white — both preserve the image's texture and colour inside the cell).
-  //    Because this measures the ACTUAL pixels each render, it stays correct for any image,
-  //    any frame of a video/GIF, and any Ken-Burns position.
-  var sc = _artSampleCv; var sn = n*2;
-  if (sc.width !== sn){ sc.width = sn; sc.height = sn; }
-  var sg2 = sc.getContext("2d", {willReadFrequently:true});
-  var px = null;
-  try {
-    sg2.drawImage(g.canvas, ox, oy, area, area, 0, 0, sn, sn);
-    px = sg2.getImageData(0, 0, sn, sn).data;
-  } catch(e){ /* tainted canvas etc. → fall back to uniform push below */ }
-
-  // contrast window: higher visibility → narrower push (more raw image). Moving art keeps a floor.
-  var C = 170 - vis*95;                        // vis .2→151 … .92→82.6
-  if (artMoving) C = Math.max(C, 120);
-  var MID = 132, Ld = MID - C/2, Ll = MID + C/2;
-  var ext = unit*0.02;
-  for (var r0=0;r0<n;r0++){
-    for (var c0=0;c0<n;c0++){
-      if (isFinder(r0,c0,n)) continue;
-      var dk = roleDark(r0,c0);
-      var L = 128;
-      if (px){
-        // average the 2×2 samples of this cell (≈ its centre-weighted tone)
-        var i00=((r0*2)*sn+(c0*2))*4, i01=i00+4, i10=i00+sn*4, i11=i10+4;
-        var lum=function(i){ return 0.299*px[i]+0.587*px[i+1]+0.114*px[i+2]; };
-        L = (lum(i00)+lum(i01)+lum(i10)+lum(i11))/4;
-      }
-      var x0=ox+c0*unit-ext, y0=oy+r0*unit-ext, w0=unit+2*ext;
-      if (dk){
-        if (L > Ld){                            // too bright for a dark module → multiply down
-          g.globalCompositeOperation = "multiply";
-          var mv = Math.round(255*Math.max(0.05, Ld/Math.max(L,1)));
-          g.fillStyle = "rgb("+mv+","+mv+","+mv+")";
-          g.fillRect(x0,y0,w0,w0);
-        }
-      } else {
-        if (L < Ll){                            // too dark for a light module → screen up
-          g.globalCompositeOperation = "screen";
-          var sv = Math.round(255*Math.min(0.95, (Ll-L)/Math.max(255-L,1)));
-          g.fillStyle = "rgb("+sv+","+sv+","+sv+")";
-          g.fillRect(x0,y0,w0,w0);
-        }
-      }
+  // 1) artwork over the WHOLE canvas (Ken-Burns when animating a still image)
+  function paintArt(x,y,w,h){
+    if (moveImg){
+      var tt=_phase*6.28318, z=1.12+0.07*Math.sin(tt);
+      var dw=w*z, dh=h*z;
+      var dx=x-(dw-w)/2 + Math.sin(tt)*w*0.04;
+      var dy=y-(dh-h)/2 + Math.cos(tt*0.85)*h*0.034;
+      return drawCover(g, S.artImg, dx, dy, dw, dh);
     }
+    return drawCover(g, S.artImg, x, y, w, h);
   }
-  g.globalCompositeOperation = "source-over";
+  if (!paintArt(0,0,size,size)){ g.fillStyle="#0b0d12"; g.fillRect(0,0,size,size); }
 
-  // 3) whisper-faint centre cores — a last-resort anchor at the exact sampling point of each
-  //    module. Kept very subtle so no dot grid is visible over the picture.
-  var coreR = unit*0.22, coreA = artMoving ? 0.30 : 0.18;
+  // 2) centred QR zone + clean ring (the ring IS the quiet zone)
+  var qArea=size*0.60, q0=(size-qArea)/2, unit=qArea/n;
+  var ring=unit*2.8;
+  var paper = inv ? "#0b0d12" : "#ffffff";
+  var dotInk = inv ? "#f5f7fa" : "#14161c";              // data dots: near-black/white for max contrast
+  var tintInk = inv ? "#f5f7fa" : scannableColor(S.fg1); // finders/alignments: template tint, scan-capped
+  g.fillStyle = paper;
+  roundRect(g, q0-ring, q0-ring, qArea+2*ring, qArea+2*ring, ring*0.9); g.fill();
+  // restore the artwork INSIDE the zone (the picture continues through the code)…
+  g.save(); g.beginPath(); g.rect(q0, q0, qArea, qArea); g.clip();
+  if (!paintArt(0,0,size,size)){ g.fillStyle="#0b0d12"; g.fillRect(q0,q0,qArea,qArea); }
+  // …behind a pastel veil so the opaque dots read at ANY image tone (visibility = image strength)
+  var V = 0.72 - vis*0.34;                               // vis .2→.65 … .92→.41
+  g.fillStyle = inv ? "rgba(8,10,16,"+Math.min(0.8,(V+0.12))+")" : "rgba(255,255,255,"+V+")";
+  g.fillRect(q0, q0, qArea, qArea);
+  g.restore();
+
+  // alignment-pattern centres for this version (keep dots out of them; draw them solid below)
+  var ver=(n-17)/4, ac=APOS[ver]||[];
+  var centers=[];
+  for (var ai=0; ai<ac.length; ai++) for (var aj=0; aj<ac.length; aj++){
+    var ar=ac[ai], av=ac[aj];
+    if ((ar<8&&av<8)||(ar<8&&av>n-9)||(ar>n-9&&av<8)) continue;      // overlaps a finder
+    centers.push([ar,av]);
+  }
+  function inAlign(r,c){ for (var k=0;k<centers.length;k++){ if (Math.abs(r-centers[k][0])<=2 && Math.abs(c-centers[k][1])<=2) return true; } return false; }
+
+  // 3) crisp OPAQUE micro-dots at module centres (shape follows the module style)
+  var dotR = unit*0.31;
+  g.fillStyle = dotInk;
   for (var r=0;r<n;r++){
     for (var c=0;c<n;c++){
       if (isFinder(r,c,n)) continue;
-      var cx = ox+c*unit+unit/2, cy = oy+r*unit+unit/2;
-      g.fillStyle = roleDark(r,c) ? "rgba(12,14,20,"+coreA+")" : "rgba(255,255,255,"+coreA+")";
-      drawArtMark(g, cx, cy, coreR, S.dot);
+      if (inAlign(r,c)) continue;
+      if (m[r][c] === inv) continue;                     // ink-role modules only
+      drawArtMark(g, q0+c*unit+unit/2, q0+r*unit+unit/2, dotR, S.dot);
     }
   }
 
-  // 4) finder patterns — template-coloured on a clean pad, for reliable detection
-  var eyeDark  = S.artInvert ? "#ffffff" : markFill;
-  var eyeLight = S.artInvert ? "#000000" : "#ffffff";
-  var pos = [[0,0],[0,n-7],[n-7,0]];
+  // 4) alignment patterns — the little ⊡ marks, solid on a clean pad
+  for (var k2=0;k2<centers.length;k2++){
+    var ax=q0+(centers[k2][1]-2)*unit, ay=q0+(centers[k2][0]-2)*unit, aw=unit*5;
+    g.fillStyle=paper;   roundRect(g, ax-unit*0.35, ay-unit*0.35, aw+unit*0.7, aw+unit*0.7, unit*0.5); g.fill();
+    g.fillStyle=tintInk; g.fillRect(ax, ay, aw, aw);
+    g.fillStyle=paper;   g.fillRect(ax+unit, ay+unit, aw-2*unit, aw-2*unit);
+    g.fillStyle=tintInk; g.fillRect(ax+2*unit, ay+2*unit, unit, unit);
+  }
+
+  // 5) finder patterns — solid, template-tinted, on a clean pad
+  var pos=[[0,0],[0,n-7],[n-7,0]];
   for (var i=0;i<pos.length;i++){
-    var px = ox + pos[i][1]*unit, py = oy + pos[i][0]*unit, o = unit*7;
-    g.fillStyle = eyeLight; roundRect(g, px-unit*0.5, py-unit*0.5, o+unit, o+unit, unit*0.6); g.fill();
-    g.fillStyle = eyeDark;  pathEyeShape(g, px, py, o, S.eye, 0); g.fill();
-    g.fillStyle = eyeLight; pathEyeShape(g, px+unit, py+unit, o-2*unit, S.eye, 1); g.fill();
-    g.fillStyle = eyeDark;  pathEyeShape(g, px+unit*2, py+unit*2, o-4*unit, S.eye, 2); g.fill();
+    var px=q0+pos[i][1]*unit, py=q0+pos[i][0]*unit, o=unit*7;
+    g.fillStyle=paper;   roundRect(g, px-unit*0.6, py-unit*0.6, o+unit*1.2, o+unit*1.2, unit*0.6); g.fill();
+    g.fillStyle=tintInk; pathEyeShape(g, px, py, o, S.eye, 0); g.fill();
+    g.fillStyle=paper;   pathEyeShape(g, px+unit, py+unit, o-2*unit, S.eye, 1); g.fill();
+    g.fillStyle=tintInk; pathEyeShape(g, px+unit*2, py+unit*2, o-4*unit, S.eye, 2); g.fill();
   }
 }
 
