@@ -391,7 +391,7 @@
               <div class="lbl">속도 <b id="animSpeedOut">1.0×</b></div>
               <input type="range" id="animSpeed" min="0.2" max="3" step="0.1" value="1" />
             </label>
-            <div class="hint">네 가지 효과(<b>샤인·회전·펄스·스윕</b>) 모두 단색·그라디언트·아트 어디서나 빛 오버레이로 <b>항상 보입니다</b>. 미리보기에서 실시간으로 움직이고, <b>애니메이션 저장</b>은 WebM 영상으로 내보냅니다. QR 패턴은 고정이라 모든 프레임이 스캔됩니다.</div>
+            <div class="hint"><b>정적 이미지를 올린 뒤 이 스위치를 켜면</b>, 이미지가 줌·드리프트로 살아 움직이는 <b>움짤 QR</b>이 됩니다(모듈은 고정 → 모든 프레임 스캔). 여기에 네 가지 빛 효과(<b>샤인·회전·펄스·스윕</b>)가 더해집니다. <b>애니메이션 저장</b>으로 WebM 영상으로 내보낼 수 있습니다.</div>
           </div>
         </details>
 
@@ -565,7 +565,7 @@
   <footer>
     <div>Aesthetic QR Studio · LemioCode 컨셉을 오픈소스로 재구현 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.04-a</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.04-c</b></div>
   </footer>
 </div>
 
@@ -3303,7 +3303,10 @@ function render(g2, exportSize){
   // animated overlay pass — a post-render layer so motion is ALWAYS visible, on any fill
   // (solid/gradient/art) and every browser. Clipped to the QR block; phase 0 = neutral so
   // exported PNG stays clean. WebM capture records the motion.
-  if (S.anim){
+  // The moving light-sheen is only for SOLID/GRADIENT QRs (they have no other motion). ART QRs
+  // get their motion from the moving image itself (Ken-Burns / video / GIF); stacking a sheen
+  // on the art veil only tips borderline frames out of scan range, so we skip it for art.
+  if (S.anim && !S.artImg){
     var bs = avail, bx0 = xoff, by0 = topPad, ccx = bx0+bs/2, ccy = by0+bs/2, t = _phase;
     g.save();
     g.beginPath(); g.rect(bx0, by0, bs, bs); g.clip();
@@ -3407,8 +3410,28 @@ function drawArtMark(g, cx, cy, r, shape){
 // shrinks the dots + fades the bias (more artwork). Finders stay solid.
 function drawArtLayer(g, ox, oy, unit, n, m){
   var area = n*unit;
-  // 1) artwork covers the whole module area — at full strength (no heavy veil)
-  var ok = drawCover(g, S.artImg, ox, oy, area, area);
+  // 1) artwork covers the whole module area — at full strength (no heavy veil).
+  //    "Living photo" (움짤): when animation is on and the media is a STILL image (not a
+  //    video/GIF, which already move), apply a Ken-Burns zoom+drift to the image so it
+  //    visibly moves while the QR marks below stay FIXED → every frame still scans.
+  //    zoom stays ≥1.10 so the ≤0.045 pan never exposes a blank edge.
+  var ok;
+  var artMoving = S.artImg && (S.anim || S.artIsVideo || S.artIsGif);   // any moving art (image/video/gif)
+  var moveImg = S.anim && S.artImg && !S.artIsVideo && !S.artIsGif;      // still image → Ken-Burns motion
+  if (moveImg){
+    // gentle breathing zoom + tiny drift: enough to read as a living photo, small enough
+    // that the tone under each fixed module barely shifts (so frames keep scanning).
+    var tt = _phase*6.28318;
+    var z = 1.09 + 0.05*Math.sin(tt);
+    var dw = area*z, dh = area*z;
+    var dx = ox - (dw-area)/2 + Math.sin(tt)*area*0.028;
+    var dy = oy - (dh-area)/2 + Math.cos(tt*0.85)*area*0.024;
+    g.save(); g.beginPath(); g.rect(ox,oy,area,area); g.clip();
+    ok = drawCover(g, S.artImg, dx, dy, dw, dh);
+    g.restore();
+  } else {
+    ok = drawCover(g, S.artImg, ox, oy, area, area);
+  }
   if (!ok){ g.fillStyle="#0b0d12"; g.fillRect(ox,oy,area,area); }
 
   var vis = Math.max(0.2, Math.min(0.92, S.artVisibility/100));
@@ -3422,8 +3445,11 @@ function drawArtLayer(g, ox, oy, unit, n, m){
   //    dark cells get a modest darkening (image still shows through them); light cells get a
   //    stronger white lift with a floor, so light modules stay light even over DARK scene
   //    regions (deep sea, night sky) — otherwise the scanner can't tell light from dark there.
-  var darkBias = Math.max((1-vis)*0.40, 0.30); // floor: dark modules read even over BRIGHT scenes (snow)
-  var lightBias = Math.max(darkBias, 0.42);    // guarantee light modules read even over DARK scenes (night)
+  // moving art flows different tones under each cell every frame → a stronger, more opaque
+  // veil is needed so modules stay readable at ANY underlying tone (the image still clearly
+  // moves through the veil). Still art keeps the lighter, image-forward veil.
+  var darkBias = Math.max((1-vis)*0.40, artMoving?0.46:0.30);
+  var lightBias = Math.max(darkBias, artMoving?0.56:0.42);
   for (var r0=0;r0<n;r0++){
     for (var c0=0;c0<n;c0++){
       if (isFinder(r0,c0,n)) continue;
@@ -3437,6 +3463,7 @@ function drawArtLayer(g, ox, oy, unit, n, m){
   // 3) small crisp centre marks — finer, image-forward look (more artwork shows between them).
   //    Shape follows the selected module style; radius shrinks with visibility.
   var dotR = unit*(0.40 - vis*0.13);     // vis .2→.374 … .92→.28
+  if (artMoving) dotR = Math.max(dotR, unit*0.40);   // near-solid centres so the sampled module centre reads at ANY frame
   for (var r=0;r<n;r++){
     for (var c=0;c<n;c++){
       if (isFinder(r,c,n)) continue;
@@ -3824,10 +3851,11 @@ $("artFile").addEventListener("change",function(e){
       var oc=document.createElement("canvas"); oc.width=Math.max(1,Math.round(iw*k)); oc.height=Math.max(1,Math.round(ih*k));
       try{ oc.getContext("2d").drawImage(src,0,0,oc.width,oc.height); }
       catch(e){ toast("이미지 처리에 실패했어요"); return; }
-      S.artImg=oc; S.artIsVideo=false;
+      S.artImg=oc; S.artIsVideo=false; S.artIsGif=false;
       $("artControls").style.display="block";
       $("artLabel").textContent="✓ 이미지 업로드됨 — 변경하려면 클릭";
-      if(S.ecc!=="H") toast("아트 QR은 ECC-H 권장");
+      if(S.ecc!=="H") setEcc("H");
+      toast("‘애니메이션 켜기’를 켜면 이미지가 움직이는 움짤 QR이 됩니다");
       rerender();
     };
     var viaImg=function(){ var img=new Image(); img.onload=function(){ useBaked(img); }; img.onerror=function(){ toast("이미지를 불러오지 못했어요"); }; img.src=url; };
