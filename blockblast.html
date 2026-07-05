@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>블록 블라스트 — 콤보 러시</title>
+<title>블록 블라스트 — 몬스터 배틀</title>
 <style>
   :root{
     --bg1:#0f0c29; --bg2:#302b63; --bg3:#24243e;
@@ -23,7 +23,7 @@
     touch-action:none;
   }
   @keyframes bgShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
-  #app{width:min(100vw,460px); height:100dvh; display:flex; flex-direction:column; padding:10px 12px 14px; gap:10px;}
+  #app{width:min(100vw,460px); height:100dvh; display:flex; flex-direction:column; padding:10px 12px 14px; gap:9px;}
 
   /* ===== Top bar ===== */
   .topbar{display:flex; align-items:center; gap:8px;}
@@ -41,14 +41,18 @@
 
   /* ===== Combo / streak line ===== */
   .infoline{display:flex; align-items:center; justify-content:space-between; gap:8px; min-height:24px;}
+  .chips{display:flex; align-items:center; gap:8px; font-size:12px;}
+  #streakTag{opacity:.85; display:flex; align-items:center; gap:3px;}
+  #streakTag b{color:var(--gold);}
+  #dexChip{cursor:pointer; background:var(--glass); border:1px solid rgba(255,255,255,.12);
+    border-radius:20px; padding:2px 10px; display:flex; align-items:center; gap:3px;}
+  #dexChip b{color:#4dffb8;}
   #comboTag{
     font-weight:900; font-size:15px; padding:3px 12px; border-radius:20px;
     background:linear-gradient(90deg,#ff6a00,#ff2e63); box-shadow:0 4px 16px rgba(255,46,99,.4);
     opacity:0; transform:translateY(6px) scale(.8); transition:.2s;
   }
   #comboTag.show{opacity:1; transform:translateY(0) scale(1);}
-  #streakTag{font-size:12px; opacity:.85; display:flex; align-items:center; gap:4px;}
-  #streakTag b{color:var(--gold);}
 
   /* ===== Board ===== */
   #boardWrap{position:relative; width:100%; aspect-ratio:1/1;}
@@ -62,17 +66,40 @@
   }
   #board.danger{box-shadow:inset 0 0 30px rgba(255,77,109,.55), 0 0 24px rgba(255,77,109,.35);}
   #board.shake{animation:shake .38s cubic-bezier(.36,.07,.19,.97);}
+  #board.shake-hard{animation:shakeHard .5s cubic-bezier(.36,.07,.19,.97);}
   @keyframes shake{10%,90%{transform:translateX(-2px)}20%,80%{transform:translateX(4px)}30%,50%,70%{transform:translateX(-7px)}40%,60%{transform:translateX(7px)}}
+  @keyframes shakeHard{0%,100%{transform:translate(0,0) rotate(0)}
+    10%{transform:translate(-9px,-4px) rotate(-1.2deg)}20%{transform:translate(11px,3px) rotate(1.2deg)}
+    30%{transform:translate(-13px,4px) rotate(-1.4deg)}40%{transform:translate(12px,-5px) rotate(1.1deg)}
+    50%{transform:translate(-10px,3px) rotate(-.9deg)}60%{transform:translate(9px,4px) rotate(.9deg)}
+    70%{transform:translate(-7px,-3px) rotate(-.6deg)}80%{transform:translate(5px,2px) rotate(.4deg)}90%{transform:translate(-3px,1px)}}
+  #board.punch{animation:punch .32s cubic-bezier(.2,1.4,.3,1);}
+  @keyframes punch{0%{transform:scale(1)}22%{transform:scale(.9)}55%{transform:scale(1.06)}100%{transform:scale(1)}}
+  #board.hitstop .cell.clearing{animation-play-state:paused;}
+
+  /* impact flash + shockwave */
+  #flash{position:fixed; inset:0; z-index:45; pointer-events:none; opacity:0; mix-blend-mode:screen;
+    background:radial-gradient(circle at 50% 42%, rgba(255,255,255,.9), rgba(255,210,80,.35) 40%, transparent 70%);}
+  #flash.go{animation:flashHit .34s ease-out;}
+  @keyframes flashHit{0%{opacity:.85}100%{opacity:0}}
+  .shockwave{position:fixed; z-index:44; pointer-events:none; border-radius:50%;
+    border:4px solid rgba(255,255,255,.85); transform:translate(-50%,-50%) scale(.2); opacity:.9;}
+  .shockwave.go{animation:shock .5s cubic-bezier(.15,.7,.3,1) forwards;}
+  @keyframes shock{to{transform:translate(-50%,-50%) scale(2.6); opacity:0; border-width:1px;}}
   .cell{
     border-radius:7px; background:var(--cell);
     box-shadow:inset 0 0 0 1px var(--cell-edge);
     position:relative; transition:background .08s;
+    display:flex; align-items:center; justify-content:center;
+    font-size:min(6.2vw,27px); line-height:1;
   }
   .cell.filled{box-shadow:inset 0 2px 4px rgba(255,255,255,.35), inset 0 -3px 6px rgba(0,0,0,.35);}
   .cell.hint{background:rgba(124,92,255,.32)!important; box-shadow:inset 0 0 0 2px rgba(255,255,255,.5);}
   .cell.badhint{background:rgba(255,77,109,.28)!important;}
-  .cell.clearing{animation:clearFlash .4s ease forwards;}
-  @keyframes clearFlash{0%{transform:scale(1);filter:brightness(1)}45%{transform:scale(1.18);filter:brightness(2.2)}100%{transform:scale(0);filter:brightness(3)}}
+  .cell.clearing{animation:clearFlash .42s cubic-bezier(.3,1.5,.4,1) forwards; z-index:2;}
+  @keyframes clearFlash{0%{transform:scale(1);filter:brightness(1) saturate(1)}
+    30%{transform:scale(1.32);filter:brightness(2.6) saturate(2.5); box-shadow:0 0 18px currentColor;}
+    100%{transform:scale(0) rotate(20deg);filter:brightness(3.5)}}
   .cell.pulse{animation:cellPulse .25s ease;}
   @keyframes cellPulse{0%{transform:scale(.4)}100%{transform:scale(1)}}
 
@@ -82,16 +109,18 @@
     background:rgba(0,0,0,.2); border-radius:18px; padding:10px 8px; min-height:96px;
     border:1px solid rgba(255,255,255,.06);
   }
-  .slot{display:flex; align-items:center; justify-content:center; min-height:76px;}
+  .slot{display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:80px; gap:3px;}
   .piece{display:grid; gap:3px; cursor:grab; transition:transform .15s, opacity .2s;}
   .piece.used{opacity:0; pointer-events:none; transform:scale(.3);}
   .piece.dragging{opacity:.25;}
   .pc{width:var(--ps); height:var(--ps); border-radius:5px;
-    box-shadow:inset 0 2px 3px rgba(255,255,255,.4), inset 0 -3px 5px rgba(0,0,0,.35);}
+    box-shadow:inset 0 2px 3px rgba(255,255,255,.4), inset 0 -3px 5px rgba(0,0,0,.35);
+    display:flex; align-items:center; justify-content:center; line-height:1;}
+  .pcname{font-size:9px; opacity:.7; white-space:nowrap;}
 
   /* dragging ghost */
   #ghost{position:fixed; left:0; top:0; pointer-events:none; z-index:50; display:grid; gap:4px; opacity:.92; transform:translate(-9999px,-9999px);}
-  #ghost .pc{width:var(--gps); height:var(--gps); border-radius:7px;}
+  #ghost .pc{width:var(--gps); height:var(--gps); border-radius:7px; font-size:calc(var(--gps)*.62);}
 
   /* ===== Powerups ===== */
   #tools{display:flex; gap:8px;}
@@ -114,11 +143,11 @@
   @keyframes floatUp{0%{transform:translate(-50%,0) scale(.6);opacity:0}20%{transform:translate(-50%,-10px) scale(1.15);opacity:1}100%{transform:translate(-50%,-70px) scale(1);opacity:0}}
   .particle{position:absolute; width:8px; height:8px; border-radius:2px; pointer-events:none; z-index:39;}
 
-  /* toast (achievements) */
+  /* toast (achievements / dex) */
   #toasts{position:fixed; top:14px; left:50%; transform:translateX(-50%); z-index:60; display:flex; flex-direction:column; gap:8px; align-items:center;}
   .toast{background:linear-gradient(90deg,#ffd23f,#ff8c00); color:#3a2400; font-weight:800;
     padding:10px 18px; border-radius:30px; box-shadow:0 8px 24px rgba(0,0,0,.4);
-    display:flex; align-items:center; gap:8px; animation:toastIn .4s ease, toastOut .4s ease 2.4s forwards; font-size:14px;}
+    display:flex; align-items:center; gap:8px; animation:toastIn .4s ease, toastOut .4s ease 2.4s forwards; font-size:14px; max-width:90vw;}
   @keyframes toastIn{from{transform:translateY(-30px);opacity:0}to{transform:translateY(0);opacity:1}}
   @keyframes toastOut{to{transform:translateY(-30px);opacity:0}}
 
@@ -127,27 +156,37 @@
     background:rgba(10,8,25,.82); backdrop-filter:blur(6px); padding:24px;}
   .overlay.hide{display:none;}
   .card{background:linear-gradient(160deg,#241f47,#1a1730); border:1px solid rgba(255,255,255,.12);
-    border-radius:24px; padding:28px 24px; width:100%; max-width:360px; text-align:center;
-    box-shadow:0 24px 60px rgba(0,0,0,.6); animation:cardIn .4s cubic-bezier(.2,.9,.3,1.3);}
+    border-radius:24px; padding:26px 22px; width:100%; max-width:370px; text-align:center;
+    box-shadow:0 24px 60px rgba(0,0,0,.6); animation:cardIn .4s cubic-bezier(.2,.9,.3,1.3); max-height:92dvh; overflow:auto;}
   @keyframes cardIn{from{transform:scale(.85) translateY(20px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
-  .card h1{margin:0 0 6px; font-size:30px; background:linear-gradient(90deg,#ffd23f,#ff6a00,#7c5cff);
+  .card h1{margin:0 0 6px; font-size:28px; background:linear-gradient(90deg,#ffd23f,#ff6a00,#7c5cff);
     -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;}
   .card h2{margin:0 0 14px; font-size:22px;}
   .card p{opacity:.8; font-size:14px; line-height:1.6; margin:8px 0;}
-  .bigscore{font-size:52px; font-weight:900; color:var(--gold); margin:8px 0; line-height:1;}
+  .bigscore{font-size:50px; font-weight:900; color:var(--gold); margin:8px 0; line-height:1;}
   .newrec{color:#4dffb8; font-weight:800; font-size:15px; animation:blink 1s infinite;}
   @keyframes blink{50%{opacity:.4}}
-  .btn{margin-top:16px; width:100%; padding:15px; border:none; border-radius:16px; cursor:pointer;
+  .btn{margin-top:14px; width:100%; padding:15px; border:none; border-radius:16px; cursor:pointer;
     font-size:17px; font-weight:800; color:#fff; background:linear-gradient(90deg,#7c5cff,#ff2e63);
     box-shadow:0 8px 24px rgba(124,92,255,.5); transition:transform .1s;}
   .btn:active{transform:scale(.96);}
-  .btn.ghost{background:transparent; border:1px solid rgba(255,255,255,.2); box-shadow:none; font-size:14px; padding:11px; margin-top:10px;}
-  .rules{text-align:left; font-size:13px; opacity:.85; line-height:1.7; margin:14px 0; padding-left:2px;}
+  .btn.ghost{background:transparent; border:1px solid rgba(255,255,255,.2); box-shadow:none; font-size:14px; padding:11px; margin-top:9px;}
+  .rules{text-align:left; font-size:12.5px; opacity:.88; line-height:1.65; margin:12px 0;}
   .rules b{color:var(--gold);}
   .muteBtn{position:fixed; top:12px; right:12px; z-index:65; background:var(--glass);
     border:1px solid rgba(255,255,255,.12); border-radius:50%; width:38px; height:38px; font-size:18px;
     cursor:pointer; color:#fff; display:flex; align-items:center; justify-content:center;}
   .bestline{font-size:13px; opacity:.7; margin-top:6px;}
+
+  /* Dex grid */
+  .dexgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:14px 0;}
+  .dexcell{background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08);
+    border-radius:12px; padding:8px 4px; display:flex; flex-direction:column; align-items:center; gap:2px;}
+  .dexcell .de{font-size:26px; line-height:1;}
+  .dexcell .dn{font-size:11px; font-weight:700;}
+  .dexcell .dt{font-size:9px; opacity:.7;}
+  .dexcell.locked{opacity:.45;}
+  .dexcell.locked .de{filter:grayscale(1) brightness(.4);}
 </style>
 </head>
 <body>
@@ -159,7 +198,10 @@
   </div>
 
   <div class="infoline">
-    <span id="streakTag">📅 연속출석 <b id="streakVal">1</b>일</span>
+    <div class="chips">
+      <span id="streakTag">📅 <b id="streakVal">1</b>일</span>
+      <span id="dexChip">📖 도감 <b id="dexCount">0</b>/15</span>
+    </div>
     <span id="comboTag">COMBO x2</span>
   </div>
 
@@ -170,11 +212,12 @@
   <div id="tools">
     <div class="tool" data-tool="bomb"><div class="ic">💣</div><div class="nm">폭탄</div><div class="cost">🪙<span id="costBomb">15</span></div></div>
     <div class="tool" data-tool="hammer"><div class="ic">🔨</div><div class="nm">망치</div><div class="cost">🪙<span id="costHammer">8</span></div></div>
-    <div class="tool" data-tool="refresh"><div class="ic">🔄</div><div class="nm">새블록</div><div class="cost">🪙<span id="costRefresh">10</span></div></div>
+    <div class="tool" data-tool="refresh"><div class="ic">🔄</div><div class="nm">새몬스터</div><div class="cost">🪙<span id="costRefresh">10</span></div></div>
   </div>
 </div>
 
 <div id="ghost"></div>
+<div id="flash"></div>
 <div class="pops" id="pops"></div>
 <div id="toasts"></div>
 <button class="muteBtn" id="muteBtn">🔊</button>
@@ -183,17 +226,19 @@
 <div class="overlay" id="startOverlay">
   <div class="card">
     <h1>블록 블라스트</h1>
-    <p style="margin-top:-2px">콤보 러시 에디션 🔥</p>
+    <p style="margin-top:-2px">몬스터 배틀 에디션 ⚔️</p>
     <div class="rules">
-      🧩 블록을 <b>드래그</b>해서 8×8 판에 놓으세요.<br>
-      ➖ 가로/세로 한 줄을 채우면 <b>펑!</b> 터집니다.<br>
-      🔥 연속으로 터뜨리면 <b>콤보 배율</b>이 쌓여요.<br>
-      ⚡ 한 번에 여러 줄 = <b>대박 보너스</b>!<br>
-      💰 클리어로 <b>코인</b>을 모아 파워업 구매.<br>
-      📅 매일 접속하면 <b>연속출석 보너스</b>.
+      🧩 <b>몬스터 블록</b>을 드래그해 8×8 판에 놓으세요.<br>
+      ➖ 가로/세로 한 줄을 채우면 그 몬스터가 <b>무기 스킬</b> 발동!<br>
+      ⚡십자번개 🔥화염방사 💧하이드로펌프 🌿씨앗폭탄<br>
+      🔮사이코키네시스 👻섀도볼 😴몸통박치기 🎈자장가<br>
+      🔥 연속 클리어 = <b>콤보 배율</b>, 여러 줄 = <b>대박 보너스</b>.<br>
+      📖 처음 만난 몬스터는 <b>도감</b>에 등록 (15종 수집!).<br>
+      💰 코인으로 파워업 · 📅 매일 접속 보너스.
     </div>
     <div class="bestline">🏆 최고 기록: <span id="bestStart">0</span></div>
     <button class="btn" id="startBtn">게임 시작</button>
+    <button class="btn ghost" id="dexBtnStart">📖 몬스터 도감 보기</button>
   </div>
 </div>
 
@@ -204,9 +249,19 @@
     <div class="bigscore" id="finalScore">0</div>
     <div id="recLine" class="newrec" style="display:none">🎉 새로운 신기록! 🎉</div>
     <p id="overMsg">더 이상 놓을 곳이 없어요…</p>
-    <div class="bestline">🏆 최고 기록: <span id="bestOver">0</span> · 🪙 <span id="coinOver">0</span></div>
+    <div class="bestline">🏆 최고 <span id="bestOver">0</span> · 🪙 <span id="coinOver">0</span> · 📖 <span id="dexOver">0</span>/15</div>
     <button class="btn" id="againBtn">다시 하기</button>
     <button class="btn ghost" id="shareBtn">📤 결과 공유하기</button>
+  </div>
+</div>
+
+<!-- Dex overlay -->
+<div class="overlay hide" id="dexOverlay">
+  <div class="card">
+    <h2>📖 몬스터 도감</h2>
+    <p style="margin-top:-8px"><span id="dexProgress">0</span> / 15 수집</p>
+    <div class="dexgrid" id="dexGrid"></div>
+    <button class="btn ghost" id="dexClose">닫기</button>
   </div>
 </div>
 
@@ -214,29 +269,59 @@
 "use strict";
 (function(){
 /* ============ Config ============ */
-const N=8;                        // board size
-const COLORS=["#7c5cff","#ff2e63","#00d4ff","#4dffb8","#ffd23f","#ff8c42","#ff6ac1"];
+const N=8;
 const COST={bomb:15,hammer:8,refresh:10};
 
-// piece shapes (relative cells)
+// Types → color + weapon skill label
+const TYPES={
+  electric:{color:"#f5c518", skill:"10만 볼트 ⚡"},
+  fire:    {color:"#ff6a3d", skill:"화염방사 🔥"},
+  water:   {color:"#3aa0ff", skill:"하이드로펌프 💧"},
+  grass:   {color:"#4cd964", skill:"씨앗폭탄 🌿"},
+  psychic: {color:"#b06bff", skill:"사이코키네시스 🔮"},
+  ghost:   {color:"#7c6cff", skill:"섀도볼 👻"},
+  normal:  {color:"#9aa0b5", skill:"몸통박치기 💥"},
+  fairy:   {color:"#ff8fc7", skill:"자장가 🎈"},
+};
+const TYPE_KO={electric:"전기",fire:"불꽃",water:"물",grass:"풀",psychic:"에스퍼",ghost:"고스트",normal:"노말",fairy:"페어리"};
+// 15 monsters
+const CHARS=[
+  {name:"피카츄",   emoji:"⚡", type:"electric"},
+  {name:"파이리",   emoji:"🦎", type:"fire"},
+  {name:"리자몽",   emoji:"🐲", type:"fire"},
+  {name:"윈디",     emoji:"🐕", type:"fire"},
+  {name:"꼬부기",   emoji:"🐢", type:"water"},
+  {name:"거북왕",   emoji:"🌊", type:"water"},
+  {name:"갸라도스", emoji:"🐍", type:"water"},
+  {name:"이상해씨", emoji:"🌱", type:"grass"},
+  {name:"이상해꽃", emoji:"🌺", type:"grass"},
+  {name:"뮤츠",     emoji:"🧬", type:"psychic"},
+  {name:"뮤",       emoji:"🌸", type:"psychic"},
+  {name:"잠만보",   emoji:"😴", type:"normal"},
+  {name:"이브이",   emoji:"🦊", type:"normal"},
+  {name:"푸린",     emoji:"🎈", type:"fairy"},
+  {name:"팬텀",     emoji:"👻", type:"ghost"},
+];
+const PARTICLE_COLORS=Object.values(TYPES).map(t=>t.color);
+
+// piece shapes
 const SHAPES=[
-  [[0,0]],                                             // single
-  [[0,0],[0,1]],[[0,0],[1,0]],                         // domino
-  [[0,0],[0,1],[0,2]],[[0,0],[1,0],[2,0]],             // tri line
-  [[0,0],[0,1],[0,2],[0,3]],[[0,0],[1,0],[2,0],[3,0]], // 4 line
-  [[0,0],[0,1],[0,2],[0,3],[0,4]],[[0,0],[1,0],[2,0],[3,0],[4,0]], // 5 line
-  [[0,0],[0,1],[1,0],[1,1]],                           // square 2x2
-  [[0,0],[0,1],[0,2],[1,0],[1,1],[1,2],[2,0],[2,1],[2,2]], // 3x3
-  [[0,0],[1,0],[1,1]],[[0,1],[1,0],[1,1]],[[0,0],[0,1],[1,0]],[[0,0],[0,1],[1,1]], // corner tri
-  [[0,0],[1,0],[2,0],[2,1]],[[0,1],[1,1],[2,1],[2,0]], // L
-  [[0,0],[0,1],[0,2],[1,0]],[[0,0],[0,1],[0,2],[1,2]], // J/L flat
-  [[0,0],[0,1],[1,1],[1,2]],[[0,1],[0,2],[1,0],[1,1]], // S/Z
-  [[0,0],[0,1],[0,2],[1,1]],                           // T
+  [[0,0]],
+  [[0,0],[0,1]],[[0,0],[1,0]],
+  [[0,0],[0,1],[0,2]],[[0,0],[1,0],[2,0]],
+  [[0,0],[0,1],[0,2],[0,3]],[[0,0],[1,0],[2,0],[3,0]],
+  [[0,0],[0,1],[0,2],[0,3],[0,4]],[[0,0],[1,0],[2,0],[3,0],[4,0]],
+  [[0,0],[0,1],[1,0],[1,1]],
+  [[0,0],[0,1],[0,2],[1,0],[1,1],[1,2],[2,0],[2,1],[2,2]],
+  [[0,0],[1,0],[1,1]],[[0,1],[1,0],[1,1]],[[0,0],[0,1],[1,0]],[[0,0],[0,1],[1,1]],
+  [[0,0],[1,0],[2,0],[2,1]],[[0,1],[1,1],[2,1],[2,0]],
+  [[0,0],[0,1],[0,2],[1,0]],[[0,0],[0,1],[0,2],[1,2]],
+  [[0,0],[0,1],[1,1],[1,2]],[[0,1],[0,2],[1,0],[1,1]],
+  [[0,0],[0,1],[0,2],[1,1]],
 ];
 
 /* ============ State ============ */
-let grid, score, coins, best, combo, streak, tray, activeTool, gameOver, muted;
-let placedSinceClear=0;
+let grid, score, coins, best, combo, streak, tray, activeTool, gameOver, muted, shield;
 
 /* ============ DOM ============ */
 const boardEl=document.getElementById("board");
@@ -248,9 +333,10 @@ const coinVal=document.getElementById("coinVal");
 const bestVal=document.getElementById("bestVal");
 const streakVal=document.getElementById("streakVal");
 const comboTag=document.getElementById("comboTag");
+const dexCountEl=document.getElementById("dexCount");
 let cells=[];
 
-/* ============ Audio (Web Audio chiptune) ============ */
+/* ============ Audio ============ */
 let actx=null;
 function beep(freq,dur,type,vol){
   if(muted) return;
@@ -269,15 +355,43 @@ function sndClear(n){ for(let i=0;i<n;i++) setTimeout(()=>beep(520+i*140,0.13,"s
 function sndCombo(c){beep(400+c*80,0.18,"sawtooth",0.08);}
 function sndBad(){beep(120,0.18,"sawtooth",0.06);}
 function sndCoin(){beep(880,0.06,"sine",0.05); setTimeout(()=>beep(1180,0.08,"sine",0.05),50);}
+function sndSkill(){beep(700,0.06,"sawtooth",0.07); setTimeout(()=>beep(1050,0.14,"square",0.07),60);}
 function sndOver(){[440,330,262,196].forEach((f,i)=>setTimeout(()=>beep(f,0.22,"triangle",0.08),i*160));}
+// deep bass thump — the "punch"
+function thump(power){
+  if(muted)return;
+  try{
+    if(!actx) actx=new (window.AudioContext||window.webkitAudioContext)();
+    const o=actx.createOscillator(), g=actx.createGain(); const t=actx.currentTime;
+    o.type="sine"; o.frequency.setValueAtTime(180,t); o.frequency.exponentialRampToValueAtTime(45,t+0.18);
+    g.gain.setValueAtTime(Math.min(0.28,0.12+power*0.04),t); g.gain.exponentialRampToValueAtTime(0.001,t+0.28);
+    o.connect(g); g.connect(actx.destination); o.start(); o.stop(t+0.3);
+  }catch(e){}
+}
+// short white-noise burst — the "crunch"
+function noiseBurst(power){
+  if(muted)return;
+  try{
+    if(!actx) actx=new (window.AudioContext||window.webkitAudioContext)();
+    const dur=0.14, buf=actx.createBuffer(1,Math.floor(actx.sampleRate*dur),actx.sampleRate);
+    const d=buf.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*(1-i/d.length);
+    const src=actx.createBufferSource(); src.buffer=buf;
+    const bp=actx.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=1200+power*300; bp.Q.value=0.8;
+    const g=actx.createGain(); g.gain.setValueAtTime(Math.min(0.18,0.08+power*0.02),actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,actx.currentTime+dur);
+    src.connect(bp); bp.connect(g); g.connect(actx.destination); src.start();
+  }catch(e){}
+}
+function buzz(pattern){ try{ if(navigator.vibrate) navigator.vibrate(pattern); }catch(e){} }
 
 /* ============ Persistence ============ */
+const DEX=new Set(JSON.parse(localStorage.getItem("bb_dex")||"[]"));
 function load(){
   best=+(localStorage.getItem("bb_best")||0);
   coins=+(localStorage.getItem("bb_coins")||0);
   muted=localStorage.getItem("bb_muted")==="1";
   document.getElementById("muteBtn").textContent=muted?"🔇":"🔊";
-  // daily streak
   const today=new Date().toISOString().slice(0,10);
   const last=localStorage.getItem("bb_lastday");
   streak=+(localStorage.getItem("bb_streak")||0);
@@ -298,7 +412,15 @@ function saveMeta(){
   if(score>best){best=score;localStorage.setItem("bb_best",best);}
 }
 
-/* ============ Achievements ============ */
+/* ============ Dex / Achievements ============ */
+function registerDex(char){
+  if(!DEX.has(char.name)){
+    DEX.add(char.name); localStorage.setItem("bb_dex",JSON.stringify([...DEX]));
+    toast(char.emoji,`도감 등록! ${char.name} (${DEX.size}/15)`);
+    if(DEX.size===15) setTimeout(()=>unlock("dexfull","📖","도감 완성! 몬스터 마스터!"),1300);
+  }
+  dexCountEl.textContent=DEX.size;
+}
 const ACH=new Set(JSON.parse(localStorage.getItem("bb_ach")||"[]"));
 function unlock(id,icon,text){
   if(ACH.has(id))return;
@@ -328,8 +450,8 @@ function paint(){
   for(let r=0;r<N;r++)for(let c=0;c<N;c++){
     const d=cells[r][c], v=grid[r][c];
     d.classList.remove("hint","badhint");
-    if(v){d.classList.add("filled"); d.style.background=v;}
-    else{d.classList.remove("filled"); d.style.background="";}
+    if(v){d.classList.add("filled"); d.style.background=v.char.color; d.textContent=v.char.emoji;}
+    else{d.classList.remove("filled"); d.style.background=""; d.textContent="";}
   }
   updateDanger();
 }
@@ -340,12 +462,13 @@ function updateDanger(){
 
 /* ============ Pieces ============ */
 function randShape(){return SHAPES[Math.floor(Math.random()*SHAPES.length)];}
+function randChar(){return CHARS[Math.floor(Math.random()*CHARS.length)];}
 function normalize(sh){
   let mr=Math.min(...sh.map(p=>p[0])), mc=Math.min(...sh.map(p=>p[1]));
   return sh.map(p=>[p[0]-mr,p[1]-mc]);
 }
 function newTray(){
-  tray=[0,1,2].map(i=>({shape:normalize(randShape()),color:COLORS[Math.floor(Math.random()*COLORS.length)],used:false}));
+  tray=[0,1,2].map(()=>({shape:normalize(randShape()),char:randChar(),used:false}));
   renderTray();
 }
 function renderTray(){
@@ -353,16 +476,21 @@ function renderTray(){
   tray.forEach((p,i)=>{
     const slot=document.createElement("div"); slot.className="slot";
     slot.appendChild(makePieceEl(p,i));
+    const nm=document.createElement("div"); nm.className="pcname";
+    nm.textContent=p.used?"":p.char.name;
+    slot.appendChild(nm);
     trayEl.appendChild(slot);
   });
-  // check game over
-  if(tray.every(p=>p.used)) { newTray(); }
-  else if(!anyMove()) endGame();
+  if(tray.every(p=>p.used)){ newTray(); return; }
+  if(!anyMove()){
+    if(shield){ shield=false; toast("🎈","자장가 발동! 새 몬스터로 위기 탈출"); newTray(); return; }
+    endGame();
+  }
 }
 function makePieceEl(p,idx){
   const rows=Math.max(...p.shape.map(s=>s[0]))+1;
   const cols=Math.max(...p.shape.map(s=>s[1]))+1;
-  const ps=Math.min(20, Math.floor(66/Math.max(rows,cols)));
+  const ps=Math.min(20, Math.floor(62/Math.max(rows,cols)));
   const el=document.createElement("div"); el.className="piece"; el.style.setProperty("--ps",ps+"px");
   el.style.gridTemplateColumns=`repeat(${cols},${ps}px)`;
   el.style.gridTemplateRows=`repeat(${rows},${ps}px)`;
@@ -370,7 +498,7 @@ function makePieceEl(p,idx){
   const set=new Set(p.shape.map(s=>s[0]+","+s[1]));
   for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
     const cell=document.createElement("div");
-    if(set.has(r+","+c)){cell.className="pc"; cell.style.background=p.color;}
+    if(set.has(r+","+c)){cell.className="pc"; cell.style.background=p.char.color; cell.style.fontSize=(ps*0.62)+"px"; cell.textContent=p.char.emoji;}
     else cell.style.visibility="hidden";
     el.appendChild(cell);
   }
@@ -391,78 +519,98 @@ function anyMove(){
   return false;
 }
 function place(idx,r,c){
-  const p=tray[idx];
-  for(const[dr,dc]of p.shape){grid[r+dr][c+dc]=p.color;
+  const p=tray[idx], char=p.char, placed=[];
+  for(const[dr,dc]of p.shape){grid[r+dr][c+dc]={char};
+    placed.push([r+dr,c+dc]);
     const cell=cells[r+dr][c+dc]; cell.classList.add("pulse");
     setTimeout(()=>cell.classList.remove("pulse"),260);
   }
   p.used=true;
-  score += p.shape.length;             // points for placing
-  sndPlace();
+  score += p.shape.length;
+  sndPlace(); buzz(12);
+  boardEl.classList.remove("punch"); void boardEl.offsetWidth; boardEl.classList.add("punch");
   paint();
-  resolveClears(r,c);
+  registerDex(char);
+  resolveClears(char, placed, r, c);
   renderScore();
   renderTray();
   saveMeta();
 }
 
-function resolveClears(pr,pc){
+/* weapon skills → extra cells to clear + bonuses */
+function applySkill(char, placed, ar, ac){
+  const t=char.type, out={cells:new Set(), mult:1, bonusScore:0, bonusCoin:0, shield:false};
+  const add=(r,c)=>{ if(r>=0&&c>=0&&r<N&&c<N&&grid[r][c]) out.cells.add(r+","+c); };
+  if(t==="electric"){ for(let c=0;c<N;c++)add(ar,c); for(let r=0;r<N;r++)add(r,ac); }
+  else if(t==="fire"){ for(const[pr,pc]of placed)for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++)add(pr+dr,pc+dc); }
+  else if(t==="water"){ let best=-1,br=-1; for(let r=0;r<N;r++){let n=0;for(let c=0;c<N;c++)if(grid[r][c])n++; if(n>best){best=n;br=r;}} if(br>=0)for(let c=0;c<N;c++)add(br,c); }
+  else if(t==="grass"){ for(let r=0;r<N;r++)for(let c=0;c<N;c++)if(grid[r][c]&&grid[r][c].char.type==="grass")out.cells.add(r+","+c); }
+  else if(t==="psychic"){ for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++)add(ar+dr,ac+dc); out.mult=2; }
+  else if(t==="ghost"){ const all=[]; for(let r=0;r<N;r++)for(let c=0;c<N;c++)if(grid[r][c])all.push([r,c]);
+    for(let i=0;i<5&&all.length;i++){const j=Math.floor(Math.random()*all.length); const[r,c]=all.splice(j,1)[0]; out.cells.add(r+","+c);} }
+  else if(t==="normal"){ out.bonusScore=200; out.bonusCoin=5; }
+  else if(t==="fairy"){ out.shield=true; out.bonusCoin=3; }
+  return out;
+}
+
+function resolveClears(char, placed, ar, ac){
   const fullRows=[], fullCols=[];
   for(let r=0;r<N;r++) if(grid[r].every(v=>v)) fullRows.push(r);
   for(let c=0;c<N;c++){let ok=true;for(let r=0;r<N;r++)if(!grid[r][c]){ok=false;break;} if(ok)fullCols.push(c);}
   const lines=fullRows.length+fullCols.length;
 
-  if(lines===0){
-    combo=0; placedSinceClear++;
-    hideCombo();
-    return;
-  }
-  // combo up
+  if(lines===0){ combo=0; hideCombo(); return; }
   combo++;
-  placedSinceClear=0;
 
-  // mark & clear
   const toClear=new Set();
   fullRows.forEach(r=>{for(let c=0;c<N;c++)toClear.add(r+","+c);});
   fullCols.forEach(c=>{for(let r=0;r<N;r++)toClear.add(r+","+c);});
+
+  // weapon skill of the monster that completed the line
+  const sk=applySkill(char, placed, ar, ac);
+  let skillOnly=0;
+  sk.cells.forEach(k=>{ if(!toClear.has(k)) skillOnly++; toClear.add(k); });
+  if(sk.shield){ shield=true; }
+
   toClear.forEach(k=>{const[r,c]=k.split(",").map(Number); cells[r][c].classList.add("clearing");});
 
   // scoring
-  const base=lines*10*N;                       // 80 per line
+  const base=lines*10*N;
   const multiBonus=lines>=2 ? lines*(lines-1)*25 : 0;
-  const comboMult=1+(combo-1)*0.5;             // x1, x1.5, x2 ...
-  const gained=Math.round((base+multiBonus)*comboMult);
+  const comboMult=1+(combo-1)*0.5;
+  const gained=Math.round((base+multiBonus)*comboMult*sk.mult) + skillOnly*8 + sk.bonusScore;
   score+=gained;
-  const coinGain=lines + (lines>=2?lines:0) + (combo>1?combo:0);
-  coins+=coinGain;
+  coins += lines + (lines>=2?lines:0) + (combo>1?combo:0) + Math.floor(skillOnly/3) + sk.bonusCoin;
 
-  // effects
-  boardEl.classList.add("shake"); setTimeout(()=>boardEl.classList.remove("shake"),400);
-  sndClear(lines); if(combo>1)sndCombo(combo); sndCoin();
-  const cx=window.innerWidth/2, cy=window.innerHeight*0.42;
-  popText(cx,cy,`+${gained}`, "#ffd23f", 26);
-  if(lines>=2) popText(cx,cy-38, lines>=3?"🌟 어메이징!":"⚡ 퍼펙트!", "#ff6ac1", 22);
-  if(combo>1){ showCombo(combo); popText(cx,cy+34,`COMBO x${combo}`, "#ff8c42", 20); }
-  spawnParticles(toClear);
+  // effects — centered on the clear centroid, power scales the punch
+  let sx=0, sy=0, nn=0;
+  toClear.forEach(k=>{const[r,c]=k.split(",").map(Number); const rc=cells[r][c].getBoundingClientRect();
+    sx+=rc.left+rc.width/2; sy+=rc.top+rc.height/2; nn++;});
+  const cx=nn?sx/nn:window.innerWidth/2, cy=nn?sy/nn:window.innerHeight*0.42;
+  const power=lines + Math.max(0,combo-1) + (skillOnly>0?1:0) + (lines>=3?1:0);
+  impact(power, cx, cy, TYPES[char.type].color);
+  sndClear(lines); sndSkill(); if(combo>1)sndCombo(combo); sndCoin();
+  popText(cx,cy,`+${gained}`, "#ffd23f", 26+Math.min(14,power*2));
+  popText(cx,cy-40,`${char.emoji} ${TYPES[char.type].skill}`, TYPES[char.type].color, 18);
+  if(lines>=2) popText(cx,cy-74, lines>=3?"🌟 어메이징!":"⚡ 퍼펙트!", "#ff6ac1", 20);
+  if(combo>1){ showCombo(combo); popText(cx,cy+38,`COMBO x${combo}`, "#ff8c42", 20); }
+  spawnParticles(toClear, Math.min(6,2+power));
 
   // achievements
-  unlockChecks(lines,combo,gained);
+  unlock("first","🧩","첫 줄 클리어!");
+  if(lines>=2) unlock("double","⚡","더블 클리어!");
+  if(lines>=3) unlock("triple","🌟","트리플! 미쳤다!");
+  if(combo>=3) unlock("combo3","🔥","3콤보 연쇄!");
+  if(combo>=5) unlock("combo5","💥","5콤보! 손이 빨라요!");
+  if(char.type==="psychic") unlock("psy","🔮","에스퍼 몬스터 각성!");
+  if(gained>=500) unlock("big","💎","한 방에 500점+!");
+  if(score>=1000) unlock("k1","🏅","1,000점 돌파!");
+  if(score>=5000) unlock("k5","👑","5,000점 마스터!");
 
   setTimeout(()=>{
     toClear.forEach(k=>{const[r,c]=k.split(",").map(Number); grid[r][c]=0; cells[r][c].classList.remove("clearing");});
     paint(); renderScore(); saveMeta();
   },380);
-}
-
-function unlockChecks(lines,combo,gained){
-  unlock("first","🧩","첫 줄 클리어!");
-  if(lines>=2) unlock("double","⚡","더블 클리어 달성!");
-  if(lines>=3) unlock("triple","🌟","트리플! 미쳤다!");
-  if(combo>=3) unlock("combo3","🔥","3콤보 연쇄!");
-  if(combo>=5) unlock("combo5","💥","5콤보! 손이 빨라요!");
-  if(gained>=500) unlock("big","💎","한 방에 500점+!");
-  if(score>=1000) unlock("k1","🏅","1,000점 돌파!");
-  if(score>=5000) unlock("k5","👑","5,000점 마스터!");
 }
 
 /* ============ Effects ============ */
@@ -471,12 +619,13 @@ function popText(x,y,txt,color,size){
   el.style.left=x+"px"; el.style.top=y+"px"; el.style.color=color; el.style.fontSize=(size||22)+"px";
   popsEl.appendChild(el); setTimeout(()=>el.remove(),1000);
 }
-function spawnParticles(keys){
+function spawnParticles(keys,per){
+  per=per||3;
   keys.forEach(k=>{
     const[r,c]=k.split(",").map(Number); const rect=cells[r][c].getBoundingClientRect();
-    for(let i=0;i<3;i++){
+    for(let i=0;i<per;i++){
       const p=document.createElement("div"); p.className="particle";
-      p.style.background=COLORS[(r+c+i)%COLORS.length];
+      p.style.background=PARTICLE_COLORS[(r+c+i)%PARTICLE_COLORS.length];
       p.style.left=(rect.left+rect.width/2)+"px"; p.style.top=(rect.top+rect.height/2)+"px";
       document.body.appendChild(p);
       const ang=Math.random()*6.28, dist=30+Math.random()*50;
@@ -487,6 +636,36 @@ function spawnParticles(keys){
       setTimeout(()=>p.remove(),950);
     }
   });
+}
+const flashEl=document.getElementById("flash");
+function shockwave(x,y,color){
+  const s=document.createElement("div"); s.className="shockwave";
+  const size=90; s.style.width=size+"px"; s.style.height=size+"px";
+  s.style.left=x+"px"; s.style.top=y+"px"; if(color)s.style.borderColor=color;
+  document.body.appendChild(s); void s.offsetWidth; s.classList.add("go");
+  setTimeout(()=>s.remove(),520);
+}
+// central game-feel orchestrator — power scales with lines + combo
+function impact(power, cx, cy, color){
+  // impact flash
+  flashEl.classList.remove("go"); void flashEl.offsetWidth; flashEl.classList.add("go");
+  // shockwave ring(s)
+  shockwave(cx,cy,color||"#fff");
+  if(power>=3) setTimeout(()=>shockwave(cx,cy,"#ffd23f"),70);
+  // board zoom-punch + hitstop
+  boardEl.classList.remove("punch"); void boardEl.offsetWidth; boardEl.classList.add("punch");
+  boardEl.classList.add("hitstop");
+  setTimeout(()=>boardEl.classList.remove("hitstop"), Math.min(140,60+power*18));
+  // screen shake, harder as power grows
+  const hard = power>=3;
+  boardEl.classList.remove("shake","shake-hard"); void boardEl.offsetWidth;
+  boardEl.classList.add(hard?"shake-hard":"shake");
+  // punchy sound stack
+  thump(power); noiseBurst(power);
+  // haptics
+  if(power>=4) buzz([0,40,30,60]);
+  else if(power>=2) buzz([0,30,20,40]);
+  else buzz(25);
 }
 function showCombo(c){comboTag.textContent="COMBO x"+c; comboTag.classList.add("show");}
 function hideCombo(){comboTag.classList.remove("show");}
@@ -512,8 +691,7 @@ function attachDrag(el,idx){
     e.preventDefault();
     const p=tray[idx];
     if(!actx){try{actx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}
-    // build ghost at board cell size
-    const gps=(boardEl.clientWidth-16-4*7)/8;   // padding 8*2, gap 4*7
+    const gps=(boardEl.clientWidth-16-4*7)/8;
     ghostEl.style.setProperty("--gps",gps+"px");
     const rows=Math.max(...p.shape.map(s=>s[0]))+1, cols=Math.max(...p.shape.map(s=>s[1]))+1;
     ghostEl.style.gridTemplateColumns=`repeat(${cols},${gps}px)`;
@@ -522,7 +700,7 @@ function attachDrag(el,idx){
     const set=new Set(p.shape.map(s=>s[0]+","+s[1]));
     for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
       const cell=document.createElement("div");
-      if(set.has(r+","+c)){cell.className="pc"; cell.style.background=p.color;}
+      if(set.has(r+","+c)){cell.className="pc"; cell.style.background=p.char.color; cell.textContent=p.char.emoji;}
       else cell.style.visibility="hidden";
       ghostEl.appendChild(cell);
     }
@@ -533,11 +711,8 @@ function attachDrag(el,idx){
     window.addEventListener("pointerup",onUp);
   });
 }
-function moveGhost(x,y){
-  ghostEl.style.transform=`translate(${x-drag.offX}px,${y-drag.offY}px)`;
-}
+function moveGhost(x,y){ ghostEl.style.transform=`translate(${x-drag.offX}px,${y-drag.offY}px)`; }
 function hoveredCell(x,y){
-  // anchor = top-left cell of piece
   const bx=x-drag.offX, by=y-drag.offY;
   const rect=boardEl.getBoundingClientRect();
   const pad=8, gap=4;
@@ -576,10 +751,8 @@ document.querySelectorAll(".tool").forEach(t=>{
     const tool=t.dataset.tool;
     if(tool==="refresh"){
       coins-=COST.refresh; sndCoin(); newTray(); renderScore();
-      if(!anyMove()) endGame();
       return;
     }
-    // toggle target mode
     if(activeTool===tool){activeTool=null; t.classList.remove("active");}
     else{
       document.querySelectorAll(".tool").forEach(x=>x.classList.remove("active"));
@@ -603,22 +776,45 @@ boardEl.addEventListener("click",e=>{
       const rr=r+dr,cc=c+dc; if(rr>=0&&cc>=0&&rr<N&&cc<N&&grid[rr][cc]){grid[rr][cc]=0;keys.add(rr+","+cc);}
     }
     keys.forEach(k=>{const[a,b]=k.split(",").map(Number);cells[a][b].classList.add("clearing");});
-    spawnParticles(keys);
-    boardEl.classList.add("shake"); setTimeout(()=>boardEl.classList.remove("shake"),400);
+    spawnParticles(keys,5);
+    const br=cell.getBoundingClientRect();
+    impact(3, br.left+br.width/2, br.top+br.height/2, "#ff4d6d");
     setTimeout(()=>{keys.forEach(k=>{const[a,b]=k.split(",").map(Number);cells[a][b].classList.remove("clearing");});paint();},380);
   }
   activeTool=null;
   document.querySelectorAll(".tool").forEach(x=>x.classList.remove("active"));
   renderScore(); saveMeta();
-  if(!anyMove() && !tray.every(p=>p.used)) endGame();
+  if(!gameOver && !tray.every(p=>p.used) && !anyMove()){
+    if(shield){shield=false; toast("🎈","자장가 발동! 새 몬스터로 위기 탈출"); newTray();}
+    else endGame();
+  }
 });
+
+/* ============ Dex overlay ============ */
+function buildDex(){
+  const g=document.getElementById("dexGrid"); g.innerHTML="";
+  CHARS.forEach(ch=>{
+    const owned=DEX.has(ch.name);
+    const d=document.createElement("div"); d.className="dexcell"+(owned?"":" locked");
+    d.innerHTML=`<div class="de">${owned?ch.emoji:"❓"}</div>
+      <div class="dn">${owned?ch.name:"???"}</div>
+      <div class="dt" style="color:${owned?TYPES[ch.type].color:'#888'}">${owned?TYPE_KO[ch.type]:"미발견"}</div>`;
+    g.appendChild(d);
+  });
+  document.getElementById("dexProgress").textContent=DEX.size;
+}
+function openDex(){ buildDex(); document.getElementById("dexOverlay").classList.remove("hide"); }
+document.getElementById("dexChip").onclick=openDex;
+document.getElementById("dexBtnStart").onclick=openDex;
+document.getElementById("dexClose").onclick=()=>document.getElementById("dexOverlay").classList.add("hide");
 
 /* ============ Game flow ============ */
 function startGame(){
   grid=Array.from({length:N},()=>Array(N).fill(0));
-  score=0; combo=0; activeTool=null; gameOver=false; placedSinceClear=0;
+  score=0; combo=0; activeTool=null; gameOver=false; shield=false;
   document.getElementById("startOverlay").classList.add("hide");
   document.getElementById("overOverlay").classList.add("hide");
+  document.getElementById("dexOverlay").classList.add("hide");
   buildBoard(); paint(); newTray(); renderScore(); hideCombo();
 }
 function endGame(){
@@ -629,6 +825,7 @@ function endGame(){
   document.getElementById("recLine").style.display=isRec?"block":"none";
   document.getElementById("bestOver").textContent=best.toLocaleString();
   document.getElementById("coinOver").textContent=coins;
+  document.getElementById("dexOver").textContent=DEX.size;
   const msgs=["더 이상 놓을 곳이 없어요…","꽉 막혔네요! 다시 도전!","아깝다! 한 판 더?"];
   document.getElementById("overMsg").textContent=msgs[Math.floor(score)%msgs.length];
   saveMeta();
@@ -643,9 +840,9 @@ document.getElementById("muteBtn").onclick=function(){
   this.textContent=muted?"🔇":"🔊";
 };
 document.getElementById("shareBtn").onclick=async function(){
-  const text=`🧩 블록 블라스트 콤보 러시에서 ${score.toLocaleString()}점 달성! 🔥 최고기록 ${best.toLocaleString()}점. 도전해봐!`;
+  const text=`🧩 블록 블라스트 몬스터 배틀에서 ${score.toLocaleString()}점! 📖 도감 ${DEX.size}/15 수집. 최고 ${best.toLocaleString()}점, 도전해봐! ⚔️`;
   try{
-    if(navigator.share){await navigator.share({title:"블록 블라스트",text});}
+    if(navigator.share){await navigator.share({title:"블록 블라스트 몬스터 배틀",text});}
     else{await navigator.clipboard.writeText(text); toast("📋","결과가 복사됐어요!");}
   }catch(e){}
 };
@@ -656,6 +853,7 @@ document.getElementById("bestStart").textContent=best.toLocaleString();
 streakVal.textContent=streak;
 coinVal.textContent=coins;
 bestVal.textContent=best.toLocaleString();
+dexCountEl.textContent=DEX.size;
 document.getElementById("costBomb").textContent=COST.bomb;
 document.getElementById("costHammer").textContent=COST.hammer;
 document.getElementById("costRefresh").textContent=COST.refresh;
