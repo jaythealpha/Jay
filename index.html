@@ -112,6 +112,7 @@
   .toggle input:checked+span::before{transform:translateX(20px)}
   .hint{font-size:11px;color:var(--mut2);margin-top:8px;line-height:1.5}
   #aiStyleSeg button{flex:1 1 28%;min-width:0}   /* 9 presets → balanced 3×3 grid */
+  #ctypeSeg button{flex:1 1 22%;min-width:0}     /* 8 content types → balanced 4×2 grid */
   .picto-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;margin-top:6px}
   .picto-grid button{aspect-ratio:1;font-size:20px;line-height:1;background:var(--bg2);border:1px solid var(--line2);border-radius:8px;cursor:pointer;padding:0;transition:.1s}
   .picto-grid button.on{border-color:var(--acc);background:linear-gradient(135deg,rgba(124,92,255,.25),rgba(34,211,238,.18))}
@@ -248,9 +249,67 @@
           <summary><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>콘텐츠<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
           <div class="body">
             <label class="fld">
-              <div class="lbl">URL 또는 텍스트</div>
+              <div class="lbl">QR 연결 유형</div>
+              <div class="seg" id="ctypeSeg">
+                <button data-ct="url" class="on">URL</button>
+                <button data-ct="text">텍스트</button>
+                <button data-ct="wifi">Wi-Fi</button>
+                <button data-ct="vcard">연락처</button>
+                <button data-ct="tel">전화</button>
+                <button data-ct="sms">문자</button>
+                <button data-ct="email">이메일</button>
+                <button data-ct="geo">위치</button>
+              </div>
+              <div class="hint">스캔하면 바로 실행됩니다 — Wi-Fi 접속, 연락처 저장, 전화 걸기, 문자·메일 작성, 지도 열기.</div>
+            </label>
+            <label class="fld" id="ctRaw">
+              <div class="lbl" id="ctRawLbl">URL</div>
               <textarea id="content">https://jay-inky.vercel.app</textarea>
             </label>
+            <div id="ctWifi" style="display:none">
+              <label class="fld"><div class="lbl">네트워크 이름 (SSID)</div><input type="text" id="wifiSsid" maxlength="64" placeholder="예: MyHomeWiFi" /></label>
+              <label class="fld" id="wifiPassWrap"><div class="lbl">비밀번호</div><input type="text" id="wifiPass" maxlength="64" /></label>
+              <label class="fld">
+                <div class="lbl">보안 방식</div>
+                <div class="seg" id="wifiSecSeg">
+                  <button data-sec="WPA" class="on">WPA/WPA2</button>
+                  <button data-sec="WEP">WEP</button>
+                  <button data-sec="nopass">없음</button>
+                </div>
+              </label>
+              <div class="switch"><div class="lbl" style="margin:0">숨겨진 네트워크</div><label class="toggle"><input type="checkbox" id="wifiHidden" /><span></span></label></div>
+            </div>
+            <div id="ctVcard" style="display:none">
+              <label class="fld"><div class="lbl">이름 *</div><input type="text" id="vcName" maxlength="60" placeholder="홍길동" /></label>
+              <div class="row2">
+                <label class="fld"><div class="lbl">전화</div><input type="text" id="vcTel" maxlength="30" placeholder="010-1234-5678" /></label>
+                <label class="fld"><div class="lbl">이메일</div><input type="text" id="vcEmail" maxlength="80" /></label>
+              </div>
+              <div class="row2">
+                <label class="fld"><div class="lbl">회사/조직</div><input type="text" id="vcOrg" maxlength="60" /></label>
+                <label class="fld"><div class="lbl">웹사이트</div><input type="text" id="vcUrl" maxlength="120" /></label>
+              </div>
+            </div>
+            <div id="ctTel" style="display:none">
+              <label class="fld"><div class="lbl">전화번호</div><input type="text" id="telNum" maxlength="24" placeholder="010-1234-5678" /></label>
+            </div>
+            <div id="ctSms" style="display:none">
+              <label class="fld"><div class="lbl">받는 번호</div><input type="text" id="smsNum" maxlength="24" placeholder="010-1234-5678" /></label>
+              <label class="fld"><div class="lbl">메시지 (선택)</div><input type="text" id="smsMsg" maxlength="140" /></label>
+            </div>
+            <div id="ctEmail" style="display:none">
+              <label class="fld"><div class="lbl">받는 사람</div><input type="text" id="emTo" maxlength="80" placeholder="hello@example.com" /></label>
+              <label class="fld"><div class="lbl">제목 (선택)</div><input type="text" id="emSubj" maxlength="100" /></label>
+              <label class="fld"><div class="lbl">내용 (선택)</div><input type="text" id="emBody" maxlength="200" /></label>
+            </div>
+            <div id="ctGeo" style="display:none">
+              <div class="row2">
+                <label class="fld"><div class="lbl">위도</div><input type="text" id="geoLat" maxlength="20" placeholder="37.5665" /></label>
+                <label class="fld"><div class="lbl">경도</div><input type="text" id="geoLng" maxlength="20" placeholder="126.9780" /></label>
+              </div>
+              <div class="hint">지도 앱에서 좌표 복사: 구글 지도에서 위치 길게 누르면 위도, 경도가 표시됩니다.</div>
+            </div>
+            <div class="hint" id="ctPreview" style="display:none"></div>
             <label class="fld">
               <div class="lbl">오류 정정 레벨 <b id="eccOut">H (30%)</b></div>
               <div class="seg" id="eccSeg">
@@ -595,7 +654,7 @@
   <footer>
     <div>Aesthetic QR Studio · LemioCode 컨셉을 오픈소스로 재구현 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.05-e</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.05-f</b></div>
   </footer>
 </div>
 
@@ -3832,12 +3891,68 @@ segBind("eyeSeg","eye",null,true);
 segBind("animSeg","animKind",null,true);
 segBind("labelPosSeg","labelPos");
 
-$("content").addEventListener("input", function(e){
-  S.content=e.target.value;
+// ---- QR content types: URL / text / Wi-Fi / vCard / tel / SMS / email / geo ----
+// Each type has its own small form; every edit recomposes the standard QR payload
+// string into S.content, so the whole design pipeline (art, AI, presets) is unchanged.
+var CT = "url";
+function setContent(v){
+  if (v === S.content) return;
+  S.content = v;
   // the generated AI image encodes the OLD content — keeping it would show a QR that
   // points somewhere else. Invalidate it and ask the user to regenerate.
-  if(S.aiArt){ S.aiArt=null; $("aiClear").style.display="none"; aiStatus("내용이 변경되어 AI 아트가 제거되었습니다 — 새 내용으로 다시 생성하세요."); toast("내용 변경 → AI 아트 제거됨 (다시 생성 필요)"); }
+  if (S.aiArt){ S.aiArt=null; $("aiClear").style.display="none"; aiStatus("내용이 변경되어 AI 아트가 제거되었습니다 — 새 내용으로 다시 생성하세요."); toast("내용 변경 → AI 아트 제거됨 (다시 생성 필요)"); }
   rerender();
+}
+function ctEsc(v){ return String(v||"").replace(/([\\;,:"])/g, "\\$1"); }  // WIFI: payload escaping
+function buildContent(){
+  var v = "";
+  if (CT==="url" || CT==="text"){ v = $("content").value; }
+  else if (CT==="wifi"){
+    var sec = document.querySelector("#wifiSecSeg button.on").dataset.sec;
+    v = "WIFI:T:"+sec+";S:"+ctEsc($("wifiSsid").value)+";"
+      + (sec==="nopass" ? "" : "P:"+ctEsc($("wifiPass").value)+";")
+      + ($("wifiHidden").checked ? "H:true;" : "") + ";";
+  }
+  else if (CT==="vcard"){
+    var nm=$("vcName").value.trim(), tel=$("vcTel").value.trim(), em=$("vcEmail").value.trim(),
+        org=$("vcOrg").value.trim(), url=$("vcUrl").value.trim();
+    v = "BEGIN:VCARD\nVERSION:3.0\nN:"+nm+"\nFN:"+nm
+      + (org?"\nORG:"+org:"") + (tel?"\nTEL;TYPE=CELL:"+tel:"")
+      + (em?"\nEMAIL:"+em:"") + (url?"\nURL:"+url:"") + "\nEND:VCARD";
+  }
+  else if (CT==="tel"){ v = "tel:" + $("telNum").value.replace(/[\s-]/g,""); }
+  else if (CT==="sms"){ v = "SMSTO:" + $("smsNum").value.replace(/[\s-]/g,"") + ":" + $("smsMsg").value; }
+  else if (CT==="email"){
+    var to=$("emTo").value.trim(), su=$("emSubj").value, bo=$("emBody").value;
+    var q=[]; if(su) q.push("subject="+encodeURIComponent(su)); if(bo) q.push("body="+encodeURIComponent(bo));
+    v = "mailto:" + to + (q.length ? "?"+q.join("&") : "");
+  }
+  else if (CT==="geo"){ v = "geo:" + (parseFloat($("geoLat").value)||0) + "," + (parseFloat($("geoLng").value)||0); }
+  setContent(v);
+  var pv=$("ctPreview");
+  if (CT==="url" || CT==="text"){ pv.style.display="none"; }
+  else { pv.style.display="block"; pv.textContent="인코딩될 내용: "+(v.length>140 ? v.slice(0,140)+"…" : v); }
+}
+var CTFORMS = { wifi:"ctWifi", vcard:"ctVcard", tel:"ctTel", sms:"ctSms", email:"ctEmail", geo:"ctGeo" };
+$("ctypeSeg").addEventListener("click", function(e){
+  var b=e.target.closest("button"); if(!b) return;
+  Array.prototype.forEach.call(this.children, function(x){x.classList.remove("on");});
+  b.classList.add("on"); CT=b.dataset.ct;
+  $("ctRaw").style.display = (CT==="url"||CT==="text") ? "block" : "none";
+  $("ctRawLbl").textContent = (CT==="text") ? "텍스트" : "URL";
+  for (var k in CTFORMS){ $(CTFORMS[k]).style.display = (CT===k) ? "block" : "none"; }
+  buildContent();
+});
+["content","wifiSsid","wifiPass","vcName","vcTel","vcEmail","vcOrg","vcUrl","telNum","smsNum","smsMsg","emTo","emSubj","emBody","geoLat","geoLng"].forEach(function(id){
+  $(id).addEventListener("input", buildContent);
+});
+$("wifiHidden").addEventListener("change", buildContent);
+$("wifiSecSeg").addEventListener("click", function(e){
+  var b=e.target.closest("button"); if(!b) return;
+  Array.prototype.forEach.call(this.children, function(x){x.classList.remove("on");});
+  b.classList.add("on");
+  $("wifiPassWrap").style.display = (b.dataset.sec==="nopass") ? "none" : "block";
+  buildContent();
 });
 
 $("eccSeg").addEventListener("click",function(e){
