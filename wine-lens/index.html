@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#1c0a11">
-<title>와인 렌즈 — 라벨을 찍으면 와인이 말을 겁니다</title>
+<title>와인 렌즈 — 라벨을 찍으면 술이 말을 겁니다</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
@@ -427,7 +427,7 @@
     <div class="logo">🍷</div>
     <div>
       <b>와인 렌즈</b>
-      <small>Wine Lens · 라벨 스캔 인포그래픽</small>
+      <small>와인 · 사케 · 위스키 · 전통주 라벨 스캔</small>
     </div>
   </div>
   <div class="spacer"></div>
@@ -440,8 +440,8 @@
   <!-- ========== CAPTURE SCREEN ========== -->
   <section class="screen active" id="screen-capture">
     <div class="hero">
-      <h1>와인 라벨을 찍으면<br><span class="accent">한 잔의 이야기</span>가 펼쳐집니다</h1>
-      <p>빈티지 · 가격대 · 히스토리 · 스토리 · 와이너리 · 테이스팅 · 페어링까지<br>세션별 인포그래픽으로 정리해 드려요.</p>
+      <h1>술 라벨을 찍으면<br><span class="accent">한 잔의 이야기</span>가 펼쳐집니다</h1>
+      <p>🍷 와인 · 🍶 사케 · 🥃 위스키 · 🏺 전통주를 자동 판별해<br>연식 · 가격대 · 히스토리 · 테이스팅 · 페어링을 인포그래픽으로.</p>
     </div>
 
     <div class="capture-card">
@@ -475,7 +475,7 @@
 
     <p class="disclaimer" style="margin-top:22px">
       API 키가 없어도 <b style="color:var(--gold-soft)">데모 보기</b>로 인포그래픽을 체험할 수 있어요.<br>
-      <button class="btn btn-ghost" id="btnDemo" style="margin-top:10px;padding:10px 16px;font-size:14px">🍇 데모 인포그래픽 보기</button>
+      <button class="btn btn-ghost" id="btnDemo" style="margin-top:10px;padding:10px 16px;font-size:14px">🍇 데모 보기 (탭할 때마다 와인→사케→위스키→전통주)</button>
     </p>
   </section>
 
@@ -672,7 +672,8 @@ function resetCapture() {
 const LOAD_STEPS = [
   '사진을 정리하고 있어요',
   '라벨의 글자를 읽는 중',
-  '와이너리와 빈티지를 조회하는 중',
+  '주종을 판별하는 중 — 와인? 사케? 위스키?',
+  '생산자와 연식을 조회하는 중',
   '히스토리와 스토리를 엮는 중',
   '테이스팅 노트를 정리하는 중',
   '인포그래픽을 그리는 중',
@@ -700,8 +701,9 @@ async function analyze() {
       data = await callClaude(key, store.model(), capturedForApi);
     } else {
       await new Promise(r => setTimeout(r, 2600));
-      data = DEMO_DATA;
-      toast('데모 모드입니다. 실제 인식은 설정에서 API 키를 등록하세요.');
+      data = pendingDemo || DEMOS[0];
+      pendingDemo = null;
+      toast(`데모 모드 (${catOf(data).label} 샘플) — 실제 인식은 설정에서 API 키를 등록하세요.`);
     }
     clearInterval(loadTimer);
 
@@ -723,39 +725,50 @@ async function analyze() {
 
 /* ---------- Claude vision call ---------- */
 const SYSTEM_PROMPT =
-`당신은 세계 와인 전문가(소믈리에 겸 와인 역사가)입니다. 제공된 와인 라벨 사진을 분석해
-와인 애호가에게 유용한 정보를 한국어로 정리합니다. 라벨에서 읽히지 않는 사실은 일반적인
-와인 지식과 해당 생산자/지역/품종의 특성으로 합리적으로 추정하되, 불확실하면 겸손하게 표현합니다.
+`당신은 주류 전문가입니다 — 와인 소믈리에, 사케 키키자케시(唎酒師), 위스키 앰배서더,
+한국 전통주 소믈리에를 겸합니다. 제공된 술 라벨 사진에서 먼저 주종(category)을 판별하고,
+그 주종의 애호가에게 유용한 정보를 한국어로 정리합니다. 라벨에서 읽히지 않는 사실은 일반적인
+지식과 해당 생산자/지역/원료의 특성으로 합리적으로 추정하되, 불확실하면 겸손하게 표현합니다.
 반드시 아래 JSON 스키마 하나만 출력하고, 코드펜스나 다른 텍스트는 절대 붙이지 마세요.`;
 
 const JSON_SCHEMA = `{
-  "found": true,                       // 라벨을 와인으로 인식했으면 true, 아니면 false
+  "found": true,                       // 라벨을 술로 인식했으면 true, 아니면 false
   "reason": "",                        // found=false일 때 이유
   "confidence": "high|medium|low",     // 라벨 인식 확신도
-  "name": "와인명(라벨 표기 그대로)",
-  "producer": "생산자/와이너리 이름",
-  "type": "레드|화이트|로제|스파클링|디저트|주정강화 등",
-  "vintage": "빈티지 연도 또는 'NV'/미상",
-  "region": "지역/아펠라시옹",
+  "category": "wine|sake|whisky|traditional|spirits",  // 주종: 와인|사케|위스키|한국 전통주|기타(진·럼·브랜디·맥주 등)
+  "name": "제품명(라벨 표기 그대로)",
+  "producer": "생산자(와이너리/양조장/증류소) 이름",
+  "type": "주종 내 세부 타입 — 와인: 레드/화이트/로제/스파클링, 사케: 준마이/긴조/다이긴조, 위스키: 싱글몰트/블렌디드/버번, 전통주: 탁주/약주/청주/증류식 소주 등",
+  "vintage": "연식 표기 문자열 — 와인: 빈티지 연도/'NV', 위스키: '12년' 등 숙성 연수, 사케: 양조년도(BY)/미상, 전통주: 제조년도/미상",
+  "region": "지역/아펠라시옹/현(県)/도(道)",
   "country": "국가",
-  "grapes": ["주요 포도 품종", "..."],
+  "ingredients": ["주원료 — 와인: 포도 품종, 사케: 쌀 품종·누룩, 위스키: 몰트·곡물, 전통주: 쌀·누룩 등"],
   "alcohol": "도수 예: 13.5%",
-  "priceRange": "예상 소매가 범위(원화), 예: 3~5만원",
+  "priceRange": "한국 예상 소매가 범위(원화), 예: 3~5만원",
   "priceNote": "가격 관련 한 줄 코멘트(가성비/희소성 등)",
   "priceTier": 3,                      // 1~5 정수: 1 데일리(~2만원) 2 캐주얼(2~5만) 3 프리미엄(5~15만) 4 파인(15~50만) 5 아이콘(50만+)
-  "body": 0, "tannin": 0, "acidity": 0, "sweetness": 0,  // 0~100 정수, 화이트는 tannin 낮게
+  "tasteProfile": [                    // 주종에 맞는 맛 축 정확히 4개, value는 0~100 정수
+    {"name":"바디","en":"Body","value":70,"left":"라이트","right":"풀"}
+    // 와인: 바디/탄닌/산도/당도 · 사케: 단맛(甘辛)/산미/바디(담려-농순)/향 ·
+    // 위스키: 바디/피트(스모크)/단맛/스파이스 · 전통주: 단맛/산미/바디/탄산(또는 향)
+  ],
+  "specs": [                           // 주종 특화 제원 2~5개 (라벨·일반 지식 기반)
+    {"label":"정미보합","value":"23%"}
+    // 사케: 분류/정미보합/일본주도(SMV)/산도 · 위스키: 숙성 연수/캐스크/칠필터/캐스크 스트렝스 ·
+    // 전통주: 주종/원료/누룩/살균 여부 · 와인: 등급(AOC 등)/오크 숙성/생산량 등
+  ],
   "tastingNotes": "향과 맛 묘사 2~3문장",
-  "drinkFrom": 2020,                   // 음용 권장 시작 연도(정수), 미상이면 null
-  "drinkPeak": 2027,                   // 정점 연도(정수), 미상이면 null
-  "drinkUntil": 2035,                  // 음용 권장 마지막 연도(정수), 미상이면 null
-  "history": [ {"year":"연도/시기","text":"사건"}, ... ],  // 와인/생산자 히스토리 2~4개
-  "story": "이 와인/빈티지에 얽힌 흥미로운 스토리 2~3문장",
-  "winery": "와이너리 소개 2~3문장(설립, 규모, 철학, 유명세)",
-  "foodPairing": ["🥩 음식1","🧀 음식2","..."],  // 이모지 포함 3~5개
-  "servingTemp": "권장 서빙 온도 예: 16~18℃",
-  "decant": "디캔팅 권장 여부/시간",
-  "aging": "적정 음용 시기/숙성 잠재력 한 줄",
-  "tips": ["와인 애호가를 위한 실전 팁 3~4개(구매/보관/서빙/유사 와인 추천 등)"]
+  "drinkFrom": 2020,                   // 음용 권장 시작 연도(정수) — 장기 숙성형 와인 위주, 해당 없으면 null
+  "drinkPeak": 2027,                   // 정점 연도(정수), 해당 없으면 null
+  "drinkUntil": 2035,                  // 음용 권장 마지막 연도(정수), 해당 없으면 null (사케·탁주 등 신선 음용 주류는 null)
+  "history": [ {"year":"연도/시기","text":"사건"}, ... ],  // 제품/생산자 히스토리 2~4개
+  "story": "이 술/연식에 얽힌 흥미로운 스토리 2~3문장",
+  "winery": "생산자(와이너리/양조장/증류소) 소개 2~3문장(설립, 규모, 철학, 유명세)",
+  "foodPairing": ["🥩 음식1","🧀 음식2","..."],  // 이모지 포함 3~5개, 주종에 어울리게(전통주는 한식 위주)
+  "servingTemp": "권장 서빙 온도 예: 16~18℃ (사케는 온도대별 스타일 병기 가능)",
+  "servingNote": "서빙 팁 — 와인: 디캔팅, 위스키: 니트/가수/글라스, 사케: 히야·누루캉 등 온도 스타일, 전통주: 흔들기·잔 추천",
+  "aging": "적정 음용 시기/숙성·보관 잠재력 한 줄",
+  "tips": ["애호가를 위한 실전 팁 3~4개(구매/보관/서빙/유사 제품 추천 등)"]
 }`;
 
 async function callClaude(key, model, base64) {
@@ -769,7 +782,7 @@ async function callClaude(key, model, base64) {
     },
     body: JSON.stringify({
       model,
-      max_tokens: 2200,
+      max_tokens: 3000,
       system: SYSTEM_PROMPT,
       messages: [{
         role: 'user',
@@ -829,6 +842,36 @@ function updateHistBadge() {
 /* ================= RENDER RESULT ================= */
 function esc(s) { return String(s ?? '').replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m])); }
 function clamp01(v) { return Math.max(0, Math.min(100, Number(v) || 0)); }
+
+/* ---- category registry: labels per 주종 ---- */
+const CATS = {
+  wine:        { icon: '🍷', label: '와인',      en: 'Wine',    vintageCap: 'Vintage',  ingTitle: ['Grapes', '포도 품종'], prodTitle: ['The Winery', '와이너리'] },
+  sake:        { icon: '🍶', label: '사케',      en: 'Sake',    vintageCap: 'Brewery Year', ingTitle: ['Rice & Koji', '원료'], prodTitle: ['The Brewery', '양조장'] },
+  whisky:      { icon: '🥃', label: '위스키',    en: 'Whisky',  vintageCap: 'Age / Year', ingTitle: ['Malt & Grain', '원료'], prodTitle: ['The Distillery', '증류소'] },
+  traditional: { icon: '🏺', label: '전통주',    en: 'K-Sool',  vintageCap: 'Year',     ingTitle: ['Ingredients', '원료'], prodTitle: ['The Brewery', '양조장'] },
+  spirits:     { icon: '🍸', label: '기타 주류', en: 'Spirits', vintageCap: 'Year',     ingTitle: ['Ingredients', '원료'], prodTitle: ['The Maker', '생산자'] },
+};
+function catOf(d) { return CATS[d && d.category] || CATS.wine; }
+
+/* taste axes: model-provided per category, else wine fields from older sessions */
+function tasteAxes(d) {
+  if (Array.isArray(d.tasteProfile) && d.tasteProfile.length) {
+    return d.tasteProfile.slice(0, 4).map(a => ({
+      ko: a.name || '', en: a.en || '', value: a.value,
+      anchors: [a.left || '약함', a.right || '강함'],
+      words: [a.left || '약함', '중간', a.right || '강함'],
+    }));
+  }
+  if ([d.body, d.tannin, d.acidity, d.sweetness].some(v => v != null)) {
+    return [
+      { ko: '바디', en: 'Body', value: d.body, anchors: ['라이트', '풀'], words: ['라이트', '미디엄', '풀바디'] },
+      { ko: '탄닌', en: 'Tannin', value: d.tannin, anchors: ['부드러움', '단단함'], words: ['부드러움', '중간', '단단함'] },
+      { ko: '산도', en: 'Acidity', value: d.acidity, anchors: ['낮음', '높음'], words: ['낮음', '중간', '높음'] },
+      { ko: '당도', en: 'Sweetness', value: d.sweetness, anchors: ['드라이', '스위트'], words: ['드라이', '오프드라이', '스위트'] },
+    ];
+  }
+  return [];
+}
 
 /* anchored taste scale: label + track(ticks/fill/dot) + anchors + direct-labeled reading */
 function scaleRow(nameKo, nameEn, val, anchors, words) {
@@ -911,8 +954,9 @@ function renderResult(session) {
   const confMap = { high: '높음', medium: '보통', low: '낮음' };
   const confClass = d.confidence === 'low' ? 'low' : '';
 
-  const grapes = (d.grapes || []).map(g => `<span class="pill">${esc(g)}</span>`).join('')
-    || '<p class="body">품종 정보가 없습니다.</p>';
+  const cat = catOf(d);
+  const grapes = (d.ingredients || d.grapes || []).map(g => `<span class="pill">${esc(g)}</span>`).join('')
+    || '<p class="body">원료 정보가 없습니다.</p>';
   const pairing = (d.foodPairing || []).map(f => {
     const s = String(f).trim();
     const m = s.match(/^(\p{Extended_Pictographic}[️‍\p{Extended_Pictographic}]*)\s*(.*)$/u);
@@ -925,15 +969,15 @@ function renderResult(session) {
   ).join('') || '<p class="body">기록 정보가 없습니다.</p>';
   const tips = (d.tips || []).map(t => `<li>${esc(t)}</li>`).join('');
 
-  const scales =
-    scaleRow('바디', 'Body', d.body, ['라이트', '풀'], ['라이트', '미디엄', '풀바디']) +
-    scaleRow('탄닌', 'Tannin', d.tannin, ['부드러움', '단단함'], ['부드러움', '중간', '단단함']) +
-    scaleRow('산도', 'Acidity', d.acidity, ['낮음', '높음'], ['낮음', '중간', '높음']) +
-    scaleRow('당도', 'Sweetness', d.sweetness, ['드라이', '스위트'], ['드라이', '오프드라이', '스위트']);
+  const scales = tasteAxes(d).map(a => scaleRow(a.ko, a.en, a.value, a.anchors, a.words)).join('');
+
+  const specs = (d.specs || []).filter(s => s && s.label && s.value).map(s =>
+    `<div class="serve"><div class="s-label">${esc(s.label)}</div><div class="s-value">${esc(s.value)}</div></div>`
+  ).join('');
 
   const win = drinkWindow(d);
   const temp = tempScale(d.servingTemp);
-  const isNV = !d.vintage || /nv|미상/i.test(String(d.vintage));
+  const isNV = !d.vintage || /^(nv|미상)$/i.test(String(d.vintage).trim());
 
   $('#resultBody').innerHTML = `
     <!-- label plate -->
@@ -944,11 +988,12 @@ function renderResult(session) {
         <div class="kicker">Wine Lens · Scan Report</div>
         ${d.producer ? `<div class="producer">${esc(d.producer)}</div>` : ''}
         <div class="orn"><i></i></div>
-        <h2>${esc(d.name || '이름 미상 와인')}</h2>
-        <div class="vintage">${isNV ? 'NV' : esc(d.vintage)}<small>Vintage</small></div>
+        <h2>${esc(d.name || '이름 미상')}</h2>
+        ${isNV && d.category && d.category !== 'wine' ? '' :
+          `<div class="vintage">${isNV ? 'NV' : esc(d.vintage)}<small>${esc(cat.vintageCap)}</small></div>`}
         <div class="origin">${d.region ? `<b>${esc(d.region)}</b>` : ''}${d.region && d.country ? ' · ' : ''}${esc(d.country || '')}</div>
         <div class="badges">
-          ${d.type ? `<span class="tag type">${esc(d.type)} 와인</span>` : ''}
+          <span class="tag type">${cat.icon} ${esc(cat.label)}${d.type ? ' · ' + esc(d.type) : ''}</span>
           <span class="tag conf ${confClass}">인식 확신도 ${confMap[d.confidence] || '보통'}</span>
         </div>
       </div>
@@ -965,9 +1010,11 @@ function renderResult(session) {
         <div class="k-value">${esc(d.alcohol || '—')}</div>
       </div>
       <div class="kpi">
-        <div class="k-label">정점 시기</div>
-        <div class="k-value">${d.drinkPeak ? esc(d.drinkPeak) : '—'}</div>
-        ${d.drinkPeak ? '<div class="k-sub">음용 최적</div>' : ''}
+        ${d.drinkPeak
+          ? `<div class="k-label">정점 시기</div><div class="k-value">${esc(d.drinkPeak)}</div><div class="k-sub">음용 최적</div>`
+          : (d.specs && d.specs[0] && d.specs[0].label
+            ? `<div class="k-label">${esc(d.specs[0].label)}</div><div class="k-value">${esc(d.specs[0].value)}</div>`
+            : `<div class="k-label">지역</div><div class="k-value" style="font-size:14px">${esc(d.region || d.country || '—')}</div>`)}
       </div>
     </div>
 
@@ -981,11 +1028,10 @@ function renderResult(session) {
       ${priceMeter(d.priceTier)}
     </div>
 
+    ${specs ? `<div class="card">${sec('Specs', '제원')}<div class="serve-grid">${specs}</div></div>` : ''}
+
     <!-- taste profile -->
-    <div class="card">
-      ${sec('Taste Profile', '맛 프로필')}
-      ${scales}
-    </div>
+    ${scales ? `<div class="card">${sec('Taste Profile', '맛 프로필')}${scales}</div>` : ''}
 
     <!-- tasting notes -->
     <div class="card">
@@ -1005,15 +1051,15 @@ function renderResult(session) {
           ${temp}
         </div>
         <div class="serve">
-          <div class="s-label">Decanting</div>
-          <div class="s-sub" style="margin-top:6px">${esc(d.decant || '—')}</div>
+          <div class="s-label">Serving Note</div>
+          <div class="s-sub" style="margin-top:6px">${esc(d.servingNote || d.decant || '—')}</div>
         </div>
       </div>
     </div>
 
-    <!-- grapes -->
+    <!-- ingredients / grapes -->
     <div class="card">
-      ${sec('Grapes', '포도 품종')}
+      ${sec(cat.ingTitle[0], cat.ingTitle[1])}
       <div class="pills">${grapes}</div>
     </div>
 
@@ -1035,9 +1081,9 @@ function renderResult(session) {
       <div class="editorial"><p>${esc(d.story || '정보 없음')}</p></div>
     </div>
 
-    <!-- winery -->
+    <!-- producer -->
     <div class="card">
-      ${sec('The Winery', '와이너리')}
+      ${sec(cat.prodTitle[0], cat.prodTitle[1])}
       <div class="editorial"><p>${esc(d.winery || '정보 없음')}</p></div>
     </div>
 
@@ -1064,16 +1110,17 @@ function renderHistory() {
   const list = $('#histList');
   const sessions = store.sessions();
   if (!sessions.length) {
-    list.innerHTML = `<div class="empty-hist"><span class="big">🍷</span>아직 스캔한 와인이 없어요.<br>첫 라벨을 찍어보세요!</div>`;
+    list.innerHTML = `<div class="empty-hist"><span class="big">🍷</span>아직 스캔 기록이 없어요.<br>첫 라벨을 찍어보세요!</div>`;
     return;
   }
   list.innerHTML = sessions.map(s => {
     const d = s.data || {};
+    const cat = catOf(d);
     return `<div class="sess" data-id="${s.id}">
-      ${s.photo ? `<img class="thumb" src="${s.photo}" alt="">` : `<div class="thumb" style="display:grid;place-items:center;font-size:22px">🍷</div>`}
+      ${s.photo ? `<img class="thumb" src="${s.photo}" alt="">` : `<div class="thumb" style="display:grid;place-items:center;font-size:22px">${cat.icon}</div>`}
       <div class="info">
-        <b>${esc(d.name || '이름 미상 와인')}</b>
-        <span>${esc(d.producer || '')}${d.vintage ? ' · ' + esc(d.vintage) : ''}</span>
+        <b>${cat.icon} ${esc(d.name || '이름 미상')}</b>
+        <span>${esc(cat.label)}${d.producer ? ' · ' + esc(d.producer) : ''}${d.vintage && !/미상/.test(d.vintage) ? ' · ' + esc(d.vintage) : ''}</span>
         <span style="color:var(--ink-3);font-size:11px">${fmtDate(s.at)}</span>
       </div>
       <button class="del" data-del="${s.id}" title="삭제">🗑️</button>
@@ -1102,7 +1149,8 @@ function refreshKeyStat() {
 async function shareResult() {
   if (!currentSession) return;
   const d = currentSession.data || {};
-  const text = `🍷 ${d.name || '와인'} ${d.vintage || ''}\n` +
+  const cat = catOf(d);
+  const text = `${cat.icon} ${d.name || cat.label} ${d.vintage && !/미상/.test(d.vintage) ? d.vintage : ''}\n` +
     `${d.producer || ''} · ${d.region || d.country || ''}\n` +
     `💰 ${d.priceRange || ''}\n👃 ${d.tastingNotes || ''}\n\n— 와인 렌즈로 스캔`;
   try {
@@ -1120,21 +1168,31 @@ function handleFile(file) {
   reader.readAsDataURL(file);
 }
 
-/* ================= DEMO DATA ================= */
-const DEMO_DATA = {
-  found: true, confidence: 'high',
+/* ================= DEMO DATA (주종별 샘플 — 탭할 때마다 순환) ================= */
+const DEMOS = [
+{
+  found: true, confidence: 'high', category: 'wine',
   name: 'Château Margaux',
   producer: 'Château Margaux (샤토 마고)',
   type: '레드',
   vintage: '2015',
   region: '마고 (Margaux), 보르도',
   country: '프랑스',
-  grapes: ['카베르네 소비뇽', '메를로', '쁘띠 베르도', '카베르네 프랑'],
+  ingredients: ['카베르네 소비뇽', '메를로', '쁘띠 베르도', '카베르네 프랑'],
   alcohol: '13.5%',
   priceRange: '90~130만원',
   priceNote: '보르도 1등급(프리미에 크뤼) 그레이트 빈티지로 투자·수집 가치 높음',
   priceTier: 5,
-  body: 88, tannin: 78, acidity: 62, sweetness: 6,
+  tasteProfile: [
+    { name: '바디', en: 'Body', value: 88, left: '라이트', right: '풀' },
+    { name: '탄닌', en: 'Tannin', value: 78, left: '부드러움', right: '단단함' },
+    { name: '산도', en: 'Acidity', value: 62, left: '낮음', right: '높음' },
+    { name: '당도', en: 'Sweetness', value: 6, left: '드라이', right: '스위트' },
+  ],
+  specs: [
+    { label: '등급', value: '1er Grand Cru Classé' },
+    { label: '오크 숙성', value: '새 오크 100% · 18~24개월' },
+  ],
   tastingNotes: '블랙커런트와 제비꽃, 삼나무·연필심의 우아한 향. 실키한 탄닌과 긴 여운, 완벽한 균형감이 인상적입니다.',
   drinkFrom: 2023, drinkPeak: 2035, drinkUntil: 2050,
   history: [
@@ -1146,7 +1204,7 @@ const DEMO_DATA = {
   winery: '1152년까지 거슬러 올라가는 유서 깊은 샤토로, 신고전주의 양식의 상징적 건축물로도 유명합니다. 265ha 부지 중 약 100ha에서 포도를 재배하며, 세계에서 가장 존경받는 와인 생산자 중 하나입니다.',
   foodPairing: ['🥩 숙성 스테이크', '🦆 오리 콩피', '🧀 하드 치즈', '🍄 트러플 요리'],
   servingTemp: '16~18℃',
-  decant: '음용 1~2시간 전 디캔팅 권장',
+  servingNote: '음용 1~2시간 전 디캔팅 권장',
   aging: '지금도 훌륭하나 2035년 전후 정점, 2050년까지 숙성 잠재력 보유',
   tips: [
     '개봉 후 시간이 지날수록 향이 열리니 서두르지 마세요.',
@@ -1154,7 +1212,142 @@ const DEMO_DATA = {
     '비슷한 스타일을 찾는다면 Château Palmer, Pauillac 1등급을 참고하세요.',
     '영 빈티지는 넓은 보르도 글라스를 사용하면 향이 잘 삽니다.',
   ],
-};
+},
+{
+  found: true, confidence: 'high', category: 'sake',
+  name: '獺祭 純米大吟醸 磨き二割三分 (닷사이 23)',
+  producer: '아사히주조 (旭酒造)',
+  type: '준마이 다이긴조',
+  vintage: '미상',
+  region: '야마구치현',
+  country: '일본',
+  ingredients: ['야마다니시키 (山田錦)', '쌀누룩'],
+  alcohol: '16%',
+  priceRange: '13~18만원',
+  priceNote: '정미보합 23%의 플래그십 — 선물용으로 인기가 높아 시즌에 따라 가격 변동',
+  priceTier: 3,
+  tasteProfile: [
+    { name: '단맛', en: 'Kanjaku', value: 45, left: '드라이(辛口)', right: '스위트(甘口)' },
+    { name: '산미', en: 'Acidity', value: 35, left: '낮음', right: '높음' },
+    { name: '바디', en: 'Body', value: 40, left: '담려(가벼움)', right: '농순(진함)' },
+    { name: '향', en: 'Aroma', value: 88, left: '은은함', right: '화려함' },
+  ],
+  specs: [
+    { label: '분류', value: '준마이 다이긴조' },
+    { label: '정미보합', value: '23%' },
+    { label: '일본주도', value: '+4 전후 (드라이)' },
+  ],
+  tastingNotes: '잘 익은 멜론과 배, 흰 꽃의 화려한 긴조향. 입 안에서는 부드러운 단맛과 깨끗한 여운이 이어지는 우아한 스타일입니다.',
+  drinkFrom: null, drinkPeak: null, drinkUntil: null,
+  history: [
+    { year: '1948', text: '야마구치의 작은 양조장으로 창업' },
+    { year: '1990', text: '"닷사이" 브랜드 출시 — 다이긴조 전문 양조장으로 전환' },
+    { year: '2010년대', text: '세계 시장 진출, 프리미엄 사케 붐을 이끈 대표 브랜드로 성장' },
+  ],
+  story: '쌀알을 77%나 깎아내고 남은 23%의 심백만으로 빚는 극한의 정미가 이름의 유래입니다. 사양길이던 지방 양조장이 데이터 기반 양조로 세계적 브랜드가 된 역전 스토리로도 유명합니다.',
+  winery: '아사히주조는 두주(杜氏·장인) 없이 데이터와 직원의 손으로 사시사철 양조하는 혁신적 방식으로 유명합니다. 준마이 다이긴조만을 고집하며, 파리·뉴욕에도 진출했습니다.',
+  foodPairing: ['🍣 스시·사시미', '🦪 굴 요리', '🥗 가벼운 샐러드', '🧀 크림 치즈'],
+  servingTemp: '8~12℃',
+  servingNote: '차게(히야) 하여 와인 글라스에 — 향이 활짝 열립니다',
+  aging: '신선할 때 마시는 술 — 구매 후 냉장 보관하고 수개월 내 음용 권장',
+  tips: [
+    '개봉 후에는 냉장 보관하고 1~2주 내에 마시는 것이 좋습니다.',
+    '온도가 오르면 단맛이 도드라지니 8℃ 전후로 시작해 보세요.',
+    '입문용으로는 같은 브랜드의 닷사이 45가 가성비가 좋습니다.',
+    '긴조향을 즐기려면 소주잔보다 볼이 넓은 글라스를 추천합니다.',
+  ],
+},
+{
+  found: true, confidence: 'high', category: 'whisky',
+  name: 'The Macallan 12 Years Sherry Oak',
+  producer: '맥캘란 증류소 (The Macallan)',
+  type: '싱글몰트 스카치',
+  vintage: '12년',
+  region: '스페이사이드',
+  country: '스코틀랜드',
+  ingredients: ['몰티드 발리 (보리 맥아)'],
+  alcohol: '40%',
+  priceRange: '12~17만원',
+  priceNote: '셰리 캐스크 싱글몰트의 기준점 — 면세점가와 국내가 차이가 큰 편',
+  priceTier: 3,
+  tasteProfile: [
+    { name: '바디', en: 'Body', value: 68, left: '라이트', right: '풀' },
+    { name: '피트', en: 'Peat', value: 5, left: '논피트', right: '피티' },
+    { name: '단맛', en: 'Sweetness', value: 72, left: '드라이', right: '스위트' },
+    { name: '스파이스', en: 'Spice', value: 48, left: '순함', right: '알싸함' },
+  ],
+  specs: [
+    { label: '숙성', value: '12년' },
+    { label: '캐스크', value: '셰리 시즌드 유러피안·아메리칸 오크' },
+    { label: '병입 도수', value: '40% ABV' },
+  ],
+  tastingNotes: '건포도·무화과 등 셰리의 달콤한 과실향에 바닐라와 진저, 오크 스파이스가 어우러집니다. 부드럽고 긴 피니시에 말린 과일과 우드 스모크가 남습니다.',
+  drinkFrom: null, drinkPeak: null, drinkUntil: null,
+  history: [
+    { year: '1824', text: '스페이사이드에서 합법 면허를 받은 초기 증류소로 설립' },
+    { year: '1950~60년대', text: '셰리 캐스크 숙성 원액이 훗날 전설적 올드보틀로 재평가' },
+    { year: '2018', text: '2억 파운드 규모의 새 증류소 완공 — 럭셔리 브랜드로 자리매김' },
+  ],
+  story: '맥캘란은 스페인 헤레스에서 셰리를 담았던 오크통을 직접 관리해 들여오는 것으로 유명합니다. "싱글몰트의 롤스로이스"라는 별칭처럼, 경매 시장 최고가 기록을 여러 차례 갈아치운 브랜드입니다.',
+  winery: '맥캘란 증류소는 유난히 작은 증류기(스틸)에서 풍부하고 오일리한 스피릿을 뽑아내는 것이 특징입니다. 캐스크에 대한 집착적인 투자로 색소 무첨가의 자연스러운 색을 고집합니다.',
+  foodPairing: ['🍫 다크 초콜릿', '🧀 숙성 체다', '🥜 견과류', '🍖 훈제 요리'],
+  servingTemp: '실온 (18~22℃)',
+  servingNote: '니트로 먼저, 이후 물 몇 방울을 더해 향의 변화를 즐겨보세요',
+  aging: '병입 후 숙성되지 않으니 개봉 후 1년 내 음용 권장 (직사광선 피해 보관)',
+  tips: [
+    '글렌캐런 글라스를 쓰면 셰리향이 집중되어 올라옵니다.',
+    '얼음은 향을 닫으니 첫 잔은 니트를 추천합니다.',
+    '비슷한 셰리 스타일로 글렌드로낙 12, 아벨라워 12도 좋습니다.',
+    '개봉 후 병에 술이 1/3 이하로 남으면 산화가 빨라집니다 — 작은 병에 옮겨 보관하세요.',
+  ],
+},
+{
+  found: true, confidence: 'high', category: 'traditional',
+  name: '복순도가 손막걸리',
+  producer: '복순도가 (福順都家)',
+  type: '탁주 (막걸리)',
+  vintage: '미상',
+  region: '울산 울주군',
+  country: '대한민국',
+  ingredients: ['쌀', '전통 누룩', '정제수'],
+  alcohol: '6.5%',
+  priceRange: '1~2만원',
+  priceNote: '프리미엄 막걸리의 대표 주자 — 자연 탄산 병입으로 유통기한이 짧은 편',
+  priceTier: 1,
+  tasteProfile: [
+    { name: '단맛', en: 'Sweetness', value: 55, left: '드라이', right: '스위트' },
+    { name: '산미', en: 'Acidity', value: 70, left: '낮음', right: '높음' },
+    { name: '바디', en: 'Body', value: 60, left: '가벼움', right: '진득함' },
+    { name: '탄산', en: 'Fizz', value: 85, left: '잔잔함', right: '톡톡함' },
+  ],
+  specs: [
+    { label: '주종', value: '생탁주 (비살균)' },
+    { label: '발효', value: '전통 항아리 자연 발효' },
+    { label: '탄산', value: '자연 탄산 (2차 병내 발효)' },
+  ],
+  tastingNotes: '샴페인처럼 터지는 자연 탄산과 요구르트를 닮은 산뜻한 산미가 특징입니다. 은은한 단맛과 쌀의 고소함이 균형을 이루는 스파클링 막걸리입니다.',
+  drinkFrom: null, drinkPeak: null, drinkUntil: null,
+  history: [
+    { year: '2010', text: '울주군에서 가족 양조장으로 설립, 전통 항아리 발효 방식 고수' },
+    { year: '2013', text: '청와대 만찬주로 선정되며 전국적 주목' },
+    { year: '2015', text: '밀라노 엑스포 등 국제 무대에 "샴페인 막걸리"로 소개' },
+  ],
+  story: '"막걸리가 샴페인처럼 터진다"는 입소문의 주인공입니다. 시어머니에게 물려받은 누룩과 항아리 발효를 지키면서, 병 안에서 2차 발효로 탄산을 만드는 방식이 시그니처가 됐습니다.',
+  winery: '복순도가는 양조장 건물 자체를 검은 볏짚 외벽으로 지어 "발효 건축"이라 불립니다. 전통 방식 그대로 항아리에서 술을 빚으며, 생막걸리의 프리미엄화를 이끈 대표 양조장입니다.',
+  foodPairing: ['🥘 해물파전', '🥓 보쌈·수육', '🌶️ 김치찜', '🧀 부라타 치즈'],
+  servingTemp: '4~8℃',
+  servingNote: '개봉 시 분출 주의! 병을 세워 차게 둔 뒤 천천히 열고, 가라앉은 침전물은 마지막에 섞으세요',
+  aging: '비살균 생주 — 냉장 보관 필수, 제조일로부터 한 달 내 음용 권장',
+  tips: [
+    '개봉 전 절대 흔들지 마세요 — 자연 탄산이 강해 분출합니다.',
+    '첫 잔은 맑은 윗술만, 둘째 잔부터 섞어 마시면 두 가지 맛을 즐길 수 있어요.',
+    '와인 글라스에 따르면 탄산과 향이 더 살아납니다.',
+    '비슷한 결의 프리미엄 탁주로 해창 6도, 나루 생막걸리도 시도해 보세요.',
+  ],
+},
+];
+let demoIdx = 0;
+let pendingDemo = null;
 
 /* ================= EVENT WIRING ================= */
 $('#btnShutter').addEventListener('click', () => {
@@ -1166,7 +1359,11 @@ $('#btnGallery').addEventListener('click', () => $('#fileInput').click());
 $('#fileInput').addEventListener('change', (e) => handleFile(e.target.files[0]));
 $('#btnRetake').addEventListener('click', () => { resetCapture(); startCamera(); });
 $('#btnAnalyze').addEventListener('click', analyze);
-$('#btnDemo').addEventListener('click', () => { capturedForApi = 'demo'; capturedDataUrl = ''; const k = store.key(); store.setKey(''); analyze(); if (k) store.setKey(k); });
+$('#btnDemo').addEventListener('click', () => {
+  capturedForApi = 'demo'; capturedDataUrl = '';
+  pendingDemo = DEMOS[demoIdx % DEMOS.length]; demoIdx++;
+  const k = store.key(); store.setKey(''); analyze(); if (k) store.setKey(k);
+});
 
 $('#btnNewScan').addEventListener('click', () => { resetCapture(); show('capture'); });
 $('#btnShare').addEventListener('click', shareResult);
