@@ -271,7 +271,7 @@
     </div>
     <div id="myqrBar" style="display:none;margin:0 0 14px;display:none;align-items:center;gap:10px;flex-wrap:wrap">
       <button class="btn" id="saveMyQr" style="flex:none" data-i18n="btn.saveMyQr">＋ 현재 디자인 저장</button>
-      <span class="hint" style="margin:0">스튜디오에서 만든 디자인을 브라우저에 저장·관리합니다(기기 로컬 저장).</span>
+      <span class="hint" style="margin:0" data-i18n="hint.myqrBar">스튜디오에서 만든 디자인을 브라우저에 저장·관리합니다(기기 로컬 저장).</span>
     </div>
     <div class="gal-grid" id="galGrid"></div>
     <div id="galEmpty" class="hint" style="display:none;text-align:center;padding:40px 0"></div>
@@ -322,47 +322,47 @@
               <textarea id="content">https://jay-inky.vercel.app</textarea>
             </label>
             <div id="ctWifi" style="display:none">
-              <label class="fld"><div class="lbl">네트워크 이름 (SSID)</div><input type="text" id="wifiSsid" maxlength="64" placeholder="예: MyHomeWiFi" /></label>
-              <label class="fld" id="wifiPassWrap"><div class="lbl">비밀번호</div><input type="text" id="wifiPass" maxlength="64" /></label>
+              <label class="fld"><div class="lbl" data-i18n="lbl.wifiSsid">네트워크 이름 (SSID)</div><input type="text" id="wifiSsid" maxlength="64" data-i18n-ph="ph.wifiSsid" placeholder="예: MyHomeWiFi" /></label>
+              <label class="fld" id="wifiPassWrap"><div class="lbl" data-i18n="lbl.wifiPass">비밀번호</div><input type="text" id="wifiPass" maxlength="64" /></label>
               <label class="fld">
-                <div class="lbl">보안 방식</div>
+                <div class="lbl" data-i18n="lbl.wifiSec">보안 방식</div>
                 <div class="seg" id="wifiSecSeg">
                   <button data-sec="WPA" class="on">WPA/WPA2</button>
                   <button data-sec="WEP">WEP</button>
-                  <button data-sec="nopass">없음</button>
+                  <button data-sec="nopass"><span data-i18n="seg.wsec.nopass">없음</span></button>
                 </div>
               </label>
-              <div class="switch"><div class="lbl" style="margin:0">숨겨진 네트워크</div><label class="toggle"><input type="checkbox" id="wifiHidden" /><span></span></label></div>
+              <div class="switch"><div class="lbl" data-i18n="lbl.wifiHidden" style="margin:0">숨겨진 네트워크</div><label class="toggle"><input type="checkbox" id="wifiHidden" /><span></span></label></div>
             </div>
             <div id="ctVcard" style="display:none">
-              <label class="fld"><div class="lbl">이름 *</div><input type="text" id="vcName" maxlength="60" placeholder="홍길동" /></label>
+              <label class="fld"><div class="lbl" data-i18n="lbl.vcName">이름 *</div><input type="text" id="vcName" maxlength="60" data-i18n-ph="ph.vcName" placeholder="홍길동" /></label>
               <div class="row2">
-                <label class="fld"><div class="lbl">전화</div><input type="text" id="vcTel" maxlength="30" placeholder="010-1234-5678" /></label>
-                <label class="fld"><div class="lbl">이메일</div><input type="text" id="vcEmail" maxlength="80" /></label>
+                <label class="fld"><div class="lbl" data-i18n="lbl.vcTel">전화</div><input type="text" id="vcTel" maxlength="30" placeholder="010-1234-5678" /></label>
+                <label class="fld"><div class="lbl" data-i18n="lbl.vcEmail">이메일</div><input type="text" id="vcEmail" maxlength="80" /></label>
               </div>
               <div class="row2">
-                <label class="fld"><div class="lbl">회사/조직</div><input type="text" id="vcOrg" maxlength="60" /></label>
-                <label class="fld"><div class="lbl">웹사이트</div><input type="text" id="vcUrl" maxlength="120" /></label>
+                <label class="fld"><div class="lbl" data-i18n="lbl.vcOrg">회사/조직</div><input type="text" id="vcOrg" maxlength="60" /></label>
+                <label class="fld"><div class="lbl" data-i18n="lbl.vcUrl">웹사이트</div><input type="text" id="vcUrl" maxlength="120" /></label>
               </div>
             </div>
             <div id="ctTel" style="display:none">
-              <label class="fld"><div class="lbl">전화번호</div><input type="text" id="telNum" maxlength="24" placeholder="010-1234-5678" /></label>
+              <label class="fld"><div class="lbl" data-i18n="lbl.telNum">전화번호</div><input type="text" id="telNum" maxlength="24" placeholder="010-1234-5678" /></label>
             </div>
             <div id="ctSms" style="display:none">
-              <label class="fld"><div class="lbl">받는 번호</div><input type="text" id="smsNum" maxlength="24" placeholder="010-1234-5678" /></label>
-              <label class="fld"><div class="lbl">메시지 (선택)</div><input type="text" id="smsMsg" maxlength="140" /></label>
+              <label class="fld"><div class="lbl" data-i18n="lbl.smsNum">받는 번호</div><input type="text" id="smsNum" maxlength="24" placeholder="010-1234-5678" /></label>
+              <label class="fld"><div class="lbl" data-i18n="lbl.smsMsg">메시지 (선택)</div><input type="text" id="smsMsg" maxlength="140" /></label>
             </div>
             <div id="ctEmail" style="display:none">
-              <label class="fld"><div class="lbl">받는 사람</div><input type="text" id="emTo" maxlength="80" placeholder="hello@example.com" /></label>
-              <label class="fld"><div class="lbl">제목 (선택)</div><input type="text" id="emSubj" maxlength="100" /></label>
-              <label class="fld"><div class="lbl">내용 (선택)</div><input type="text" id="emBody" maxlength="200" /></label>
+              <label class="fld"><div class="lbl" data-i18n="lbl.emTo">받는 사람</div><input type="text" id="emTo" maxlength="80" placeholder="hello@example.com" /></label>
+              <label class="fld"><div class="lbl" data-i18n="lbl.emSubj">제목 (선택)</div><input type="text" id="emSubj" maxlength="100" /></label>
+              <label class="fld"><div class="lbl" data-i18n="lbl.emBody">내용 (선택)</div><input type="text" id="emBody" maxlength="200" /></label>
             </div>
             <div id="ctGeo" style="display:none">
               <div class="row2">
                 <label class="fld"><div class="lbl">위도</div><input type="text" id="geoLat" maxlength="20" placeholder="37.5665" /></label>
                 <label class="fld"><div class="lbl">경도</div><input type="text" id="geoLng" maxlength="20" placeholder="126.9780" /></label>
               </div>
-              <div class="hint">지도 앱에서 좌표 복사: 구글 지도에서 위치 길게 누르면 위도, 경도가 표시됩니다.</div>
+              <div class="hint" data-i18n="hint.geo">지도 앱에서 좌표 복사: 구글 지도에서 위치 길게 누르면 위도, 경도가 표시됩니다.</div>
             </div>
             <div class="hint" id="ctPreview" style="display:none"></div>
             <label class="fld">
@@ -373,7 +373,7 @@
                 <button data-ecc="Q" data-tip="복원력 25%. 로고를 조금 넣을 때.">Q</button>
                 <button data-ecc="H" class="on" data-tip="복원력 30%(최대). 로고·아트·픽토그램을 크게 넣어도 스캔됩니다. 권장.">H</button>
               </div>
-              <div class="hint">오류가 나도 스스로 복원하는 여유량입니다. 높을수록 로고를 크게 넣어도 스캔돼요 — 로고·아트 사용 시 <b>H</b> 권장.</div>
+              <div class="hint" data-i18n-html="hint.ecc">오류가 나도 스스로 복원하는 여유량입니다. 높을수록 로고를 크게 넣어도 스캔돼요 — 로고·아트 사용 시 <b>H</b> 권장.</div>
             </label>
           </div>
         </details>
@@ -381,26 +381,26 @@
         <details class="grp" id="grpArt" open>
           <summary><svg class="ic" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="10" r="2" fill="currentColor"/><path d="M4 18l5-5 3 3 4-4 4 4" stroke="currentColor" stroke-width="2" fill="none"/></svg><span data-i18n="grp.art">이미지 · 영상 · GIF 아트 QR</span><span style="margin-left:8px;font-size:10px;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--acc),var(--acc3));padding:2px 7px;border-radius:20px">핵심</span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
           <div class="body">
-            <label class="file-btn" for="artFile" id="artLabel">＋ 이미지 / 영상 / GIF 업로드 — QR 전체를 덮는 아트</label>
+            <label class="file-btn" for="artFile" id="artLabel" data-i18n="btn.artUpload">＋ 이미지 / 영상 / GIF 업로드 — QR 전체를 덮는 아트</label>
             <input type="file" id="artFile" accept="image/*,image/gif,video/*" />
             <div id="artControls" style="display:none">
               <label class="fld">
-                <div class="lbl">아트 노출도 <b id="artVisOut">72%</b></div>
+                <div class="lbl"><span data-i18n="lbl.artVis">아트 노출도</span> <b id="artVisOut">72%</b></div>
                 <input type="range" id="artVis" min="30" max="92" step="1" value="72" />
-                <div class="hint">높을수록 그림이 더 드러나고, 낮을수록 스캔이 더 안정적입니다.</div>
+                <div class="hint" data-i18n="hint.artVis">높을수록 그림이 더 드러나고, 낮을수록 스캔이 더 안정적입니다.</div>
               </label>
               <label class="fld">
-                <div class="lbl">모듈 밀도(도트 크기) <b id="artDensityOut">보통</b></div>
+                <div class="lbl"><span data-i18n="lbl.artDensity">모듈 밀도(도트 크기)</span> <b id="artDensityOut">보통</b></div>
                 <input type="range" id="artDensity" min="4" max="10" step="1" value="6" />
-                <div class="hint">오른쪽일수록 모듈이 작고 촘촘해져 그림이 더 선명합니다(스캔엔 더 큰 화면/인쇄 권장).</div>
+                <div class="hint" data-i18n="hint.artDensity">오른쪽일수록 모듈이 작고 촘촘해져 그림이 더 선명합니다(스캔엔 더 큰 화면/인쇄 권장).</div>
               </label>
               <div class="switch" style="margin-top:12px">
-                <div class="lbl" style="margin:0">어두운 그림용 반전</div>
+                <div class="lbl" data-i18n="lbl.artInvert" style="margin:0">어두운 그림용 반전</div>
                 <label class="toggle"><input type="checkbox" id="artInvert" /><span></span></label>
               </div>
-              <button class="btn sec" id="artClear" style="margin-top:12px;flex:none;width:100%">아트 제거</button>
+              <button class="btn sec" id="artClear" style="margin-top:12px;flex:none;width:100%" data-i18n="btn.artClear">아트 제거</button>
             </div>
-            <div class="hint" id="artHint"><b>즉시·무료</b> 아트 QR 모드입니다. 이미지가 QR 전체에 깔리고, 이미지의 <b>밝기를 모듈별로 조절</b>해 QR을 이미지에 녹여넣습니다. <b>영상·GIF</b>를 올리거나 <b>정적 이미지+애니메이션</b>을 켜면 움직이는 아트 QR이 됩니다. 최고 품질이 필요하면 아래 <b>AI 생성(서버)</b>을 사용하세요.</div>
+            <div class="hint" id="artHint" data-i18n-html="hint.art"><b>즉시·무료</b> 아트 QR 모드입니다. 이미지가 QR 전체에 깔리고, 이미지의 <b>밝기를 모듈별로 조절</b>해 QR을 이미지에 녹여넣습니다. <b>영상·GIF</b>를 올리거나 <b>정적 이미지+애니메이션</b>을 켜면 움직이는 아트 QR이 됩니다. 최고 품질이 필요하면 아래 <b>AI 생성(서버)</b>을 사용하세요.</div>
           </div>
         </details>
 
@@ -408,28 +408,28 @@
           <summary><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 5.8L20 10l-5.6 2.2L12 18l-2.4-5.8L4 10l5.6-2.2L12 2z" fill="currentColor"/><circle cx="19" cy="17" r="2.4" fill="currentColor"/><circle cx="5.5" cy="18.5" r="1.6" fill="currentColor"/></svg><span data-i18n="grp.ai">AI 아트 QR</span><span style="margin-left:8px;font-size:10px;font-weight:700;color:#fff;background:linear-gradient(135deg,#f43f5e,#f97316);padding:2px 7px;border-radius:20px">서버 생성 · 최고 품질</span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
           <div class="body">
             <label class="fld">
-              <div class="lbl">프롬프트 (영어 권장 — 그릴 장면을 서술)</div>
-              <input type="text" id="aiPrompt" maxlength="300" placeholder="예: watercolor ocean sunset, soft pastel colors" />
+              <div class="lbl" data-i18n="lbl.prompt">프롬프트 (영어 권장 — 그릴 장면을 서술)</div>
+              <input type="text" id="aiPrompt" maxlength="300" data-i18n-ph="ph.prompt" placeholder="예: watercolor ocean sunset, soft pastel colors" />
             </label>
             <label class="fld">
-              <div class="lbl">스타일 프리셋 (클릭하면 프롬프트 입력)</div>
+              <div class="lbl" data-i18n="lbl.stylePreset">스타일 프리셋 (클릭하면 프롬프트 입력)</div>
               <div class="seg" id="aiStyleSeg">
-                <button data-p="watercolor painting of a serene lake and mountains, soft pastel colors, dreamy atmosphere, high detail">수채화</button>
-                <button data-p="cyberpunk neon city street at night, glowing signs, rain reflections, cinematic lighting, high detail">네온 시티</button>
-                <button data-p="impressionist oil painting of a sunflower field at sunset, thick brush strokes, warm golden light">유화</button>
-                <button data-p="photorealistic mountain landscape at golden hour, dramatic clouds, crisp air, 8k, high detail">실사 풍경</button>
-                <button data-p="cherry blossom garden in spring, petals drifting in the wind, soft pink tones, japanese art style">벚꽃</button>
-                <button data-p="deep space nebula with vivid purple and cyan cosmic clouds, sparkling stars, astrophotography style">우주</button>
-                <button data-p="autumn forest with golden and crimson maple leaves, morning mist, warm sunlight through trees, high detail">가을 숲</button>
-                <button data-p="snowy mountain village at dusk, warm lights in windows, falling snow, cozy winter atmosphere, high detail">겨울 마을</button>
-                <button data-p="fantasy castle floating among clouds, epic scale, dramatic lighting, concept art, highly detailed">판타지</button>
+                <button data-p="watercolor painting of a serene lake and mountains, soft pastel colors, dreamy atmosphere, high detail"><span data-i18n="sty.watercolor">수채화</span></button>
+                <button data-p="cyberpunk neon city street at night, glowing signs, rain reflections, cinematic lighting, high detail"><span data-i18n="sty.neon">네온 시티</span></button>
+                <button data-p="impressionist oil painting of a sunflower field at sunset, thick brush strokes, warm golden light"><span data-i18n="sty.oil">유화</span></button>
+                <button data-p="photorealistic mountain landscape at golden hour, dramatic clouds, crisp air, 8k, high detail"><span data-i18n="sty.photo">실사 풍경</span></button>
+                <button data-p="cherry blossom garden in spring, petals drifting in the wind, soft pink tones, japanese art style"><span data-i18n="sty.sakura">벚꽃</span></button>
+                <button data-p="deep space nebula with vivid purple and cyan cosmic clouds, sparkling stars, astrophotography style"><span data-i18n="sty.space">우주</span></button>
+                <button data-p="autumn forest with golden and crimson maple leaves, morning mist, warm sunlight through trees, high detail"><span data-i18n="sty.autumn">가을 숲</span></button>
+                <button data-p="snowy mountain village at dusk, warm lights in windows, falling snow, cozy winter atmosphere, high detail"><span data-i18n="sty.winter">겨울 마을</span></button>
+                <button data-p="fantasy castle floating among clouds, epic scale, dramatic lighting, concept art, highly detailed"><span data-i18n="sty.fantasy">판타지</span></button>
               </div>
             </label>
             <div class="row2" style="margin-top:8px">
-              <button class="btn" id="aiGo">✨ AI로 생성 (5~30초)</button>
-              <button class="btn sec" id="aiClear" style="display:none">AI 아트 제거</button>
+              <button class="btn" id="aiGo" data-i18n="btn.aiGo">✨ AI로 생성 (5~30초)</button>
+              <button class="btn sec" id="aiClear" style="display:none" data-i18n="btn.aiClear">AI 아트 제거</button>
             </div>
-            <div class="hint" id="aiStatus">Stable Diffusion + ControlNet(QR 전용)으로 <b>이미지를 처음부터 QR 명암 구조에 맞춰 생성</b>합니다 — 모듈 격자가 보이지 않는 최고 품질의 아트 QR입니다. 생성 후 자동으로 <b>스캔 검증</b>하고, 실패하면 대비를 올려 재시도합니다. 서버에 <b>REPLICATE_API_TOKEN</b>만 등록하면 됩니다. (이미지당 약 $0.02)</div>
+            <div class="hint" id="aiStatus" data-i18n-html="hint.ai">Stable Diffusion + ControlNet(QR 전용)으로 <b>이미지를 처음부터 QR 명암 구조에 맞춰 생성</b>합니다 — 모듈 격자가 보이지 않는 최고 품질의 아트 QR입니다. 생성 후 자동으로 <b>스캔 검증</b>하고, 실패하면 대비를 올려 재시도합니다. 서버에 <b>REPLICATE_API_TOKEN</b>만 등록하면 됩니다. (이미지당 약 $0.02)</div>
           </div>
         </details>
 
@@ -437,26 +437,26 @@
           <summary><svg class="ic" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4" fill="currentColor"/><rect x="4" y="4" width="4" height="4" rx="1" fill="currentColor"/><rect x="16" y="16" width="4" height="4" rx="1.3" fill="currentColor"/></svg><span data-i18n="grp.module">모듈 & 눈(Eye)</span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
           <div class="body">
             <label class="fld">
-              <div class="lbl">모듈 형태</div>
+              <div class="lbl" data-i18n="lbl.moduleShape">모듈 형태</div>
               <div class="seg" id="dotSeg">
-                <button data-dot="square" class="on">사각</button>
-                <button data-dot="rounded">둥근</button>
-                <button data-dot="dots">점</button>
-                <button data-dot="classy">클래시</button>
-                <button data-dot="diamond">다이아</button>
+                <button data-dot="square" class="on"><span data-i18n="seg.dot.square">사각</span></button>
+                <button data-dot="rounded"><span data-i18n="seg.dot.rounded">둥근</span></button>
+                <button data-dot="dots"><span data-i18n="seg.dot.dots">점</span></button>
+                <button data-dot="classy"><span data-i18n="seg.dot.classy">클래시</span></button>
+                <button data-dot="diamond"><span data-i18n="seg.dot.diamond">다이아</span></button>
               </div>
             </label>
             <label class="fld">
-              <div class="lbl">눈(코너) 형태</div>
+              <div class="lbl" data-i18n="lbl.eyeShape">눈(코너) 형태</div>
               <div class="seg" id="eyeSeg">
-                <button data-eye="square" class="on">사각</button>
-                <button data-eye="rounded">둥근</button>
-                <button data-eye="circle">원형</button>
-                <button data-eye="leaf">잎사귀</button>
+                <button data-eye="square" class="on"><span data-i18n="seg.eye.square">사각</span></button>
+                <button data-eye="rounded"><span data-i18n="seg.eye.rounded">둥근</span></button>
+                <button data-eye="circle"><span data-i18n="seg.eye.circle">원형</span></button>
+                <button data-eye="leaf"><span data-i18n="seg.eye.leaf">잎사귀</span></button>
               </div>
             </label>
             <label class="fld">
-              <div class="lbl">여백(Quiet zone) <b id="marginOut">4</b></div>
+              <div class="lbl"><span data-i18n="lbl.margin">여백(Quiet zone)</span> <b id="marginOut">4</b></div>
               <input type="range" id="margin" min="0" max="8" step="1" value="4" />
             </label>
           </div>
@@ -466,33 +466,33 @@
           <summary><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M12 3a9 9 0 100 18 9 9 0 000-18z" stroke="currentColor" stroke-width="2"/><path d="M12 3v18" stroke="currentColor" stroke-width="2"/></svg><span data-i18n="grp.color">색상</span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
           <div class="body">
             <label class="fld">
-              <div class="lbl">채우기 방식</div>
+              <div class="lbl" data-i18n="lbl.fill">채우기 방식</div>
               <div class="seg" id="fillSeg">
-                <button data-fill="solid" class="on">단색</button>
-                <button data-fill="linear">선형 그라디언트</button>
-                <button data-fill="radial">원형 그라디언트</button>
+                <button data-fill="solid" class="on"><span data-i18n="seg.fill.solid">단색</span></button>
+                <button data-fill="linear"><span data-i18n="seg.fill.linear">선형 그라디언트</span></button>
+                <button data-fill="radial"><span data-i18n="seg.fill.radial">원형 그라디언트</span></button>
               </div>
             </label>
             <div class="row2">
               <label class="fld">
-                <div class="lbl">전경색 1</div>
+                <div class="lbl" data-i18n="lbl.fg1">전경색 1</div>
                 <input type="color" id="fg1" value="#7c5cff" />
               </label>
               <label class="fld" id="fg2Wrap">
-                <div class="lbl">전경색 2</div>
+                <div class="lbl" data-i18n="lbl.fg2">전경색 2</div>
                 <input type="color" id="fg2" value="#22d3ee" />
               </label>
             </div>
             <label class="fld" id="angleWrap">
-              <div class="lbl">그라디언트 각도 <b id="angleOut">45°</b></div>
+              <div class="lbl"><span data-i18n="lbl.angle">그라디언트 각도</span> <b id="angleOut">45°</b></div>
               <input type="range" id="angle" min="0" max="360" step="5" value="45" />
             </label>
             <div class="switch" style="margin-top:16px">
-              <div class="lbl" style="margin:0">배경 투명</div>
+              <div class="lbl" data-i18n="lbl.transparent" style="margin:0">배경 투명</div>
               <label class="toggle"><input type="checkbox" id="transparent" /><span></span></label>
             </div>
             <label class="fld" id="bgWrap">
-              <div class="lbl">배경색</div>
+              <div class="lbl" data-i18n="lbl.bg">배경색</div>
               <input type="color" id="bg" value="#ffffff" />
             </label>
           </div>
@@ -501,17 +501,17 @@
         <details class="grp" id="grpLogo">
           <summary><svg class="ic" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"/><circle cx="8.5" cy="10.5" r="1.5" fill="currentColor"/><path d="M4 17l5-4 4 3 3-2 4 3" stroke="currentColor" stroke-width="2" fill="none"/></svg><span data-i18n="grp.logo">로고</span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
           <div class="body">
-            <label class="file-btn" for="logoFile" id="logoLabel">＋ 로고 이미지 업로드 (PNG·JPG·SVG)</label>
+            <label class="file-btn" for="logoFile" id="logoLabel" data-i18n="btn.logoUpload">＋ 로고 이미지 업로드 (PNG·JPG·SVG)</label>
             <input type="file" id="logoFile" accept="image/*" />
             <label class="fld" id="logoSizeWrap" style="display:none">
-              <div class="lbl">로고 크기 <b id="logoSizeOut">22%</b></div>
+              <div class="lbl"><span data-i18n="lbl.logoSize">로고 크기</span> <b id="logoSizeOut">22%</b></div>
               <input type="range" id="logoSize" min="10" max="35" step="1" value="22" />
             </label>
             <div class="switch" id="logoBgWrap" style="margin-top:14px;display:none">
-              <div class="lbl" style="margin:0">로고 뒤 배경 패딩</div>
+              <div class="lbl" data-i18n="lbl.logoPad" style="margin:0">로고 뒤 배경 패딩</div>
               <label class="toggle"><input type="checkbox" id="logoPad" checked /><span></span></label>
             </div>
-            <button class="btn sec" id="logoClear" style="display:none;margin-top:12px;flex:none;width:100%">로고 제거</button>
+            <button class="btn sec" id="logoClear" style="display:none;margin-top:12px;flex:none;width:100%" data-i18n="btn.logoClear">로고 제거</button>
           </div>
         </details>
 
@@ -519,23 +519,23 @@
           <summary><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span data-i18n="grp.anim">애니메이션</span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
           <div class="body">
             <div class="switch">
-              <div class="lbl" style="margin:0">애니메이션 켜기</div>
+              <div class="lbl" data-i18n="lbl.animOn" style="margin:0">애니메이션 켜기</div>
               <label class="toggle"><input type="checkbox" id="anim" /><span></span></label>
             </div>
             <label class="fld">
-              <div class="lbl">효과</div>
+              <div class="lbl" data-i18n="lbl.effect">효과</div>
               <div class="seg" id="animSeg">
-                <button data-anim="shine" class="on">샤인 ✨</button>
-                <button data-anim="rotate">회전</button>
-                <button data-anim="pulse">펄스</button>
-                <button data-anim="sweep">스윕</button>
+                <button data-anim="shine" class="on"><span data-i18n="seg.anim.shine">샤인 ✨</span></button>
+                <button data-anim="rotate"><span data-i18n="seg.anim.rotate">회전</span></button>
+                <button data-anim="pulse"><span data-i18n="seg.anim.pulse">펄스</span></button>
+                <button data-anim="sweep"><span data-i18n="seg.anim.sweep">스윕</span></button>
               </div>
             </label>
             <label class="fld">
-              <div class="lbl">속도 <b id="animSpeedOut">1.0×</b></div>
+              <div class="lbl"><span data-i18n="lbl.speed">속도</span> <b id="animSpeedOut">1.0×</b></div>
               <input type="range" id="animSpeed" min="0.2" max="3" step="0.1" value="1" />
             </label>
-            <div class="hint"><b>정적 이미지를 올린 뒤 이 스위치를 켜면</b>, 이미지가 줌·드리프트로 살아 움직이는 <b>움짤 QR</b>이 됩니다(모듈은 고정 → 모든 프레임 스캔). 여기에 네 가지 빛 효과(<b>샤인·회전·펄스·스윕</b>)가 더해집니다. <b>애니메이션 저장</b>으로 WebM 영상으로 내보낼 수 있습니다.</div>
+            <div class="hint" data-i18n-html="hint.anim"><b>정적 이미지를 올린 뒤 이 스위치를 켜면</b>, 이미지가 줌·드리프트로 살아 움직이는 <b>움짤 QR</b>이 됩니다(모듈은 고정 → 모든 프레임 스캔). 여기에 네 가지 빛 효과(<b>샤인·회전·펄스·스윕</b>)가 더해집니다. <b>애니메이션 저장</b>으로 WebM 영상으로 내보낼 수 있습니다.</div>
           </div>
         </details>
 
@@ -543,28 +543,28 @@
           <summary><svg class="ic" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 15h18" stroke="currentColor" stroke-width="2"/></svg><span data-i18n="grp.label">라벨 & 프레임</span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
           <div class="body">
             <div class="switch">
-              <div class="lbl" style="margin:0">라벨 표시</div>
+              <div class="lbl" data-i18n="lbl.labelOn" style="margin:0">라벨 표시</div>
               <label class="toggle"><input type="checkbox" id="labelOn" /><span></span></label>
             </div>
             <label class="fld">
-              <div class="lbl">라벨 텍스트</div>
+              <div class="lbl" data-i18n="lbl.labelText">라벨 텍스트</div>
               <input type="text" id="labelText" value="SCAN ME" maxlength="24" />
             </label>
             <label class="fld">
-              <div class="lbl">글자 크기 <b id="labelSizeOut">100%</b></div>
+              <div class="lbl"><span data-i18n="lbl.labelSize">글자 크기</span> <b id="labelSizeOut">100%</b></div>
               <input type="range" id="labelSize" min="40" max="180" step="5" value="100" />
             </label>
             <label class="fld">
-              <div class="lbl">위치</div>
+              <div class="lbl" data-i18n="lbl.labelPos">위치</div>
               <div class="seg" id="labelPosSeg">
-                <button data-lpos="bottom" class="on">하단</button>
-                <button data-lpos="top">상단</button>
+                <button data-lpos="bottom" class="on"><span data-i18n="seg.lpos.bottom">하단</span></button>
+                <button data-lpos="top"><span data-i18n="seg.lpos.top">상단</span></button>
               </div>
             </label>
             <label class="fld">
-              <div class="lbl">상하 미세 위치 <b id="labelOffsetOut">0</b></div>
+              <div class="lbl"><span data-i18n="lbl.labelOffset">상하 미세 위치</span> <b id="labelOffsetOut">0</b></div>
               <input type="range" id="labelOffset" min="-100" max="100" step="2" value="0" />
-              <div class="hint">− 위로 / + 아래로. QR과 글자 사이 간격을 조절합니다.</div>
+              <div class="hint" data-i18n="hint.labelOffset">− 위로 / + 아래로. QR과 글자 사이 간격을 조절합니다.</div>
             </label>
           </div>
         </details>
@@ -573,43 +573,43 @@
           <summary><svg class="ic" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" stroke-width="2"/><rect x="8" y="8" width="8" height="8" rx="2" fill="currentColor"/></svg><span data-i18n="grp.frame">프레임 & 픽토그램</span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
           <div class="body">
             <div class="switch">
-              <div class="lbl" style="margin:0">프레임(액자)</div>
+              <div class="lbl" data-i18n="lbl.frameOn" style="margin:0">프레임(액자)</div>
               <label class="toggle"><input type="checkbox" id="frameOn" /><span></span></label>
             </div>
             <div id="frameControls" style="display:none">
               <label class="fld">
-                <div class="lbl">프레임 스타일</div>
+                <div class="lbl" data-i18n="lbl.frameStyle">프레임 스타일</div>
                 <div class="seg wrap" id="frameStyleSeg">
-                  <button data-fstyle="card" class="on">카드</button>
-                  <button data-fstyle="wood">우드</button>
-                  <button data-fstyle="gold">골드 액자</button>
-                  <button data-fstyle="polaroid">폴라로이드</button>
-                  <button data-fstyle="shadow">섀도우박스</button>
-                  <button data-fstyle="neon">네온</button>
+                  <button data-fstyle="card" class="on"><span data-i18n="seg.fstyle.card">카드</span></button>
+                  <button data-fstyle="wood"><span data-i18n="seg.fstyle.wood">우드</span></button>
+                  <button data-fstyle="gold"><span data-i18n="seg.fstyle.gold">골드 액자</span></button>
+                  <button data-fstyle="polaroid"><span data-i18n="seg.fstyle.polaroid">폴라로이드</span></button>
+                  <button data-fstyle="shadow"><span data-i18n="seg.fstyle.shadow">섀도우박스</span></button>
+                  <button data-fstyle="neon"><span data-i18n="seg.fstyle.neon">네온</span></button>
                 </div>
               </label>
               <div id="frameBgFields">
                 <label class="fld">
-                  <div class="lbl">배경 채우기</div>
+                  <div class="lbl" data-i18n="lbl.frameFill">배경 채우기</div>
                   <div class="seg" id="frameModeSeg">
-                    <button data-fmode="solid" class="on">단색</button>
-                    <button data-fmode="linear">선형</button>
-                    <button data-fmode="radial">원형</button>
+                    <button data-fmode="solid" class="on"><span data-i18n="seg.fmode.solid">단색</span></button>
+                    <button data-fmode="linear"><span data-i18n="seg.fmode.linear">선형</span></button>
+                    <button data-fmode="radial"><span data-i18n="seg.fmode.radial">원형</span></button>
                   </div>
                 </label>
                 <div class="row2">
-                  <label class="fld"><div class="lbl">배경색 1</div><input type="color" id="frameBg1" value="#16a34a" /></label>
-                  <label class="fld" id="frameBg2Wrap"><div class="lbl">배경색 2</div><input type="color" id="frameBg2" value="#0b3d22" /></label>
+                  <label class="fld"><div class="lbl" data-i18n="lbl.frameBg1">배경색 1</div><input type="color" id="frameBg1" value="#16a34a" /></label>
+                  <label class="fld" id="frameBg2Wrap"><div class="lbl" data-i18n="lbl.frameBg2">배경색 2</div><input type="color" id="frameBg2" value="#0b3d22" /></label>
                 </div>
               </div>
             </div>
             <div style="height:1px;background:var(--line);margin:16px 0"></div>
             <label class="fld">
-              <div class="lbl">중앙 콘텐츠</div>
+              <div class="lbl" data-i18n="lbl.centerMode">중앙 콘텐츠</div>
               <div class="seg" id="centerModeSeg">
-                <button data-cmode="none" class="on">없음</button>
-                <button data-cmode="text">텍스트 로고</button>
-                <button data-cmode="emoji">픽토그램</button>
+                <button data-cmode="none" class="on"><span data-i18n="seg.cmode.none">없음</span></button>
+                <button data-cmode="text"><span data-i18n="seg.cmode.text">텍스트 로고</span></button>
+                <button data-cmode="emoji"><span data-i18n="seg.cmode.emoji">픽토그램</span></button>
               </div>
             </label>
             <div id="centerControls" style="display:none">
@@ -619,18 +619,18 @@
                 <div class="hint" id="centerTextHint">기업/브랜드명을 입력하세요(짧을수록 선명).</div>
               </label>
               <div class="fld" id="pictoPickerWrap" style="display:none">
-                <div class="lbl">픽토그램 소스 — 클릭해서 변경</div>
+                <div class="lbl" data-i18n="lbl.pictoPick">픽토그램 소스 — 클릭해서 변경</div>
                 <div id="pictoPicker" class="picto-grid"></div>
               </div>
               <label class="fld" id="centerColorWrap">
-                <div class="lbl">텍스트 색</div>
+                <div class="lbl" data-i18n="lbl.centerColor">텍스트 색</div>
                 <input type="color" id="centerColor" value="#111111" />
               </label>
               <label class="fld">
-                <div class="lbl">크기 <b id="centerScaleOut">24%</b></div>
+                <div class="lbl"><span data-i18n="lbl.centerScale">크기</span> <b id="centerScaleOut">24%</b></div>
                 <input type="range" id="centerScale" min="14" max="40" step="1" value="24" />
               </label>
-              <div class="hint">오류정정 <b>H</b>에 의존해 스캔됩니다. 크면(특히 픽토그램) 스캔 테스트를 권장합니다.</div>
+              <div class="hint" data-i18n-html="hint.centerScale">오류정정 <b>H</b>에 의존해 스캔됩니다. 크면(특히 픽토그램) 스캔 테스트를 권장합니다.</div>
             </div>
           </div>
         </details>
@@ -641,8 +641,8 @@
   <!-- ============ AR (marker-based) ============ -->
   <section class="view" id="view-ar">
     <div class="hero" style="padding:6px 0 16px">
-      <h2>카메라로 <span class="g">QR을 비추면</span> AR이 나타납니다</h2>
-      <p>후면 카메라로 아무 QR 코드나 비추세요. 코드를 실시간 인식해 그 위에 3D 오브젝트·정보 카드를 얹어 보여줍니다. 100% 브라우저 처리(영상 전송 없음).</p>
+      <h2 data-i18n-html="ar.h">카메라로 <span class="g">QR을 비추면</span> AR이 나타납니다</h2>
+      <p data-i18n="ar.p">후면 카메라로 아무 QR 코드나 비추세요. 코드를 실시간 인식해 그 위에 3D 오브젝트·정보 카드를 얹어 보여줍니다. 100% 브라우저 처리(영상 전송 없음).</p>
     </div>
     <div class="ar-wrap">
       <div class="ar-stage" id="arStage">
@@ -652,14 +652,14 @@
         <div class="ar-badge" id="arBadge"></div>
       </div>
       <div class="ar-controls">
-        <button class="btn" id="arStart">📷 카메라 시작</button>
-        <button class="btn sec" id="arFlip" disabled>전환</button>
+        <button class="btn" id="arStart" data-i18n="btn.arStart">📷 카메라 시작</button>
+        <button class="btn sec" id="arFlip" disabled data-i18n="btn.arFlip">전환</button>
         <label class="fld" style="flex:1;min-width:150px;margin:0">
-          <div class="lbl" style="margin-bottom:5px">AR 오브젝트</div>
+          <div class="lbl" data-i18n="lbl.arObj" style="margin-bottom:5px">AR 오브젝트</div>
           <select id="arObj">
-            <option value="cube">🧊 3D 큐브 + 정보 카드</option>
-            <option value="card">🪧 정보 카드만</option>
-            <option value="portal">🌀 네온 포탈</option>
+            <option value="cube" data-i18n="opt.arCube">🧊 3D 큐브 + 정보 카드</option>
+            <option value="card" data-i18n="opt.arCard">🪧 정보 카드만</option>
+            <option value="portal" data-i18n="opt.arPortal">🌀 네온 포탈</option>
           </select>
         </label>
         <button class="btn" id="arShot" disabled>📸 사진 저장</button>
@@ -730,7 +730,7 @@
   <footer>
     <div>Aesthetic QR Studio · 아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.06-a</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.06-b</b></div>
   </footer>
 </div>
 
@@ -3842,30 +3842,30 @@ function escapeXml(s){ return s.replace(/[<>&"']/g,function(c){return {'<':'&lt;
 // ---------- scannability meter ----------
 function updateMeta(){
   var data = getMatrix();
-  if(!data){ $("metaVer").textContent="—"; $("metaScan").textContent="⚠ 데이터 길이 초과"; $("metaScan").style.color="#ff5c8a"; return; }
-  $("metaVer").textContent = "버전 "+data.version+" · "+data.n+"×"+data.n;
+  if(!data){ $("metaVer").textContent="—"; $("metaScan").textContent=t("dyn.overflow"); $("metaScan").style.color="#ff5c8a"; return; }
+  $("metaVer").textContent = t("dyn.ver")+" "+data.version+" · "+data.n+"×"+data.n;
   $("metaEcc").textContent = "ECC "+S.ecc;
   if (S.aiArt){
-    $("metaScan").textContent="🤖 AI 아트 QR 적용 중 — 디자인 옵션은 반영되지 않습니다 ('AI 아트 제거' 후 편집)";
+    $("metaScan").textContent=t("dyn.aiApplied");
     $("metaScan").style.color="#ffcc4d";
     return;
   }
   if (S.artImg){
-    var msg = (S.artIsVideo?"🎬 영상 아트 QR":"🖼️ 이미지 아트 QR");
-    if (S.artVisibility > 70) { $("metaScan").textContent="⚠ "+msg+" · 노출도 높음(스캔 테스트 권장)"; $("metaScan").style.color="#ffcc4d"; }
-    else { $("metaScan").textContent="✓ "+msg+" · 스캔 양호"; $("metaScan").style.color="#3ddc97"; }
-    if (S.ecc!=="H"){ $("metaScan").textContent="⚠ "+msg+" · ECC-H 권장"; $("metaScan").style.color="#ffcc4d"; }
+    var msg = (S.artIsVideo?t("dyn.vidArt"):t("dyn.imgArt"));
+    if (S.artVisibility > 70) { $("metaScan").textContent="⚠ "+msg+" · "+t("dyn.expHigh"); $("metaScan").style.color="#ffcc4d"; }
+    else { $("metaScan").textContent="✓ "+msg+" · "+t("dyn.scanGood"); $("metaScan").style.color="#3ddc97"; }
+    if (S.ecc!=="H"){ $("metaScan").textContent="⚠ "+msg+" · "+t("dyn.eccHRec"); $("metaScan").style.color="#ffcc4d"; }
     return;
   }
   var warn=[];
   var cr = S.transparent ? 5 : contrastRatio(S.fg1, S.bg);
   var cr2 = S.transparent ? 5 : contrastRatio(S.fg2, S.bg);
-  if (Math.min(cr,cr2) < 2.6) warn.push("대비 낮음");
+  if (Math.min(cr,cr2) < 2.6) warn.push(t("dyn.contrastLow"));
   var maxLogo = ({L:14,M:18,Q:24,H:30})[S.ecc];
-  if (S.logo && S.logoSize > maxLogo-4) warn.push("로고 큼");
-  if (S.dot === "diamond" || S.dot === "classy") warn.push("장식용 모듈(스캔 테스트 권장)");
+  if (S.logo && S.logoSize > maxLogo-4) warn.push(t("dyn.logoBig"));
+  if (S.dot === "diamond" || S.dot === "classy") warn.push(t("dyn.decoModule"));
   if (warn.length){ $("metaScan").textContent="⚠ "+warn.join(" · "); $("metaScan").style.color="#ffcc4d"; }
-  else { $("metaScan").textContent="✓ 스캔 양호"; $("metaScan").style.color="#3ddc97"; }
+  else { $("metaScan").textContent="✓ "+t("dyn.scanGood"); $("metaScan").style.color="#3ddc97"; }
 }
 
 // ---------- animation loop ----------
@@ -4004,7 +4004,7 @@ function buildContent(){
   setContent(v);
   var pv=$("ctPreview");
   if (CT==="url" || CT==="text"){ pv.style.display="none"; }
-  else { pv.style.display="block"; pv.textContent="인코딩될 내용: "+(v.length>140 ? v.slice(0,140)+"…" : v); }
+  else { pv.style.display="block"; pv.textContent=t("ct.enc")+": "+(v.length>140 ? v.slice(0,140)+"…" : v); }
 }
 var CTFORMS = { wifi:"ctWifi", vcard:"ctVcard", tel:"ctTel", sms:"ctSms", email:"ctEmail", geo:"ctGeo" };
 function selectCType(ct){
@@ -4096,7 +4096,7 @@ function clearArt(){
   removeArtVid();
   S.artImg=null; S.artIsVideo=false; S.artIsGif=false; $("artFile").value="";
   $("artControls").style.display="none";
-  $("artLabel").textContent="＋ 이미지 / 영상 / GIF 업로드 — QR 전체를 덮는 아트";
+  $("artLabel").textContent=t("btn.artUpload");
   rerender();
 }
 $("artFile").addEventListener("change",function(e){
@@ -4113,7 +4113,7 @@ $("artFile").addEventListener("change",function(e){
       document.body.appendChild(gi); _artGif=gi;
       S.artImg=gi; S.artIsVideo=false; S.artIsGif=true;
       $("artControls").style.display="block";
-      $("artLabel").textContent="✓ GIF 업로드됨 (애니메이션 QR) — 변경하려면 클릭";
+      $("artLabel").textContent=t("art.gifOk");
       if(S.ecc!=="H") toast("아트 QR은 ECC-H 권장");
       rerender();
     };
@@ -4133,7 +4133,7 @@ $("artFile").addEventListener("change",function(e){
       S.artImg=v; S.artIsVideo=true;
       v.play().catch(function(){});
       $("artControls").style.display="block";
-      $("artLabel").textContent="✓ 영상 업로드됨 (애니메이션 QR) — 변경하려면 클릭";
+      $("artLabel").textContent=t("art.vidOk2");
       if(S.ecc!=="H") toast("아트 QR은 ECC-H 권장");
       rerender();
     }
@@ -4155,7 +4155,7 @@ $("artFile").addEventListener("change",function(e){
       catch(e){ toast("이미지 처리에 실패했어요"); return; }
       S.artImg=oc; S.artIsVideo=false; S.artIsGif=false;
       $("artControls").style.display="block";
-      $("artLabel").textContent="✓ 이미지 업로드됨 — 변경하려면 클릭";
+      $("artLabel").textContent=t("art.imgOk");
       if(S.ecc!=="H") setEcc("H");
       toast("‘애니메이션 켜기’를 켜면 이미지가 움직이는 움짤 QR이 됩니다");
       rerender();
@@ -4166,7 +4166,7 @@ $("artFile").addEventListener("change",function(e){
   }
 });
 $("artVis").addEventListener("input",function(e){ S.artVisibility=+e.target.value; $("artVisOut").textContent=e.target.value+"%"; rerender(); });
-$("artDensity").addEventListener("input",function(e){ S.artDensity=+e.target.value; $("artDensityOut").textContent=({4:"성김",5:"약간 성김",6:"보통",7:"촘촘",8:"더 촘촘",9:"매우 촘촘",10:"최대"})[e.target.value]||"보통"; rerender(); });
+$("artDensity").addEventListener("input",function(e){ S.artDensity=+e.target.value; $("artDensityOut").textContent=t("dens."+e.target.value)||t("dens.6"); rerender(); });
 $("artInvert").addEventListener("change",function(e){ S.artInvert=e.target.checked; rerender(); });
 $("artClear").addEventListener("click",clearArt);
 
@@ -4290,8 +4290,8 @@ function centerUIvis(){
   var on=S.centerMode!=="none", emoji=(S.centerMode==="emoji");
   $("centerControls").style.display=on?"block":"none";
   $("centerColorWrap").style.display=(S.centerMode==="text")?"block":"none";
-  $("centerTextLbl").textContent=emoji?"픽토그램(직접 입력도 가능)":"로고 텍스트";
-  $("centerTextHint").textContent=emoji?"아래에서 픽토그램을 고르거나 이모지를 붙여넣으세요.":"기업/브랜드명을 입력하세요(짧을수록 선명).";
+  $("centerTextLbl").textContent=emoji?t("ctr.lblEmoji"):t("ctr.lblText");
+  $("centerTextHint").textContent=emoji?t("ctr.hintEmoji"):t("ctr.hintText");
   $("pictoPickerWrap").style.display=emoji?"block":"none";
   if(emoji) syncPictoSel();
 }
@@ -4756,7 +4756,7 @@ function syncStudioUI(){
   $("labelOn").checked=S.labelOn; $("labelText").value=S.labelText||"SCAN ME";
   $("labelSize").value=S.labelSize; $("labelSizeOut").textContent=S.labelSize+"%";
   setSeg("labelPosSeg","lpos",S.labelPos); $("labelOffset").value=S.labelOffset; $("labelOffsetOut").textContent=S.labelOffset;
-  $("artControls").style.display="none"; $("artLabel").textContent="＋ 이미지 / 영상 업로드 — QR 전체를 덮는 아트";
+  $("artControls").style.display="none"; $("artLabel").textContent=t("art.reset2");
   if($("logoClear")){ $("logoSizeWrap").style.display="none"; $("logoBgWrap").style.display="none"; $("logoClear").style.display="none"; $("logoLabel").textContent="＋ 로고 이미지 업로드 (PNG·JPG·SVG)"; $("logoFile").value=""; }
   if(typeof syncFrameIconUI==="function") syncFrameIconUI();
 }
@@ -4765,7 +4765,7 @@ function applyPreset(ps, meta){
   resetDesign(true);
   for(var k in ps) S[k]=ps[k];
   if(ps.scene){ S.artImg=makeScene(ps.scene); S.artIsVideo=false; }
-  else if(ps.artUrl){ getArtImg(ps.artUrl, function(img){ if(img){ S.artImg=img; S.artIsVideo=false; $("artControls").style.display="block"; $("artLabel").textContent="✓ 이미지 적용됨(웹) — 변경하려면 클릭"; rerender(); } }); }
+  else if(ps.artUrl){ getArtImg(ps.artUrl, function(img){ if(img){ S.artImg=img; S.artIsVideo=false; $("artControls").style.display="block"; $("artLabel").textContent=t("art.webOk"); rerender(); } }); }
   // use-case presets carry a connection type + prefilled form fields (e.g. Wi-Fi SSID)
   if(meta && meta.ct){
     selectCType(meta.ct);
@@ -4773,7 +4773,7 @@ function applyPreset(ps, meta){
     buildContent();
   }
   syncStudioUI();
-  if(ps.scene){ $("artControls").style.display="block"; $("artLabel").textContent="✓ 장면 아트 적용됨 — 내 이미지/영상/GIF로 교체하려면 클릭"; }
+  if(ps.scene){ $("artControls").style.display="block"; $("artLabel").textContent=t("art.sceneOk"); }
   openRelevantGroups(ps);
   Array.prototype.forEach.call($("tabs").children,function(x){x.classList.toggle("active", x.dataset.view==="studio");});
   ["gallery","studio","ar","about"].forEach(function(v){ $("view-"+v).classList.toggle("active", v==="studio"); });
@@ -4822,11 +4822,11 @@ function saveCurrentQr(){
 function renderMyQr(){
   var grid=$("galGrid"), empty=$("galEmpty"); grid.innerHTML="";
   var arr=loadMyQr();
-  if(!arr.length){ empty.style.display="block"; empty.innerHTML="아직 저장된 QR이 없습니다.<br>스튜디오에서 디자인을 만든 뒤 <b>‘＋ 현재 디자인 저장’</b>을 누르세요."; return; }
+  if(!arr.length){ empty.style.display="block"; empty.innerHTML=t("myqr.empty"); return; }
   empty.style.display="none";
   arr.forEach(function(item,i){
     var card=document.createElement("div"); card.className="gal-card";
-    card.innerHTML='<span class="del" data-i="'+i+'">삭제 ✕</span><span class="use">불러오기 →</span><img src="'+item.thumb+'" style="width:100%;border-radius:8px;display:block;background:#fff"/><div class="name">'+ (item.name||"내 QR") +'</div><div class="tag">저장된 디자인</div>';
+    card.innerHTML='<span class="del" data-i="'+i+'">'+t("myqr.del")+'</span><span class="use">'+t("myqr.use")+'</span><img src="'+item.thumb+'" style="width:100%;border-radius:8px;display:block;background:#fff"/><div class="name">'+ (item.name||t("myqr.name")) +'</div><div class="tag">'+t("myqr.tag")+'</div>';
     grid.appendChild(card);
     card.addEventListener("click",function(ev){
       if(ev.target.closest(".del")){ ev.stopPropagation(); var a=loadMyQr(); a.splice(i,1); storeMyQr(a); renderMyQr(); toast("삭제됨"); return; }
@@ -4961,7 +4961,157 @@ var I18N = {
     ko:'<li>로고·아트·픽토그램을 넣을 땐 <b>오류정정 H</b>가 자동 권장됩니다(복원력 30%).</li><li>미리보기 아래 <b>상태줄</b>에 예상 스캔성이 표시돼요 — 경고가 뜨면 대비를 높이거나 노출도를 낮추세요.</li><li>모든 처리는 <b>브라우저 안에서만</b> 이뤄집니다(AI 생성 제외). 사진·데이터가 기기를 떠나지 않아요.</li><li>인쇄하거나 화면에 띄운 뒤 <b>실제로 휴대폰으로 스캔</b>해 최종 확인하는 것을 권장합니다.</li>',
     en:'<li>When adding a logo/art/pictogram, <b>error-correction H</b> is auto-recommended (30% recovery).</li><li>The <b>status line</b> under the preview shows expected scannability — if it warns, raise contrast or lower art visibility.</li><li>Everything runs <b>in your browser only</b> (except AI generation). Photos & data never leave your device.</li><li>Print it or show it on screen and <b>scan it with a real phone</b> for a final check.</li>',
     zh:'<li>加入 Logo/艺术/图标时会自动推荐<b>纠错级别 H</b>（可恢复 30%）。</li><li>预览下方<b>状态栏</b>显示预计可扫描性——出现警告时请提高对比度或降低显示度。</li><li>除 AI 生成外，所有处理<b>仅在浏览器内</b>完成。照片与数据不会离开设备。</li><li>建议打印或在屏幕显示后，<b>用真实手机扫描</b>做最终确认。</li>',
-    ja:'<li>ロゴ・アート・ピクトグラムを入れる時は<b>誤り訂正H</b>が自動推奨されます（復元30%）。</li><li>プレビュー下の<b>ステータス</b>に想定スキャン性が表示 — 警告が出たらコントラストを上げるか表示度を下げてください。</li><li>AI生成を除き、すべて<b>ブラウザ内のみ</b>で処理。写真・データは端末を離れません。</li><li>印刷か画面表示の上で<b>実機のスマホでスキャン</b>して最終確認を推奨します。</li>'}
+    ja:'<li>ロゴ・アート・ピクトグラムを入れる時は<b>誤り訂正H</b>が自動推奨されます（復元30%）。</li><li>プレビュー下の<b>ステータス</b>に想定スキャン性が表示 — 警告が出たらコントラストを上げるか表示度を下げてください。</li><li>AI生成を除き、すべて<b>ブラウザ内のみ</b>で処理。写真・データは端末を離れません。</li><li>印刷か画面表示の上で<b>実機のスマホでスキャン</b>して最終確認を推奨します。</li>'},
+  "lbl.moduleShape":{ko:'모듈 형태',en:'Module shape',zh:'模块形状',ja:'モジュール形状'},
+  "lbl.eyeShape":{ko:'눈(코너) 형태',en:'Eye (corner) shape',zh:'定位角形状',ja:'目（コーナー）形状'},
+  "lbl.fill":{ko:'채우기 방식',en:'Fill style',zh:'填充方式',ja:'塗り方式'},
+  "lbl.fg1":{ko:'전경색 1',en:'Foreground 1',zh:'前景色 1',ja:'前景色 1'},
+  "lbl.fg2":{ko:'전경색 2',en:'Foreground 2',zh:'前景色 2',ja:'前景色 2'},
+  "lbl.bg":{ko:'배경색',en:'Background',zh:'背景色',ja:'背景色'},
+  "lbl.angle":{ko:'그라디언트 각도',en:'Gradient angle',zh:'渐变角度',ja:'グラデーション角度'},
+  "lbl.transparent":{ko:'배경 투명',en:'Transparent background',zh:'背景透明',ja:'背景透明'},
+  "lbl.artInvert":{ko:'어두운 그림용 반전',en:'Invert for dark art',zh:'深色图反相',ja:'暗い画像用の反転'},
+  "lbl.artVis":{ko:'아트 노출도',en:'Art visibility',zh:'艺术显示度',ja:'アート表示度'},
+  "lbl.artDensity":{ko:'모듈 밀도(도트 크기)',en:'Module density (dot size)',zh:'模块密度（点大小）',ja:'モジュール密度（ドットサイズ）'},
+  "lbl.prompt":{ko:'프롬프트 (영어 권장 — 그릴 장면을 서술)',en:'Prompt (English recommended — describe the scene)',zh:'提示词（建议英文 — 描述画面）',ja:'プロンプト（英語推奨 — 描く場面を記述）'},
+  "lbl.stylePreset":{ko:'스타일 프리셋 (클릭하면 프롬프트 입력)',en:'Style preset (click to fill the prompt)',zh:'风格预设（点击填入提示词）',ja:'スタイルプリセット（クリックでプロンプト入力）'},
+  "lbl.logoPad":{ko:'로고 뒤 배경 패딩',en:'Logo background padding',zh:'Logo 背景内边距',ja:'ロゴ背景パディング'},
+  "lbl.logoSize":{ko:'로고 크기',en:'Logo size',zh:'Logo 大小',ja:'ロゴサイズ'},
+  "lbl.animOn":{ko:'애니메이션 켜기',en:'Enable animation',zh:'开启动画',ja:'アニメーションを有効化'},
+  "lbl.effect":{ko:'효과',en:'Effect',zh:'效果',ja:'エフェクト'},
+  "lbl.speed":{ko:'속도',en:'Speed',zh:'速度',ja:'速度'},
+  "lbl.labelOn":{ko:'라벨 표시',en:'Show label',zh:'显示标签',ja:'ラベル表示'},
+  "lbl.labelText":{ko:'라벨 텍스트',en:'Label text',zh:'标签文字',ja:'ラベルテキスト'},
+  "lbl.labelPos":{ko:'위치',en:'Position',zh:'位置',ja:'位置'},
+  "lbl.labelSize":{ko:'글자 크기',en:'Text size',zh:'文字大小',ja:'文字サイズ'},
+  "lbl.labelOffset":{ko:'상하 미세 위치',en:'Vertical fine offset',zh:'上下微调',ja:'上下の微調整'},
+  "lbl.frameOn":{ko:'프레임(액자)',en:'Frame',zh:'相框',ja:'フレーム（額）'},
+  "lbl.frameStyle":{ko:'프레임 스타일',en:'Frame style',zh:'相框风格',ja:'フレームスタイル'},
+  "lbl.frameFill":{ko:'배경 채우기',en:'Background fill',zh:'背景填充',ja:'背景の塗り'},
+  "lbl.frameBg1":{ko:'배경색 1',en:'Background 1',zh:'背景色 1',ja:'背景色 1'},
+  "lbl.frameBg2":{ko:'배경색 2',en:'Background 2',zh:'背景色 2',ja:'背景色 2'},
+  "lbl.centerMode":{ko:'중앙 콘텐츠',en:'Center content',zh:'中心内容',ja:'中央コンテンツ'},
+  "lbl.pictoPick":{ko:'픽토그램 소스 — 클릭해서 변경',en:'Pictogram source — click to change',zh:'图标来源 — 点击更改',ja:'ピクトグラム素材 — クリックで変更'},
+  "lbl.centerColor":{ko:'텍스트 색',en:'Text color',zh:'文字颜色',ja:'文字色'},
+  "lbl.centerScale":{ko:'크기',en:'Size',zh:'大小',ja:'サイズ'},
+  "lbl.margin":{ko:'여백(Quiet zone)',en:'Margin (quiet zone)',zh:'边距（静区）',ja:'余白（クワイエットゾーン）'},
+  "lbl.arObj":{ko:'AR 오브젝트',en:'AR object',zh:'AR 对象',ja:'ARオブジェクト'},
+  "lbl.wifiSsid":{ko:'네트워크 이름 (SSID)',en:'Network name (SSID)',zh:'网络名称 (SSID)',ja:'ネットワーク名 (SSID)'},
+  "lbl.wifiPass":{ko:'비밀번호',en:'Password',zh:'密码',ja:'パスワード'},
+  "lbl.wifiSec":{ko:'보안 방식',en:'Security',zh:'加密方式',ja:'セキュリティ'},
+  "lbl.wifiHidden":{ko:'숨겨진 네트워크',en:'Hidden network',zh:'隐藏网络',ja:'非公開ネットワーク'},
+  "lbl.vcName":{ko:'이름 *',en:'Name *',zh:'姓名 *',ja:'名前 *'},
+  "lbl.vcTel":{ko:'전화',en:'Phone',zh:'电话',ja:'電話'},
+  "lbl.vcEmail":{ko:'이메일',en:'Email',zh:'邮箱',ja:'メール'},
+  "lbl.vcOrg":{ko:'회사/조직',en:'Company / Org',zh:'公司/组织',ja:'会社/組織'},
+  "lbl.vcUrl":{ko:'웹사이트',en:'Website',zh:'网站',ja:'ウェブサイト'},
+  "lbl.telNum":{ko:'전화번호',en:'Phone number',zh:'电话号码',ja:'電話番号'},
+  "lbl.smsNum":{ko:'받는 번호',en:'Recipient number',zh:'接收号码',ja:'送信先番号'},
+  "lbl.smsMsg":{ko:'메시지 (선택)',en:'Message (optional)',zh:'短信内容（可选）',ja:'メッセージ（任意）'},
+  "lbl.emTo":{ko:'받는 사람',en:'To',zh:'收件人',ja:'宛先'},
+  "lbl.emSubj":{ko:'제목 (선택)',en:'Subject (optional)',zh:'主题（可选）',ja:'件名（任意）'},
+  "lbl.emBody":{ko:'내용 (선택)',en:'Body (optional)',zh:'正文（可选）',ja:'本文（任意）'},
+  "btn.artUpload":{ko:'＋ 이미지 / 영상 / GIF 업로드 — QR 전체를 덮는 아트',en:'＋ Upload image / video / GIF — art covering the whole QR',zh:'＋ 上传图片 / 视频 / GIF — 覆盖整个二维码',ja:'＋ 画像 / 動画 / GIF をアップロード — QR全体を覆うアート'},
+  "btn.artClear":{ko:'아트 제거',en:'Remove art',zh:'移除艺术',ja:'アートを削除'},
+  "btn.aiGo":{ko:'✨ AI로 생성 (5~30초)',en:'✨ Generate with AI (5–30s)',zh:'✨ AI 生成（5~30秒）',ja:'✨ AIで生成（5〜30秒）'},
+  "btn.aiClear":{ko:'AI 아트 제거',en:'Remove AI art',zh:'移除 AI 艺术',ja:'AIアートを削除'},
+  "btn.logoUpload":{ko:'＋ 로고 이미지 업로드 (PNG·JPG·SVG)',en:'＋ Upload logo image (PNG/JPG/SVG)',zh:'＋ 上传 Logo 图片 (PNG/JPG/SVG)',ja:'＋ ロゴ画像をアップロード (PNG/JPG/SVG)'},
+  "btn.logoClear":{ko:'로고 제거',en:'Remove logo',zh:'移除 Logo',ja:'ロゴを削除'},
+  "btn.arStart":{ko:'📷 카메라 시작',en:'📷 Start camera',zh:'📷 启动相机',ja:'📷 カメラ開始'},
+  "btn.arFlip":{ko:'전환',en:'Flip',zh:'切换',ja:'切替'},
+  "hint.artVis":{ko:'높을수록 그림이 더 드러나고, 낮을수록 스캔이 더 안정적입니다.',en:'Higher shows the picture more; lower makes scanning more reliable.',zh:'越高图案越明显，越低扫描越稳定。',ja:'高いほど絵が目立ち、低いほどスキャンが安定します。'},
+  "hint.artDensity":{ko:'오른쪽일수록 모듈이 작고 촘촘해져 그림이 더 선명합니다(스캔엔 더 큰 화면/인쇄 권장).',en:'Further right = smaller, denser modules and a sharper picture (use a larger screen/print for scanning).',zh:'越往右模块越小越密、图案越清晰（扫描建议更大屏幕/打印）。',ja:'右にいくほどモジュールが小さく密になり絵が鮮明に（スキャンには大きめの画面/印刷を推奨）。'},
+  "hint.labelOffset":{ko:'− 위로 / + 아래로. QR과 글자 사이 간격을 조절합니다.',en:'− up / + down. Adjusts the gap between the QR and the text.',zh:'− 上移 / + 下移。调整二维码与文字之间的间距。',ja:'− 上へ / + 下へ。QRと文字の間隔を調整します。'},
+  "hint.geo":{ko:'지도 앱에서 좌표 복사: 구글 지도에서 위치 길게 누르면 위도, 경도가 표시됩니다.',en:'Copy coordinates from a map app: long-press a spot in Google Maps to see latitude & longitude.',zh:'从地图应用复制坐标：在 Google 地图长按某处即可看到经纬度。',ja:'地図アプリで座標をコピー：Googleマップで場所を長押しすると緯度・経度が表示されます。'},
+  "hint.myqrBar":{ko:'스튜디오에서 만든 디자인을 브라우저에 저장·관리합니다(기기 로컬 저장).',en:'Save and manage designs you made in the studio, right in your browser (stored locally on your device).',zh:'将在工作室创建的设计保存并管理在浏览器中（存储于本机）。',ja:'スタジオで作ったデザインをブラウザに保存・管理します（端末ローカル保存）。'},
+  "hint.centerScale":{ko:'오류정정 <b>H</b>에 의존해 스캔됩니다. 크면(특히 픽토그램) 스캔 테스트를 권장합니다.',en:'Scanning relies on error-correction <b>H</b>. If it\'s large (especially pictograms), test the scan.',zh:'依赖纠错级别 <b>H</b> 才能扫描。较大时（尤其图标）建议先测试扫描。',ja:'誤り訂正 <b>H</b> に依存してスキャンされます。大きい場合（特にピクトグラム）はスキャンテストを推奨します。'},
+  "hint.ecc":{ko:'오류가 나도 스스로 복원하는 여유량입니다. 높을수록 로고를 크게 넣어도 스캔돼요 — 로고·아트 사용 시 <b>H</b> 권장.',en:'Headroom that self-recovers from errors. Higher lets you add a bigger logo and still scan — use <b>H</b> for logos/art.',zh:'出错时可自我恢复的余量。越高即使放大 Logo 也能扫描 — 使用 Logo/艺术时建议 <b>H</b>。',ja:'エラーを自己復元する余裕量です。高いほど大きなロゴを入れてもスキャン可能 — ロゴ・アート使用時は <b>H</b> 推奨。'},
+  "hint.art":{ko:'<b>즉시·무료</b> 아트 QR 모드입니다. 이미지가 QR 전체에 깔리고, 이미지의 <b>밝기를 모듈별로 조절</b>해 QR을 이미지에 녹여넣습니다. <b>영상·GIF</b>를 올리거나 <b>정적 이미지+애니메이션</b>을 켜면 움직이는 아트 QR이 됩니다. 최고 품질이 필요하면 아래 <b>AI 생성(서버)</b>을 사용하세요.',en:'An <b>instant, free</b> art-QR mode. The image fills the whole QR and its <b>brightness is tuned per module</b> to blend the QR into the picture. Upload a <b>video/GIF</b>, or turn on <b>static image + animation</b>, for a moving art QR. For top quality, use <b>AI generation (server)</b> below.',zh:'<b>即时·免费</b>的艺术二维码模式。图片铺满整个二维码，并<b>按模块调节亮度</b>把二维码融入图片。上传<b>视频/GIF</b>或开启<b>静态图+动画</b>即可得到动态艺术二维码。追求最高质量请用下方的 <b>AI 生成（服务器）</b>。',ja:'<b>即時・無料</b>のアートQRモードです。画像がQR全体に敷かれ、画像の<b>明るさをモジュールごとに調整</b>してQRを画像に溶け込ませます。<b>動画・GIF</b>を上げるか<b>静止画＋アニメーション</b>をオンにすると動くアートQRになります。最高品質が必要なら下の <b>AI生成（サーバー）</b> を使ってください。'},
+  "hint.anim":{ko:'<b>정적 이미지를 올린 뒤 이 스위치를 켜면</b>, 이미지가 줌·드리프트로 살아 움직이는 <b>움짤 QR</b>이 됩니다(모듈은 고정 → 모든 프레임 스캔). 여기에 네 가지 빛 효과(<b>샤인·회전·펄스·스윕</b>)가 더해집니다. <b>애니메이션 저장</b>으로 WebM 영상으로 내보낼 수 있습니다.',en:'<b>Upload a static image and flip this switch</b>, and the image comes alive with zoom & drift as a <b>moving QR</b> (modules stay fixed → every frame scans). Four light effects (<b>shine, rotate, pulse, sweep</b>) are layered on. Use <b>Save animation</b> to export a WebM video.',zh:'<b>上传静态图后打开此开关</b>，图片便以缩放·漂移动起来，成为<b>动态二维码</b>（模块固定 → 每帧都可扫描）。再叠加四种光效（<b>闪耀·旋转·脉冲·扫光</b>）。用<b>保存动画</b>可导出 WebM 视频。',ja:'<b>静止画を上げてこのスイッチをオンにすると</b>、画像がズーム・ドリフトで動く<b>動くQR</b>になります（モジュールは固定 → 全フレームでスキャン可）。さらに4つの光エフェクト（<b>シャイン・回転・パルス・スイープ</b>）が加わります。<b>アニメーション保存</b>でWebM動画として書き出せます。'},
+  "hint.ai":{ko:'Stable Diffusion + ControlNet(QR 전용)으로 <b>이미지를 처음부터 QR 명암 구조에 맞춰 생성</b>합니다. 프롬프트를 적고 생성하면 스캔되는 아트워크가 나옵니다.',en:'Uses Stable Diffusion + ControlNet (QR-specific) to <b>generate an image from scratch, shaped to the QR\'s light/dark structure</b>. Write a prompt and generate a scannable artwork.',zh:'用 Stable Diffusion + ControlNet（二维码专用）<b>从零生成契合二维码明暗结构的图像</b>。填写提示词即可生成可扫描的艺术图。',ja:'Stable Diffusion + ControlNet（QR専用）で<b>画像を一から QR の明暗構造に合わせて生成</b>します。プロンプトを書いて生成すると、スキャンできるアートワークができます。'},
+  "ph.wifiSsid":{ko:'예: MyHomeWiFi',en:'e.g. MyHomeWiFi',zh:'例：MyHomeWiFi',ja:'例：MyHomeWiFi'},
+  "ph.vcName":{ko:'홍길동',en:'John Smith',zh:'张三',ja:'山田太郎'},
+  "ph.prompt":{ko:'예: watercolor ocean sunset, soft pastel colors',en:'e.g. watercolor ocean sunset, soft pastel colors',zh:'例：watercolor ocean sunset, soft pastel colors',ja:'例：watercolor ocean sunset, soft pastel colors'},
+  "seg.dot.square":{ko:'사각',en:'Square',zh:'方形',ja:'四角'},
+  "seg.dot.rounded":{ko:'둥근',en:'Rounded',zh:'圆角',ja:'丸み'},
+  "seg.dot.dots":{ko:'점',en:'Dots',zh:'圆点',ja:'ドット'},
+  "seg.dot.classy":{ko:'클래시',en:'Classy',zh:'雅致',ja:'クラッシー'},
+  "seg.dot.diamond":{ko:'다이아',en:'Diamond',zh:'菱形',ja:'ダイヤ'},
+  "seg.eye.square":{ko:'사각',en:'Square',zh:'方形',ja:'四角'},
+  "seg.eye.rounded":{ko:'둥근',en:'Rounded',zh:'圆角',ja:'丸み'},
+  "seg.eye.circle":{ko:'원형',en:'Circle',zh:'圆形',ja:'円形'},
+  "seg.eye.leaf":{ko:'잎사귀',en:'Leaf',zh:'叶形',ja:'リーフ'},
+  "seg.fill.solid":{ko:'단색',en:'Solid',zh:'单色',ja:'単色'},
+  "seg.fill.linear":{ko:'선형 그라디언트',en:'Linear gradient',zh:'线性渐变',ja:'線形グラデーション'},
+  "seg.fill.radial":{ko:'원형 그라디언트',en:'Radial gradient',zh:'径向渐变',ja:'円形グラデーション'},
+  "seg.fmode.solid":{ko:'단색',en:'Solid',zh:'单色',ja:'単色'},
+  "seg.fmode.linear":{ko:'선형',en:'Linear',zh:'线性',ja:'線形'},
+  "seg.fmode.radial":{ko:'원형',en:'Radial',zh:'径向',ja:'円形'},
+  "seg.anim.shine":{ko:'샤인 ✨',en:'Shine ✨',zh:'闪耀 ✨',ja:'シャイン ✨'},
+  "seg.anim.rotate":{ko:'회전',en:'Rotate',zh:'旋转',ja:'回転'},
+  "seg.anim.pulse":{ko:'펄스',en:'Pulse',zh:'脉冲',ja:'パルス'},
+  "seg.anim.sweep":{ko:'스윕',en:'Sweep',zh:'扫光',ja:'スイープ'},
+  "seg.lpos.top":{ko:'상단',en:'Top',zh:'顶部',ja:'上'},
+  "seg.lpos.bottom":{ko:'하단',en:'Bottom',zh:'底部',ja:'下'},
+  "seg.fstyle.card":{ko:'카드',en:'Card',zh:'卡片',ja:'カード'},
+  "seg.fstyle.polaroid":{ko:'폴라로이드',en:'Polaroid',zh:'拍立得',ja:'ポラロイド'},
+  "seg.fstyle.shadow":{ko:'섀도우박스',en:'Shadow box',zh:'阴影框',ja:'シャドーボックス'},
+  "seg.fstyle.gold":{ko:'골드 액자',en:'Gold frame',zh:'金色相框',ja:'ゴールド額'},
+  "seg.fstyle.wood":{ko:'우드',en:'Wood',zh:'木框',ja:'ウッド'},
+  "seg.fstyle.neon":{ko:'네온',en:'Neon',zh:'霓虹',ja:'ネオン'},
+  "seg.cmode.none":{ko:'없음',en:'None',zh:'无',ja:'なし'},
+  "seg.cmode.text":{ko:'텍스트 로고',en:'Text logo',zh:'文字 Logo',ja:'テキストロゴ'},
+  "seg.cmode.emoji":{ko:'픽토그램',en:'Pictogram',zh:'图标',ja:'ピクトグラム'},
+  "seg.wsec.nopass":{ko:'없음',en:'None',zh:'无',ja:'なし'},
+  "sty.watercolor":{ko:'수채화',en:'Watercolor',zh:'水彩',ja:'水彩'},
+  "sty.neon":{ko:'네온 시티',en:'Neon city',zh:'霓虹城市',ja:'ネオンシティ'},
+  "sty.oil":{ko:'유화',en:'Oil paint',zh:'油画',ja:'油絵'},
+  "sty.photo":{ko:'실사 풍경',en:'Photoreal scene',zh:'写实风景',ja:'実写風景'},
+  "sty.sakura":{ko:'벚꽃',en:'Cherry blossom',zh:'樱花',ja:'桜'},
+  "sty.space":{ko:'우주',en:'Space',zh:'太空',ja:'宇宙'},
+  "sty.autumn":{ko:'가을 숲',en:'Autumn forest',zh:'秋日森林',ja:'秋の森'},
+  "sty.winter":{ko:'겨울 마을',en:'Winter village',zh:'冬日村庄',ja:'冬の村'},
+  "sty.fantasy":{ko:'판타지',en:'Fantasy',zh:'奇幻',ja:'ファンタジー'},
+  "ar.h":{ko:'카메라로 <span class="g">QR을 비추면</span> AR이 나타납니다',en:'Point your camera <span class="g">at a QR</span> and AR appears',zh:'用相机<span class="g">对准二维码</span>，AR 即刻出现',ja:'カメラで<span class="g">QRを映すと</span> ARが現れます'},
+  "ar.p":{ko:'후면 카메라로 아무 QR 코드나 비추세요. 코드를 실시간 인식해 그 위에 3D 오브젝트·정보 카드를 얹어 보여줍니다. 100% 브라우저 처리(영상 전송 없음).',en:'Point your rear camera at any QR code. It\'s recognized live and a 3D object / info card is overlaid on top. 100% in-browser (video never sent).',zh:'用后置摄像头对准任意二维码。实时识别并在其上叠加 3D 对象/信息卡。全程浏览器处理（不上传视频）。',ja:'背面カメラで任意のQRコードを映してください。リアルタイム認識して3Dオブジェクト・情報カードを重ねます。100%ブラウザ処理（映像送信なし）。'},
+  "opt.arCube":{ko:'🧊 3D 큐브 + 정보 카드',en:'🧊 3D cube + info card',zh:'🧊 3D 立方体 + 信息卡',ja:'🧊 3Dキューブ + 情報カード'},
+  "opt.arCard":{ko:'🪧 정보 카드만',en:'🪧 Info card only',zh:'🪧 仅信息卡',ja:'🪧 情報カードのみ'},
+  "opt.arPortal":{ko:'🌀 네온 포탈',en:'🌀 Neon portal',zh:'🌀 霓虹传送门',ja:'🌀 ネオンポータル'},
+  "dyn.ver":{ko:'버전',en:'Version',zh:'版本',ja:'バージョン'},
+  "dyn.overflow":{ko:'⚠ 데이터 길이 초과',en:'⚠ Data too long',zh:'⚠ 数据过长',ja:'⚠ データ長超過'},
+  "dyn.scanGood":{ko:'스캔 양호',en:'Good to scan',zh:'扫描良好',ja:'スキャン良好'},
+  "dyn.aiApplied":{ko:'🤖 AI 아트 QR 적용 중 — 디자인 옵션은 반영되지 않습니다 (\'AI 아트 제거\' 후 편집)',en:'🤖 AI art QR active — design options don\'t apply (click \'Remove AI art\' to edit)',zh:'🤖 正在应用 AI 艺术二维码 — 设计选项不生效（点击“移除 AI 艺术”后编辑）',ja:'🤖 AIアートQR適用中 — デザイン設定は反映されません（『AIアートを削除』後に編集）'},
+  "dyn.imgArt":{ko:'🖼️ 이미지 아트 QR',en:'🖼️ Image art QR',zh:'🖼️ 图片艺术二维码',ja:'🖼️ 画像アートQR'},
+  "dyn.vidArt":{ko:'🎬 영상 아트 QR',en:'🎬 Video art QR',zh:'🎬 视频艺术二维码',ja:'🎬 動画アートQR'},
+  "dyn.expHigh":{ko:'노출도 높음(스캔 테스트 권장)',en:'high visibility (test the scan)',zh:'显示度高（建议测试扫描）',ja:'表示度が高い（スキャンテスト推奨）'},
+  "dyn.eccHRec":{ko:'ECC-H 권장',en:'ECC-H recommended',zh:'建议 ECC-H',ja:'ECC-H 推奨'},
+  "dyn.contrastLow":{ko:'대비 낮음',en:'low contrast',zh:'对比度低',ja:'コントラスト低'},
+  "dyn.logoBig":{ko:'로고 큼',en:'logo large',zh:'Logo 过大',ja:'ロゴ大'},
+  "dyn.decoModule":{ko:'장식용 모듈(스캔 테스트 권장)',en:'decorative module (test the scan)',zh:'装饰模块（建议测试扫描）',ja:'装飾モジュール（スキャンテスト推奨）'},
+  "ctr.lblEmoji":{ko:'픽토그램(직접 입력도 가능)',en:'Pictogram (or type your own)',zh:'图标（也可手动输入）',ja:'ピクトグラム（直接入力も可）'},
+  "ctr.lblText":{ko:'로고 텍스트',en:'Text logo',zh:'文字 Logo',ja:'テキストロゴ'},
+  "ctr.hintEmoji":{ko:'아래에서 픽토그램을 고르거나 이모지를 붙여넣으세요.',en:'Pick a pictogram below or paste an emoji.',zh:'在下方选择图标，或粘贴一个表情符号。',ja:'下からピクトグラムを選ぶか、絵文字を貼り付けてください。'},
+  "ctr.hintText":{ko:'기업/브랜드명을 입력하세요(짧을수록 선명).',en:'Enter a company/brand name (shorter is sharper).',zh:'输入公司/品牌名（越短越清晰）。',ja:'企業・ブランド名を入力（短いほど鮮明）。'},
+  "dens.4":{ko:'성김',en:'Sparse',zh:'稀疏',ja:'粗い'},
+  "dens.5":{ko:'약간 성김',en:'Slightly sparse',zh:'略稀疏',ja:'やや粗い'},
+  "dens.6":{ko:'보통',en:'Medium',zh:'中等',ja:'普通'},
+  "dens.7":{ko:'촘촘',en:'Dense',zh:'密',ja:'細かい'},
+  "dens.8":{ko:'더 촘촘',en:'Denser',zh:'更密',ja:'より細かい'},
+  "dens.9":{ko:'매우 촘촘',en:'Very dense',zh:'非常密',ja:'非常に細かい'},
+  "dens.10":{ko:'최대',en:'Maximum',zh:'最大',ja:'最大'},
+  "art.imgOk":{ko:'✓ 이미지 업로드됨 — 변경하려면 클릭',en:'✓ Image uploaded — click to change',zh:'✓ 已上传图片 — 点击更换',ja:'✓ 画像アップロード済み — 変更するにはクリック'},
+  "art.vidOk":{ko:'✓ 영상/GIF 업로드됨 — 변경하려면 클릭',en:'✓ Video/GIF uploaded — click to change',zh:'✓ 已上传视频/GIF — 点击更换',ja:'✓ 動画/GIFアップロード済み — 変更するにはクリック'},
+  "myqr.empty":{ko:'아직 저장된 QR이 없습니다.<br>스튜디오에서 디자인을 만든 뒤 <b>‘＋ 현재 디자인 저장’</b>을 누르세요.',en:'No saved QRs yet.<br>Create a design in the studio, then click <b>‘＋ Save current design’</b>.',zh:'还没有已保存的二维码。<br>在工作室创建设计后，点击 <b>‘＋ 保存当前设计’</b>。',ja:'保存されたQRはまだありません。<br>スタジオでデザインを作成し、<b>『＋ 現在のデザインを保存』</b>を押してください。'},
+  "myqr.tag":{ko:'저장된 디자인',en:'Saved design',zh:'已保存设计',ja:'保存済みデザイン'},
+  "myqr.name":{ko:'내 QR',en:'My QR',zh:'我的二维码',ja:'マイQR'},
+  "myqr.del":{ko:'삭제 ✕',en:'Delete ✕',zh:'删除 ✕',ja:'削除 ✕'},
+  "myqr.use":{ko:'불러오기 →',en:'Load →',zh:'加载 →',ja:'読み込み →'},
+  "ct.enc":{ko:'인코딩될 내용',en:'Encoded content',zh:'编码内容',ja:'エンコード内容'},
+  "art.reset2":{ko:'＋ 이미지 / 영상 업로드 — QR 전체를 덮는 아트',en:'＋ Upload image / video — art covering the whole QR',zh:'＋ 上传图片 / 视频 — 覆盖整个二维码',ja:'＋ 画像 / 動画をアップロード — QR全体を覆うアート'},
+  "art.gifOk":{ko:'✓ GIF 업로드됨 (애니메이션 QR) — 변경하려면 클릭',en:'✓ GIF uploaded (animated QR) — click to change',zh:'✓ 已上传 GIF（动画二维码）— 点击更换',ja:'✓ GIFアップロード済み（アニメQR）— 変更するにはクリック'},
+  "art.vidOk2":{ko:'✓ 영상 업로드됨 (애니메이션 QR) — 변경하려면 클릭',en:'✓ Video uploaded (animated QR) — click to change',zh:'✓ 已上传视频（动画二维码）— 点击更换',ja:'✓ 動画アップロード済み（アニメQR）— 変更するにはクリック'},
+  "art.webOk":{ko:'✓ 이미지 적용됨(웹) — 변경하려면 클릭',en:'✓ Image applied (web) — click to change',zh:'✓ 已应用图片（网络）— 点击更换',ja:'✓ 画像適用済み（Web）— 変更するにはクリック'},
+  "art.sceneOk":{ko:'✓ 장면 아트 적용됨 — 내 이미지/영상/GIF로 교체하려면 클릭',en:'✓ Scene art applied — click to replace with your image/video/GIF',zh:'✓ 已应用场景艺术 — 点击用你的图片/视频/GIF 替换',ja:'✓ シーンアート適用済み — 自分の画像/動画/GIFに置換するにはクリック'}
 };
 var LANG="ko";
 function t(key){ var e=I18N[key]; return e ? (e[LANG]||e.ko) : null; }
@@ -4971,6 +5121,8 @@ function applyLang(lang){
   document.querySelectorAll("[data-i18n-html]").forEach(function(el){ var v=t(el.getAttribute("data-i18n-html")); if(v!=null) el.innerHTML=v; });
   document.querySelectorAll("[data-i18n-tip]").forEach(function(el){ var v=t(el.getAttribute("data-i18n-tip")); if(v!=null) el.setAttribute("data-tip",v); });
   document.querySelectorAll("[data-i18n-ph]").forEach(function(el){ var v=t(el.getAttribute("data-i18n-ph")); if(v!=null) el.setAttribute("placeholder",v); });
+  try{ updateMeta(); }catch(e){}
+  try{ centerUIvis(); }catch(e){}
   try{ localStorage.setItem("aqr_lang", lang); }catch(e){}
   var sel=$("langSel"); if(sel) sel.value=lang;
 }
