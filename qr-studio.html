@@ -729,7 +729,7 @@
   <footer>
     <div>Aesthetic QR Studio · 아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.06-c</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.06-d</b></div>
   </footer>
 </div>
 
@@ -4609,6 +4609,131 @@ function makeScene(kind){
   SCENES[kind]=c; return c;
 }
 
+var GAL_TR = {
+  '네온 펄스':{en:'Neon Pulse',zh:'霓虹脉冲',ja:'ネオンパルス'},
+  '스카이':{en:'Sky',zh:'天空',ja:'スカイ'},
+  '오션':{en:'Ocean',zh:'海洋',ja:'オーシャン'},
+  '오로라':{en:'Aurora',zh:'极光',ja:'オーロラ'},
+  '선셋':{en:'Sunset',zh:'日落',ja:'サンセット'},
+  '라벤더':{en:'Lavender',zh:'薰衣草',ja:'ラベンダー'},
+  '에메랄드':{en:'Emerald',zh:'翡翠',ja:'エメラルド'},
+  '코랄':{en:'Coral',zh:'珊瑚',ja:'コーラル'},
+  '사이버펑크':{en:'Cyberpunk',zh:'赛博朋克',ja:'サイバーパンク'},
+  '포레스트':{en:'Forest',zh:'森林',ja:'フォレスト'},
+  '바이올렛':{en:'Violet',zh:'紫罗兰',ja:'バイオレット'},
+  '아쿠아':{en:'Aqua',zh:'水色',ja:'アクア'},
+  '라임 네온':{en:'Lime Neon',zh:'青柠霓虹',ja:'ライムネオン'},
+  '골드 럭스':{en:'Gold Lux',zh:'金色奢华',ja:'ゴールドラックス'},
+  '모노 잉크':{en:'Mono Ink',zh:'单色墨',ja:'モノインク'},
+  '네온 시티':{en:'Neon City',zh:'霓虹城市',ja:'ネオンシティ'},
+  '우키요에':{en:'Ukiyo-e',zh:'浮世绘',ja:'浮世絵'},
+  '팝아트':{en:'Pop Art',zh:'波普艺术',ja:'ポップアート'},
+  '수묵화':{en:'Ink Wash',zh:'水墨画',ja:'水墨画'},
+  '고대 벽화':{en:'Ancient Mural',zh:'古代壁画',ja:'古代壁画'},
+  '판타지 도어':{en:'Fantasy Door',zh:'奇幻之门',ja:'ファンタジードア'},
+  '아르누보':{en:'Art Nouveau',zh:'新艺术',ja:'アールヌーヴォー'},
+  '베이퍼웨이브':{en:'Vaporwave',zh:'蒸汽波',ja:'ヴェイパーウェイヴ'},
+  '바로크':{en:'Baroque',zh:'巴洛克',ja:'バロック'},
+  '목판화':{en:'Woodblock',zh:'木版画',ja:'木版画'},
+  '티 레이크':{en:'Tea Lake',zh:'茶湖',ja:'ティーレイク'},
+  '퀼트 풍경':{en:'Quilt Scene',zh:'拼布风景',ja:'キルト風景'},
+  '우주 정원':{en:'Cosmic Garden',zh:'宇宙花园',ja:'宇宙庭園'},
+  '마법의 숲':{en:'Magic Forest',zh:'魔法森林',ja:'魔法の森'},
+  '크리스탈':{en:'Crystal',zh:'水晶',ja:'クリスタル'},
+  '소화기':{en:'Fire Extinguisher',zh:'灭火器',ja:'消火器'},
+  '응급/병원':{en:'ER / Hospital',zh:'急救/医院',ja:'救急・病院'},
+  '와이파이':{en:'Wi-Fi',zh:'Wi-Fi',ja:'Wi-Fi'},
+  '별점 리뷰':{en:'Star Review',zh:'星级评价',ja:'星評価'},
+  '이벤트 선물':{en:'Event Gift',zh:'活动礼物',ja:'イベントギフト'},
+  '카페 메뉴':{en:'Café Menu',zh:'咖啡菜单',ja:'カフェメニュー'},
+  '매장 위치':{en:'Store Location',zh:'门店位置',ja:'店舗の位置'},
+  '음악/플레이':{en:'Music / Play',zh:'音乐/播放',ja:'音楽・再生'},
+  '홈/부동산':{en:'Home / Realty',zh:'房产/家居',ja:'住宅・不動産'},
+  '친환경':{en:'Eco',zh:'环保',ja:'エコ'},
+  '포토/카메라':{en:'Photo / Camera',zh:'照片/相机',ja:'フォト・カメラ'},
+  '주차':{en:'Parking',zh:'停车',ja:'駐車'},
+  '골드 액자':{en:'Gold Frame',zh:'金色相框',ja:'ゴールド額'},
+  '우드 프레임':{en:'Wood Frame',zh:'木质相框',ja:'ウッドフレーム'},
+  '폴라로이드':{en:'Polaroid',zh:'拍立得',ja:'ポラロイド'},
+  '네온 프레임':{en:'Neon Frame',zh:'霓虹相框',ja:'ネオンフレーム'},
+  '핑크 네온':{en:'Pink Neon',zh:'粉色霓虹',ja:'ピンクネオン'},
+  '섀도우박스':{en:'Shadow Box',zh:'阴影框',ja:'シャドーボックス'},
+  '블루 섀도우박스':{en:'Blue Shadow Box',zh:'蓝色阴影框',ja:'ブルーシャドーボックス'},
+  '우드 픽토':{en:'Wood Picto',zh:'木质图标',ja:'ウッドピクト'},
+  '골드 브랜드':{en:'Gold Brand',zh:'金色品牌',ja:'ゴールドブランド'},
+  '에메랄드 카드':{en:'Emerald Card',zh:'翡翠卡片',ja:'エメラルドカード'},
+  '선셋 카드':{en:'Sunset Card',zh:'日落卡片',ja:'サンセットカード'},
+  '모노 카드':{en:'Mono Card',zh:'单色卡片',ja:'モノカード'},
+  '카페 Wi-Fi':{en:'Café Wi-Fi',zh:'咖啡馆 Wi-Fi',ja:'カフェWi-Fi'},
+  '디지털 명함':{en:'Digital Card',zh:'电子名片',ja:'デジタル名刺'},
+  '전화 문의':{en:'Call Us',zh:'电话咨询',ja:'電話問い合わせ'},
+  '문자 참여':{en:'SMS Join',zh:'短信参与',ja:'SMS参加'},
+  '이메일 문의':{en:'Email Us',zh:'邮件咨询',ja:'メール問い合わせ'},
+  '쿠폰 텍스트':{en:'Coupon Text',zh:'优惠券文本',ja:'クーポンテキスト'},
+  '리뷰 남기기':{en:'Leave a Review',zh:'留下评价',ja:'レビューを書く'},
+  '사이버·다크':{en:'Cyber · Dark',zh:'赛博·暗黑',ja:'サイバー・ダーク'},
+  '청량한 하늘':{en:'Fresh Sky',zh:'清爽天空',ja:'さわやかな空'},
+  '딥 블루':{en:'Deep Blue',zh:'深蓝',ja:'ディープブルー'},
+  '오로라 빛':{en:'Aurora Glow',zh:'极光之光',ja:'オーロラの光'},
+  '따뜻한 노을':{en:'Warm Dusk',zh:'温暖晚霞',ja:'暖かな夕焼け'},
+  '부드러운 퍼플':{en:'Soft Purple',zh:'柔和紫',ja:'やわらかな紫'},
+  '자연 그린':{en:'Nature Green',zh:'自然绿',ja:'ナチュラルグリーン'},
+  '산호빛':{en:'Coral Hue',zh:'珊瑚色',ja:'珊瑚色'},
+  '핑크×시안':{en:'Pink × Cyan',zh:'粉×青',ja:'ピンク×シアン'},
+  '딥 그린':{en:'Deep Green',zh:'深绿',ja:'ディープグリーン'},
+  '퍼플×마젠타':{en:'Purple × Magenta',zh:'紫×品红',ja:'パープル×マゼンタ'},
+  '물빛 라디얼':{en:'Aqua Radial',zh:'水色径向',ja:'水色ラジアル'},
+  '형광 라임':{en:'Fluoro Lime',zh:'荧光青柠',ja:'蛍光ライム'},
+  '프리미엄':{en:'Premium',zh:'高级',ja:'プレミアム'},
+  '클래식':{en:'Classic',zh:'经典',ja:'クラシック'},
+  '사이버펑크·스윕':{en:'Cyberpunk · Sweep',zh:'赛博朋克·扫光',ja:'サイバーパンク・スイープ'},
+  '파도·샤인':{en:'Waves · Shine',zh:'波浪·闪耀',ja:'波・シャイン'},
+  '코믹·회전':{en:'Comic · Rotate',zh:'漫画·旋转',ja:'コミック・回転'},
+  '산수·펄스':{en:'Landscape · Pulse',zh:'山水·脉冲',ja:'山水・パルス'},
+  '피닉스·샤인':{en:'Phoenix · Shine',zh:'凤凰·闪耀',ja:'フェニックス・シャイン'},
+  '애니메이션·스윕':{en:'Animation · Sweep',zh:'动画·扫光',ja:'アニメ・スイープ'},
+  '장식·펄스':{en:'Ornate · Pulse',zh:'装饰·脉冲',ja:'装飾・パルス'},
+  '신스웨이브·회전':{en:'Synthwave · Rotate',zh:'合成波·旋转',ja:'シンセウェイブ・回転'},
+  '고전 회화·샤인':{en:'Classic Painting · Shine',zh:'古典绘画·闪耀',ja:'古典絵画・シャイン'},
+  '흑백 판화·펄스':{en:'B&W Print · Pulse',zh:'黑白版画·脉冲',ja:'白黒版画・パルス'},
+  '디저트 도시·스윕':{en:'Dessert City · Sweep',zh:'甜品城市·扫光',ja:'デザート都市・スイープ'},
+  '자수 공예·펄스':{en:'Embroidery · Pulse',zh:'刺绣工艺·脉冲',ja:'刺繍工芸・パルス'},
+  'SF 판타지·회전':{en:'Sci-Fi · Rotate',zh:'科幻奇幻·旋转',ja:'SFファンタジー・回転'},
+  '향수 포스터·샤인':{en:'Retro Poster · Shine',zh:'怀旧海报·闪耀',ja:'レトロポスター・シャイン'},
+  '유리 판타지·펄스':{en:'Glass Fantasy · Pulse',zh:'玻璃奇幻·脉冲',ja:'ガラスファンタジー・パルス'},
+  '텍스트 로고':{en:'Text Logo',zh:'文字 Logo',ja:'テキストロゴ'},
+  '다크 로고':{en:'Dark Logo',zh:'暗色 Logo',ja:'ダークロゴ'},
+  '모노 로고':{en:'Mono Logo',zh:'单色 Logo',ja:'モノロゴ'},
+  '소방 안전':{en:'Fire Safety',zh:'消防安全',ja:'防火安全'},
+  '의료':{en:'Medical',zh:'医疗',ja:'医療'},
+  '안내':{en:'Info',zh:'指引',ja:'案内'},
+  '리뷰':{en:'Review',zh:'评价',ja:'レビュー'},
+  '프로모션':{en:'Promotion',zh:'促销',ja:'プロモーション'},
+  'F&B':{en:'F&B',zh:'餐饮',ja:'F&B'},
+  '길찾기':{en:'Directions',zh:'导航',ja:'道案内'},
+  '미디어':{en:'Media',zh:'媒体',ja:'メディア'},
+  '부동산':{en:'Real Estate',zh:'房产',ja:'不動産'},
+  '에코':{en:'Eco',zh:'环保',ja:'エコ'},
+  '사진':{en:'Photo',zh:'摄影',ja:'写真'},
+  '교통':{en:'Transit',zh:'交通',ja:'交通'},
+  '미술관 액자':{en:'Gallery Frame',zh:'美术馆相框',ja:'美術館額'},
+  '원목 액자':{en:'Solid Wood Frame',zh:'原木相框',ja:'無垢木の額'},
+  '인생네컷 감성':{en:'Photobooth Vibe',zh:'大头贴风格',ja:'プリクラ風'},
+  '글로우 액자':{en:'Glow Frame',zh:'发光相框',ja:'グロー額'},
+  '파스파르투':{en:'Passepartout',zh:'卡纸装裱',ja:'パスパルトゥー'},
+  '원목+픽토그램':{en:'Wood + Picto',zh:'原木+图标',ja:'木＋ピクト'},
+  '액자+로고':{en:'Frame + Logo',zh:'相框+Logo',ja:'額＋ロゴ'},
+  '컬러 카드':{en:'Color Card',zh:'彩色卡片',ja:'カラーカード'},
+  '스캔 → 와이파이 자동 접속':{en:'Scan → auto Wi-Fi',zh:'扫描 → 自动连 Wi-Fi',ja:'スキャン → Wi-Fi自動接続'},
+  '스캔 → 연락처 저장':{en:'Scan → save contact',zh:'扫描 → 保存联系人',ja:'スキャン → 連絡先を保存'},
+  '스캔 → 바로 전화':{en:'Scan → call now',zh:'扫描 → 直接拨号',ja:'スキャン → すぐ電話'},
+  '스캔 → 문자 작성':{en:'Scan → compose SMS',zh:'扫描 → 编写短信',ja:'スキャン → SMS作成'},
+  '스캔 → 메일 작성':{en:'Scan → compose email',zh:'扫描 → 编写邮件',ja:'スキャン → メール作成'},
+  '스캔 → 지도 열기':{en:'Scan → open map',zh:'扫描 → 打开地图',ja:'スキャン → 地図を開く'},
+  '스캔 → 쿠폰 코드 표시':{en:'Scan → show coupon',zh:'扫描 → 显示优惠码',ja:'スキャン → クーポン表示'},
+  '스캔 → 리뷰 페이지':{en:'Scan → review page',zh:'扫描 → 评价页面',ja:'スキャン → レビューページ'}
+};
+function gtr(str){ var e=GAL_TR[str]; return (e && e[LANG]) ? e[LANG] : str; }
 var CATS = {
   standard:[
     {name:"네온 펄스",tag:"사이버·다크",s:{fill:"linear",fg1:"#7c5cff",fg2:"#22d3ee",angle:45,dot:"rounded",eye:"rounded",bg:"#0b0d12"}},
@@ -4731,7 +4856,7 @@ function buildGallery(){
   var animate=(curCat==="animation");
   list.forEach(function(p){
     var card=document.createElement("div"); card.className="gal-card";
-    card.innerHTML='<span class="use">편집하기 →</span><canvas width="300" height="300"></canvas><div class="name">'+p.name+'</div><div class="tag">'+p.tag+'</div>';
+    card.innerHTML='<span class="use">'+t("gal.edit")+'</span><canvas width="300" height="300"></canvas><div class="name">'+gtr(p.name)+'</div><div class="tag">'+gtr(p.tag)+'</div>';
     grid.appendChild(card);
     var cv=card.querySelector("canvas");
     renderPreset(cv, p.s);
@@ -5111,6 +5236,7 @@ var I18N = {
   "art.vidOk2":{ko:'✓ 영상 업로드됨 (애니메이션 QR) — 변경하려면 클릭',en:'✓ Video uploaded (animated QR) — click to change',zh:'✓ 已上传视频（动画二维码）— 点击更换',ja:'✓ 動画アップロード済み（アニメQR）— 変更するにはクリック'},
   "art.webOk":{ko:'✓ 이미지 적용됨(웹) — 변경하려면 클릭',en:'✓ Image applied (web) — click to change',zh:'✓ 已应用图片（网络）— 点击更换',ja:'✓ 画像適用済み（Web）— 変更するにはクリック'},
   "art.sceneOk":{ko:'✓ 장면 아트 적용됨 — 내 이미지/영상/GIF로 교체하려면 클릭',en:'✓ Scene art applied — click to replace with your image/video/GIF',zh:'✓ 已应用场景艺术 — 点击用你的图片/视频/GIF 替换',ja:'✓ シーンアート適用済み — 自分の画像/動画/GIFに置換するにはクリック'},
+  "gal.edit":{ko:'편집하기 →',en:'Edit →',zh:'编辑 →',ja:'編集 →'},
   "chip.art":{ko:'🖼️ 이미지·영상 아트',en:'🖼️ Image / Video art',zh:'🖼️ 图片·视频艺术',ja:'🖼️ 画像・動画アート'},
   "chip.anim":{ko:'✨ 애니메이션',en:'✨ Animation',zh:'✨ 动画',ja:'✨ アニメーション'}
 };
@@ -5122,6 +5248,7 @@ function applyLang(lang){
   document.querySelectorAll("[data-i18n-html]").forEach(function(el){ var v=t(el.getAttribute("data-i18n-html")); if(v!=null) el.innerHTML=v; });
   document.querySelectorAll("[data-i18n-tip]").forEach(function(el){ var v=t(el.getAttribute("data-i18n-tip")); if(v!=null) el.setAttribute("data-tip",v); });
   document.querySelectorAll("[data-i18n-ph]").forEach(function(el){ var v=t(el.getAttribute("data-i18n-ph")); if(v!=null) el.setAttribute("placeholder",v); });
+  try{ if($("galGrid") && $("galGrid").children.length) buildGallery(); }catch(e){}
   try{ updateMeta(); }catch(e){}
   try{ centerUIvis(); }catch(e){}
   try{ localStorage.setItem("aqr_lang", lang); }catch(e){}
