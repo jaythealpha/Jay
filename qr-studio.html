@@ -168,6 +168,49 @@
   .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--card2);border:1px solid var(--acc);
     color:#fff;padding:11px 20px;border-radius:30px;font-size:13px;font-weight:600;opacity:0;transition:.25s;pointer-events:none;z-index:50;box-shadow:var(--shadow)}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  /* ---- hover/focus tooltips (data-tip) ---- */
+  [data-tip]{position:relative}
+  [data-tip]:hover::after,[data-tip]:focus-visible::after{
+    content:attr(data-tip);position:absolute;left:50%;top:calc(100% + 8px);transform:translateX(-50%);
+    background:#0b0d14;color:#e8ecf5;border:1px solid var(--acc);border-radius:9px;padding:8px 11px;
+    font-size:11.5px;font-weight:500;line-height:1.5;white-space:normal;width:max-content;max-width:230px;
+    text-align:left;z-index:80;box-shadow:0 8px 24px rgba(0,0,0,.45);pointer-events:none}
+  [data-tip]:hover::before,[data-tip]:focus-visible::before{
+    content:"";position:absolute;left:50%;top:calc(100% + 2px);transform:translateX(-50%);
+    border:6px solid transparent;border-bottom-color:var(--acc);z-index:80;pointer-events:none}
+  .seg [data-tip]:hover::after,.seg [data-tip]:focus-visible::after{max-width:210px}
+  .help-dot{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;margin-left:6px;
+    border-radius:50%;background:var(--bg2);border:1px solid var(--line2);color:var(--mut);font-size:10px;
+    font-weight:700;cursor:help;vertical-align:middle}
+  .help-dot:hover{border-color:var(--acc);color:#fff}
+
+  /* ---- onboarding welcome modal ---- */
+  .ob-mask{position:fixed;inset:0;background:rgba(6,8,14,.72);backdrop-filter:blur(4px);z-index:100;
+    display:none;align-items:center;justify-content:center;padding:20px}
+  .ob-mask.show{display:flex}
+  .ob-card{background:var(--card);border:1px solid var(--line2);border-radius:18px;max-width:520px;width:100%;
+    padding:26px 24px;box-shadow:0 24px 70px rgba(0,0,0,.6);max-height:88vh;overflow:auto}
+  .ob-card h2{font-size:22px;margin:0 0 4px}
+  .ob-card .sub{color:var(--mut2);font-size:13px;margin-bottom:18px}
+  .ob-step{display:flex;gap:13px;align-items:flex-start;margin:13px 0}
+  .ob-step .n{flex:none;width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:14px;color:#fff;background:linear-gradient(135deg,var(--acc),var(--acc3))}
+  .ob-step h4{margin:2px 0 3px;font-size:14.5px}
+  .ob-step p{margin:0;font-size:12.5px;color:var(--mut2);line-height:1.55}
+  .ob-actions{display:flex;gap:10px;margin-top:22px}
+  .ob-actions .btn{flex:1}
+
+  /* ---- guide page ---- */
+  .guide-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-top:18px}
+  .guide-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+  .guide-card .ic-badge{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+    font-size:19px;background:var(--bg2);border:1px solid var(--line2);margin-bottom:10px}
+  .guide-card h4{margin:0 0 6px;font-size:15px}
+  .guide-card p{margin:0 0 8px;font-size:12.5px;color:var(--mut2);line-height:1.6}
+  .guide-card ol,.guide-card ul{margin:6px 0 0;padding-left:18px;font-size:12.5px;color:var(--mut2);line-height:1.7}
+  .guide-card .tag2{display:inline-block;font-size:10px;font-weight:700;color:var(--acc);background:var(--bg2);
+    border:1px solid var(--line2);border-radius:20px;padding:2px 9px;margin-bottom:10px}
 </style>
 </head>
 <body>
@@ -179,14 +222,14 @@
       </div>
       <div>
         <h1>Aesthetic QR Studio</h1>
-        <p>Transform the Ordinary — 스캔되는 예술</p>
+        <p>아름답고 스캔되는 QR을 만드는 스튜디오</p>
       </div>
     </div>
     <nav class="tabs" id="tabs">
       <button data-view="gallery" class="active">갤러리</button>
       <button data-view="studio">스튜디오</button>
       <button data-view="ar">AR</button>
-      <button data-view="about">기술 분석</button>
+      <button data-view="about">사용법</button>
     </nav>
   </header>
 
@@ -207,13 +250,13 @@
       </div>
     </div>
     <div class="cat-tabs" id="catTabs">
-      <button data-cat="standard" class="on">Standard</button>
-      <button data-cat="animation">Animation</button>
-      <button data-cat="logo">Logo</button>
-      <button data-cat="pictogram">Pictogram</button>
-      <button data-cat="frame">Frame</button>
-      <button data-cat="usecase">활용</button>
-      <button data-cat="myqr">★ My QR</button>
+      <button data-cat="standard" class="on" data-tip="색상·그라디언트 기본 디자인 모음. 클릭하면 스튜디오로 불러와 편집할 수 있어요.">Standard</button>
+      <button data-cat="animation" data-tip="이미지가 살아 움직이는 아트 QR. 카드를 클릭하면 그 이미지가 적용된 채 편집할 수 있어요.">Animation</button>
+      <button data-cat="logo" data-tip="중앙에 브랜드 텍스트가 들어간 로고형 QR. 클릭 후 문구를 바꾸거나 로고 이미지를 올릴 수 있어요.">Logo</button>
+      <button data-cat="pictogram" data-tip="중앙에 픽토그램(이모지)이 들어간 QR. 클릭 후 아이콘을 자유롭게 바꿀 수 있어요.">Pictogram</button>
+      <button data-cat="frame" data-tip="우드·골드·폴라로이드 등 실제 액자 프레임 디자인.">Frame</button>
+      <button data-cat="usecase" data-tip="Wi-Fi·명함·전화 등 바로 쓰는 용도별 템플릿. 클릭하면 입력폼이 예시값과 함께 열려요.">활용</button>
+      <button data-cat="myqr" data-tip="내가 저장한 QR 보관함. 스튜디오에서 ‘현재 디자인 저장’을 누르면 여기 쌓입니다.">★ My QR</button>
     </div>
     <div id="myqrBar" style="display:none;margin:0 0 14px;display:none;align-items:center;gap:10px;flex-wrap:wrap">
       <button class="btn" id="saveMyQr" style="flex:none">＋ 현재 디자인 저장</button>
@@ -252,16 +295,16 @@
             <label class="fld">
               <div class="lbl">QR 연결 유형</div>
               <div class="seg" id="ctypeSeg">
-                <button data-ct="url" class="on">URL</button>
-                <button data-ct="text">텍스트</button>
-                <button data-ct="wifi">Wi-Fi</button>
-                <button data-ct="vcard">연락처</button>
-                <button data-ct="tel">전화</button>
-                <button data-ct="sms">문자</button>
-                <button data-ct="email">이메일</button>
-                <button data-ct="geo">위치</button>
+                <button data-ct="url" class="on" data-tip="웹사이트·유튜브·인스타 등 링크로 이동합니다. 가장 많이 쓰는 기본 유형이에요.">URL</button>
+                <button data-ct="text" data-tip="자유 문구를 담습니다. 스캔하면 텍스트가 그대로 표시돼요(쿠폰 코드·안내문 등).">텍스트</button>
+                <button data-ct="wifi" data-tip="네트워크 이름·비밀번호를 담아, 스캔 한 번으로 Wi-Fi에 자동 접속시켜요. 카페·매장에 유용.">Wi-Fi</button>
+                <button data-ct="vcard" data-tip="이름·전화·이메일을 담은 디지털 명함. 스캔하면 연락처에 바로 저장됩니다.">연락처</button>
+                <button data-ct="tel" data-tip="전화번호를 담습니다. 스캔하면 전화 앱에 번호가 떠서 바로 걸 수 있어요.">전화</button>
+                <button data-ct="sms" data-tip="받는 번호와 메시지를 미리 채워 문자 작성창을 엽니다(이벤트 참여 등).">문자</button>
+                <button data-ct="email" data-tip="받는사람·제목·내용을 채워 메일 작성창을 엽니다.">이메일</button>
+                <button data-ct="geo" data-tip="위도·경도를 담아 지도 앱에 위치 핀을 띄웁니다(매장 찾아오기).">위치</button>
               </div>
-              <div class="hint">스캔하면 바로 실행됩니다 — Wi-Fi 접속, 연락처 저장, 전화 걸기, 문자·메일 작성, 지도 열기.</div>
+              <div class="hint">각 버튼에 <b>마우스를 올리면</b> 설명이 나옵니다. 스캔하면 바로 실행 — Wi-Fi 접속, 연락처 저장, 전화·문자·메일, 지도 열기.</div>
             </label>
             <label class="fld" id="ctRaw">
               <div class="lbl" id="ctRawLbl">URL</div>
@@ -314,12 +357,12 @@
             <label class="fld">
               <div class="lbl">오류 정정 레벨 <b id="eccOut">H (30%)</b></div>
               <div class="seg" id="eccSeg">
-                <button data-ecc="L">L</button>
-                <button data-ecc="M">M</button>
-                <button data-ecc="Q">Q</button>
-                <button data-ecc="H" class="on">H</button>
+                <button data-ecc="L" data-tip="복원력 7%. 데이터가 짧아지지만 로고·아트에는 약해요.">L</button>
+                <button data-ecc="M" data-tip="복원력 15%. 일반 용도의 균형점.">M</button>
+                <button data-ecc="Q" data-tip="복원력 25%. 로고를 조금 넣을 때.">Q</button>
+                <button data-ecc="H" class="on" data-tip="복원력 30%(최대). 로고·아트·픽토그램을 크게 넣어도 스캔됩니다. 권장.">H</button>
               </div>
-              <div class="hint">높을수록 로고를 크게 넣어도 스캔이 됩니다. 로고 사용 시 <b>H</b> 권장.</div>
+              <div class="hint">오류가 나도 스스로 복원하는 여유량입니다. 높을수록 로고를 크게 넣어도 스캔돼요 — 로고·아트 사용 시 <b>H</b> 권장.</div>
             </label>
           </div>
         </details>
@@ -346,12 +389,12 @@
               </div>
               <button class="btn sec" id="artClear" style="margin-top:12px;flex:none;width:100%">아트 제거</button>
             </div>
-            <div class="hint" id="artHint">LemioCode(AI 아트 QR)의 원리를 <b>서버 없이</b> 재현하는 <b>즉시·무료</b> 모드입니다. 이미지의 <b>밝기를 모듈별로 조절(멀티플라이·스크린)</b>해 QR을 이미지에 녹여넣습니다. <b>영상·GIF</b>를 올리거나 <b>정적 이미지+애니메이션</b>을 켜면 움직이는 아트 QR이 됩니다. 최고 품질이 필요하면 아래 <b>AI 생성(서버)</b>을 사용하세요.</div>
+            <div class="hint" id="artHint"><b>즉시·무료</b> 아트 QR 모드입니다. 이미지가 QR 전체에 깔리고, 이미지의 <b>밝기를 모듈별로 조절</b>해 QR을 이미지에 녹여넣습니다. <b>영상·GIF</b>를 올리거나 <b>정적 이미지+애니메이션</b>을 켜면 움직이는 아트 QR이 됩니다. 최고 품질이 필요하면 아래 <b>AI 생성(서버)</b>을 사용하세요.</div>
           </div>
         </details>
 
         <details class="grp" id="grpAI" open>
-          <summary><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 5.8L20 10l-5.6 2.2L12 18l-2.4-5.8L4 10l5.6-2.2L12 2z" fill="currentColor"/><circle cx="19" cy="17" r="2.4" fill="currentColor"/><circle cx="5.5" cy="18.5" r="1.6" fill="currentColor"/></svg>AI 아트 QR<span style="margin-left:8px;font-size:10px;font-weight:700;color:#fff;background:linear-gradient(135deg,#f43f5e,#f97316);padding:2px 7px;border-radius:20px">서버 생성 · lemio급</span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
+          <summary><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 5.8L20 10l-5.6 2.2L12 18l-2.4-5.8L4 10l5.6-2.2L12 2z" fill="currentColor"/><circle cx="19" cy="17" r="2.4" fill="currentColor"/><circle cx="5.5" cy="18.5" r="1.6" fill="currentColor"/></svg>AI 아트 QR<span style="margin-left:8px;font-size:10px;font-weight:700;color:#fff;background:linear-gradient(135deg,#f43f5e,#f97316);padding:2px 7px;border-radius:20px">서버 생성 · 최고 품질</span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
           <div class="body">
             <label class="fld">
               <div class="lbl">프롬프트 (영어 권장 — 그릴 장면을 서술)</div>
@@ -375,7 +418,7 @@
               <button class="btn" id="aiGo">✨ AI로 생성 (5~30초)</button>
               <button class="btn sec" id="aiClear" style="display:none">AI 아트 제거</button>
             </div>
-            <div class="hint" id="aiStatus">Stable Diffusion + ControlNet(QR 전용)으로 <b>이미지를 처음부터 QR 명암 구조에 맞춰 생성</b>합니다 — lemio와 동일한 방식이라 모듈 격자가 보이지 않습니다. 생성 후 자동으로 <b>스캔 검증</b>하고, 실패하면 대비를 올려 재시도합니다. 기본 모델은 <b>zylim0702/qr_code_controlnet</b>이며, 서버에 <b>REPLICATE_API_TOKEN</b>만 등록하면 됩니다. (이미지당 약 $0.02)</div>
+            <div class="hint" id="aiStatus">Stable Diffusion + ControlNet(QR 전용)으로 <b>이미지를 처음부터 QR 명암 구조에 맞춰 생성</b>합니다 — 모듈 격자가 보이지 않는 최고 품질의 아트 QR입니다. 생성 후 자동으로 <b>스캔 검증</b>하고, 실패하면 대비를 올려 재시도합니다. 서버에 <b>REPLICATE_API_TOKEN</b>만 등록하면 됩니다. (이미지당 약 $0.02)</div>
           </div>
         </details>
 
@@ -618,45 +661,116 @@
   <!-- ============ ABOUT / ANALYSIS ============ -->
   <section class="view" id="view-about">
     <div class="about">
-      <h2 style="font-size:26px;margin:8px 0 4px">기술 분석 — LemioCode 컨셉 재현</h2>
-      <p style="font-size:13px;color:var(--mut2)">참고 사이트: <a href="https://lemiocode.com/gallery" target="_blank" rel="noopener">lemiocode.com/gallery</a> · 이 앱은 동일한 핵심 기술(미적·스캔가능 QR 생성)을 오픈소스로 재구현한 결과물입니다.</p>
+      <h2 style="font-size:26px;margin:8px 0 4px">사용법 가이드</h2>
+      <p style="font-size:13px;color:var(--mut2)">아름다운 QR 코드를 만드는 스튜디오입니다. 아래 순서대로 따라 하면 처음이라도 몇 분 안에 완성할 수 있어요. <button class="btn sec" id="replayOnboard" style="flex:none;padding:6px 14px;font-size:12px;margin-left:6px">첫 화면 안내 다시 보기</button></p>
 
-      <h3>컨셉</h3>
-      <p>LemioCode의 슬로건은 <b>“Transform the Ordinary”</b>입니다. 핵심은 단순 로고 삽입이 아니라, <b>이미지·영상·GIF 전체가 QR 코드 그 자체가 되는 “아트 QR”</b>입니다. 정적(이미지) QR과 애니메이션(영상/GIF) QR을 제공하고, 갤러리는 영감을 주는 샘플 쇼케이스입니다. 타깃은 마케팅 에이전시·이벤트 주최자·크리에이터입니다.</p>
-
-      <h3>실제 원본의 기술 — Stable Diffusion + ControlNet</h3>
-      <p>LemioCode는 <b>Stable Diffusion + ControlNet</b> 기반의 <b>AI 아트 QR</b>입니다(특허 출원 중 스캔 최적화). ControlNet이 QR 패턴을 “밝고 어두운 영역의 조건(condition)”으로 넣어, AI가 그림의 명암·질감·오브젝트 배치를 <b>QR 모듈에 맞춰</b> 생성합니다. 그 결과 그림 전체가 스캔 가능한 QR이 됩니다.</p>
-
-      <h3>이 앱의 재현 방식 — 서버 없이 “이미지가 QR 전체에 반영”</h3>
-      <p>브라우저에는 GPU 확산 모델이 없으므로, 동일한 <b>결과(그림이 코드 전체에 깔리고 스캔됨)</b>를 <b>이미지 블렌딩</b>으로 재현합니다. 업로드한 이미지/영상을 QR 영역 전체에 깔고, 각 셀을 <b>반투명 명암 오버레이</b>로 덮어 셀의 평균 밝기가 모듈(밝음/어둠)을 정확히 인코딩하게 합니다 — 그림은 셀마다 비쳐 보이고, 스캐너는 데이터를 읽습니다. “아트 노출도” 슬라이더로 그림 노출과 스캔 안정성을 조절합니다.</p>
-      <div class="feat">
-        <div class="f"><h4>1. 인코딩</h4><p>텍스트/URL → 오류정정 레벨(L/M/Q/H) QR 매트릭스 생성. 자동 버전. UTF-8로 한/일/이모지 지원.</p></div>
-        <div class="f"><h4>2. 🖼️ 이미지·영상 아트 QR</h4><p><b>핵심.</b> 미디어가 코드 전체를 덮고, 셀 단위 반투명 오버레이로 스캔성을 보장. 영상 업로드 시 애니메이션 QR + WebM 출력.</p></div>
-        <div class="f"><h4>3. 스타일 렌더링</h4><p>모듈 5종(사각·둥근·점·클래시·다이아)·눈 4종. 이웃 인식 라운딩으로 예쁘면서 잉크 커버리지 유지.</p></div>
-        <div class="f"><h4>4. 컬러/그라디언트</h4><p>단색·선형·원형 그라디언트. 실시간 대비 경고로 스캔성 보호.</p></div>
-        <div class="f"><h4>5. 로고 & 애니메이션</h4><p>중앙 로고 합성(ECC-H 복원력). 컬러 회전/펄스/스윕 애니메이션 + MediaRecorder WebM.</p></div>
-        <div class="f"><h4>6. 📷 마커 기반 AR</h4><p>추가 기능. 카메라로 QR을 비추면 <b>jsQR</b>로 실시간 인식 → 코너 좌표 위에 3D 큐브·정보 카드·네온 포탈을 얹어 표시. 100% 브라우저, 영상 비전송.</p></div>
+      <h3 style="margin-top:22px">3단계로 끝내기</h3>
+      <div class="guide-grid">
+        <div class="guide-card">
+          <div class="ic-badge">①</div>
+          <h4>연결 유형 고르기</h4>
+          <p><b>스튜디오 → 콘텐츠</b>에서 QR이 무엇을 하게 할지 고릅니다.</p>
+          <ul>
+            <li><b>URL</b> — 웹사이트로 이동</li>
+            <li><b>Wi-Fi</b> — 스캔 한 번에 자동 접속</li>
+            <li><b>연락처</b> — 명함처럼 저장</li>
+            <li><b>전화·문자·이메일</b> — 바로 실행</li>
+            <li><b>위치</b> — 지도에 핀 표시</li>
+          </ul>
+          <p style="margin-top:8px">각 버튼에 <b>마우스를 올리면</b> 설명이 뜹니다.</p>
+        </div>
+        <div class="guide-card">
+          <div class="ic-badge">②</div>
+          <h4>디자인 입히기</h4>
+          <p>갤러리에서 마음에 드는 카드를 클릭해 불러오거나, 스튜디오에서 직접 꾸밉니다.</p>
+          <ul>
+            <li><b>모듈·눈 형태</b>, <b>색상·그라디언트</b></li>
+            <li><b>이미지 아트 QR</b> — 사진을 QR 전체에</li>
+            <li><b>로고·픽토그램·라벨·프레임</b></li>
+          </ul>
+        </div>
+        <div class="guide-card">
+          <div class="ic-badge">③</div>
+          <h4>저장 & 활용</h4>
+          <p>미리보기 아래 버튼으로 내보내고 보관합니다.</p>
+          <ul>
+            <li><b>PNG / SVG</b> 다운로드</li>
+            <li>애니메이션은 <b>WebM 영상</b>으로</li>
+            <li><b>My QR</b>에 저장해 언제든 다시 편집</li>
+          </ul>
+        </div>
       </div>
 
-      <h3>이 구현의 기술 스택</h3>
-      <ul>
-        <li><b>QR 인코더</b>: Kazuhiko Arase의 <span class="kbd">qrcode-generator</span> (MIT) — Reed–Solomon 오류정정 포함, 검증된 스캔성.</li>
-        <li><b>렌더링</b>: 순수 <span class="kbd">Canvas 2D API</span> — 커스텀 모듈/눈 형태, 그라디언트, 로고 합성.</li>
-        <li><b>벡터 출력</b>: 런타임 <span class="kbd">SVG</span> 생성(모듈별 path/circle + gradient defs).</li>
-        <li><b>애니메이션 캡처</b>: 브라우저 내장 <span class="kbd">MediaRecorder</span> + <span class="kbd">canvas.captureStream()</span> → WebM.</li>
-        <li><b>의존성 0(런타임)</b>: 빌드 없이 단일 HTML. 오프라인 동작, 서버 불필요(프라이버시 — 데이터가 기기를 떠나지 않음).</li>
-      </ul>
+      <h3 style="margin-top:26px">기능별 사용법</h3>
+      <div class="guide-grid">
+        <div class="guide-card">
+          <span class="tag2">갤러리</span>
+          <div class="ic-badge">🖼️</div>
+          <h4>디자인 갤러리</h4>
+          <p>Standard·Animation·Logo·Pictogram·Frame·활용 카테고리의 예시를 클릭하면 그 디자인이 스튜디오로 <b>그대로 불러와져</b> 편집됩니다. 상단 탭에 마우스를 올리면 각 카테고리 설명이 나와요.</p>
+        </div>
+        <div class="guide-card">
+          <span class="tag2">아트 QR</span>
+          <div class="ic-badge">📷</div>
+          <h4>이미지·영상·GIF 아트 QR</h4>
+          <p>사진을 올리면 QR 전체에 깔립니다. <b>아트 노출도</b> 슬라이더로 사진 선명도 ↔ 스캔 안정성을 조절해요. <b>영상·GIF</b>를 올리거나 정적 이미지에 <b>애니메이션</b>을 켜면 움직이는 QR이 됩니다.</p>
+        </div>
+        <div class="guide-card">
+          <span class="tag2">AI</span>
+          <div class="ic-badge">✨</div>
+          <h4>AI 아트 QR (서버)</h4>
+          <p>프롬프트(또는 스타일 프리셋)를 넣고 생성하면 AI가 <b>이미지를 처음부터 QR 구조에 맞춰</b> 만들어 최고 품질이 나옵니다. 생성 후 자동으로 스캔 검증합니다. <span class="kbd">REPLICATE_API_TOKEN</span> 서버 등록이 필요해요.</p>
+        </div>
+        <div class="guide-card">
+          <span class="tag2">애니메이션</span>
+          <div class="ic-badge">🎞️</div>
+          <h4>움직이는 QR</h4>
+          <p>샤인·회전·펄스·스윕 효과를 켜면 미리보기에서 실시간으로 움직이고, <b>애니메이션 저장</b>으로 WebM 영상을 내보냅니다. QR 패턴은 고정이라 모든 프레임이 스캔됩니다.</p>
+        </div>
+        <div class="guide-card">
+          <span class="tag2">My QR</span>
+          <div class="ic-badge">★</div>
+          <h4>내 QR 보관함</h4>
+          <p>스튜디오에서 <b>＋ 현재 디자인 저장</b>을 누르면 갤러리의 <b>★ My QR</b> 탭에 쌓입니다. 언제든 클릭해 다시 불러와 편집·다운로드할 수 있어요(기기에만 저장, 서버 전송 없음).</p>
+        </div>
+        <div class="guide-card">
+          <span class="tag2">AR</span>
+          <div class="ic-badge">🕶️</div>
+          <h4>증강현실(AR)</h4>
+          <p><b>AR</b> 탭에서 카메라로 QR을 비추면 실시간 인식해 그 위에 3D·정보 카드를 얹어 보여줍니다. 100% 브라우저에서 처리되고 영상은 전송되지 않습니다.</p>
+        </div>
+      </div>
 
-      <h3>스캔성 검증</h3>
-      <p>이 앱으로 만든 코드는 실제로 스캔되어야 의미가 있습니다. 미리보기 하단에 예상 스캔성 지표를 표시하며, 대비가 낮거나 로고가 너무 크면 경고합니다. 개발 과정에서 헤드리스 브라우저 + <span class="kbd">jsQR</span> 디코더로 생성 결과를 자동 디코딩해 스캔 가능함을 검증했습니다.</p>
+      <h3 style="margin-top:26px">알아두면 좋은 팁</h3>
+      <ul>
+        <li>로고·아트·픽토그램을 넣을 땐 <b>오류정정 H</b>가 자동 권장됩니다(복원력 30%).</li>
+        <li>미리보기 아래 <b>상태줄</b>에 예상 스캔성이 표시돼요 — 경고가 뜨면 대비를 높이거나 노출도를 낮추세요.</li>
+        <li>모든 처리는 <b>브라우저 안에서만</b> 이뤄집니다(AI 생성 제외). 사진·데이터가 기기를 떠나지 않아요.</li>
+        <li>인쇄하거나 화면에 띄운 뒤 <b>실제로 휴대폰으로 스캔</b>해 최종 확인하는 것을 권장합니다.</li>
+      </ul>
     </div>
   </section>
 
   <footer>
-    <div>Aesthetic QR Studio · LemioCode 컨셉을 오픈소스로 재구현 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
+    <div>Aesthetic QR Studio · 아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.05-l</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.06-a</b></div>
   </footer>
+</div>
+
+<!-- ===== first-visit onboarding modal ===== -->
+<div class="ob-mask" id="obMask">
+  <div class="ob-card">
+    <h2>QR 스튜디오에 오신 걸 환영합니다 👋</h2>
+    <div class="sub">아름답고 실제로 스캔되는 QR 코드를 몇 분 만에 만들어 보세요.</div>
+    <div class="ob-step"><div class="n">1</div><div><h4>연결 유형 고르기</h4><p><b>콘텐츠</b>에서 URL·Wi-Fi·연락처·전화·문자·이메일·위치 중 QR이 할 일을 고릅니다. 버튼에 마우스를 올리면 설명이 떠요.</p></div></div>
+    <div class="ob-step"><div class="n">2</div><div><h4>디자인 입히기</h4><p><b>갤러리</b>에서 예시를 클릭하거나, <b>스튜디오</b>에서 색상·모듈·이미지 아트·로고·프레임을 직접 꾸밉니다.</p></div></div>
+    <div class="ob-step"><div class="n">3</div><div><h4>저장 & 활용</h4><p>PNG·SVG로 내보내거나 애니메이션은 WebM으로, <b>My QR</b>에 저장해 언제든 다시 편집하세요.</p></div></div>
+    <div class="ob-actions">
+      <button class="btn sec" id="obGuide" style="flex:none">자세한 사용법</button>
+      <button class="btn" id="obStart">시작하기</button>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -2995,7 +3109,7 @@ var S = {
   labelSize: 100,      // % font size (tight)
   labelPos: "bottom",  // bottom | top
   labelOffset: 0,      // -100..100 fine vertical nudge (negative = up)
-  // ---- full-image "art QR" (LemioCode-style: media covers the whole code) ----
+  // ---- full-image "art QR" (media covers the whole code) ----
   artImg: null,        // HTMLImageElement or HTMLVideoElement used as full background
   aiArt: null,         // server-generated (SD+ControlNet) art QR image — the image IS the QR
   artIsVideo: false,   // true when the uploaded media is a video → animated QR
@@ -3003,7 +3117,7 @@ var S = {
   artVisibility: 72,   // % — higher = artwork shows more, lower = more scannable
   artInvert: false,    // invert dark/light overlay (for dark artworks)
   artDensity: 6,       // min QR version for art (higher = more, smaller modules; finer look)
-  // ---- framed background (LemioCode-style card on a coloured backdrop) ----
+  // ---- framed background (card on a coloured backdrop) ----
   frameOn: false,      // draw an outer backdrop + white rounded card around the QR
   frameStyle: "card",  // card | wood | gold | polaroid | shadow | neon
   frameMode: "solid",  // solid | linear | radial  (backdrop fill)
@@ -3322,7 +3436,7 @@ function render(g2, exportSize){
     try { g.drawImage(S.aiArt, xoff, topPad, avail, avail); } catch(e){}
     g.restore();
   } else if (S.artImg){
-    // ===== lemio-style art QR: artwork fills the canvas, QR zone centred =====
+    // ===== art QR: artwork fills the canvas, QR zone centred =====
     drawArtLayer(g, size, n, m);
   } else {
     // ===== styled vector QR mode =====
@@ -3523,13 +3637,13 @@ function drawArtMark(g, cx, cy, r, shape){
     default:        g.beginPath(); g.arc(cx, cy, r, 0, Math.PI*2); g.fill();  // dots (circle)
   }
 }
-// LemioCode-style blending, client-side: the artwork stays BRIGHT and fills the whole QR;
+// Client-side blending: the artwork stays BRIGHT and fills the whole QR;
 // each module keeps a small opaque centre dot (the scanner samples module centres, so a
 // solid dot there guarantees the read) plus a faint full-cell luminance bias. Result: the
 // image reads clearly across the entire code while staying scannable. Higher "visibility"
 // shrinks the dots + fades the bias (more artwork). Finders stay solid.
-// ================= lemio-style art QR =================
-// Composition matches the lemiocode gallery: the artwork fills the ENTIRE canvas; the QR sits
+// ================= art QR (image woven into the code) =================
+// Composition: the artwork fills the ENTIRE canvas; the QR sits
 // in a centred zone wrapped by a clean ring (the quiet zone). Inside, the image shows through
 // a pastel veil and the data reads as crisp OPAQUE micro-dots at module centres, with finders,
 // alignment patterns and the timing row drawn solid. Safari-safe by construction: source-over
@@ -4246,6 +4360,24 @@ $("tabs").addEventListener("click",function(e){
   if(b.dataset.view==="ar") AR.refresh(); else AR.leave();
   if(b.dataset.view==="gallery"){ if(curCat==="animation" && typeof startGalAnim==="function") startGalAnim(); } else if(typeof stopGalAnim==="function"){ stopGalAnim(); }
 });
+function gotoView(v){
+  Array.prototype.forEach.call($("tabs").children,function(x){x.classList.toggle("active", x.dataset.view===v);});
+  ["gallery","studio","ar","about"].forEach(function(k){ $("view-"+k).classList.toggle("active", k===v); });
+  if(v==="studio") rerender();
+  if(v==="ar") AR.refresh(); else AR.leave();
+  if(typeof stopGalAnim==="function" && v!=="gallery") stopGalAnim();
+  window.scrollTo(0,0);
+}
+
+// ---------- first-visit onboarding ----------
+var OBKEY="aqr_onboarded_v1";
+function showOnboard(){ $("obMask").classList.add("show"); }
+function hideOnboard(){ $("obMask").classList.remove("show"); try{ localStorage.setItem(OBKEY,"1"); }catch(e){} }
+$("obStart").addEventListener("click",hideOnboard);
+$("obGuide").addEventListener("click",function(){ hideOnboard(); gotoView("about"); });
+$("obMask").addEventListener("click",function(e){ if(e.target===this) hideOnboard(); });
+if($("replayOnboard")) $("replayOnboard").addEventListener("click",showOnboard);
+try{ if(!localStorage.getItem(OBKEY)) setTimeout(showOnboard, 600); }catch(e){}
 
 // ---------- AR (marker-based: detect a QR in the camera, overlay 3D content) ----------
 var AR = (function(){
