@@ -121,6 +121,13 @@
   .picto-grid button{aspect-ratio:1;font-size:20px;line-height:1;background:var(--bg2);border:1px solid var(--line2);border-radius:8px;cursor:pointer;padding:0;transition:.1s}
   .picto-grid button.on{border-color:var(--acc);background:linear-gradient(135deg,rgba(124,92,255,.25),rgba(34,211,238,.18))}
   .picto-grid button:hover{border-color:var(--acc)}
+  .picto-grid button canvas{width:100%;height:100%;display:block}
+  .seg.seg-wrap{display:flex;flex-wrap:wrap;height:auto;gap:4px;padding:4px}
+  .seg.seg-wrap button{flex:0 0 auto;padding:6px 10px;border-radius:8px}
+  .logo-examples{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+  .logo-examples:empty{display:none}
+  .logo-examples canvas{width:100%;aspect-ratio:1;border-radius:10px;border:1px solid var(--line2);cursor:pointer;background:#fff;transition:.15s}
+  .logo-examples canvas:hover{border-color:var(--acc);transform:translateY(-2px)}
   .file-btn{display:block;text-align:center;background:var(--bg2);border:1px dashed var(--line2);border-radius:9px;padding:12px;font-size:12.5px;color:var(--mut);cursor:pointer;transition:.15s}
   .file-btn:hover{border-color:var(--acc);color:var(--txt)}
   input[type=file]{display:none}
@@ -608,6 +615,7 @@
               <div class="seg" id="centerModeSeg">
                 <button data-cmode="none" class="on"><span data-i18n="seg.cmode.none">없음</span></button>
                 <button data-cmode="text"><span data-i18n="seg.cmode.text">텍스트 로고</span></button>
+                <button data-cmode="mark"><span data-i18n="seg.cmode.mark">마크</span></button>
                 <button data-cmode="emoji"><span data-i18n="seg.cmode.emoji">픽토그램</span></button>
               </div>
             </label>
@@ -617,6 +625,27 @@
                 <input type="text" id="centerText" value="BRAND" maxlength="16" />
                 <div class="hint" id="centerTextHint">기업/브랜드명을 입력하세요(짧을수록 선명).</div>
               </label>
+              <div class="fld" id="centerBadgeWrap" style="display:none">
+                <div class="lbl" data-i18n="lbl.centerBadge">배지 모양</div>
+                <div class="seg seg-wrap" id="centerBadgeSeg">
+                  <button data-badge="pill" class="on"><span data-i18n="seg.badge.pill">알약</span></button>
+                  <button data-badge="rounded"><span data-i18n="seg.badge.rounded">둥근사각</span></button>
+                  <button data-badge="circle"><span data-i18n="seg.badge.circle">원형</span></button>
+                  <button data-badge="hexagon"><span data-i18n="seg.badge.hexagon">육각형</span></button>
+                  <button data-badge="shield"><span data-i18n="seg.badge.shield">방패</span></button>
+                  <button data-badge="ribbon"><span data-i18n="seg.badge.ribbon">리본</span></button>
+                  <button data-badge="none"><span data-i18n="seg.badge.none">없음</span></button>
+                </div>
+              </div>
+              <div class="fld" id="markPickerWrap" style="display:none">
+                <div class="lbl" data-i18n="lbl.markPick">마크 심볼 — 클릭해서 변경</div>
+                <div id="markPicker" class="picto-grid"></div>
+              </div>
+              <div class="fld" id="genLogoWrap" style="display:none">
+                <button class="btn sec" id="genLogoBtn" type="button" data-i18n="btn.genLogo">✨ 브랜드명으로 예시 4개 생성</button>
+                <div class="hint" data-i18n="hint.genLogo">브랜드명을 입력하고 누르면 배지·색상·심볼을 조합한 로고 예시 4개를 만들어요. 마음에 드는 예시를 누르면 바로 적용됩니다.</div>
+                <div id="logoExamples" class="logo-examples"></div>
+              </div>
               <div class="fld" id="pictoPickerWrap" style="display:none">
                 <div class="lbl" data-i18n="lbl.pictoPick">픽토그램 소스 — 클릭해서 변경</div>
                 <div id="pictoPicker" class="picto-grid"></div>
@@ -729,7 +758,7 @@
   <footer>
     <div>Aesthetic QR Studio · 아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.06-d</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.06-e</b></div>
   </footer>
 </div>
 
@@ -3100,10 +3129,12 @@ var S = {
   frameBg2: "#0b3d22",
   frameAngle: 135,
   // ---- centre content: text wordmark (Logo) or emoji symbol (Pictogram) ----
-  centerMode: "none",  // none | text | emoji
+  centerMode: "none",  // none | text | mark | emoji
   centerText: "",      // wordmark text, or a single emoji
   centerColor: "#111111",
-  centerScale: 24      // % of QR width
+  centerScale: 24,     // % of QR width
+  centerBadge: "pill", // pill|rounded|circle|hexagon|shield|ribbon|none
+  centerMark: "monogram"
 };
 
 var $ = function(id){ return document.getElementById(id); };
@@ -3316,6 +3347,35 @@ var ICONS = {
   mail:function(g,cx,cy,r,col){g.fillStyle=col;roundRect(g,cx-r,cy-r*0.7,2*r,r*1.4,r*0.15);g.fill();g.strokeStyle="#00000040";g.lineWidth=r*0.14;g.lineJoin="round";g.beginPath();g.moveTo(cx-r*0.85,cy-r*0.5);g.lineTo(cx,cy+r*0.2);g.lineTo(cx+r*0.85,cy-r*0.5);g.stroke();}
 };
 function drawIcon(g,name,cx,cy,r,col){ var f=ICONS[name]; if(f){ g.save(); f(g,cx,cy,r,col||"#fff"); g.restore(); } }
+// ---- brand-mark emblems (abstract, non-trademarked) ----
+ICONS.swoosh=function(g,cx,cy,r,col){g.fillStyle=col;g.beginPath();g.moveTo(cx-r,cy+r*0.55);g.quadraticCurveTo(cx+r*0.2,cy-r*0.05,cx+r,cy-r*0.95);g.quadraticCurveTo(cx+r*0.05,cy+r*0.25,cx-r*0.6,cy+r*0.8);g.closePath();g.fill();};
+ICONS.stripes=function(g,cx,cy,r,col){g.fillStyle=col;g.save();g.translate(cx,cy);g.rotate(-0.32);var bw=r*0.30,gap=r*0.22,h=r*1.7,tot=3*bw+2*gap,x0=-tot/2;for(var i=0;i<3;i++){roundRect(g,x0+i*(bw+gap),-h/2,bw,h,bw*0.35);g.fill();}g.restore();};
+ICONS.mountain=function(g,cx,cy,r,col){g.fillStyle=col;g.beginPath();g.moveTo(cx-r,cy+r*0.7);g.lineTo(cx-r*0.28,cy-r*0.5);g.lineTo(cx+r*0.12,cy+r*0.1);g.lineTo(cx+r*0.55,cy-r*0.85);g.lineTo(cx+r,cy+r*0.7);g.closePath();g.fill();};
+ICONS.orbit=function(g,cx,cy,r,col){g.strokeStyle=col;g.lineWidth=r*0.16;g.save();g.translate(cx,cy);g.rotate(-0.5);g.beginPath();g.ellipse(0,0,r,r*0.48,0,0,7);g.stroke();g.restore();g.fillStyle=col;g.beginPath();g.arc(cx,cy,r*0.3,0,7);g.fill();g.beginPath();g.arc(cx+r*0.92,cy-r*0.3,r*0.14,0,7);g.fill();};
+ICONS.wave=function(g,cx,cy,r,col){g.strokeStyle=col;g.lineWidth=r*0.24;g.lineCap="round";for(var k=-1;k<=1;k++){g.beginPath();var yy=cy+k*r*0.52;g.moveTo(cx-r,yy);g.bezierCurveTo(cx-r*0.35,yy-r*0.55,cx+r*0.35,yy+r*0.55,cx+r,yy);g.stroke();}};
+ICONS.hexmark=function(g,cx,cy,r,col){g.strokeStyle=col;g.lineWidth=r*0.2;g.lineJoin="round";g.beginPath();for(var i=0;i<6;i++){var a=-Math.PI/2+i*Math.PI/3;g[i?'lineTo':'moveTo'](cx+Math.cos(a)*r,cy+Math.sin(a)*r);}g.closePath();g.stroke();};
+ICONS.ring=function(g,cx,cy,r,col){g.strokeStyle=col;g.lineWidth=r*0.28;g.beginPath();g.arc(cx,cy,r*0.72,0,7);g.stroke();g.fillStyle=col;g.beginPath();g.arc(cx,cy,r*0.22,0,7);g.fill();};
+// ---- logo badge (backing shape) ----
+function shieldPath(g,cx,cy,w,h){var x0=cx-w/2,y0=cy-h/2,r=w*0.18;g.beginPath();g.moveTo(x0+r,y0);g.lineTo(x0+w-r,y0);g.quadraticCurveTo(x0+w,y0,x0+w,y0+r);g.lineTo(x0+w,y0+h*0.5);g.quadraticCurveTo(x0+w,y0+h*0.84,cx,y0+h);g.quadraticCurveTo(x0,y0+h*0.84,x0,y0+h*0.5);g.lineTo(x0,y0+r);g.quadraticCurveTo(x0,y0,x0+r,y0);g.closePath();}
+function ribbonPath(g,cx,cy,w,h){var x=cx-w/2,y=cy-h/2,notch=h*0.42;g.beginPath();g.moveTo(x,y);g.lineTo(x+w,y);g.lineTo(x+w-notch,cy);g.lineTo(x+w,y+h);g.lineTo(x,y+h);g.lineTo(x+notch,cy);g.closePath();}
+function drawBadge(g,cx,cy,w,h,shape){
+  if(shape==="none") return;
+  var x=cx-w/2,y=cy-h/2;
+  if(shape==="pill"){ roundRect(g,x,y,w,h,Math.min(w,h)*0.5); g.fill(); }
+  else if(shape==="rounded"){ roundRect(g,x,y,w,h,Math.min(w,h)*0.26); g.fill(); }
+  else if(shape==="circle"){ var rr=Math.max(w,h)/2; g.beginPath(); g.arc(cx,cy,rr,0,7); g.fill(); }
+  else if(shape==="hexagon"){ var R=Math.max(w,h)/2*1.1; g.beginPath(); for(var i=0;i<6;i++){var a=-Math.PI/2+i*Math.PI/3; g[i?'lineTo':'moveTo'](cx+Math.cos(a)*R,cy+Math.sin(a)*R);} g.closePath(); g.fill(); }
+  else if(shape==="shield"){ var W=Math.max(w,h)*1.02,H=W*1.14; shieldPath(g,cx,cy,W,H); g.fill(); }
+  else if(shape==="ribbon"){ ribbonPath(g,cx,cy,w*1.18,h); g.fill(); }
+  else { roundRect(g,x,y,w,h,Math.min(w,h)*0.5); g.fill(); }
+}
+function drawMonogram(g,cx,cy,isz,text,col){
+  var init=((text||"B").replace(/[^A-Za-z0-9\uac00-\ud7a3]/g,"")||"B").slice(0,2).toUpperCase();
+  var fs=isz*(init.length>1?0.46:0.64);
+  g.fillStyle=col; g.textAlign="center"; g.textBaseline="middle";
+  g.font="800 "+fs+"px -apple-system,'Noto Sans KR',Pretendard,sans-serif";
+  g.fillText(init,cx,cy+fs*0.04);
+}
 function classyRect(g,x,y,w,h,r){
   r=Math.min(r,w/2,h/2);
   g.beginPath();
@@ -3460,7 +3520,7 @@ function render(g2, exportSize){
   }
 
   // centre content — text wordmark (Logo) or emoji symbol (Pictogram). Relies on ECC-H.
-  if (!S.aiArt && S.centerMode!=="none" && S.centerText){
+  if (!S.aiArt && S.centerMode!=="none" && (S.centerText || S.centerMode==="mark")){
     var qarea = n*unit;
     var isz = (S.centerScale/100) * qarea;
     var icx = ox + qarea/2, icy = oy + qarea/2;
@@ -3472,16 +3532,23 @@ function render(g2, exportSize){
       g.fillStyle = bgc; roundRect(g, icx-isz/2-pad, icy-isz/2-pad, isz+2*pad, isz+2*pad, isz*0.24); g.fill();
       g.font = Math.round(isz*0.96)+"px 'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif";
       g.fillText(S.centerText, icx, icy+isz*0.02);
+    } else if (S.centerMode==="mark"){
+      // vector brand mark on a badge — the badge forms the quiet zone
+      var mpad = isz*0.18, mbw = isz+2*mpad;
+      g.fillStyle = bgc; drawBadge(g, icx, icy, mbw, mbw, S.centerBadge);
+      if (S.centerMark==="monogram"){ drawMonogram(g, icx, icy, isz, S.centerText, S.centerColor); }
+      else { drawIcon(g, S.centerMark, icx, icy, isz*0.42, S.centerColor); }
     } else {
-      // text wordmark on a horizontal pill sized to the text
+      // text wordmark on a badge (shape) sized to the text
       var fs = isz*0.52;
       g.font = "800 "+fs+"px -apple-system,'Noto Sans KR',Pretendard,sans-serif";
       var tw = g.measureText(S.centerText).width;
       var maxW = qarea*0.5;
       while (fs>10 && tw>maxW){ fs*=0.92; g.font="800 "+fs+"px -apple-system,'Noto Sans KR',Pretendard,sans-serif"; tw=g.measureText(S.centerText).width; }
-      var padX = fs*0.55, padY = fs*0.42;
+      var padX = fs*0.62, padY = fs*0.45;
       var pw = tw+padX*2, ph = fs+padY*2;
-      g.fillStyle = bgc; roundRect(g, icx-pw/2, icy-ph/2, pw, ph, ph*0.32); g.fill();
+      if (S.centerBadge==="circle"||S.centerBadge==="hexagon"||S.centerBadge==="shield"){ var d=Math.max(pw,ph); pw=d; ph=d; }
+      g.fillStyle = bgc; drawBadge(g, icx, icy, pw, ph, S.centerBadge);
       g.fillStyle = S.centerColor; g.fillText(S.centerText, icx, icy+fs*0.04);
     }
   }
@@ -4286,18 +4353,63 @@ function buildPictoPicker(){
 }
 function syncPictoSel(){ var box=$("pictoPicker"); if(!box) return; Array.prototype.forEach.call(box.children,function(x){x.classList.toggle("on",x.textContent===S.centerText);}); }
 function centerUIvis(){
-  var on=S.centerMode!=="none", emoji=(S.centerMode==="emoji");
+  var m=S.centerMode, on=m!=="none", emoji=(m==="emoji"), mark=(m==="mark"), text=(m==="text");
   $("centerControls").style.display=on?"block":"none";
-  $("centerColorWrap").style.display=(S.centerMode==="text")?"block":"none";
-  $("centerTextLbl").textContent=emoji?t("ctr.lblEmoji"):t("ctr.lblText");
-  $("centerTextHint").textContent=emoji?t("ctr.hintEmoji"):t("ctr.hintText");
+  $("centerColorWrap").style.display=(text||mark)?"block":"none";
+  $("centerTextLbl").textContent=emoji?t("ctr.lblEmoji"):(mark?t("ctr.lblMark"):t("ctr.lblText"));
+  $("centerTextHint").textContent=emoji?t("ctr.hintEmoji"):(mark?t("ctr.hintMark"):t("ctr.hintText"));
   $("pictoPickerWrap").style.display=emoji?"block":"none";
+  $("centerBadgeWrap").style.display=(text||mark)?"block":"none";
+  $("markPickerWrap").style.display=mark?"block":"none";
+  $("genLogoWrap").style.display=(text||mark)?"block":"none";
   if(emoji) syncPictoSel();
+  if(mark) syncMarkSel();
 }
 $("centerModeSeg").addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b)return; Array.prototype.forEach.call(this.children,function(x){x.classList.remove("on");}); b.classList.add("on"); S.centerMode=b.dataset.cmode; if(S.centerMode!=="none"){ if(!S.centerText || (S.centerMode==="emoji")!==/\p{Emoji}/u.test(S.centerText||"a")) S.centerText=(S.centerMode==="emoji")?"⭐":"BRAND"; $("centerText").value=S.centerText; if(S.ecc!=="H") setEcc("H"); } centerUIvis(); rerender(); });
 $("centerText").addEventListener("input",function(e){ S.centerText=e.target.value; syncPictoSel(); rerender(); });
 $("centerColor").addEventListener("input",function(e){ S.centerColor=e.target.value; rerender(); });
 $("centerScale").addEventListener("input",function(e){ S.centerScale=+e.target.value; $("centerScaleOut").textContent=e.target.value+"%"; rerender(); });
+$("centerBadgeSeg").addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b)return; S.centerBadge=b.dataset.badge; Array.prototype.forEach.call(this.children,function(x){x.classList.toggle("on",x===b);}); rerender(); });
+$("genLogoBtn").addEventListener("click",function(){ buildLogoExamples(); });
+var MARKS=["monogram","swoosh","stripes","mountain","orbit","wave","hexmark","ring","bolt","leaf","flame","star","play","check","paw","music"];
+function paintMarkThumb(g,key,sz){
+  g.clearRect(0,0,sz,sz);
+  var col=(getComputedStyle(document.documentElement).getPropertyValue("--fg")||"").trim()||"#e8ecf3";
+  if(key==="monogram"){ g.fillStyle=col; g.textAlign="center"; g.textBaseline="middle"; g.font="800 15px -apple-system,sans-serif"; g.fillText("A",sz/2,sz/2+1); }
+  else { drawIcon(g,key,sz/2,sz/2,sz*0.34,col); }
+}
+function buildMarkPicker(){
+  var box=$("markPicker"); if(!box) return; box.innerHTML="";
+  MARKS.forEach(function(key){
+    var b=document.createElement("button"); b.type="button"; b.dataset.mark=key;
+    var c=document.createElement("canvas"); c.width=c.height=30; paintMarkThumb(c.getContext("2d"),key,30);
+    b.appendChild(c);
+    if(key===S.centerMark) b.classList.add("on");
+    b.addEventListener("click",function(){ S.centerMark=key; if(S.centerMode!=="mark") S.centerMode="mark"; if(S.ecc!=="H") setEcc("H"); Array.prototype.forEach.call(box.children,function(x){x.classList.toggle("on",x.dataset.mark===key);}); syncFrameIconUI(); rerender(); });
+    box.appendChild(b);
+  });
+}
+function syncMarkSel(){ var box=$("markPicker"); if(!box) return; Array.prototype.forEach.call(box.children,function(x){x.classList.toggle("on",x.dataset.mark===S.centerMark);}); }
+function pickMark(brand){ var opts=["bolt","leaf","flame","star","mountain","orbit","swoosh","wave"]; var c=(brand||"B").charCodeAt(0)||66; return opts[c%opts.length]; }
+function logoRecipes(brand){
+  var mk=pickMark(brand);
+  return [
+    {centerText:brand,fill:"linear",fg1:"#4f46e5",fg2:"#7c3aed",angle:120,bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"text",centerBadge:"rounded",centerColor:"#4f46e5",centerScale:26,ecc:"H"},
+    {centerText:brand,fill:"solid",fg1:"#0f172a",bg:"#ffffff",dot:"rounded",eye:"circle",centerMode:"mark",centerMark:"monogram",centerBadge:"circle",centerColor:"#0f172a",centerScale:22,ecc:"H"},
+    {centerText:brand,fill:"solid",fg1:"#e11d48",bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"text",centerBadge:"pill",centerColor:"#e11d48",centerScale:24,ecc:"H"},
+    {centerText:brand,fill:"solid",fg1:"#f5c542",bg:"#0b0d12",dot:"classy",eye:"leaf",centerMode:"mark",centerMark:mk,centerBadge:"shield",centerColor:"#f5c542",centerScale:24,ecc:"H"}
+  ];
+}
+function buildLogoExamples(){
+  var wrap=$("logoExamples"); if(!wrap) return; wrap.innerHTML="";
+  var brand=(S.centerText&&S.centerText.trim())?S.centerText.trim():"BRAND";
+  logoRecipes(brand).forEach(function(rp){
+    var c=document.createElement("canvas"); c.width=c.height=150;
+    renderPreset(c, rp);
+    c.addEventListener("click",function(){ applyPreset(rp); });
+    wrap.appendChild(c);
+  });
+}
 function setEcc(v){ S.ecc=v; Array.prototype.forEach.call($("eccSeg").children,function(x){x.classList.toggle("on",x.dataset.ecc===v);}); $("eccOut").textContent=v+" ("+({L:"7%",M:"15%",Q:"25%",H:"30%"})[v]+")"; }
 function syncFrameIconUI(){
   $("frameOn").checked=S.frameOn; $("frameControls").style.display=S.frameOn?"block":"none";
@@ -4307,6 +4419,7 @@ function syncFrameIconUI(){
   frameStyleVis();
   Array.prototype.forEach.call($("centerModeSeg").children,function(x){x.classList.toggle("on",x.dataset.cmode===S.centerMode);});
   $("centerText").value=S.centerText||""; $("centerColor").value=S.centerColor; $("centerScale").value=S.centerScale; $("centerScaleOut").textContent=S.centerScale+"%";
+  Array.prototype.forEach.call($("centerBadgeSeg").children,function(x){x.classList.toggle("on",x.dataset.badge===S.centerBadge);});
   centerUIvis();
 }
 // open the studio control groups relevant to a chosen preset so its editable options are visible
@@ -4508,8 +4621,8 @@ $("featureChips").addEventListener("click",function(e){
 });
 
 // ---------- gallery: categorised presets ----------
-var DKEYS=["fill","fg1","fg2","angle","transparent","bg","dot","eye","margin","ecc","anim","animKind","animSpeed","frameOn","frameStyle","frameMode","frameBg1","frameBg2","frameAngle","centerMode","centerText","centerColor","centerScale","artVisibility","artDensity","artInvert","labelOn","labelText","labelSize","labelPos","labelOffset"];
-var DDEF={fill:"solid",fg1:"#111111",fg2:"#111111",angle:45,transparent:false,bg:"#ffffff",dot:"square",eye:"square",margin:4,ecc:"H",anim:false,animKind:"shine",animSpeed:1,frameOn:false,frameStyle:"card",frameMode:"solid",frameBg1:"#0e7a3b",frameBg2:"#0b3d22",frameAngle:135,centerMode:"none",centerText:"",centerColor:"#111111",centerScale:24,artVisibility:70,artDensity:6,artInvert:false,labelOn:false,labelText:"SCAN ME",labelSize:100,labelPos:"bottom",labelOffset:0};
+var DKEYS=["fill","fg1","fg2","angle","transparent","bg","dot","eye","margin","ecc","anim","animKind","animSpeed","frameOn","frameStyle","frameMode","frameBg1","frameBg2","frameAngle","centerMode","centerText","centerColor","centerScale","centerBadge","centerMark","artVisibility","artDensity","artInvert","labelOn","labelText","labelSize","labelPos","labelOffset"];
+var DDEF={fill:"solid",fg1:"#111111",fg2:"#111111",angle:45,transparent:false,bg:"#ffffff",dot:"square",eye:"square",margin:4,ecc:"H",anim:false,animKind:"shine",animSpeed:1,frameOn:false,frameStyle:"card",frameMode:"solid",frameBg1:"#0e7a3b",frameBg2:"#0b3d22",frameAngle:135,centerMode:"none",centerText:"",centerColor:"#111111",centerScale:24,centerBadge:"pill",centerMark:"monogram",artVisibility:70,artDensity:6,artInvert:false,labelOn:false,labelText:"SCAN ME",labelSize:100,labelPos:"bottom",labelOffset:0};
 function resetDesign(fullArt){ for(var k in DDEF) S[k]=DDEF[k]; S.logo=null; S.artImg=null; S.artIsVideo=false; S.artIsGif=false; S.aiArt=null; if(fullArt && typeof removeArtVid==="function") removeArtVid(); }
 // load real web images (CORS-enabled host) for image-based gallery presets
 var IMGCACHE={};
@@ -5238,7 +5351,21 @@ var I18N = {
   "art.sceneOk":{ko:'✓ 장면 아트 적용됨 — 내 이미지/영상/GIF로 교체하려면 클릭',en:'✓ Scene art applied — click to replace with your image/video/GIF',zh:'✓ 已应用场景艺术 — 点击用你的图片/视频/GIF 替换',ja:'✓ シーンアート適用済み — 自分の画像/動画/GIFに置換するにはクリック'},
   "gal.edit":{ko:'편집하기 →',en:'Edit →',zh:'编辑 →',ja:'編集 →'},
   "chip.art":{ko:'🖼️ 이미지·영상 아트',en:'🖼️ Image / Video art',zh:'🖼️ 图片·视频艺术',ja:'🖼️ 画像・動画アート'},
-  "chip.anim":{ko:'✨ 애니메이션',en:'✨ Animation',zh:'✨ 动画',ja:'✨ アニメーション'}
+  "chip.anim":{ko:'✨ 애니메이션',en:'✨ Animation',zh:'✨ 动画',ja:'✨ アニメーション'},
+  "seg.cmode.mark":{ko:'마크',en:'Mark',zh:'标志',ja:'マーク'},
+  "lbl.centerBadge":{ko:'배지 모양',en:'Badge shape',zh:'徽章形状',ja:'バッジ形状'},
+  "seg.badge.pill":{ko:'알약',en:'Pill',zh:'胶囊',ja:'ピル'},
+  "seg.badge.rounded":{ko:'둥근사각',en:'Rounded',zh:'圆角方',ja:'角丸'},
+  "seg.badge.circle":{ko:'원형',en:'Circle',zh:'圆形',ja:'円形'},
+  "seg.badge.hexagon":{ko:'육각형',en:'Hexagon',zh:'六角',ja:'六角形'},
+  "seg.badge.shield":{ko:'방패',en:'Shield',zh:'盾牌',ja:'シールド'},
+  "seg.badge.ribbon":{ko:'리본',en:'Ribbon',zh:'丝带',ja:'リボン'},
+  "seg.badge.none":{ko:'없음',en:'None',zh:'无',ja:'なし'},
+  "lbl.markPick":{ko:'마크 심볼 — 클릭해서 변경',en:'Mark symbol — click to change',zh:'标志符号 — 点击更改',ja:'マークシンボル — クリックで変更'},
+  "btn.genLogo":{ko:'✨ 브랜드명으로 예시 4개 생성',en:'✨ Generate 4 logo examples',zh:'✨ 用品牌名生成4个示例',ja:'✨ ブランド名で例を4つ生成'},
+  "hint.genLogo":{ko:'브랜드명을 입력하고 누르면 배지·색상·심볼을 조합한 로고 예시 4개를 만들어요. 마음에 드는 예시를 누르면 바로 적용됩니다.',en:'Enter a brand name and tap to generate 4 logo examples combining badge, colors and symbol. Tap one you like to apply it instantly.',zh:'输入品牌名后点击，生成结合徽章·颜色·符号的4个 Logo 示例。点击喜欢的即可立即应用。',ja:'ブランド名を入力して押すと、バッジ・色・シンボルを組み合わせたロゴ例を4つ生成します。気に入った例を押すとすぐ適用されます。'},
+  "ctr.lblMark":{ko:'브랜드명 (모노그램용)',en:'Brand name (for monogram)',zh:'品牌名（用于字母标）',ja:'ブランド名（モノグラム用）'},
+  "ctr.hintMark":{ko:'모노그램 심볼은 브랜드명의 앞 글자를 사용합니다. 아래에서 심볼을 골라보세요.',en:'The monogram symbol uses the first letters of the brand name. Pick a symbol below.',zh:'字母标使用品牌名的首字母。在下方选择符号。',ja:'モノグラムはブランド名の頭文字を使います。下からシンボルを選んでください。'}
 };
 var LANG="ko";
 function t(key){ var e=I18N[key]; return e ? (e[LANG]||e.ko) : null; }
@@ -5269,6 +5396,7 @@ if (typeof qrcode === "undefined"){
   render(ctx, EXPORT);
   updateMeta();
   buildPictoPicker();
+  buildMarkPicker();
   buildGallery();
   AR.init();
 }
