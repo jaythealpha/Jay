@@ -427,7 +427,7 @@
     <div class="logo">🍷</div>
     <div>
       <b>와인 렌즈</b>
-      <small>와인 · 사케 · 위스키 · 전통주 라벨 스캔</small>
+      <small>와인부터 데킬라까지 · 8가지 주종 라벨 스캔</small>
     </div>
   </div>
   <div class="spacer"></div>
@@ -441,7 +441,7 @@
   <section class="screen active" id="screen-capture">
     <div class="hero">
       <h1>술 라벨을 찍으면<br><span class="accent">한 잔의 이야기</span>가 펼쳐집니다</h1>
-      <p>🍷 와인 · 🍶 사케 · 🥃 위스키 · 🏺 전통주를 자동 판별해<br>연식 · 가격대 · 히스토리 · 테이스팅 · 페어링을 인포그래픽으로.</p>
+      <p>🍷 와인 · 🍶 사케 · 🥃 위스키 · 🏺 전통주 · 🍺 맥주<br>🍇 브랜디 · 🏮 백주 · 🌵 데킬라까지 자동 판별해<br>연식 · 가격대 · 히스토리 · 테이스팅 · 페어링을 인포그래픽으로.</p>
     </div>
 
     <div class="capture-card">
@@ -475,7 +475,7 @@
 
     <p class="disclaimer" style="margin-top:22px">
       API 키가 없어도 <b style="color:var(--gold-soft)">데모 보기</b>로 인포그래픽을 체험할 수 있어요.<br>
-      <button class="btn btn-ghost" id="btnDemo" style="margin-top:10px;padding:10px 16px;font-size:14px">🍇 데모 보기 (탭할 때마다 와인→사케→위스키→전통주)</button>
+      <button class="btn btn-ghost" id="btnDemo" style="margin-top:10px;padding:10px 16px;font-size:14px">🎲 데모 보기 — 탭할 때마다 8가지 주종 순환</button>
     </p>
   </section>
 
@@ -735,14 +735,14 @@ const JSON_SCHEMA = `{
   "found": true,                       // 라벨을 술로 인식했으면 true, 아니면 false
   "reason": "",                        // found=false일 때 이유
   "confidence": "high|medium|low",     // 라벨 인식 확신도
-  "category": "wine|sake|whisky|traditional|spirits",  // 주종: 와인|사케|위스키|한국 전통주|기타(진·럼·브랜디·맥주 등)
+  "category": "wine|sake|whisky|traditional|beer|brandy|baijiu|tequila|spirits",  // 주종: 와인|사케|위스키|한국 전통주|맥주|브랜디·코냑|중국 백주|데킬라·메즈칼|기타(진·럼·보드카 등)
   "name": "제품명(라벨 표기 그대로)",
-  "producer": "생산자(와이너리/양조장/증류소) 이름",
-  "type": "주종 내 세부 타입 — 와인: 레드/화이트/로제/스파클링, 사케: 준마이/긴조/다이긴조, 위스키: 싱글몰트/블렌디드/버번, 전통주: 탁주/약주/청주/증류식 소주 등",
-  "vintage": "연식 표기 문자열 — 와인: 빈티지 연도/'NV', 위스키: '12년' 등 숙성 연수, 사케: 양조년도(BY)/미상, 전통주: 제조년도/미상",
-  "region": "지역/아펠라시옹/현(県)/도(道)",
+  "producer": "생산자(와이너리/양조장/증류소/브루어리) 이름",
+  "type": "주종 내 세부 타입 — 와인: 레드/화이트/로제/스파클링, 사케: 준마이/긴조/다이긴조, 위스키: 싱글몰트/블렌디드/버번, 전통주: 탁주/약주/청주/증류식 소주, 맥주: IPA/스타우트/라거 등 스타일, 브랜디: 코냑/아르마냑/칼바도스, 백주: 농향형/장향형/청향형, 데킬라: 블랑코/레포사도/아녜호",
+  "vintage": "연식 표기 문자열 — 와인: 빈티지 연도/'NV', 위스키·브랜디: '12년'/'XO' 등 숙성 표기, 사케: 양조년도(BY)/미상, 그 외: 제조년도/미상",
+  "region": "지역/아펠라시옹/현(県)/도(道)/주(州)",
   "country": "국가",
-  "ingredients": ["주원료 — 와인: 포도 품종, 사케: 쌀 품종·누룩, 위스키: 몰트·곡물, 전통주: 쌀·누룩 등"],
+  "ingredients": ["주원료 — 와인: 포도 품종, 사케: 쌀 품종·누룩, 위스키·맥주: 몰트·곡물·홉, 전통주: 쌀·누룩, 브랜디: 포도 품종, 백주: 수수(고량) 등, 데킬라: 아가베"],
   "alcohol": "도수 예: 13.5%",
   "priceRange": "한국 예상 소매가 범위(원화), 예: 3~5만원",
   "priceNote": "가격 관련 한 줄 코멘트(가성비/희소성 등)",
@@ -750,12 +750,16 @@ const JSON_SCHEMA = `{
   "tasteProfile": [                    // 주종에 맞는 맛 축 정확히 4개, value는 0~100 정수
     {"name":"바디","en":"Body","value":70,"left":"라이트","right":"풀"}
     // 와인: 바디/탄닌/산도/당도 · 사케: 단맛(甘辛)/산미/바디(담려-농순)/향 ·
-    // 위스키: 바디/피트(스모크)/단맛/스파이스 · 전통주: 단맛/산미/바디/탄산(또는 향)
+    // 위스키: 바디/피트(스모크)/단맛/스파이스 · 전통주: 단맛/산미/바디/탄산(또는 향) ·
+    // 맥주: 바디/쓴맛/단맛/탄산 · 브랜디: 바디/과실향/단맛/오크 ·
+    // 백주: 향 강도/단맛/부드러움/여운 · 데킬라: 바디/아가베향/단맛/스파이스
   ],
   "specs": [                           // 주종 특화 제원 2~5개 (라벨·일반 지식 기반)
     {"label":"정미보합","value":"23%"}
     // 사케: 분류/정미보합/일본주도(SMV)/산도 · 위스키: 숙성 연수/캐스크/칠필터/캐스크 스트렝스 ·
-    // 전통주: 주종/원료/누룩/살균 여부 · 와인: 등급(AOC 등)/오크 숙성/생산량 등
+    // 전통주: 주종/원료/누룩/살균 여부 · 와인: 등급(AOC 등)/오크 숙성/생산량 ·
+    // 맥주: 스타일/IBU/발효(에일·라거)/서빙 · 브랜디: 등급(VS·VSOP·XO)/크뤼/숙성 ·
+    // 백주: 향형/원료/도수 스타일 · 데킬라: 등급/아가베 100% 여부/지역(고지대·저지대)
   ],
   "tastingNotes": "향과 맛 묘사 2~3문장",
   "drinkFrom": 2020,                   // 음용 권장 시작 연도(정수) — 장기 숙성형 와인 위주, 해당 없으면 null
@@ -849,6 +853,10 @@ const CATS = {
   sake:        { icon: '🍶', label: '사케',      en: 'Sake',    vintageCap: 'Brewery Year', ingTitle: ['Rice & Koji', '원료'], prodTitle: ['The Brewery', '양조장'] },
   whisky:      { icon: '🥃', label: '위스키',    en: 'Whisky',  vintageCap: 'Age / Year', ingTitle: ['Malt & Grain', '원료'], prodTitle: ['The Distillery', '증류소'] },
   traditional: { icon: '🏺', label: '전통주',    en: 'K-Sool',  vintageCap: 'Year',     ingTitle: ['Ingredients', '원료'], prodTitle: ['The Brewery', '양조장'] },
+  beer:        { icon: '🍺', label: '맥주',      en: 'Beer',    vintageCap: 'Year',     ingTitle: ['Malt & Hops', '원료'], prodTitle: ['The Brewery', '브루어리'] },
+  brandy:      { icon: '🍇', label: '브랜디',    en: 'Brandy',  vintageCap: 'Age / Grade', ingTitle: ['Grapes & Fruit', '원료'], prodTitle: ['The House', '메종'] },
+  baijiu:      { icon: '🏮', label: '백주',      en: 'Baijiu',  vintageCap: 'Year',     ingTitle: ['Grains', '원료'], prodTitle: ['The Distillery', '양조창'] },
+  tequila:     { icon: '🌵', label: '데킬라',    en: 'Tequila', vintageCap: 'Grade',    ingTitle: ['Agave', '원료'], prodTitle: ['The Distillery', '증류소'] },
   spirits:     { icon: '🍸', label: '기타 주류', en: 'Spirits', vintageCap: 'Year',     ingTitle: ['Ingredients', '원료'], prodTitle: ['The Maker', '생산자'] },
 };
 function catOf(d) { return CATS[d && d.category] || CATS.wine; }
@@ -1343,6 +1351,182 @@ const DEMOS = [
     '첫 잔은 맑은 윗술만, 둘째 잔부터 섞어 마시면 두 가지 맛을 즐길 수 있어요.',
     '와인 글라스에 따르면 탄산과 향이 더 살아납니다.',
     '비슷한 결의 프리미엄 탁주로 해창 6도, 나루 생막걸리도 시도해 보세요.',
+  ],
+},
+{
+  found: true, confidence: 'high', category: 'beer',
+  name: 'Guinness Draught',
+  producer: '기네스 (세인트 제임스 게이트 양조장)',
+  type: '드라이 스타우트',
+  vintage: '미상',
+  region: '더블린',
+  country: '아일랜드',
+  ingredients: ['볶은 보리 (로스티드 발리)', '몰트', '홉', '효모'],
+  alcohol: '4.2%',
+  priceRange: '3~5천원 (캔)',
+  priceNote: '세계에서 가장 유명한 스타우트 — 위젯 캔은 펍의 질소 생맥주 질감을 재현',
+  priceTier: 1,
+  tasteProfile: [
+    { name: '바디', en: 'Body', value: 55, left: '라이트', right: '풀' },
+    { name: '쓴맛', en: 'Bitterness', value: 48, left: '순함', right: '쌉쌀함' },
+    { name: '단맛', en: 'Sweetness', value: 30, left: '드라이', right: '스위트' },
+    { name: '탄산', en: 'Carbonation', value: 20, left: '부드러움', right: '톡톡함' },
+  ],
+  specs: [
+    { label: '스타일', value: '드라이 스타우트' },
+    { label: '서빙', value: '질소 위젯 캔 (크리미 헤드)' },
+    { label: '발효', value: '상면발효 (에일)' },
+  ],
+  tastingNotes: '볶은 보리의 커피·다크초콜릿 향과 크리미한 질소 거품이 특징입니다. 보기보다 가볍고 드라이한 피니시로 술술 넘어갑니다.',
+  drinkFrom: null, drinkPeak: null, drinkUntil: null,
+  history: [
+    { year: '1759', text: '아서 기네스가 더블린 양조장을 연 9,000년 임대 계약으로 창업' },
+    { year: '1959', text: '창립 200주년에 질소 서빙 기술 개발 — 시그니처 크리미 헤드 탄생' },
+    { year: '1988', text: '캔 속 위젯 발명으로 집에서도 펍의 질감 구현' },
+  ],
+  story: '아서 기네스는 연 45파운드에 9,000년짜리 임대 계약서에 서명한 것으로 유명합니다. "기네스는 아일랜드에서 마셔야 맛있다"는 말은 신선도와 서빙 온도 차이에서 나온 이야기입니다.',
+  winery: '세인트 제임스 게이트 양조장은 260년 넘게 같은 자리에서 양조 중이며, 더블린의 기네스 스토어하우스는 아일랜드 최다 방문 관광지 중 하나입니다.',
+  foodPairing: ['🦪 굴', '🍖 비프 스튜', '🍫 초콜릿 디저트', '🧀 체다 치즈'],
+  servingTemp: '6~8℃',
+  servingNote: '캔을 딴 뒤 잔에 한 번에 부어 거품이 가라앉길 기다렸다 마시세요 (서지 앤 세틀)',
+  aging: '신선할 때 마시는 맥주 — 유통기한 내 서늘한 곳 보관',
+  tips: [
+    '전용 파인트 글라스에 따르면 거품층이 더 오래 유지됩니다.',
+    '너무 차게 마시면 로스티드 향이 닫힙니다 — 6℃ 이상을 권장해요.',
+    '스타우트 입문 후엔 임페리얼 스타우트나 포터로 확장해 보세요.',
+    '굴과의 페어링은 19세기 더블린 펍부터 내려오는 클래식입니다.',
+  ],
+},
+{
+  found: true, confidence: 'high', category: 'brandy',
+  name: 'Hennessy V.S.O.P',
+  producer: '헤네시 (Hennessy)',
+  type: '코냑',
+  vintage: 'V.S.O.P',
+  region: '코냑 (Cognac AOC)',
+  country: '프랑스',
+  ingredients: ['위니 블랑 (포도)'],
+  alcohol: '40%',
+  priceRange: '8~13만원',
+  priceNote: '코냑 판매량 세계 1위 하우스의 스테디셀러 — 면세·마트 프로모션이 잦은 편',
+  priceTier: 3,
+  tasteProfile: [
+    { name: '바디', en: 'Body', value: 60, left: '라이트', right: '풀' },
+    { name: '과실향', en: 'Fruit', value: 70, left: '은은함', right: '풍부함' },
+    { name: '단맛', en: 'Sweetness', value: 62, left: '드라이', right: '스위트' },
+    { name: '오크', en: 'Oak', value: 58, left: '약함', right: '진함' },
+  ],
+  specs: [
+    { label: '등급', value: 'V.S.O.P (최소 4년 숙성)' },
+    { label: '블렌딩', value: '60여 종의 오드비' },
+    { label: '숙성', value: '프렌치 오크 캐스크' },
+  ],
+  tastingNotes: '살구·구운 사과의 과실향에 바닐라, 시나몬, 은은한 오크가 겹겹이 올라옵니다. 부드럽고 균형 잡힌 코냑의 교과서 같은 맛입니다.',
+  drinkFrom: null, drinkPeak: null, drinkUntil: null,
+  history: [
+    { year: '1765', text: '아일랜드 출신 리처드 헤네시가 코냑에서 하우스 설립' },
+    { year: '1817', text: '영국 조지 4세의 주문서에서 "V.S.O.P" 명칭이 유래' },
+    { year: '1971', text: '모엣 헤네시(현 LVMH) 합병 — 럭셔리 제국의 축이 됨' },
+  ],
+  story: 'V.S.O.P(Very Superior Old Pale)라는 등급 자체가 헤네시에 온 영국 왕실 주문에서 시작됐습니다. 오늘날 전 세계 코냑 두 병 중 한 병이 헤네시일 만큼 압도적인 하우스입니다.',
+  winery: '헤네시는 8대째 이어지는 마스터 블렌더 가문(피유 가문)이 블렌딩을 책임지는 것으로 유명합니다. 샤랑트 강변의 셀러에는 수십만 통의 오드비가 숙성 중입니다.',
+  foodPairing: ['🧀 블루 치즈', '🍫 다크 초콜릿', '🥜 구운 견과', '🍑 과일 타르트'],
+  servingTemp: '실온 (18~22℃)',
+  servingNote: '튤립 글라스에 니트로, 손바닥 온기로 데우며 향의 변화를 즐기세요. 진저에일과의 하이볼도 인기',
+  aging: '병입 후 숙성되지 않음 — 개봉 후엔 세워서 보관하고 1년 내 음용 권장',
+  tips: [
+    '식후주로 커피와 함께하는 것이 클래식한 즐기는 법입니다.',
+    '등급 사다리: V.S(2년+) → V.S.O.P(4년+) → X.O(10년+) 순으로 숙성이 깊어집니다.',
+    '비슷한 가격대에서 레미 마르탱 V.S.O.P, 카뮈 V.S.O.P도 비교해 보세요.',
+    '하이볼로 마실 땐 얼음을 크게, 진저에일은 1:2.5 비율이 무난합니다.',
+  ],
+},
+{
+  found: true, confidence: 'high', category: 'baijiu',
+  name: '귀주 마오타이 (贵州茅台)',
+  producer: '귀주모태주창 (貴州茅台酒廠)',
+  type: '장향형 (酱香型)',
+  vintage: '미상',
+  region: '구이저우성 마오타이진',
+  country: '중국',
+  ingredients: ['수수 (고량)', '밀누룩'],
+  alcohol: '53%',
+  priceRange: '40~70만원',
+  priceNote: '중국 국주(國酒)로 불리는 최고가 백주 — 위조품이 많아 정식 수입품 확인 필수',
+  priceTier: 5,
+  tasteProfile: [
+    { name: '향 강도', en: 'Aroma', value: 90, left: '은은함', right: '강렬함' },
+    { name: '단맛', en: 'Sweetness', value: 40, left: '드라이', right: '스위트' },
+    { name: '부드러움', en: 'Smoothness', value: 72, left: '거침', right: '매끄러움' },
+    { name: '여운', en: 'Finish', value: 88, left: '짧음', right: '긺' },
+  ],
+  specs: [
+    { label: '향형', value: '장향형 (간장·발효 곡물의 복합향)' },
+    { label: '공법', value: '1년 주기 9증 8효 7취주' },
+    { label: '숙성', value: '도자기 항아리 3년 이상 + 블렌딩' },
+  ],
+  tastingNotes: '간장, 볶은 곡물, 말린 과일이 뒤섞인 강렬하고 복합적인 향이 특징입니다. 53도가 믿기지 않을 만큼 부드럽게 넘어가며 여운이 매우 깁니다.',
+  drinkFrom: null, drinkPeak: null, drinkUntil: null,
+  history: [
+    { year: '1915', text: '파나마 만국박람회 금상 — "던져 깨뜨린 술병의 향" 일화로 유명' },
+    { year: '1949', text: '건국 만찬주로 채택된 이래 국빈 외교주로 사용' },
+    { year: '1972', text: '닉슨 방중 만찬에서 저우언라이가 대접하며 세계에 각인' },
+  ],
+  story: '마오타이진의 붉은 수수와 츠수이허(赤水河) 강물, 그리고 마을 공기 중의 미생물이 아니면 같은 맛이 나지 않는다고 알려져 있습니다. 실제로 다른 지역에 지은 분공장에서는 같은 맛 재현에 실패했다는 일화가 있습니다.',
+  winery: '귀주모태주창은 시가총액 기준 세계 최대 주류 기업에 오른 적이 있을 정도의 국영 기업입니다. 생산량이 수요를 따라가지 못해 출고가와 시장가의 차이가 큰 것으로도 유명합니다.',
+  foodPairing: ['🦆 북경오리', '🥟 딤섬', '🌶️ 마라 요리', '🐟 생선찜'],
+  servingTemp: '실온 (20℃ 전후)',
+  servingNote: '작은 백주잔에 소량씩 — 첫 모금 전 향을 충분히 맡는 것이 예법입니다',
+  aging: '고도수 증류주라 장기 보관 가능 — 세워서 서늘하고 어두운 곳에',
+  tips: [
+    '병을 연 뒤 잔에 따르고 1~2분 두면 향이 훨씬 풍부해집니다.',
+    '입문용으로는 같은 장향형의 랑주(郎酒)나 시진주가 부담이 적습니다.',
+    '정품은 병뚜껑 위 NFC/QR 정품 인증이 있으니 꼭 확인하세요.',
+    '중식 기름진 요리와 함께하면 높은 도수가 부드럽게 느껴집니다.',
+  ],
+},
+{
+  found: true, confidence: 'high', category: 'tequila',
+  name: 'Don Julio Reposado',
+  producer: '돈 훌리오 증류소 (La Primavera)',
+  type: '레포사도',
+  vintage: '레포사도 (8개월)',
+  region: '할리스코 고지대 (Los Altos)',
+  country: '멕시코',
+  ingredients: ['블루 아가베 100%'],
+  alcohol: '38%',
+  priceRange: '8~12만원',
+  priceNote: '프리미엄 데킬라 붐의 대표 주자 — 하이볼·마르가리타용으로도 인기',
+  priceTier: 3,
+  tasteProfile: [
+    { name: '바디', en: 'Body', value: 55, left: '라이트', right: '풀' },
+    { name: '아가베향', en: 'Agave', value: 72, left: '은은함', right: '싱그러움' },
+    { name: '단맛', en: 'Sweetness', value: 58, left: '드라이', right: '스위트' },
+    { name: '스파이스', en: 'Spice', value: 45, left: '순함', right: '알싸함' },
+  ],
+  specs: [
+    { label: '등급', value: '레포사도 (오크 8개월 휴식)' },
+    { label: '아가베', value: '블루 아가베 100% (믹스토 아님)' },
+    { label: '지역', value: '할리스코 고지대 — 달고 향긋한 아가베' },
+  ],
+  tastingNotes: '구운 아가베의 달큰함에 바닐라, 시트러스, 가벼운 오크 스파이스가 어우러집니다. 블랑코의 싱그러움과 아녜호의 깊이 사이, 균형이 좋은 스타일입니다.',
+  drinkFrom: null, drinkPeak: null, drinkUntil: null,
+  history: [
+    { year: '1942', text: '17세의 돈 훌리오 곤잘레스가 할리스코에서 증류를 시작' },
+    { year: '1987', text: '그의 이름을 딴 브랜드 "돈 훌리오" 공식 출시' },
+    { year: '2010년대', text: '셀럽 마케팅과 함께 프리미엄 데킬라 붐의 중심에 섬' },
+  ],
+  story: '돈 훌리오는 밭에서 아가베를 더 넓게 심어 당도를 높이는 등 품질 혁신으로 "프리미엄 데킬라"라는 카테고리를 연 인물로 평가받습니다. 낮고 넓은 병 디자인은 식탁에서 서로의 얼굴이 보이게 하려던 배려에서 나왔다는 이야기가 있습니다.',
+  winery: '라 프리마베라 증류소는 할리스코 고지대의 완숙 아가베만 사용하며, 느린 저온 발효로 과실향을 살리는 것으로 유명합니다. 현재는 디아지오 소속의 글로벌 브랜드입니다.',
+  foodPairing: ['🌮 타코', '🍤 세비체', '🥑 과카몰리', '🍊 자몽·라임 요리'],
+  servingTemp: '실온 또는 살짝 차게',
+  servingNote: '리델 데킬라 글라스나 샴페인 플루트에 니트로 — 소금·라임 없이 향을 즐겨보세요',
+  aging: '병입 후 숙성되지 않음 — 직사광선을 피해 세워 보관',
+  tips: [
+    '"슬래밍"(원샷)은 저가 믹스토 시절의 문화 — 프리미엄은 홀짝이며 마셔요.',
+    '라벨에 "100% de Agave" 표기가 없으면 설탕 혼합(믹스토)입니다.',
+    '팔로마(자몽소다 칵테일)로 마시면 레포사도의 달큰함이 잘 삽니다.',
+    '다음 단계로는 아녜호(1년+), 크리스탈리노도 시도해 보세요.',
   ],
 },
 ];
