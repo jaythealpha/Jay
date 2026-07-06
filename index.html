@@ -40,9 +40,10 @@
   .brand h1{font-size:19px;margin:0;letter-spacing:-.3px}
   .brand p{margin:0;font-size:12px;color:var(--mut)}
   .tabs{display:flex;gap:6px;background:var(--card);padding:5px;border-radius:12px;border:1px solid var(--line)}
-  .lang-sel{background:var(--card);border:1px solid var(--line2);color:var(--fg);border-radius:10px;padding:8px 10px;
-    font-size:13px;font-weight:600;cursor:pointer;outline:none}
-  .lang-sel:hover{border-color:var(--acc)}
+  .lang-switch{display:flex;justify-content:center;gap:2px;margin:18px auto 0;padding:4px;background:var(--card);border:1px solid var(--line2);border-radius:12px;width:max-content}
+  .lang-switch button{background:transparent;border:0;color:var(--mut);font-family:inherit;font-weight:700;font-size:13px;letter-spacing:.5px;padding:7px 16px;border-radius:9px;cursor:pointer;transition:.15s}
+  .lang-switch button:hover{color:var(--fg)}
+  .lang-switch button.on{background:linear-gradient(135deg,var(--acc),#22d3ee);color:#fff}
   .tabs button{border:0;background:transparent;color:var(--mut);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;transition:.15s}
   .tabs button.active{background:linear-gradient(135deg,var(--acc),#5a3fd6);color:#fff;box-shadow:0 4px 14px rgba(124,92,255,.35)}
 
@@ -228,20 +229,12 @@
         <p data-i18n="hdr.sub">아름답고 스캔되는 QR을 만드는 스튜디오</p>
       </div>
     </div>
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       <nav class="tabs" id="tabs">
         <button data-view="gallery" class="active" data-i18n="nav.gallery">갤러리</button>
         <button data-view="studio" data-i18n="nav.studio">스튜디오</button>
         <button data-view="ar" data-i18n="nav.ar">AR</button>
         <button data-view="about" data-i18n="nav.guide">사용법</button>
       </nav>
-      <select id="langSel" class="lang-sel" aria-label="Language">
-        <option value="ko">🇰🇷 한국어</option>
-        <option value="en">🇺🇸 English</option>
-        <option value="zh">🇨🇳 中文</option>
-        <option value="ja">🇯🇵 日本語</option>
-      </select>
-    </div>
   </header>
 
   <!-- ============ GALLERY ============ -->
@@ -249,6 +242,12 @@
     <div class="hero">
       <h2 data-i18n-html="hero.h">평범한 QR을 <span class="g">브랜드가 되는 아트</span>로</h2>
       <p data-i18n="hero.p">흑백 사각형은 이제 그만. 색상·그라디언트·모듈 형태·로고·애니메이션으로 스캔되는 디자인을 만드세요. 아래 프리셋을 눌러 스튜디오에서 바로 편집할 수 있습니다.</p>
+      <div class="lang-switch" id="langSwitch" role="group" aria-label="Language">
+        <button data-lang="ko">KR</button>
+        <button data-lang="en">EN</button>
+        <button data-lang="ja">JP</button>
+        <button data-lang="zh">CN</button>
+      </div>
     </div>
     <div class="gal-intro">
       <div>
@@ -256,8 +255,8 @@
         <p data-i18n="gal.sub">카테고리를 고르고, 카드를 눌러 스튜디오에 불러오기 (예시 QR은 이 사이트로 연결)</p>
       </div>
       <div class="chips" id="featureChips">
-        <button class="chip" data-jump="1" data-act="art">🖼️ 이미지·영상 아트</button>
-        <button class="chip" data-jump="5" data-act="anim">✨ 애니메이션</button>
+        <button class="chip" data-jump="1" data-act="art" data-i18n="chip.art">🖼️ 이미지·영상 아트</button>
+        <button class="chip" data-jump="5" data-act="anim" data-i18n="chip.anim">✨ 애니메이션</button>
       </div>
     </div>
     <div class="cat-tabs" id="catTabs">
@@ -730,7 +729,7 @@
   <footer>
     <div>Aesthetic QR Studio · 아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.06-b</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.06-c</b></div>
   </footer>
 </div>
 
@@ -5111,7 +5110,9 @@ var I18N = {
   "art.gifOk":{ko:'✓ GIF 업로드됨 (애니메이션 QR) — 변경하려면 클릭',en:'✓ GIF uploaded (animated QR) — click to change',zh:'✓ 已上传 GIF（动画二维码）— 点击更换',ja:'✓ GIFアップロード済み（アニメQR）— 変更するにはクリック'},
   "art.vidOk2":{ko:'✓ 영상 업로드됨 (애니메이션 QR) — 변경하려면 클릭',en:'✓ Video uploaded (animated QR) — click to change',zh:'✓ 已上传视频（动画二维码）— 点击更换',ja:'✓ 動画アップロード済み（アニメQR）— 変更するにはクリック'},
   "art.webOk":{ko:'✓ 이미지 적용됨(웹) — 변경하려면 클릭',en:'✓ Image applied (web) — click to change',zh:'✓ 已应用图片（网络）— 点击更换',ja:'✓ 画像適用済み（Web）— 変更するにはクリック'},
-  "art.sceneOk":{ko:'✓ 장면 아트 적용됨 — 내 이미지/영상/GIF로 교체하려면 클릭',en:'✓ Scene art applied — click to replace with your image/video/GIF',zh:'✓ 已应用场景艺术 — 点击用你的图片/视频/GIF 替换',ja:'✓ シーンアート適用済み — 自分の画像/動画/GIFに置換するにはクリック'}
+  "art.sceneOk":{ko:'✓ 장면 아트 적용됨 — 내 이미지/영상/GIF로 교체하려면 클릭',en:'✓ Scene art applied — click to replace with your image/video/GIF',zh:'✓ 已应用场景艺术 — 点击用你的图片/视频/GIF 替换',ja:'✓ シーンアート適用済み — 自分の画像/動画/GIFに置換するにはクリック'},
+  "chip.art":{ko:'🖼️ 이미지·영상 아트',en:'🖼️ Image / Video art',zh:'🖼️ 图片·视频艺术',ja:'🖼️ 画像・動画アート'},
+  "chip.anim":{ko:'✨ 애니메이션',en:'✨ Animation',zh:'✨ 动画',ja:'✨ アニメーション'}
 };
 var LANG="ko";
 function t(key){ var e=I18N[key]; return e ? (e[LANG]||e.ko) : null; }
@@ -5124,14 +5125,14 @@ function applyLang(lang){
   try{ updateMeta(); }catch(e){}
   try{ centerUIvis(); }catch(e){}
   try{ localStorage.setItem("aqr_lang", lang); }catch(e){}
-  var sel=$("langSel"); if(sel) sel.value=lang;
+  var sw=$("langSwitch"); if(sw){ Array.prototype.forEach.call(sw.children,function(x){ x.classList.toggle("on", x.dataset.lang===lang); }); }
 }
 (function initLang(){
   var saved=null; try{ saved=localStorage.getItem("aqr_lang"); }catch(e){}
   var nav=(navigator.language||"ko").toLowerCase();
   var auto = nav.indexOf("zh")===0?"zh": nav.indexOf("ja")===0?"ja": nav.indexOf("ko")===0?"ko":"en";
   applyLang(saved||auto);
-  var sel=$("langSel"); if(sel) sel.addEventListener("change",function(){ applyLang(this.value); });
+  var sw=$("langSwitch"); if(sw) sw.addEventListener("click",function(e){ var b=e.target.closest("button"); if(b&&b.dataset.lang) applyLang(b.dataset.lang); });
 })();
 
 // ---------- init ----------
