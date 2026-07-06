@@ -655,7 +655,7 @@
   <footer>
     <div>Aesthetic QR Studio · LemioCode 컨셉을 오픈소스로 재구현 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.05-h</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.05-i</b></div>
   </footer>
 </div>
 
@@ -3543,10 +3543,12 @@ function drawArtLayer(g, size, n, m){
   // 1) artwork over the WHOLE canvas (Ken-Burns when animating a still image)
   function paintArt(x,y,w,h){
     if (moveImg){
-      var tt=_phase*6.28318, z=1.12+0.07*Math.sin(tt);
+      // centred breathing zoom carries the motion; pan is kept small so the image behind the
+      // fixed QR zone barely shifts (busy/bright images stay scannable at every frame).
+      var tt=_phase*6.28318, z=1.10+0.06*Math.sin(tt);
       var dw=w*z, dh=h*z;
-      var dx=x-(dw-w)/2 + Math.sin(tt)*w*0.04;
-      var dy=y-(dh-h)/2 + Math.cos(tt*0.85)*h*0.034;
+      var dx=x-(dw-w)/2 + Math.sin(tt)*w*0.014;
+      var dy=y-(dh-h)/2 + Math.cos(tt*0.85)*h*0.012;
       return drawCover(g, S.artImg, dx, dy, dw, dh);
     }
     return drawCover(g, S.artImg, x, y, w, h);
@@ -4519,12 +4521,12 @@ var CATS = {
     {name:"모노 잉크",tag:"클래식",s:{fill:"solid",fg1:"#111111",bg:"#ffffff",dot:"square",eye:"square"}}
   ],
   animation:[
-    {name:"오션 웨이브",tag:"바다·스윕",s:{scene:"ocean",anim:true,animKind:"sweep",fg1:"#062a52",dot:"dots",eye:"square",artVisibility:70}},
-    {name:"선셋",tag:"노을·샤인",s:{scene:"sunset",anim:true,animKind:"shine",fg1:"#4a1530",dot:"dots",eye:"square",artVisibility:70}},
-    {name:"포레스트",tag:"숲·펄스",s:{scene:"forest",anim:true,animKind:"pulse",fg1:"#0f5c2e",dot:"dots",eye:"square",artVisibility:70}},
-    {name:"마운틴",tag:"설산·스윕",s:{scene:"mountain",anim:true,animKind:"sweep",fg1:"#3b4a63",dot:"dots",eye:"square",artVisibility:70}},
-    {name:"플라워",tag:"꽃·회전",s:{scene:"flower",anim:true,animKind:"rotate",fg1:"#c01f5b",dot:"dots",eye:"square",artVisibility:70}},
-    {name:"네온 시티",tag:"네온·스윕",s:{scene:"neon",anim:true,animKind:"sweep",fg1:"#12123a",dot:"dots",eye:"square",artVisibility:70}},
+    {name:"네온 시티",tag:"사이버펑크·스윕",s:{artUrl:"assets/anim-1.webp",anim:true,animKind:"sweep",fg1:"#0b1e3a",dot:"dots",eye:"square",artVisibility:64}},
+    {name:"우키요에",tag:"파도·샤인",s:{artUrl:"assets/anim-2.webp",anim:true,animKind:"shine",fg1:"#1a2a52",dot:"dots",eye:"square",artVisibility:64}},
+    {name:"팝아트",tag:"코믹·회전",s:{artUrl:"assets/anim-3.webp",anim:true,animKind:"rotate",fg1:"#111318",dot:"dots",eye:"square",artVisibility:44}},
+    {name:"수묵화",tag:"산수·펄스",s:{artUrl:"assets/anim-4.webp",anim:true,animKind:"pulse",fg1:"#3a4653",dot:"dots",eye:"square",artVisibility:66}},
+    {name:"고대 벽화",tag:"피닉스·샤인",s:{artUrl:"assets/anim-5.webp",anim:true,animKind:"shine",fg1:"#6b3d12",dot:"dots",eye:"square",artVisibility:62}},
+    {name:"네온 웨이브",tag:"네온·스윕",s:{scene:"neon",anim:true,animKind:"sweep",fg1:"#12123a",dot:"dots",eye:"square",artVisibility:70}},
     {name:"비치",tag:"해변·샤인",s:{scene:"beach",anim:true,animKind:"shine",fg1:"#1e6fb0",dot:"dots",eye:"square",artVisibility:70}},
     {name:"데저트",tag:"사막·펄스",s:{scene:"desert",anim:true,animKind:"pulse",fg1:"#7a3d12",dot:"dots",eye:"square",artVisibility:70}},
     {name:"스노우",tag:"설경·펄스",s:{scene:"snow",anim:true,animKind:"pulse",fg1:"#5b7fa8",dot:"dots",eye:"square",artVisibility:70}},
