@@ -291,6 +291,19 @@
   .temp-scale .lo, .temp-scale .hi { position: absolute; top: 14px; font-size: 9.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
   .temp-scale .lo { left: 0; } .temp-scale .hi { right: 0; }
 
+  /* --- beer: IBU gauge --- */
+  .ibu-scale { position: relative; height: 14px; margin-top: 12px; }
+  .ibu-scale .rail { position: absolute; left: 0; right: 0; top: 5px; height: 4px; border-radius: 999px; background: var(--track); }
+  .ibu-scale .ibu-tick { position: absolute; top: 3px; width: 1px; height: 8px; background: var(--grid); }
+  .ibu-scale .fill { position: absolute; left: 0; top: 5px; height: 4px; border-radius: 999px; background: var(--gold); transition: width .7s cubic-bezier(.2,.7,.3,1); }
+  .ibu-scale .dot { position: absolute; top: 50%; width: 12px; height: 12px; border-radius: 50%; background: var(--gold); border: 2px solid var(--card-2); box-shadow: 0 0 0 1px rgba(220,165,77,.35); transform: translate(-50%, -50%); transition: left .7s cubic-bezier(.2,.7,.3,1); }
+  /* --- beer: SRM color bar --- */
+  .srm-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+  .srm-chip { flex: none; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); box-shadow: inset 0 2px 6px rgba(0,0,0,.35); }
+  .srm-bar { position: relative; flex: 1; height: 16px; border-radius: 6px; overflow: hidden; border: 1px solid var(--line);
+    background: linear-gradient(90deg, #f8f4a0 0%, #eec84e 18%, #cf8a1f 36%, #a85c15 54%, #6f320c 72%, #3d1405 88%, #160602 100%); }
+  .srm-bar .srm-marker { position: absolute; top: -2px; bottom: -2px; width: 3px; background: var(--ink-1); box-shadow: 0 0 0 1px rgba(0,0,0,.5); transform: translateX(-50%); transition: left .7s cubic-bezier(.2,.7,.3,1); }
+
   /* --- pills (grapes) --- */
   .pills { display: flex; flex-wrap: wrap; gap: 7px; }
   .pill {
@@ -762,6 +775,8 @@ const JSON_SCHEMA = `{
     // 맥주: 스타일/IBU/발효(에일·라거)/서빙 · 브랜디: 등급(VS·VSOP·XO)/크뤼/숙성 ·
     // 백주: 향형/원료/도수 스타일 · 데킬라: 등급/아가베 100% 여부/지역(고지대·저지대)
   ],
+  "ibu": null,                         // 맥주 전용: 국제 쓴맛 단위(정수, 대략 0~120). 맥주가 아니거나 미상이면 null
+  "srm": null,                         // 맥주 전용: 맥주 색도 SRM(정수, 1 밝은 라거 ~ 40+ 검은 스타우트). 미상이면 null
   "tastingNotes": "향과 맛 묘사 2~3문장",
   "drinkFrom": 2020,                   // 음용 권장 시작 연도(정수) — 장기 숙성형 와인 위주, 해당 없으면 null
   "drinkPeak": 2027,                   // 정점 연도(정수), 해당 없으면 null
@@ -957,6 +972,57 @@ function tempScale(text) {
   </div>`;
 }
 
+/* 맥주 전용: IBU(쓴맛) 게이지 — 0~120 스케일, 구간 라벨 직접 표기 */
+function ibuGauge(ibu) {
+  const v = Number(ibu);
+  if (!(v > 0)) return '';
+  const MAX = 120;
+  const pct = Math.min(100, v / MAX * 100);
+  const read = v < 20 ? '순한 편' : v < 40 ? '보통' : v < 70 ? '쌉쌀함' : '강한 홉';
+  const ticks = [20, 40, 60, 80, 100].map(t =>
+    `<span class="ibu-tick" style="left:${(t / MAX * 100)}%"></span>`).join('');
+  return `<div class="serve" style="grid-column:1/-1">
+    <div class="s-label" style="display:flex;justify-content:space-between;gap:8px">
+      <span>IBU · 쓴맛</span><span style="color:var(--gold-soft);white-space:nowrap">${v} · ${read}</span>
+    </div>
+    <div class="ibu-scale">
+      <span class="rail"></span>${ticks}
+      <span class="fill" style="width:${pct}%"></span>
+      <span class="dot" style="left:${pct}%"></span>
+    </div>
+    <div class="scale-anchors"><span>0 · 순함</span><span>${MAX}+ · 강렬</span></div>
+  </div>`;
+}
+
+/* 맥주 전용: SRM 색도 바 — 밝은 라거(1) ~ 검은 스타우트(40+) */
+function srmColor(srm) {
+  const v = Number(srm);
+  if (!(v > 0)) return '';
+  // SRM → 대략적 맥주 색 (Morey 근사식 기반 팔레트)
+  const PAL = [
+    [1,'#f8f4a0'],[2,'#f6e58a'],[3,'#f3d770'],[4,'#eec84e'],[6,'#e0a828'],
+    [8,'#cf8a1f'],[10,'#c07419'],[13,'#a85c15'],[17,'#8a4310'],[20,'#6f320c'],
+    [24,'#561f08'],[29,'#3d1405'],[35,'#280b03'],[40,'#160602'],
+  ];
+  let hex = PAL[PAL.length-1][1];
+  for (const [s, c] of PAL) { if (v <= s) { hex = c; break; } }
+  const MAX = 40;
+  const pct = Math.min(100, v / MAX * 100);
+  const read = v <= 4 ? '옅은 금빛' : v <= 9 ? '황금빛' : v <= 17 ? '호박·구릿빛' : v <= 26 ? '갈색' : '흑맥주';
+  return `<div class="serve" style="grid-column:1/-1">
+    <div class="s-label" style="display:flex;justify-content:space-between">
+      <span>SRM · 맥주 색도</span><span style="color:var(--gold-soft)">${v} · ${read}</span>
+    </div>
+    <div class="srm-row">
+      <span class="srm-chip" style="background:${hex}" role="img" aria-label="맥주 색 SRM ${v}, ${read}"></span>
+      <div class="srm-bar">
+        <span class="srm-marker" style="left:${pct}%"></span>
+      </div>
+    </div>
+    <div class="scale-anchors"><span>1 · 라이트 라거</span><span>40+ · 임페리얼 스타우트</span></div>
+  </div>`;
+}
+
 function sec(en, ko) {
   return `<h3 class="sec"><span class="en">${esc(en)}</span><span class="ko">${esc(ko)}</span></h3>`;
 }
@@ -986,6 +1052,9 @@ function renderResult(session) {
   const specs = (d.specs || []).filter(s => s && s.label && s.value).map(s =>
     `<div class="serve"><div class="s-label">${esc(s.label)}</div><div class="s-value">${esc(s.value)}</div></div>`
   ).join('');
+
+  // 맥주 전용 시각화 (IBU 게이지 + SRM 색도 바)
+  const beerViz = d.category === 'beer' ? (ibuGauge(d.ibu) + srmColor(d.srm)) : '';
 
   const win = drinkWindow(d);
   const temp = tempScale(d.servingTemp);
@@ -1041,6 +1110,8 @@ function renderResult(session) {
     </div>
 
     ${specs ? `<div class="card">${sec('Specs', '제원')}<div class="serve-grid">${specs}</div></div>` : ''}
+
+    ${beerViz ? `<div class="card">${sec('Beer Meter', '맥주 지표')}<div class="serve-grid">${beerViz}</div></div>` : ''}
 
     <!-- taste profile -->
     ${scales ? `<div class="card">${sec('Taste Profile', '맛 프로필')}${scales}</div>` : ''}
@@ -1381,6 +1452,7 @@ const DEMOS = [
     { label: '서빙', value: '질소 위젯 캔 (크리미 헤드)' },
     { label: '발효', value: '상면발효 (에일)' },
   ],
+  ibu: 45, srm: 40,
   tastingNotes: '볶은 보리의 커피·다크초콜릿 향과 크리미한 질소 거품이 특징입니다. 보기보다 가볍고 드라이한 피니시로 술술 넘어갑니다.',
   drinkFrom: null, drinkPeak: null, drinkUntil: null,
   history: [
