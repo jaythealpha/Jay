@@ -116,7 +116,7 @@
   .toggle input:checked+span::before{transform:translateX(20px)}
   .hint{font-size:11px;color:var(--mut2);margin-top:8px;line-height:1.5}
   #aiStyleSeg button{flex:1 1 28%;min-width:0}   /* 9 presets → balanced 3×3 grid */
-  #ctypeSeg button{flex:1 1 22%;min-width:0}     /* 8 content types → balanced 4×2 grid */
+  #ctypeSeg button{flex:1 1 22%;min-width:0}     /* 12 content types → balanced 4-col grid */
   .picto-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;margin-top:6px}
   .picto-grid button{aspect-ratio:1;font-size:20px;line-height:1;background:var(--bg2);border:1px solid var(--line2);border-radius:8px;cursor:pointer;padding:0;transition:.1s}
   .picto-grid button.on{border-color:var(--acc);background:linear-gradient(135deg,rgba(124,92,255,.25),rgba(34,211,238,.18))}
@@ -285,6 +285,7 @@
 
   <!-- ============ STUDIO ============ -->
   <section class="view" id="view-studio">
+    <div class="lang-switch" role="group" aria-label="Language"><button data-lang="ko">KR</button><button data-lang="en">EN</button><button data-lang="ja">JP</button><button data-lang="zh">CN</button></div>
     <div class="studio">
       <!-- preview -->
       <div class="stage">
@@ -320,6 +321,10 @@
                 <button data-ct="sms" data-i18n-tip="ct.tip.sms" data-tip="받는 번호와 메시지를 미리 채워 문자 작성창을 엽니다(이벤트 참여 등)."><span data-i18n="ct.sms">문자</span></button>
                 <button data-ct="email" data-i18n-tip="ct.tip.email" data-tip="받는사람·제목·내용을 채워 메일 작성창을 엽니다."><span data-i18n="ct.email">이메일</span></button>
                 <button data-ct="geo" data-i18n-tip="ct.tip.geo" data-tip="위도·경도를 담아 지도 앱에 위치 핀을 띄웁니다(매장 찾아오기)."><span data-i18n="ct.geo">위치</span></button>
+                <button data-ct="whatsapp" data-i18n-tip="ct.tip.whatsapp" data-tip="번호와 메시지를 담아, 스캔하면 WhatsApp 채팅창이 바로 열립니다(문의·예약).">WhatsApp</button>
+                <button data-ct="paypal" data-i18n-tip="ct.tip.paypal" data-tip="PayPal.Me 사용자명으로 결제·송금 페이지를 엽니다(금액 지정 가능).">PayPal</button>
+                <button data-ct="crypto" data-i18n-tip="ct.tip.crypto" data-tip="비트코인 주소·금액을 담아, 스캔하면 지갑 앱에서 바로 송금할 수 있어요(BIP-21)."><span data-i18n="ct.crypto">암호화폐</span></button>
+                <button data-ct="event" data-i18n-tip="ct.tip.event" data-tip="제목·장소·시간을 담아, 스캔하면 캘린더에 일정을 추가합니다(iCalendar)."><span data-i18n="ct.event">일정</span></button>
               </div>
               <div class="hint" data-i18n-html="ct.hint">각 버튼에 <b>마우스를 올리면</b> 설명이 나옵니다. 스캔하면 바로 실행 — Wi-Fi 접속, 연락처 저장, 전화·문자·메일, 지도 열기.</div>
             </label>
@@ -365,10 +370,39 @@
             </div>
             <div id="ctGeo" style="display:none">
               <div class="row2">
-                <label class="fld"><div class="lbl">위도</div><input type="text" id="geoLat" maxlength="20" placeholder="37.5665" /></label>
-                <label class="fld"><div class="lbl">경도</div><input type="text" id="geoLng" maxlength="20" placeholder="126.9780" /></label>
+                <label class="fld"><div class="lbl" data-i18n="lbl.geoLat">위도</div><input type="text" id="geoLat" maxlength="20" placeholder="37.5665" /></label>
+                <label class="fld"><div class="lbl" data-i18n="lbl.geoLng">경도</div><input type="text" id="geoLng" maxlength="20" placeholder="126.9780" /></label>
               </div>
               <div class="hint" data-i18n="hint.geo">지도 앱에서 좌표 복사: 구글 지도에서 위치 길게 누르면 위도, 경도가 표시됩니다.</div>
+            </div>
+            <div id="ctWhatsapp" style="display:none">
+              <label class="fld"><div class="lbl" data-i18n="lbl.waNum">전화번호 (국가코드 포함)</div><input type="text" id="waNum" maxlength="24" placeholder="+82 10 1234 5678" /></label>
+              <label class="fld"><div class="lbl" data-i18n="lbl.waMsg">메시지 (선택)</div><input type="text" id="waMsg" maxlength="200" /></label>
+              <div class="hint" data-i18n="hint.wa">스캔하면 해당 번호로 WhatsApp 채팅이 열립니다(메시지가 미리 채워짐).</div>
+            </div>
+            <div id="ctPaypal" style="display:none">
+              <label class="fld"><div class="lbl" data-i18n="lbl.ppUser">PayPal.Me 사용자명</div><input type="text" id="ppUser" maxlength="40" placeholder="myusername" /></label>
+              <div class="row2">
+                <label class="fld"><div class="lbl" data-i18n="lbl.ppAmt">금액 (선택)</div><input type="text" id="ppAmt" maxlength="12" placeholder="10.00" /></label>
+                <label class="fld"><div class="lbl" data-i18n="lbl.ppCur">통화</div>
+                  <div class="seg" id="ppCurSeg"><button data-cur="USD" class="on">USD</button><button data-cur="EUR">EUR</button><button data-cur="GBP">GBP</button><button data-cur="KRW">KRW</button></div>
+                </label>
+              </div>
+              <div class="hint" data-i18n="hint.pp">스캔하면 PayPal 결제·송금 페이지가 열립니다. paypal.me 사용자명이 필요해요.</div>
+            </div>
+            <div id="ctCrypto" style="display:none">
+              <label class="fld"><div class="lbl" data-i18n="lbl.cyAddr">비트코인 주소</div><input type="text" id="cyAddr" maxlength="80" placeholder="bc1q..." /></label>
+              <label class="fld"><div class="lbl" data-i18n="lbl.cyAmt">금액 BTC (선택)</div><input type="text" id="cyAmt" maxlength="20" placeholder="0.001" /></label>
+              <div class="hint" data-i18n="hint.cy">스캔하면 지갑 앱이 열려 해당 주소로 송금할 수 있습니다(BIP-21 표준).</div>
+            </div>
+            <div id="ctEvent" style="display:none">
+              <label class="fld"><div class="lbl" data-i18n="lbl.evTitle">일정 제목</div><input type="text" id="evTitle" maxlength="80" placeholder="제품 출시 행사" /></label>
+              <label class="fld"><div class="lbl" data-i18n="lbl.evLoc">장소 (선택)</div><input type="text" id="evLoc" maxlength="120" /></label>
+              <div class="row2">
+                <label class="fld"><div class="lbl" data-i18n="lbl.evStart">시작</div><input type="datetime-local" id="evStart" /></label>
+                <label class="fld"><div class="lbl" data-i18n="lbl.evEnd">종료</div><input type="datetime-local" id="evEnd" /></label>
+              </div>
+              <div class="hint" data-i18n="hint.ev">스캔하면 캘린더에 이 일정을 추가할 수 있습니다(iCalendar 표준).</div>
             </div>
             <div class="hint" id="ctPreview" style="display:none"></div>
             <label class="fld">
@@ -671,6 +705,7 @@
     <div class="hero" style="padding:6px 0 16px">
       <h2 data-i18n-html="ar.h">카메라로 <span class="g">QR을 비추면</span> AR이 나타납니다</h2>
       <p data-i18n="ar.p">후면 카메라로 아무 QR 코드나 비추세요. 코드를 실시간 인식해 그 위에 3D 오브젝트·정보 카드를 얹어 보여줍니다. 100% 브라우저 처리(영상 전송 없음).</p>
+      <div class="lang-switch" role="group" aria-label="Language"><button data-lang="ko">KR</button><button data-lang="en">EN</button><button data-lang="ja">JP</button><button data-lang="zh">CN</button></div>
     </div>
     <div class="ar-wrap">
       <div class="ar-stage" id="arStage">
@@ -702,6 +737,7 @@
     <div class="about">
       <h2 style="font-size:26px;margin:8px 0 4px" data-i18n="gd.title">사용법 가이드</h2>
       <p style="font-size:13px;color:var(--mut2)"><span data-i18n="gd.intro">아름다운 QR 코드를 만드는 스튜디오입니다. 아래 순서대로 따라 하면 처음이라도 몇 분 안에 완성할 수 있어요.</span> <button class="btn sec" id="replayOnboard" style="flex:none;padding:6px 14px;font-size:12px;margin-left:6px" data-i18n="gd.replay">첫 화면 안내 다시 보기</button></p>
+      <div class="lang-switch" role="group" aria-label="Language"><button data-lang="ko">KR</button><button data-lang="en">EN</button><button data-lang="ja">JP</button><button data-lang="zh">CN</button></div>
 
       <h3 style="margin-top:22px" data-i18n="gd.h1">3단계로 끝내기</h3>
       <div class="guide-grid">
@@ -758,7 +794,7 @@
   <footer>
     <div>Aesthetic QR Studio · 아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.06-e</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.06-f</b></div>
   </footer>
 </div>
 
@@ -4067,12 +4103,18 @@ function buildContent(){
     v = "mailto:" + to + (q.length ? "?"+q.join("&") : "");
   }
   else if (CT==="geo"){ v = "geo:" + (parseFloat($("geoLat").value)||0) + "," + (parseFloat($("geoLng").value)||0); }
+  else if (CT==="whatsapp"){ var wn=$("waNum").value.replace(/[^0-9]/g,""); var wm=$("waMsg").value; v = "https://wa.me/"+wn+(wm?"?text="+encodeURIComponent(wm):""); }
+  else if (CT==="paypal"){ var pu=$("ppUser").value.trim().replace(/^@/,""); var pa=$("ppAmt").value.trim().replace(/[^0-9.]/g,""); var pc=document.querySelector("#ppCurSeg button.on").dataset.cur; v = "https://www.paypal.com/paypalme/"+encodeURIComponent(pu)+(pa?"/"+pa+pc:""); }
+  else if (CT==="crypto"){ var ca=$("cyAddr").value.trim(); var cm=$("cyAmt").value.trim().replace(/[^0-9.]/g,""); v = "bitcoin:"+ca+(cm?"?amount="+cm:""); }
+  else if (CT==="event"){ v = buildVEvent(); }
   setContent(v);
   var pv=$("ctPreview");
   if (CT==="url" || CT==="text"){ pv.style.display="none"; }
   else { pv.style.display="block"; pv.textContent=t("ct.enc")+": "+(v.length>140 ? v.slice(0,140)+"…" : v); }
 }
-var CTFORMS = { wifi:"ctWifi", vcard:"ctVcard", tel:"ctTel", sms:"ctSms", email:"ctEmail", geo:"ctGeo" };
+function icalDate(x){ return x ? x.replace(/[-:]/g,"")+"00" : ""; }
+function buildVEvent(){ var ti=$("evTitle").value.trim(), lo=$("evLoc").value.trim(), st=icalDate($("evStart").value), en=icalDate($("evEnd").value); return "BEGIN:VEVENT\nSUMMARY:"+ti+(lo?"\nLOCATION:"+lo:"")+(st?"\nDTSTART:"+st:"")+(en?"\nDTEND:"+en:"")+"\nEND:VEVENT"; }
+var CTFORMS = { wifi:"ctWifi", vcard:"ctVcard", tel:"ctTel", sms:"ctSms", email:"ctEmail", geo:"ctGeo", whatsapp:"ctWhatsapp", paypal:"ctPaypal", crypto:"ctCrypto", event:"ctEvent" };
 function selectCType(ct){
   CT = ct;
   Array.prototype.forEach.call($("ctypeSeg").children, function(x){x.classList.toggle("on", x.dataset.ct===ct);});
@@ -4085,7 +4127,8 @@ $("ctypeSeg").addEventListener("click", function(e){
   selectCType(b.dataset.ct);
   buildContent();
 });
-["content","wifiSsid","wifiPass","vcName","vcTel","vcEmail","vcOrg","vcUrl","telNum","smsNum","smsMsg","emTo","emSubj","emBody","geoLat","geoLng"].forEach(function(id){
+$("ppCurSeg").addEventListener("click", function(e){ var b=e.target.closest("button"); if(!b) return; Array.prototype.forEach.call(this.children,function(x){x.classList.toggle("on",x===b);}); buildContent(); });
+["content","wifiSsid","wifiPass","vcName","vcTel","vcEmail","vcOrg","vcUrl","telNum","smsNum","smsMsg","emTo","emSubj","emBody","geoLat","geoLng","waNum","waMsg","ppUser","ppAmt","cyAddr","cyAmt","evTitle","evLoc","evStart","evEnd"].forEach(function(id){
   $(id).addEventListener("input", buildContent);
 });
 $("wifiHidden").addEventListener("change", buildContent);
@@ -5365,7 +5408,30 @@ var I18N = {
   "btn.genLogo":{ko:'✨ 브랜드명으로 예시 4개 생성',en:'✨ Generate 4 logo examples',zh:'✨ 用品牌名生成4个示例',ja:'✨ ブランド名で例を4つ生成'},
   "hint.genLogo":{ko:'브랜드명을 입력하고 누르면 배지·색상·심볼을 조합한 로고 예시 4개를 만들어요. 마음에 드는 예시를 누르면 바로 적용됩니다.',en:'Enter a brand name and tap to generate 4 logo examples combining badge, colors and symbol. Tap one you like to apply it instantly.',zh:'输入品牌名后点击，生成结合徽章·颜色·符号的4个 Logo 示例。点击喜欢的即可立即应用。',ja:'ブランド名を入力して押すと、バッジ・色・シンボルを組み合わせたロゴ例を4つ生成します。気に入った例を押すとすぐ適用されます。'},
   "ctr.lblMark":{ko:'브랜드명 (모노그램용)',en:'Brand name (for monogram)',zh:'品牌名（用于字母标）',ja:'ブランド名（モノグラム用）'},
-  "ctr.hintMark":{ko:'모노그램 심볼은 브랜드명의 앞 글자를 사용합니다. 아래에서 심볼을 골라보세요.',en:'The monogram symbol uses the first letters of the brand name. Pick a symbol below.',zh:'字母标使用品牌名的首字母。在下方选择符号。',ja:'モノグラムはブランド名の頭文字を使います。下からシンボルを選んでください。'}
+  "ctr.hintMark":{ko:'모노그램 심볼은 브랜드명의 앞 글자를 사용합니다. 아래에서 심볼을 골라보세요.',en:'The monogram symbol uses the first letters of the brand name. Pick a symbol below.',zh:'字母标使用品牌名的首字母。在下方选择符号。',ja:'モノグラムはブランド名の頭文字を使います。下からシンボルを選んでください。'},
+  "ct.crypto":{ko:'암호화폐',en:'Crypto',zh:'加密货币',ja:'暗号資産'},
+  "ct.event":{ko:'일정',en:'Event',zh:'日程',ja:'予定'},
+  "ct.tip.whatsapp":{ko:'번호와 메시지를 담아, 스캔하면 WhatsApp 채팅창이 바로 열립니다(문의·예약).',en:'Opens a WhatsApp chat to your number with a prewritten message on scan (inquiries, bookings).',zh:'扫描即打开 WhatsApp 聊天并预填消息（咨询·预约）。',ja:'スキャンでWhatsAppチャットが開き、メッセージが事前入力されます（問い合わせ・予約）。'},
+  "ct.tip.paypal":{ko:'PayPal.Me 사용자명으로 결제·송금 페이지를 엽니다(금액 지정 가능).',en:'Opens a PayPal.Me payment page for your username (optional amount).',zh:'用 PayPal.Me 用户名打开付款页面（可指定金额）。',ja:'PayPal.Meユーザー名で支払いページを開きます（金額指定可）。'},
+  "ct.tip.crypto":{ko:'비트코인 주소·금액을 담아, 스캔하면 지갑 앱에서 바로 송금할 수 있어요(BIP-21).',en:'Encodes a Bitcoin address & amount so a wallet app can pay on scan (BIP-21).',zh:'编入比特币地址与金额，扫描即可在钱包应用付款（BIP-21）。',ja:'ビットコインアドレスと金額を入れ、スキャンでウォレットから送金できます（BIP-21）。'},
+  "ct.tip.event":{ko:'제목·장소·시간을 담아, 스캔하면 캘린더에 일정을 추가합니다(iCalendar).',en:'Encodes a title/place/time so scanning adds it to the calendar (iCalendar).',zh:'编入标题·地点·时间，扫描即可加入日历（iCalendar）。',ja:'タイトル・場所・時間を入れ、スキャンでカレンダーに追加します（iCalendar）。'},
+  "lbl.waNum":{ko:'전화번호 (국가코드 포함)',en:'Phone number (with country code)',zh:'电话号码（含国家码）',ja:'電話番号（国番号込み）'},
+  "lbl.waMsg":{ko:'메시지 (선택)',en:'Message (optional)',zh:'消息（可选）',ja:'メッセージ（任意）'},
+  "hint.wa":{ko:'스캔하면 해당 번호로 WhatsApp 채팅이 열립니다(메시지가 미리 채워짐).',en:'Scanning opens a WhatsApp chat to that number, with the message prefilled.',zh:'扫描后会打开与该号码的 WhatsApp 聊天并预填消息。',ja:'スキャンするとその番号のWhatsAppチャットが開き、メッセージが入ります。'},
+  "lbl.ppUser":{ko:'PayPal.Me 사용자명',en:'PayPal.Me username',zh:'PayPal.Me 用户名',ja:'PayPal.Me ユーザー名'},
+  "lbl.ppAmt":{ko:'금액 (선택)',en:'Amount (optional)',zh:'金额（可选）',ja:'金額（任意）'},
+  "lbl.ppCur":{ko:'통화',en:'Currency',zh:'货币',ja:'通貨'},
+  "hint.pp":{ko:'스캔하면 PayPal 결제·송금 페이지가 열립니다. paypal.me 사용자명이 필요해요.',en:'Scanning opens a PayPal payment page. A paypal.me username is required.',zh:'扫描后打开 PayPal 付款页面，需要 paypal.me 用户名。',ja:'スキャンでPayPal支払いページが開きます。paypal.meユーザー名が必要です。'},
+  "lbl.cyAddr":{ko:'비트코인 주소',en:'Bitcoin address',zh:'比特币地址',ja:'ビットコインアドレス'},
+  "lbl.cyAmt":{ko:'금액 BTC (선택)',en:'Amount BTC (optional)',zh:'金额 BTC（可选）',ja:'金額 BTC（任意）'},
+  "hint.cy":{ko:'스캔하면 지갑 앱이 열려 해당 주소로 송금할 수 있습니다(BIP-21 표준).',en:'Scanning opens a wallet app to send to that address (BIP-21 standard).',zh:'扫描后打开钱包应用向该地址付款（BIP-21 标准）。',ja:'スキャンでウォレットが開き、そのアドレスへ送金できます（BIP-21標準）。'},
+  "lbl.evTitle":{ko:'일정 제목',en:'Event title',zh:'日程标题',ja:'予定タイトル'},
+  "lbl.evLoc":{ko:'장소 (선택)',en:'Location (optional)',zh:'地点（可选）',ja:'場所（任意）'},
+  "lbl.evStart":{ko:'시작',en:'Start',zh:'开始',ja:'開始'},
+  "lbl.evEnd":{ko:'종료',en:'End',zh:'结束',ja:'終了'},
+  "hint.ev":{ko:'스캔하면 캘린더에 이 일정을 추가할 수 있습니다(iCalendar 표준).',en:'Scanning lets you add this event to the calendar (iCalendar standard).',zh:'扫描后可将此日程加入日历（iCalendar 标准）。',ja:'スキャンでこの予定をカレンダーに追加できます（iCalendar標準）。'},
+  "lbl.geoLat":{ko:'위도',en:'Latitude',zh:'纬度',ja:'緯度'},
+  "lbl.geoLng":{ko:'경도',en:'Longitude',zh:'经度',ja:'経度'}
 };
 var LANG="ko";
 function t(key){ var e=I18N[key]; return e ? (e[LANG]||e.ko) : null; }
@@ -5379,14 +5445,14 @@ function applyLang(lang){
   try{ updateMeta(); }catch(e){}
   try{ centerUIvis(); }catch(e){}
   try{ localStorage.setItem("aqr_lang", lang); }catch(e){}
-  var sw=$("langSwitch"); if(sw){ Array.prototype.forEach.call(sw.children,function(x){ x.classList.toggle("on", x.dataset.lang===lang); }); }
+  document.querySelectorAll(".lang-switch").forEach(function(sw){ Array.prototype.forEach.call(sw.children,function(x){ x.classList.toggle("on", x.dataset.lang===lang); }); });
 }
 (function initLang(){
   var saved=null; try{ saved=localStorage.getItem("aqr_lang"); }catch(e){}
   var nav=(navigator.language||"ko").toLowerCase();
   var auto = nav.indexOf("zh")===0?"zh": nav.indexOf("ja")===0?"ja": nav.indexOf("ko")===0?"ko":"en";
   applyLang(saved||auto);
-  var sw=$("langSwitch"); if(sw) sw.addEventListener("click",function(e){ var b=e.target.closest("button"); if(b&&b.dataset.lang) applyLang(b.dataset.lang); });
+  document.addEventListener("click",function(e){ var b=e.target.closest(".lang-switch button[data-lang]"); if(b) applyLang(b.dataset.lang); });
 })();
 
 // ---------- init ----------
