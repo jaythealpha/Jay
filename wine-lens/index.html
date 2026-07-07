@@ -427,7 +427,7 @@
     <div class="logo">🍷</div>
     <div>
       <b>와인 렌즈</b>
-      <small>와인부터 데킬라까지 · 8가지 주종 라벨 스캔</small>
+      <small>와인부터 소주까지 · 12가지 주종 라벨 스캔</small>
     </div>
   </div>
   <div class="spacer"></div>
@@ -441,7 +441,7 @@
   <section class="screen active" id="screen-capture">
     <div class="hero">
       <h1>술 라벨을 찍으면<br><span class="accent">한 잔의 이야기</span>가 펼쳐집니다</h1>
-      <p>🍷 와인 · 🍶 사케 · 🥃 위스키 · 🏺 전통주 · 🍺 맥주<br>🍇 브랜디 · 🏮 백주 · 🌵 데킬라까지 자동 판별해<br>연식 · 가격대 · 히스토리 · 테이스팅 · 페어링을 인포그래픽으로.</p>
+      <p>🍷 와인 · 🍶 사케 · 🥃 위스키 · 🏺 전통주 · 🍺 맥주 · 🍇 브랜디<br>🏮 백주 · 🌵 데킬라 · 🏴‍☠️ 럼 · 🌿 진 · 🍾 소주까지 자동 판별해<br>연식 · 가격대 · 히스토리 · 테이스팅 · 페어링을 인포그래픽으로.</p>
     </div>
 
     <div class="capture-card">
@@ -475,7 +475,7 @@
 
     <p class="disclaimer" style="margin-top:22px">
       API 키가 없어도 <b style="color:var(--gold-soft)">데모 보기</b>로 인포그래픽을 체험할 수 있어요.<br>
-      <button class="btn btn-ghost" id="btnDemo" style="margin-top:10px;padding:10px 16px;font-size:14px">🎲 데모 보기 — 탭할 때마다 8가지 주종 순환</button>
+      <button class="btn btn-ghost" id="btnDemo" style="margin-top:10px;padding:10px 16px;font-size:14px">🎲 데모 보기 — 탭할 때마다 12가지 주종 순환</button>
     </p>
   </section>
 
@@ -735,14 +735,14 @@ const JSON_SCHEMA = `{
   "found": true,                       // 라벨을 술로 인식했으면 true, 아니면 false
   "reason": "",                        // found=false일 때 이유
   "confidence": "high|medium|low",     // 라벨 인식 확신도
-  "category": "wine|sake|whisky|traditional|beer|brandy|baijiu|tequila|spirits",  // 주종: 와인|사케|위스키|한국 전통주|맥주|브랜디·코냑|중국 백주|데킬라·메즈칼|기타(진·럼·보드카 등)
+  "category": "wine|sake|whisky|traditional|beer|brandy|baijiu|tequila|rum|gin|soju|spirits",  // 주종: 와인|사케|위스키|한국 전통주|맥주|브랜디·코냑|중국 백주|데킬라·메즈칼|럼|진|희석식 소주|기타(보드카 등)
   "name": "제품명(라벨 표기 그대로)",
   "producer": "생산자(와이너리/양조장/증류소/브루어리) 이름",
-  "type": "주종 내 세부 타입 — 와인: 레드/화이트/로제/스파클링, 사케: 준마이/긴조/다이긴조, 위스키: 싱글몰트/블렌디드/버번, 전통주: 탁주/약주/청주/증류식 소주, 맥주: IPA/스타우트/라거 등 스타일, 브랜디: 코냑/아르마냑/칼바도스, 백주: 농향형/장향형/청향형, 데킬라: 블랑코/레포사도/아녜호",
-  "vintage": "연식 표기 문자열 — 와인: 빈티지 연도/'NV', 위스키·브랜디: '12년'/'XO' 등 숙성 표기, 사케: 양조년도(BY)/미상, 그 외: 제조년도/미상",
+  "type": "주종 내 세부 타입 — 와인: 레드/화이트/로제/스파클링, 사케: 준마이/긴조/다이긴조, 위스키: 싱글몰트/블렌디드/버번, 전통주: 탁주/약주/청주/증류식 소주, 맥주: IPA/스타우트/라거 등 스타일, 브랜디: 코냑/아르마냑/칼바도스, 백주: 농향형/장향형/청향형, 데킬라: 블랑코/레포사도/아녜호, 럼: 화이트/골드/다크/아녜호/아그리콜, 진: 런던 드라이/올드톰/뉴웨스턴, 소주: 희석식/증류식",
+  "vintage": "연식 표기 문자열 — 와인: 빈티지 연도/'NV', 위스키·브랜디: '12년'/'XO' 등 숙성 표기, 사케: 양조년도(BY)/미상, 럼: 숙성 연수/미상, 그 외: 제조년도/미상",
   "region": "지역/아펠라시옹/현(県)/도(道)/주(州)",
   "country": "국가",
-  "ingredients": ["주원료 — 와인: 포도 품종, 사케: 쌀 품종·누룩, 위스키·맥주: 몰트·곡물·홉, 전통주: 쌀·누룩, 브랜디: 포도 품종, 백주: 수수(고량) 등, 데킬라: 아가베"],
+  "ingredients": ["주원료 — 와인: 포도 품종, 사케: 쌀 품종·누룩, 위스키·맥주: 몰트·곡물·홉, 전통주: 쌀·누룩, 브랜디: 포도 품종, 백주: 수수(고량), 데킬라: 아가베, 럼: 사탕수수(당밀/즙), 진: 주니퍼·보태니컬, 소주: 주정·쌀·감미료"],
   "alcohol": "도수 예: 13.5%",
   "priceRange": "한국 예상 소매가 범위(원화), 예: 3~5만원",
   "priceNote": "가격 관련 한 줄 코멘트(가성비/희소성 등)",
@@ -752,7 +752,8 @@ const JSON_SCHEMA = `{
     // 와인: 바디/탄닌/산도/당도 · 사케: 단맛(甘辛)/산미/바디(담려-농순)/향 ·
     // 위스키: 바디/피트(스모크)/단맛/스파이스 · 전통주: 단맛/산미/바디/탄산(또는 향) ·
     // 맥주: 바디/쓴맛/단맛/탄산 · 브랜디: 바디/과실향/단맛/오크 ·
-    // 백주: 향 강도/단맛/부드러움/여운 · 데킬라: 바디/아가베향/단맛/스파이스
+    // 백주: 향 강도/단맛/부드러움/여운 · 데킬라: 바디/아가베향/단맛/스파이스 ·
+    // 럼: 바디/단맛/오크/스파이스 · 진: 주니퍼/시트러스/허브/스파이스 · 소주: 부드러움/단맛/알코올감/깔끔함
   ],
   "specs": [                           // 주종 특화 제원 2~5개 (라벨·일반 지식 기반)
     {"label":"정미보합","value":"23%"}
@@ -857,6 +858,9 @@ const CATS = {
   brandy:      { icon: '🍇', label: '브랜디',    en: 'Brandy',  vintageCap: 'Age / Grade', ingTitle: ['Grapes & Fruit', '원료'], prodTitle: ['The House', '메종'] },
   baijiu:      { icon: '🏮', label: '백주',      en: 'Baijiu',  vintageCap: 'Year',     ingTitle: ['Grains', '원료'], prodTitle: ['The Distillery', '양조창'] },
   tequila:     { icon: '🌵', label: '데킬라',    en: 'Tequila', vintageCap: 'Grade',    ingTitle: ['Agave', '원료'], prodTitle: ['The Distillery', '증류소'] },
+  rum:         { icon: '🏴‍☠️', label: '럼',       en: 'Rum',     vintageCap: 'Age / Grade', ingTitle: ['Sugarcane', '원료'], prodTitle: ['The Distillery', '증류소'] },
+  gin:         { icon: '🌿', label: '진',        en: 'Gin',     vintageCap: 'Style',    ingTitle: ['Botanicals', '보태니컬'], prodTitle: ['The Distillery', '증류소'] },
+  soju:        { icon: '🍾', label: '소주',      en: 'Soju',    vintageCap: 'Year',     ingTitle: ['Ingredients', '원료'], prodTitle: ['The Maker', '제조사'] },
   spirits:     { icon: '🍸', label: '기타 주류', en: 'Spirits', vintageCap: 'Year',     ingTitle: ['Ingredients', '원료'], prodTitle: ['The Maker', '생산자'] },
 };
 function catOf(d) { return CATS[d && d.category] || CATS.wine; }
@@ -1527,6 +1531,138 @@ const DEMOS = [
     '라벨에 "100% de Agave" 표기가 없으면 설탕 혼합(믹스토)입니다.',
     '팔로마(자몽소다 칵테일)로 마시면 레포사도의 달큰함이 잘 삽니다.',
     '다음 단계로는 아녜호(1년+), 크리스탈리노도 시도해 보세요.',
+  ],
+},
+{
+  found: true, confidence: 'high', category: 'rum',
+  name: 'Ron Zacapa Centenario 23',
+  producer: '사카파 (Ron Zacapa)',
+  type: '다크 럼 (솔레라 숙성)',
+  vintage: '솔레라 23',
+  region: '과테말라 고지대',
+  country: '과테말라',
+  ingredients: ['사탕수수 첫 압착즙 (버진 슈가케인 허니)'],
+  alcohol: '40%',
+  priceRange: '9~13만원',
+  priceNote: '스페인식 시핑 럼의 대표 — 디저트 같은 단맛으로 럼 입문자에게 인기',
+  priceTier: 3,
+  tasteProfile: [
+    { name: '바디', en: 'Body', value: 72, left: '라이트', right: '풀' },
+    { name: '단맛', en: 'Sweetness', value: 80, left: '드라이', right: '스위트' },
+    { name: '오크', en: 'Oak', value: 62, left: '약함', right: '진함' },
+    { name: '스파이스', en: 'Spice', value: 40, left: '순함', right: '알싸함' },
+  ],
+  specs: [
+    { label: '숙성', value: '솔레라 시스템 (6~23년 블렌딩)' },
+    { label: '원료', value: '사탕수수 첫 압착즙 (당밀 아님)' },
+    { label: '캐스크', value: '버번·셰리·페드로 히메네스 오크' },
+  ],
+  tastingNotes: '건포도, 꿀, 캐러멜, 바닐라의 진한 단내에 오크와 은은한 스파이스가 어우러집니다. 벨벳처럼 부드럽고 디저트 같은 마무리가 인상적입니다.',
+  drinkFrom: null, drinkPeak: null, drinkUntil: null,
+  history: [
+    { year: '1976', text: '과테말라에서 출시 — 해발 2,300m 고지대 숙성이 특징' },
+    { year: '2000년대', text: '국제 주류 대회 다관왕으로 프리미엄 럼 붐을 견인' },
+    { year: '2011', text: '디아지오가 글로벌 유통을 맡으며 세계 시장 확대' },
+  ],
+  story: '"솔레라 23"의 23은 숙성 연수가 아니라 최대 23년까지의 원액을 층층이 블렌딩한다는 의미입니다. 사탕수수 즙을 졸인 "버진 슈가케인 허니"로 발효해 당밀 럼과는 다른 결을 냅니다.',
+  winery: '사카파는 고산지대의 낮은 기온에서 천천히 숙성시키는 "시스테마 솔레라"를 상징으로 삼습니다. 병목의 페탄테(야자잎 밴드)는 과테말라 장인들이 손으로 엮습니다.',
+  foodPairing: ['🍫 다크 초콜릿', '☕ 에스프레소', '🚬 시가', '🍮 크렘 브륄레'],
+  servingTemp: '실온 또는 큰 얼음 1개',
+  servingNote: '니트나 온더록으로 — 디저트 대신 식후주로 천천히 즐기세요',
+  aging: '병입 후 숙성되지 않음 — 세워서 직사광선을 피해 보관',
+  tips: [
+    '단맛이 강하니 첫 잔은 니트로 향을 먼저 느껴보세요.',
+    '스페인식 시핑 럼이 입에 맞으면 디플로마티코, 자카파 XO도 좋습니다.',
+    '드라이한 럼을 원하면 자메이카식(애플턴), 아그리콜(마르티니크)을 비교해 보세요.',
+    '얼음 없이 마실 땐 코냑 글라스가 향을 잘 모아줍니다.',
+  ],
+},
+{
+  found: true, confidence: 'high', category: 'gin',
+  name: 'Hendrick’s Gin',
+  producer: '헨드릭스 (윌리엄 그랜트 앤 선즈)',
+  type: '뉴 웨스턴 (스코티시 진)',
+  vintage: '뉴 웨스턴 스타일',
+  region: '스코틀랜드 걸배런',
+  country: '영국',
+  ingredients: ['주니퍼', '오이', '불가리아 장미', '코리앤더', '레몬 필', '11종 보태니컬'],
+  alcohol: '41.4%',
+  priceRange: '4~6만원',
+  priceNote: '오이·장미로 유명한 개성파 진 — 크래프트 진 붐의 상징적 브랜드',
+  priceTier: 2,
+  tasteProfile: [
+    { name: '주니퍼', en: 'Juniper', value: 45, left: '은은함', right: '강렬함' },
+    { name: '시트러스', en: 'Citrus', value: 55, left: '약함', right: '풍부함' },
+    { name: '허브·플로럴', en: 'Floral', value: 78, left: '약함', right: '화려함' },
+    { name: '스파이스', en: 'Spice', value: 35, left: '순함', right: '알싸함' },
+  ],
+  specs: [
+    { label: '스타일', value: '뉴 웨스턴 (주니퍼 절제형)' },
+    { label: '시그니처', value: '오이 + 불가리아 다마스크 장미' },
+    { label: '증류', value: '2종 증류기 원액 블렌딩' },
+  ],
+  tastingNotes: '오이의 청량함과 장미의 화사한 플로럴이 주니퍼를 부드럽게 감쌉니다. 전통 런던 드라이보다 순하고 향긋해 진토닉에서 진가를 발휘합니다.',
+  drinkFrom: null, drinkPeak: null, drinkUntil: null,
+  history: [
+    { year: '1999', text: '윌리엄 그랜트 앤 선즈가 오이·장미를 넣은 파격 진 출시' },
+    { year: '2000년대', text: '"보통과 다른 진" 마케팅으로 크래프트 진 유행의 도화선' },
+    { year: '2018', text: '수요 급증으로 걸배런에 진 전용 증류소 증설' },
+  ],
+  story: '19세기 베넷·카터헤드 증류기 두 대의 원액을 섞어 만듭니다. 오이와 장미는 증류 후에 인퓨전하는데, 이 조합이 "진은 쓰다"는 편견을 깬 것으로 평가받습니다.',
+  winery: '헨드릭스는 소량 배치(한 번에 450리터)로만 생산하며, 빅토리아 시대 실험실 콘셉트의 브랜딩으로 유명합니다. 윌리엄 그랜트 앤 선즈는 글렌피딕으로도 잘 알려진 가족 기업입니다.',
+  foodPairing: ['🥒 오이 카나페', '🐟 훈제 연어', '🧀 염소 치즈', '🍋 세비체'],
+  servingTemp: '얼음 가득 (진토닉)',
+  servingNote: '진토닉에 라임 대신 오이 슬라이스를 — 브랜드가 공식 권장하는 가니시입니다',
+  aging: '숙성되지 않는 무색 스피릿 — 개봉 후에도 오래 보관 가능',
+  tips: [
+    '토닉은 단맛 적은 프리미엄 토닉(펜티만스·1724)이 향을 살립니다.',
+    '주니퍼가 강한 정통파를 원하면 탱커레이·비피터를, 플로럴을 즐기면 몽키47을 비교해 보세요.',
+    '오이 가니시는 얇게 세로로 저며 잔 안쪽에 붙이면 향이 지속됩니다.',
+    '마티니보다는 진토닉·G&T에 더 어울리는 스타일입니다.',
+  ],
+},
+{
+  found: true, confidence: 'high', category: 'soju',
+  name: '진로 이즈백 (眞露 is Back)',
+  producer: '하이트진로',
+  type: '희석식 소주',
+  vintage: '미상',
+  region: '대한민국',
+  country: '대한민국',
+  ingredients: ['주정(고구마·타피오카 등)', '정제수', '감미료', '토닉워터 성분'],
+  alcohol: '16%',
+  priceRange: '1,300~2,000원',
+  priceNote: '레트로 두꺼비 디자인으로 흥행한 국민 소주 — 편의점·식당 기본 소주',
+  priceTier: 1,
+  tasteProfile: [
+    { name: '부드러움', en: 'Smoothness', value: 72, left: '거침', right: '매끄러움' },
+    { name: '단맛', en: 'Sweetness', value: 48, left: '드라이', right: '스위트' },
+    { name: '알코올감', en: 'Alcohol', value: 40, left: '순함', right: '강함' },
+    { name: '깔끔함', en: 'Clean Finish', value: 78, left: '텁텁함', right: '깔끔함' },
+  ],
+  specs: [
+    { label: '분류', value: '희석식 소주 (주정 희석)' },
+    { label: '도수', value: '16% (저도주 트렌드)' },
+    { label: '특징', value: '무가당 계열 · 깔끔한 목넘김' },
+  ],
+  tastingNotes: '옛 진로의 레트로 감성을 살린 깔끔하고 부드러운 목넘김이 특징입니다. 단맛을 줄여 담백하며, 기름진 안주와 무난하게 어울립니다.',
+  drinkFrom: null, drinkPeak: null, drinkUntil: null,
+  history: [
+    { year: '1924', text: '진로 창업 — 두꺼비는 오랜 소주 상징 캐릭터' },
+    { year: '2019', text: '"진로 이즈백" 출시, 뉴트로 열풍으로 대히트' },
+    { year: '2020년대', text: '도수 하향(16%대) 저도주 경쟁을 주도' },
+  ],
+  story: '1970~80년대 진로 라벨의 두꺼비를 현대적으로 되살린 "뉴트로" 마케팅의 대표 성공 사례입니다. 하늘색 병과 두꺼비 캐릭터가 굿즈로도 인기를 끌었습니다.',
+  winery: '하이트진로는 한국 최대 주류 기업으로, 진로·참이슬·테라 등을 보유합니다. 소주 세계 판매량 1위 브랜드(진로/참이슬)를 배출했습니다.',
+  foodPairing: ['🥓 삼겹살', '🌶️ 제육볶음', '🍲 김치찌개', '🍗 치킨'],
+  servingTemp: '4~8℃ (차갑게)',
+  servingNote: '냉장 보관 후 차게 — 첫 잔은 병을 살짝 돌려 소용돌이를 만든 뒤 따르면 부드럽습니다',
+  aging: '숙성 개념 없음 — 개봉 후 빨리 소비 권장',
+  tips: [
+    '차갑게 마실수록 알코올 향이 줄어 부드럽게 느껴집니다.',
+    '맥주와 섞으면 "소맥" — 소주:맥주 = 3:7 전후가 대중적입니다.',
+    '증류식 소주(화요·일품진로)는 원료 풍미가 살아 있어 스트레이트로 즐기기 좋습니다.',
+    '숙취를 줄이려면 물을 충분히 곁들여 천천히 드세요.',
   ],
 },
 ];
