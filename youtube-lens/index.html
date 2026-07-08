@@ -279,6 +279,35 @@
 
   .err-box { background: rgba(255,59,92,.08); border: 1px solid rgba(255,59,92,.3); color: var(--red-soft); border-radius: 12px; padding: 12px 14px; font-size: 13.5px; margin-top: 14px; }
 
+  /* studio */
+  .studio-src { display: flex; gap: 10px; align-items: center; background: rgba(157,124,255,.07); border: 1px solid rgba(157,124,255,.25); border-radius: 12px; padding: 10px 12px; font-size: 12.5px; color: var(--ink-2); }
+  .studio-src .ic { font-size: 16px; }
+  .studio-src b { color: var(--ink-1); }
+  .seg { display: flex; gap: 8px; }
+  .seg-b { flex: 1; padding: 11px 8px; border-radius: 12px; border: 1px solid var(--line-solid); background: var(--card); color: var(--ink-2); font-family: inherit; font-weight: 700; font-size: 13px; cursor: pointer; transition: .15s; }
+  .seg-b.active { border-color: var(--violet); background: rgba(157,124,255,.14); color: var(--violet-soft); }
+  .content { background: linear-gradient(180deg, var(--card) 0%, var(--bg2) 100%); border: 1px solid var(--line-solid); border-radius: 18px; padding: 16px 17px; margin-top: 16px; position: relative; }
+  .content .fmt { display: inline-block; font-size: 11px; font-weight: 800; color: var(--violet-soft); background: rgba(157,124,255,.12); border: 1px solid rgba(157,124,255,.3); padding: 3px 9px; border-radius: 999px; }
+  .content h4 { font-size: 17px; font-weight: 900; margin: 9px 0 12px; letter-spacing: -.02em; }
+  .content .lbl { font-size: 11px; font-weight: 800; color: var(--ink-3); letter-spacing: .06em; text-transform: uppercase; margin: 15px 0 8px; display: flex; align-items: center; gap: 7px; }
+  .hooklist { display: flex; flex-direction: column; gap: 6px; }
+  .hooklist .hk { display: flex; gap: 8px; align-items: flex-start; background: var(--bg); border: 1px solid var(--line-solid); border-radius: 10px; padding: 9px 11px; font-size: 13.5px; font-weight: 700; color: var(--ink-1); }
+  .hooklist .hk .idx { flex: none; color: var(--gold); font-weight: 800; }
+  .scenes { border-left: 2px solid var(--line-solid); margin-left: 6px; }
+  .scene { padding: 0 0 12px 14px; position: relative; }
+  .scene::before { content: ""; position: absolute; left: -5px; top: 4px; width: 8px; height: 8px; border-radius: 50%; background: var(--violet); }
+  .scene:last-child { padding-bottom: 0; }
+  .scene .sc-h { font-size: 12px; font-weight: 800; color: var(--red-soft); }
+  .scene .sc-v { font-size: 12.5px; color: var(--ink-3); margin-top: 2px; }
+  .scene .sc-t { font-size: 14px; color: var(--ink-1); margin-top: 4px; line-height: 1.55; }
+  .caption-box { background: var(--bg); border: 1px solid var(--line-solid); border-radius: 12px; padding: 12px; font-size: 14px; line-height: 1.6; color: var(--ink-1); white-space: pre-wrap; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .tags .tg { font-size: 12px; font-weight: 700; color: var(--violet-soft); }
+  .cta-box { font-size: 14px; font-weight: 700; color: var(--gold); background: rgba(255,192,72,.08); border: 1px solid rgba(255,192,72,.3); border-radius: 12px; padding: 11px 13px; }
+  .copy-btn { position: absolute; top: 14px; right: 14px; background: var(--card-2); border: 1px solid var(--line-solid); color: var(--violet-soft); font-size: 11.5px; font-weight: 800; padding: 6px 11px; border-radius: 9px; cursor: pointer; transition: .15s; }
+  .copy-btn:hover { border-color: var(--violet); }
+  .copy-btn.done { color: var(--mint-soft); border-color: rgba(53,208,165,.4); }
+
   @media (max-width: 560px) {
     .result-hero { flex-direction: column; }
     .result-hero .thumb { width: 100%; }
@@ -369,9 +398,46 @@
   <!-- ============ RESULT ============ -->
   <section class="screen" id="result">
     <div id="resultBody"></div>
-    <div class="result-actions">
+    <button class="btn btn-primary block" id="studioBtn" style="margin-top:26px;">✍️ 이 노하우로 콘텐츠 만들기</button>
+    <div class="result-actions" style="margin-top:10px;">
       <button class="btn btn-ghost block" id="againBtn">← 새 영상 분석</button>
       <button class="btn btn-violet block" id="shareBtn">📤 공유</button>
+    </div>
+  </section>
+
+  <!-- ============ CONTENT STUDIO ============ -->
+  <section class="screen" id="studio">
+    <div class="hero" style="padding-top:18px;">
+      <h1 style="font-size:23px;">✍️ <span class="accent2">콘텐츠 스튜디오</span></h1>
+      <p>분석한 노하우를 바탕으로 <b>바로 올릴 수 있는 콘텐츠</b>를 만들어요.</p>
+    </div>
+    <div class="card" style="margin-top:16px;">
+      <div class="studio-src" id="studioSrc"></div>
+      <label class="field-label" for="cfFormat" style="margin-top:14px;">형식</label>
+      <div class="seg" id="cfFormat">
+        <button class="seg-b active" data-fmt="릴스 대본">🎞 릴스 대본</button>
+        <button class="seg-b" data-fmt="카드뉴스">🖼 카드뉴스</button>
+        <button class="seg-b" data-fmt="쇼츠 훅 세트">⚡ 쇼츠 훅</button>
+      </div>
+      <label class="field-label" for="cfTopic" style="margin-top:14px;">주제 · 키워드 <span style="font-weight:600;color:var(--ink-3);">(비우면 영상 주제 사용)</span></label>
+      <input type="text" id="cfTopic" placeholder="예: 직장인 아침 루틴 / 자동화 도구 추천 …" autocomplete="off">
+      <div style="display:flex;gap:12px;margin-top:14px;">
+        <div style="flex:1;"><label class="field-label" for="cfTone">톤</label>
+          <select id="cfTone">
+            <option value="정보성·신뢰감">정보성·신뢰감</option>
+            <option value="친근·대화체">친근·대화체</option>
+            <option value="자극적·후킹 강함">자극적·후킹 강함</option>
+            <option value="담백·전문가">담백·전문가</option>
+          </select></div>
+        <div style="width:110px;"><label class="field-label" for="cfCount">개수</label>
+          <select id="cfCount"><option>1</option><option selected>2</option><option>3</option><option>4</option></select></div>
+      </div>
+      <button class="btn btn-primary block" id="genBtn" style="margin-top:16px;">✨ 콘텐츠 생성</button>
+      <div id="studioErr" class="err-box hidden"></div>
+    </div>
+    <div id="studioOut"></div>
+    <div class="result-actions" style="margin-top:22px;">
+      <button class="btn btn-ghost block" id="studioBack">← 분석으로</button>
     </div>
   </section>
 
@@ -892,6 +958,178 @@ function loadDemo() {
   show('result');
 }
 
+/* ================= CONTENT STUDIO ================= */
+let studioFmt = '릴스 대본';
+function openStudio() {
+  if (!_lastData) { toast('먼저 영상을 분석하세요', true); return; }
+  const v = _lastData.video || {};
+  $('#studioSrc').innerHTML = `<span class="ic">🧠</span><div>노하우 시드: <b>${esc(v.title || current.title || '분석 결과')}</b>의 인터뷰이 노하우 ${arr(_lastData.knowhow).length}개를 반영합니다.</div>`;
+  $('#cfTopic').value = '';
+  $('#studioOut').innerHTML = '';
+  $('#studioErr').classList.add('hidden');
+  show('studio');
+}
+
+const CONTENT_SCHEMA = `{
+  "pieces": [
+    {
+      "format": "릴스 대본|카드뉴스|쇼츠 훅 세트",
+      "title": "이 콘텐츠의 내부 제목(관리용)",
+      "hooks": ["스크롤을 멈추게 하는 첫 문장/첫 장면 후보 3개"],
+      "script": [
+        { "scene": "장면 번호·시간(릴스) 또는 슬라이드 N(카드뉴스)", "visual": "화면/비주얼/자막 배치 지시 한 줄", "voiceover": "실제 나레이션 또는 화면에 들어갈 텍스트" }
+      ],
+      "caption": "게시물 캡션(줄바꿈 포함, 첫 줄이 후킹). 이모지 적절히.",
+      "hashtags": ["#해시태그 8~12개"],
+      "cta": "저장/공유/팔로우/링크클릭을 유도하는 마지막 한 문장"
+    }
+  ]
+}`;
+function contentPrompt(seed, opts) {
+  const kh = arr(seed.knowhow).map(k => `- (${k.category}) ${k.title}: ${k.detail}`).join('\n');
+  const topic = opts.topic || (seed.video && seed.video.topic) || (seed.video && seed.video.title) || '이 영상의 주제';
+  const fmtGuide = {
+    '릴스 대본': '15~40초 릴스용. script는 시간/장면 단위(예: "0-2초", "2-6초")로 5~8개. 첫 장면은 강한 훅.',
+    '카드뉴스': '인스타 카드뉴스용. script는 슬라이드 단위(예: "1", "2" … 6~9장). 1번은 표지(훅), 마지막은 CTA. voiceover는 각 슬라이드에 들어갈 텍스트.',
+    '쇼츠 훅 세트': '같은 주제로 쓸 수 있는 강한 훅+오프닝 3초 대본 세트. script는 각 훅의 오프닝 3~4초를 담고, hooks에 훅 문구를 담는다.'
+  }[opts.format] || '';
+  return `아래는 한 유튜브 영상에서 뽑은 인터뷰이의 노하우입니다. 이 노하우를 근거로,` +
+    ` 시청자가 자기 SNS 계정에 바로 올릴 수 있는 "${opts.format}" 콘텐츠를 ${opts.count}개 만들어 주세요.\n\n` +
+    `[노하우 시드]\n${kh}\n\n[주제·키워드] ${topic}\n[톤] ${opts.tone}\n[형식 가이드] ${fmtGuide}\n\n` +
+    `각 콘텐츠는 서로 다른 앵글로 만들고, 훅은 실제로 궁금증/이득/충돌을 자극하도록 구체적으로 쓰세요.` +
+    ` 과장·허위 수익 보장 표현은 쓰지 마세요. 반드시 아래 JSON 스키마로만 한국어로 응답하세요.\n\n${CONTENT_SCHEMA}`;
+}
+
+async function generateContent() {
+  const key = store.key();
+  const opts = { format: studioFmt, topic: $('#cfTopic').value.trim(), tone: $('#cfTone').value, count: $('#cfCount').value };
+  $('#studioErr').classList.add('hidden');
+  // demo fallback (no key) — show seeded content so the flow is visible
+  if (!key) {
+    if (_renderState.isDemo) { renderContent(demoContent(opts)); toast('데모 콘텐츠예요. 실제 생성은 API 키가 필요해요'); return; }
+    toast('⚙️ 설정에서 API 키를 입력하거나 데모에서 사용해 보세요', true); openDrawer('setDrawer'); return;
+  }
+  const btn = $('#genBtn'); const orig = btn.textContent; btn.disabled = true; btn.textContent = '생성 중…';
+  try {
+    const data = await callClaudeContent(key, store.model(), contentPrompt(_lastData, opts));
+    renderContent(data);
+  } catch (e) {
+    const b = $('#studioErr'); b.textContent = '⚠️ ' + (e.message || '생성 실패'); b.classList.remove('hidden');
+  } finally { btn.disabled = false; btn.textContent = orig; }
+}
+
+async function callClaudeContent(key, model, prompt) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+    body: JSON.stringify({ model, max_tokens: 8000, messages: [{ role: 'user', content: [{ type: 'text', text: prompt }] }] }),
+  });
+  if (!res.ok) {
+    let msg = `API 오류 (${res.status})`;
+    try { const j = await res.json(); if (j.error?.message) msg += ': ' + j.error.message; } catch {}
+    if (res.status === 401) msg = 'API 키가 올바르지 않아요.';
+    throw new Error(msg);
+  }
+  const j = await res.json();
+  const texts = (j.content || []).filter(c => c.type === 'text').map(c => c.text || '');
+  for (const t of [texts.join('\n'), texts[texts.length - 1] || '']) { try { return parseJson(t); } catch {} }
+  throw new Error('응답을 해석하지 못했어요. 다시 시도해 주세요.');
+}
+
+function renderContent(data) {
+  const pieces = arr(data.pieces);
+  if (!pieces.length) { $('#studioOut').innerHTML = `<div class="empty">생성된 콘텐츠가 없어요. 다시 시도해 주세요.</div>`; return; }
+  $('#studioOut').innerHTML = pieces.map((p, i) => {
+    let h = `<div class="content" id="pc${i}"><button class="copy-btn" data-copy="${i}">📋 전체 복사</button>`;
+    h += `<span class="fmt">${esc(p.format || studioFmt)}</span>`;
+    h += `<h4>${esc(p.title || `콘텐츠 ${i+1}`)}</h4>`;
+    if (arr(p.hooks).length) h += `<div class="lbl">🎣 훅 후보</div><div class="hooklist">${arr(p.hooks).map((hk, n) =>
+      `<div class="hk"><span class="idx">${n+1}</span><span>${esc(hk)}</span></div>`).join('')}</div>`;
+    if (arr(p.script).length) h += `<div class="lbl">🎬 대본</div><div class="scenes">${arr(p.script).map(s =>
+      `<div class="scene"><div class="sc-h">${esc(s.scene || '')}</div>` +
+      (s.visual ? `<div class="sc-v">🎥 ${esc(s.visual)}</div>` : '') +
+      (s.voiceover ? `<div class="sc-t">${esc(s.voiceover)}</div>` : '') + `</div>`).join('')}</div>`;
+    if (p.caption) h += `<div class="lbl">📝 캡션</div><div class="caption-box">${esc(p.caption)}</div>`;
+    if (arr(p.hashtags).length) h += `<div class="tags">${arr(p.hashtags).map(t =>
+      `<span class="tg">${esc(t.startsWith('#') ? t : '#' + t)}</span>`).join('')}</div>`;
+    if (p.cta) h += `<div class="lbl">👉 CTA</div><div class="cta-box">${esc(p.cta)}</div>`;
+    h += `</div>`;
+    return h;
+  }).join('');
+  _contentPieces = pieces;
+  window.scrollTo({ top: $('#studioOut').offsetTop - 60, behavior: 'smooth' });
+}
+let _contentPieces = [];
+function pieceToText(p) {
+  let t = `【${p.format || ''}】 ${p.title || ''}\n`;
+  if (arr(p.hooks).length) t += `\n[훅 후보]\n${p.hooks.map((h,i)=>`${i+1}. ${h}`).join('\n')}\n`;
+  if (arr(p.script).length) t += `\n[대본]\n${p.script.map(s=>`${s.scene?('['+s.scene+'] '):''}${s.visual?('('+s.visual+') '):''}${s.voiceover||''}`).join('\n')}\n`;
+  if (p.caption) t += `\n[캡션]\n${p.caption}\n`;
+  if (arr(p.hashtags).length) t += `\n${p.hashtags.map(x=>x.startsWith('#')?x:'#'+x).join(' ')}\n`;
+  if (p.cta) t += `\n[CTA] ${p.cta}\n`;
+  return t.trim();
+}
+
+const DEMO_CONTENT = {
+  '릴스 대본': { pieces: [
+    { format: "릴스 대본", title: "저장률 높은 정보성 릴스 — 부업 첫 주 루틴",
+      hooks: ["직장 다니면서 SNS 부업? 첫 주엔 이것만 하세요.", "팔로워 0명이어도 되는 부업 시작법 3단계", "저 이거 모르고 3개월 날렸어요"],
+      script: [
+        { scene: "0-2초", visual: "얼굴 클로즈업, 큰 자막 '3개월 날린 이유'", voiceover: "SNS 부업, 저 이거 모르고 3개월 날렸어요." },
+        { scene: "2-8초", visual: "화면 분할, 항목 3개 순차 등장", voiceover: "첫째, 하고 싶은 주제 말고 '수요 있는 좁은 주제'를 고르세요." },
+        { scene: "8-16초", visual: "휴대폰 화면에 저장 아이콘 강조", voiceover: "둘째, 좋아요 말고 '저장·공유'를 지표로 보세요. 알고리즘이 밀어줍니다." },
+        { scene: "16-24초", visual: "달력에 예약 발행 표시", voiceover: "셋째, 매일 즉흥 말고 주 1회 몰아 만들고 예약 발행하세요." },
+        { scene: "24-28초", visual: "자막 '저장하고 이번 주에 시작'", voiceover: "이 3개만 지켜도 첫 달이 달라져요. 저장해두고 시작하세요." }
+      ],
+      caption: "SNS 부업 첫 주에 뭘 해야 하냐고요?\n딱 3가지만 지키세요 👇\n\n1. 좁은 주제 (수요 검증)\n2. 저장·공유율 보기\n3. 배치 제작 + 예약 발행\n\n완벽한 영상 하나보다 평범한 영상 서른 개가 계정을 키웁니다.",
+      hashtags: ["#SNS부업", "#부업추천", "#직장인부업", "#인스타부업", "#릴스", "#부수입", "#N잡", "#자기계발", "#릴스팁", "#콘텐츠마케팅"],
+      cta: "지금 저장하고, 오늘 주제 1개만 정해보세요 📌" },
+    { format: "릴스 대본", title: "훅 강화형 — 저장·공유 원리",
+      hooks: ["좋아요 많은데 안 크는 계정 특징", "이 지표 모르면 릴스 계속 묻힙니다", "알고리즘이 진짜 보는 신호"],
+      script: [
+        { scene: "0-2초", visual: "빨간 X와 '좋아요'", voiceover: "좋아요 숫자, 사실 알고리즘엔 별로 안 중요해요." },
+        { scene: "2-10초", visual: "저장·공유 아이콘 확대", voiceover: "진짜 신호는 '저장'과 '공유'예요. 유용해서 다시 볼 콘텐츠라는 뜻이거든요." },
+        { scene: "10-18초", visual: "정보 밀도 높은 카드 예시", voiceover: "그래서 저장을 부르는 '정보 밀도 높은' 콘텐츠를 늘려야 해요." },
+        { scene: "18-22초", visual: "자막 '이 영상도 저장각'", voiceover: "이 영상도 저장해두면 나중에 딱 쓸모 있어요." }
+      ],
+      caption: "좋아요는 많은데 계정이 안 큰다면?\n지표를 바꿔보세요.\n\n알고리즘이 보는 진짜 신호 = 저장 + 공유 + 완주율\n정보 밀도를 높이면 저장이 따라옵니다.",
+      hashtags: ["#릴스팁", "#인스타알고리즘", "#SNS부업", "#콘텐츠전략", "#인스타그램", "#저장각", "#부업", "#릴스", "#마케팅", "#크리에이터"],
+      cta: "저장하고 다음 릴스에 바로 적용해보세요 ✅" }
+  ]},
+  '카드뉴스': { pieces: [
+    { format: "카드뉴스", title: "부업 자동화 파이프라인 7장 카드뉴스",
+      hooks: ["직장인 SNS 부업, 결국 '시스템'이 이깁니다", "콘텐츠 공장 만드는 법", "매일 안 만들어도 매일 올라가는 구조"],
+      script: [
+        { scene: "1", visual: "표지, 큰 제목 + 서브카피", voiceover: "직장 다니며 SNS 부업\n'매일 만들기'는 무리 — '시스템'을 만드세요" },
+        { scene: "2", visual: "화살표 파이프라인 도식", voiceover: "핵심 흐름: 아이디어 → 제작 → 배포 → 분석 → 수익화" },
+        { scene: "3", visual: "LLM 아이콘", voiceover: "① 아이디어: LLM으로 주제·대본 20개 일괄 생성 → Notion 적재" },
+        { scene: "4", visual: "템플릿 교체 이미지", voiceover: "② 제작: 고정 템플릿에 텍스트만 교체 (CapCut·Canva)" },
+        { scene: "5", visual: "예약 발행 달력", voiceover: "③ 배포: '발행대기' 상태를 Make가 감지해 예약 자동 발행" },
+        { scene: "6", visual: "대시보드 차트", voiceover: "④ 분석: 저장·공유율 매일 수집 → 잘 되는 포맷을 다음 대본에 반영" },
+        { scene: "7", visual: "CTA 카드", voiceover: "사람은 '기획·검수·응대'만. 저장하고 이번 주부터 하나씩 세팅하세요 👇" }
+      ],
+      caption: "SNS 부업, 오래 가는 사람들의 공통점은 '시스템'입니다 🏭\n\n아이디어→제작→배포→분석→수익화\n반복 작업은 자동화하고, 사람은 판단만.\n\n스와이프해서 7단계 확인하고 저장하세요.",
+      hashtags: ["#SNS부업", "#자동화", "#부업시스템", "#노션", "#Make", "#콘텐츠자동화", "#직장인부업", "#N잡러", "#생산성", "#인스타부업", "#카드뉴스"],
+      cta: "저장 📌 하고 이번 주 '아이디어 자동화'부터 세팅해보세요" }
+  ]},
+  '쇼츠 훅 세트': { pieces: [
+    { format: "쇼츠 훅 세트", title: "부업 쇼츠 훅 10선 + 오프닝",
+      hooks: ["직장인인데 월급 말고 파이프라인 하나 더 만든 법","팔로워 0에서 시작해도 되는 이유","SNS 부업 사기 안 당하는 법","저장 안 되는 콘텐츠의 공통점","하루 30분으로 콘텐츠 7개 만드는 법","알고리즘이 미는 계정 특징","제휴부터 시작하면 안 되는 이유","완벽주의가 계정을 죽입니다","이 니치는 아직 안 늦었어요","부업 3개월 만에 그만두는 사람들 특징"],
+      script: [
+        { scene: "훅1 오프닝(0-3초)", visual: "얼굴+자막 '월급 말고 파이프라인'", voiceover: "직장 다니면서 월급 말고 수입 파이프라인 하나 더 만든 방법, 3초 안에 정리해드려요." },
+        { scene: "훅2 오프닝(0-3초)", visual: "숫자 0 강조", voiceover: "팔로워 0명이어도 괜찮아요. 진짜 중요한 건 이거거든요." },
+        { scene: "훅3 오프닝(0-3초)", visual: "경고 아이콘", voiceover: "'월 얼마 보장' 이 말 나오면 바로 거르세요. 이유 알려드릴게요." }
+      ],
+      caption: "쇼츠 훅이 막막할 때 쓰는 10개 세트 🎣\n앞 3초가 노출량을 결정합니다.\n\n마음에 드는 훅 하나 골라서 오늘 하나 찍어보세요.",
+      hashtags: ["#쇼츠", "#릴스훅", "#SNS부업", "#숏폼", "#콘텐츠팁", "#후킹", "#부업", "#크리에이터", "#영상편집", "#숏폼마케팅"],
+      cta: "저장하고 오늘 훅 하나로 1개만 찍어보세요 🎬" }
+  ]}
+};
+function demoContent(opts) {
+  const base = DEMO_CONTENT[opts.format] || DEMO_CONTENT['릴스 대본'];
+  return { pieces: arr(base.pieces).slice(0, Number(opts.count) || 2) };
+}
+
 /* ================= EVENTS ================= */
 $('#loadBtn').addEventListener('click', () => loadVideo($('#urlIn').value));
 $('#urlIn').addEventListener('keydown', e => { if (e.key === 'Enter') loadVideo($('#urlIn').value); });
@@ -899,6 +1137,21 @@ $('#autoFetchBtn').addEventListener('click', autoFetchTranscript);
 $('#analyzeBtn').addEventListener('click', analyze);
 $('#againBtn').addEventListener('click', () => { show('home'); });
 $('#shareBtn').addEventListener('click', share);
+$('#studioBtn').addEventListener('click', openStudio);
+$('#studioBack').addEventListener('click', () => show('result'));
+$('#genBtn').addEventListener('click', generateContent);
+$$('#cfFormat .seg-b').forEach(b => b.addEventListener('click', () => {
+  studioFmt = b.dataset.fmt;
+  $$('#cfFormat .seg-b').forEach(x => x.classList.toggle('active', x === b));
+}));
+$('#studioOut').addEventListener('click', e => {
+  const c = e.target.closest('[data-copy]'); if (!c) return;
+  const p = _contentPieces[Number(c.dataset.copy)]; if (!p) return;
+  navigator.clipboard.writeText(pieceToText(p)).then(() => {
+    c.textContent = '✓ 복사됨'; c.classList.add('done');
+    setTimeout(() => { c.textContent = '📋 전체 복사'; c.classList.remove('done'); }, 1800);
+  }).catch(() => toast('복사에 실패했어요', true));
+});
 
 $('#pasteChip').addEventListener('click', async () => {
   try { const t = await navigator.clipboard.readText(); if (t) { $('#urlIn').value = t.trim(); loadVideo(t); } }
