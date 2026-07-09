@@ -734,6 +734,13 @@
         <button class="btn sec" id="arStop" disabled>정지</button>
       </div>
       <div id="arMarkerUpload" style="display:none">
+        <div class="hint" data-i18n-html="hint.markerSteps"><b>사용 방법</b><br>① 아래 ‘데모로 체험하기’를 누르거나 내 이미지를 업로드<br>② ‘카메라 시작’ 클릭<br>③ <b>다른 기기 화면</b>(휴대폰·모니터·태블릿)에 마커 이미지를 띄우고 이 카메라로 비추기<br>④ 스티커가 나타나 마커를 따라다닙니다</div>
+        <div style="text-align:center;margin:12px 0;padding:14px;background:var(--bg2);border:1px solid var(--line2);border-radius:12px">
+          <img id="demoMarkerPreview" src="assets/anim-1.webp" style="width:100%;max-width:180px;border-radius:10px;display:block;margin:0 auto 10px" />
+          <button class="btn" id="markerDemoBtn" style="width:100%;max-width:280px" data-i18n="btn.markerDemo">🎬 데모로 바로 체험하기 (대기 없음)</button>
+          <div class="hint" style="margin-top:6px" data-i18n="hint.markerDemo">위 이미지를 다른 기기 화면에 띄우고 이 카메라로 비춰보세요</div>
+        </div>
+        <div style="height:1px;background:var(--line);margin:14px 0"></div>
         <label class="fld" style="display:flex;gap:10px;align-items:center">
           <img id="markerThumb" style="display:none;width:52px;height:52px;object-fit:cover;border-radius:8px;border:1px solid var(--line2);flex:none" />
           <span style="flex:1;min-width:0">
@@ -745,6 +752,7 @@
         <div class="hint" data-i18n="hint.markerMode">아무 사진·로고·포스터나 마커로 등록하면, 카메라로 그 이미지를 비출 때 아래 스티커가 나타나 실시간으로 따라다닙니다. 마커 인식도 100% 브라우저 안에서 처리됩니다(전송 없음). 무늬나 글자가 뚜렷한 이미지일수록 잘 인식돼요.</div>
       </div>
       <div id="arFaceControls" style="display:none">
+        <div class="hint" id="stepsFaceMode" data-i18n-html="hint.faceSteps"><b>사용 방법</b><br>① 아래에서 스티커(이모지)를 고르세요 — 기본은 😎<br>② ‘카메라 시작’ 클릭 후 카메라 권한을 허용하세요<br>③ 얼굴을 화면 중앙에 비추면 스티커가 자동으로 따라다닙니다</div>
         <label class="fld">
           <div class="lbl" data-i18n="lbl.stickerPick">스티커 고르기</div>
           <div id="stickerPicker" class="picto-grid"></div>
@@ -834,7 +842,7 @@
   <footer>
     <div>Aesthetic QR Studio · 아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.06-h</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.06-i</b></div>
   </footer>
 </div>
 
@@ -4756,40 +4764,48 @@ var AR = (function(){
     }
     g.restore();
   }
+  var loopErrCount=0;
   function loop(ts){
     if(!stream){return;}
-    fit(); var W=cv.width,H=cv.height, t=ts||0;
-    cx.fillStyle="#000"; cx.fillRect(0,0,W,H);
-    if(cam.readyState>=2) coverDraw(cx,cam,W,H);
-    frame++;
-    if(arMode==="face"){
-      if(faceModelsReady && frame%3===0) detectFaceAsync();
-      if(lastFace && faceTtl>0){
-        faceTtl--;
-        drawSticker(cx, faceAnchor(lastFace.pts, lastFace.box, FS.anchor));
-        if(badge){ badge.textContent="🙂 "+t("ar.faceDetected"); badge.classList.add("on"); }
-        if(msg) msg.style.display="none";
+    try{
+      fit(); var W=cv.width,H=cv.height, t=ts||0;
+      cx.fillStyle="#000"; cx.fillRect(0,0,W,H);
+      if(cam.readyState>=2 && cam.videoWidth>0 && cam.videoHeight>0) coverDraw(cx,cam,W,H);
+      frame++;
+      if(arMode==="face"){
+        if(faceModelsReady && frame%3===0) detectFaceAsync();
+        if(lastFace && faceTtl>0){
+          faceTtl--;
+          drawSticker(cx, faceAnchor(lastFace.pts, lastFace.box, FS.anchor));
+          if(badge){ badge.textContent="🙂 "+t("ar.faceDetected"); badge.classList.add("on"); }
+          if(msg) msg.style.display="none";
+        } else {
+          lastFace=null;
+          if(badge)badge.classList.remove("on");
+          if(msg){ msg.textContent = !faceModelsReady ? t("ar.faceLoading") : t("ar.faceSearching"); msg.style.display="block"; }
+        }
+      } else if(arMode==="marker"){
+        if(lastMarker && markerTtl>0){
+          markerTtl--;
+          drawSticker(cx, markerAnchor(lastMarker));
+          if(badge){ badge.textContent="🖼️ "+t("ar.markerDetected"); badge.classList.add("on"); }
+          if(msg) msg.style.display="none";
+        } else {
+          lastMarker=null;
+          if(badge)badge.classList.remove("on");
+          if(msg){ msg.textContent = !markerBuffer ? t("ar.markerNeeded") : t("ar.markerSearching"); msg.style.display="block"; }
+        }
       } else {
-        lastFace=null;
-        if(badge)badge.classList.remove("on");
-        if(msg){ msg.textContent = !faceModelsReady ? t("ar.faceLoading") : t("ar.faceSearching"); msg.style.display="block"; }
+        if(frame%2===0){ var d=detect(W,H); if(d){ last=d; ttl=10; } else if(ttl>0){ ttl--; } else { last=null; } }
+        else if(ttl>0){ ttl--; } else { last=null; }
+        if(last){ overlay(cx,last,t); if(badge){ badge.textContent="🔎 인식됨: "+((last.data||"").slice(0,40)); badge.classList.add("on"); } if(msg)msg.style.display="none"; }
+        else { if(badge)badge.classList.remove("on"); if(msg){ msg.textContent=window.jsQR?"QR 코드를 화면에 비춰 보세요…":"QR 인식 모듈을 불러오지 못했어요(vendor/jsQR.js)."; msg.style.display="block"; } }
       }
-    } else if(arMode==="marker"){
-      if(lastMarker && markerTtl>0){
-        markerTtl--;
-        try{ drawSticker(cx, markerAnchor(lastMarker)); }catch(e){}
-        if(badge){ badge.textContent="🖼️ "+t("ar.markerDetected"); badge.classList.add("on"); }
-        if(msg) msg.style.display="none";
-      } else {
-        lastMarker=null;
-        if(badge)badge.classList.remove("on");
-        if(msg){ msg.textContent = !markerBuffer ? t("ar.markerNeeded") : t("ar.markerSearching"); msg.style.display="block"; }
-      }
-    } else {
-      if(frame%2===0){ var d=detect(W,H); if(d){ last=d; ttl=10; } else if(ttl>0){ ttl--; } else { last=null; } }
-      else if(ttl>0){ ttl--; } else { last=null; }
-      if(last){ overlay(cx,last,t); if(badge){ badge.textContent="🔎 인식됨: "+((last.data||"").slice(0,40)); badge.classList.add("on"); } if(msg)msg.style.display="none"; }
-      else { if(badge)badge.classList.remove("on"); if(msg){ msg.textContent=window.jsQR?"QR 코드를 화면에 비춰 보세요…":"QR 인식 모듈을 불러오지 못했어요(vendor/jsQR.js)."; msg.style.display="block"; } }
+      loopErrCount=0;
+    }catch(e){
+      loopErrCount++;
+      if(window.console) console.error("AR loop frame error (recovered):", e);
+      if(loopErrCount>60 && msg){ msg.textContent=t("ar.loopError"); msg.style.display="block"; }
     }
     raf=requestAnimationFrame(loop);
   }
@@ -4863,9 +4879,13 @@ var AR = (function(){
     if($("arFaceControls")) $("arFaceControls").style.display=(m==="face"||m==="marker")?"block":"none";
     if($("stickerAnchorWrap")) $("stickerAnchorWrap").style.display=(m==="face")?"":"none";
     if($("hintFaceMode")) $("hintFaceMode").style.display=(m==="face")?"":"none";
+    if($("stepsFaceMode")) $("stepsFaceMode").style.display=(m==="face")?"":"none";
     if($("arHintQr")) $("arHintQr").style.display=(m==="qr")?"":"none";
     last=null; ttl=0; lastFace=null; faceTtl=0; lastMarker=null; markerTtl=0;
     if(prevMode==="marker" && m!=="marker" && markerController){ try{ markerController.stopProcessVideo(); }catch(e){} }
+    if(stream && m==="face" && !faceModelsReady && !faceModelsLoading){
+      ensureFaceModels().then(function(ok){ if(msg && arMode==="face") msg.textContent = ok ? t("ar.faceSearching") : (faceModelsConflict?t("ar.tfConflict"):t("ar.faceLoadFail")); });
+    }
     if(stream && m==="marker" && markerBuffer){
       ensureMarkerController().then(function(ok){ if(ok && markerController) markerController.processVideo(cam); });
     }
@@ -4912,6 +4932,25 @@ var AR = (function(){
         $("markerLabel").textContent=t("btn.markerUpload");
         $("markerClear").style.display="none";
         if(arMode==="marker") showMsg(stream?t("ar.markerNeeded"):t("ar.markerNeeded"));
+      });
+      $("markerDemoBtn").addEventListener("click",async function(){
+        var btn=$("markerDemoBtn"); btn.disabled=true; var origTxt=btn.textContent; btn.textContent=t("btn.markerDemoLoading");
+        try{
+          var resp=await fetch("assets/demo-marker.mind");
+          if(!resp.ok) throw new Error("fetch failed");
+          markerBuffer=await resp.arrayBuffer();
+          markerController=null; markerControllerDims=null;
+          markerImg=$("demoMarkerPreview");
+          $("markerThumb").src="assets/anim-1.webp"; $("markerThumb").style.display="block";
+          $("markerLabel").textContent=t("btn.markerOk");
+          $("markerClear").style.display="inline-block";
+          if(arMode==="marker") showMsg(stream?t("ar.markerSearching"):t("ar.markerHint"));
+          toast(t("toast.markerDemoOk"));
+        }catch(e){
+          toast(t("toast.markerFail"));
+        }finally{
+          btn.disabled=false; btn.textContent=origTxt;
+        }
       });
       buildStickerPicker();
       $("stickerFile").addEventListener("change",function(e){
@@ -5765,7 +5804,14 @@ var I18N = {
   "ar.markerDetected":{ko:'인식됨',en:'Detected',zh:'已识别',ja:'認識済み'},
   "ar.markerHint":{ko:'‘카메라 시작’을 눌러 마커를 비춰 보세요',en:'Tap “Start camera” to try your marker',zh:'点击「启动相机」体验标记',ja:'「カメラ開始」を押してマーカーを試してください'},
   "toast.markerFail":{ko:'마커를 분석하지 못했어요. 다른 이미지로 시도해 보세요.',en:'Couldn\'t analyze the marker. Try a different image.',zh:'无法分析标记，请尝试其他图片。',ja:'マーカーを解析できませんでした。別の画像でお試しください。'},
-  "ar.tfConflict":{ko:'얼굴 스티커와 이미지 마커는 같은 브라우저 세션에서 함께 쓰면 충돌할 수 있어요. 페이지를 새로고침한 뒤 이 기능만 사용해 보세요.',en:'Face sticker and image marker can conflict when used together in the same session. Please refresh the page and use only this feature this time.',zh:'面部贴纸和图像标记在同一浏览器会话中一起使用可能会冲突。请刷新页面后只使用此功能。',ja:'顔スタンプと画像マーカーは同じセッションで併用すると競合することがあります。ページを再読み込みしてこの機能だけをお試しください。'}
+  "ar.tfConflict":{ko:'얼굴 스티커와 이미지 마커는 같은 브라우저 세션에서 함께 쓰면 충돌할 수 있어요. 페이지를 새로고침한 뒤 이 기능만 사용해 보세요.',en:'Face sticker and image marker can conflict when used together in the same session. Please refresh the page and use only this feature this time.',zh:'面部贴纸和图像标记在同一浏览器会话中一起使用可能会冲突。请刷新页面后只使用此功能。',ja:'顔スタンプと画像マーカーは同じセッションで併用すると競合することがあります。ページを再読み込みしてこの機能だけをお試しください。'},
+  "ar.loopError":{ko:'일시적인 오류가 반복되고 있어요. ‘정지’ 후 다시 시작해보세요.',en:'Repeated glitches detected. Try tapping Stop, then Start again.',zh:'检测到反复出现的小故障。请点击「停止」后重新开始。',ja:'不具合が繰り返し発生しています。「停止」してから再度開始してください。'},
+  "hint.markerSteps":{ko:'<b>사용 방법</b><br>① 아래 ‘데모로 체험하기’를 누르거나 내 이미지를 업로드<br>② ‘카메라 시작’ 클릭<br>③ <b>다른 기기 화면</b>(휴대폰·모니터·태블릿)에 마커 이미지를 띄우고 이 카메라로 비추기<br>④ 스티커가 나타나 마커를 따라다닙니다',en:'<b>How to use</b><br>① Tap “Try the demo” below, or upload your own image<br>② Tap “Start camera”<br>③ Show the marker image on <b>another device\'s screen</b> (phone, monitor, tablet) to this camera<br>④ The sticker appears and tracks the marker',zh:'<b>使用方法</b><br>① 点击下方“体验演示”，或上传自己的图片<br>② 点击“启动相机”<br>③ 在<b>另一台设备的屏幕</b>（手机·显示器·平板）上显示标记图片，用本相机对准<br>④ 贴纸会出现并跟随标记',ja:'<b>使い方</b><br>① 下の「デモを体験」を押すか、自分の画像をアップロード<br>② 「カメラ開始」をクリック<br>③ <b>別の端末の画面</b>（スマホ・モニター・タブレット）にマーカー画像を表示し、このカメラで映す<br>④ スタンプが現れマーカーを追従します'},
+  "btn.markerDemo":{ko:'🎬 데모로 바로 체험하기 (대기 없음)',en:'🎬 Try the demo instantly (no wait)',zh:'🎬 立即体验演示（无需等待）',ja:'🎬 デモをすぐ体験（待ち時間なし）'},
+  "btn.markerDemoLoading":{ko:'불러오는 중…',en:'Loading…',zh:'加载中…',ja:'読み込み中…'},
+  "hint.markerDemo":{ko:'위 이미지를 다른 기기 화면에 띄우고 이 카메라로 비춰보세요',en:'Show the image above on another device\'s screen and point this camera at it',zh:'请在另一台设备屏幕上显示上方图片，并用本相机对准',ja:'上の画像を別の端末の画面に表示し、このカメラで映してください'},
+  "toast.markerDemoOk":{ko:'데모 마커 준비 완료 — 카메라를 시작하세요',en:'Demo marker ready — start the camera',zh:'演示标记已就绪 — 请启动相机',ja:'デモマーカー準備完了 — カメラを開始してください'},
+  "hint.faceSteps":{ko:'<b>사용 방법</b><br>① 아래에서 스티커(이모지)를 고르세요 — 기본은 😎<br>② ‘카메라 시작’ 클릭 후 카메라 권한을 허용하세요<br>③ 얼굴을 화면 중앙에 비추면 스티커가 자동으로 따라다닙니다',en:'<b>How to use</b><br>① Pick a sticker (emoji) below — 😎 by default<br>② Tap “Start camera” and allow camera access<br>③ Show your face in the center of the frame and the sticker follows automatically',zh:'<b>使用方法</b><br>① 在下方选择贴纸（表情符号）— 默认为 😎<br>② 点击“启动相机”并允许摄像头权限<br>③ 将脸对准画面中央，贴纸会自动跟随',ja:'<b>使い方</b><br>① 下でスタンプ（絵文字）を選択 — デフォルトは😎<br>② 「カメラ開始」をクリックしカメラ許可を承認<br>③ 顔を画面中央に映すとスタンプが自動で追従します'}
 };
 var LANG="ko";
 function t(key){ var e=I18N[key]; return e ? (e[LANG]||e.ko) : null; }
