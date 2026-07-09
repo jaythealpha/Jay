@@ -842,7 +842,7 @@
   <footer>
     <div>Aesthetic QR Studio · 아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.06-i</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.06-j</b></div>
   </footer>
 </div>
 
@@ -4572,7 +4572,7 @@ var AR = (function(){
   var faceModelsReady=false, faceModelsLoading=false, faceModelsConflict=false;
   var lastFace=null, faceTtl=0, faceDetectBusy=false;
   var MindARMod=null, markerImg=null, markerBuffer=null, markerController=null, markerControllerDims=null;
-  var lastMarker=null, markerTtl=0;
+  var lastMarker=null, markerTtl=0, markerSetupFailed=false;
   function els(){ cam=$("arCam"); cv=$("arCanvas"); stage=$("arStage"); msg=$("arMsg"); badge=$("arBadge"); if(cv) cx=cv.getContext("2d"); }
   function fit(){ if(!cv||!stage) return; var r=stage.getBoundingClientRect(); var w=Math.max(2,Math.round(r.width)), h=Math.max(2,Math.round(r.height)); if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h;} }
   function coverDraw(g,img,W,H){ var iw=img.videoWidth||img.width, ih=img.videoHeight||img.height; if(!iw||!ih)return; var s=Math.max(W/iw,H/ih), dw=iw*s, dh=ih*s; g.drawImage(img,(W-dw)/2,(H-dh)/2,dw,dh); }
@@ -4722,19 +4722,27 @@ var AR = (function(){
     if(!markerBuffer || !cam || !cam.videoWidth) return false;
     var VW=cam.videoWidth, VH=cam.videoHeight;
     if(markerController && markerControllerDims && markerControllerDims[0]===VW && markerControllerDims[1]===VH) return true;
-    var mod=await ensureMindAR();
-    if(markerController){ try{ markerController.stopProcessVideo(); markerController.dispose(); }catch(e){} }
-    markerController=new mod.Controller({
-      inputWidth:VW, inputHeight:VH,
-      onUpdate:function(data){
-        if(data.type==="updateMatrix"){
-          if(data.worldMatrix){ lastMarker={world:data.worldMatrix, proj:markerController.getProjectionMatrix(), dims:markerController.markerDimensions[0], VW:VW, VH:VH}; markerTtl=6; }
+    try{
+      var mod=await ensureMindAR();
+      if(markerController){ try{ markerController.stopProcessVideo(); markerController.dispose(); }catch(e){} }
+      markerController=new mod.Controller({
+        inputWidth:VW, inputHeight:VH,
+        onUpdate:function(data){
+          if(data.type==="updateMatrix"){
+            if(data.worldMatrix){ lastMarker={world:data.worldMatrix, proj:markerController.getProjectionMatrix(), dims:markerController.markerDimensions[0], VW:VW, VH:VH}; markerTtl=6; }
+          }
         }
-      }
-    });
-    markerController.addImageTargetsFromBuffer(markerBuffer);
-    markerControllerDims=[VW,VH];
-    return true;
+      });
+      markerController.addImageTargetsFromBuffer(markerBuffer);
+      markerControllerDims=[VW,VH];
+      markerSetupFailed=false;
+      return true;
+    }catch(e){
+      if(window.console) console.error("ensureMarkerController failed:", e);
+      markerSetupFailed=true;
+      markerController=null; markerControllerDims=null;
+      return false;
+    }
   }
   // marker quad (video-native px) → single center anchor in CANVAS space, via the same cover-transform as face mode
   function markerAnchor(m){
@@ -4768,7 +4776,7 @@ var AR = (function(){
   function loop(ts){
     if(!stream){return;}
     try{
-      fit(); var W=cv.width,H=cv.height, t=ts||0;
+      fit(); var W=cv.width,H=cv.height, tAnim=ts||0;
       cx.fillStyle="#000"; cx.fillRect(0,0,W,H);
       if(cam.readyState>=2 && cam.videoWidth>0 && cam.videoHeight>0) coverDraw(cx,cam,W,H);
       frame++;
@@ -4793,12 +4801,12 @@ var AR = (function(){
         } else {
           lastMarker=null;
           if(badge)badge.classList.remove("on");
-          if(msg){ msg.textContent = !markerBuffer ? t("ar.markerNeeded") : t("ar.markerSearching"); msg.style.display="block"; }
+          if(msg){ msg.textContent = markerSetupFailed ? t("ar.markerSetupFail") : (!markerBuffer ? t("ar.markerNeeded") : t("ar.markerSearching")); msg.style.display="block"; }
         }
       } else {
         if(frame%2===0){ var d=detect(W,H); if(d){ last=d; ttl=10; } else if(ttl>0){ ttl--; } else { last=null; } }
         else if(ttl>0){ ttl--; } else { last=null; }
-        if(last){ overlay(cx,last,t); if(badge){ badge.textContent="🔎 인식됨: "+((last.data||"").slice(0,40)); badge.classList.add("on"); } if(msg)msg.style.display="none"; }
+        if(last){ overlay(cx,last,tAnim); if(badge){ badge.textContent="🔎 인식됨: "+((last.data||"").slice(0,40)); badge.classList.add("on"); } if(msg)msg.style.display="none"; }
         else { if(badge)badge.classList.remove("on"); if(msg){ msg.textContent=window.jsQR?"QR 코드를 화면에 비춰 보세요…":"QR 인식 모듈을 불러오지 못했어요(vendor/jsQR.js)."; msg.style.display="block"; } }
       }
       loopErrCount=0;
@@ -4914,6 +4922,7 @@ var AR = (function(){
             var compiler=new mod.Compiler();
             await compiler.compileImageTargets([img], function(pc){ $("markerLabel").textContent=t("btn.markerCompiling")+" "+Math.round(pc)+"%"; });
             markerBuffer=compiler.exportData();
+            markerSetupFailed=false;
             $("markerLabel").textContent=t("btn.markerOk");
             $("markerClear").style.display="inline-block";
             if(arMode==="marker") showMsg(stream?t("ar.markerSearching"):t("ar.markerHint"));
@@ -4939,7 +4948,7 @@ var AR = (function(){
           var resp=await fetch("assets/demo-marker.mind");
           if(!resp.ok) throw new Error("fetch failed");
           markerBuffer=await resp.arrayBuffer();
-          markerController=null; markerControllerDims=null;
+          markerController=null; markerControllerDims=null; markerSetupFailed=false;
           markerImg=$("demoMarkerPreview");
           $("markerThumb").src="assets/anim-1.webp"; $("markerThumb").style.display="block";
           $("markerLabel").textContent=t("btn.markerOk");
@@ -5811,7 +5820,8 @@ var I18N = {
   "btn.markerDemoLoading":{ko:'불러오는 중…',en:'Loading…',zh:'加载中…',ja:'読み込み中…'},
   "hint.markerDemo":{ko:'위 이미지를 다른 기기 화면에 띄우고 이 카메라로 비춰보세요',en:'Show the image above on another device\'s screen and point this camera at it',zh:'请在另一台设备屏幕上显示上方图片，并用本相机对准',ja:'上の画像を別の端末の画面に表示し、このカメラで映してください'},
   "toast.markerDemoOk":{ko:'데모 마커 준비 완료 — 카메라를 시작하세요',en:'Demo marker ready — start the camera',zh:'演示标记已就绪 — 请启动相机',ja:'デモマーカー準備完了 — カメラを開始してください'},
-  "hint.faceSteps":{ko:'<b>사용 방법</b><br>① 아래에서 스티커(이모지)를 고르세요 — 기본은 😎<br>② ‘카메라 시작’ 클릭 후 카메라 권한을 허용하세요<br>③ 얼굴을 화면 중앙에 비추면 스티커가 자동으로 따라다닙니다',en:'<b>How to use</b><br>① Pick a sticker (emoji) below — 😎 by default<br>② Tap “Start camera” and allow camera access<br>③ Show your face in the center of the frame and the sticker follows automatically',zh:'<b>使用方法</b><br>① 在下方选择贴纸（表情符号）— 默认为 😎<br>② 点击“启动相机”并允许摄像头权限<br>③ 将脸对准画面中央，贴纸会自动跟随',ja:'<b>使い方</b><br>① 下でスタンプ（絵文字）を選択 — デフォルトは😎<br>② 「カメラ開始」をクリックしカメラ許可を承認<br>③ 顔を画面中央に映すとスタンプが自動で追従します'}
+  "hint.faceSteps":{ko:'<b>사용 방법</b><br>① 아래에서 스티커(이모지)를 고르세요 — 기본은 😎<br>② ‘카메라 시작’ 클릭 후 카메라 권한을 허용하세요<br>③ 얼굴을 화면 중앙에 비추면 스티커가 자동으로 따라다닙니다',en:'<b>How to use</b><br>① Pick a sticker (emoji) below — 😎 by default<br>② Tap “Start camera” and allow camera access<br>③ Show your face in the center of the frame and the sticker follows automatically',zh:'<b>使用方法</b><br>① 在下方选择贴纸（表情符号）— 默认为 😎<br>② 点击“启动相机”并允许摄像头权限<br>③ 将脸对准画面中央，贴纸会自动跟随',ja:'<b>使い方</b><br>① 下でスタンプ（絵文字）を選択 — デフォルトは😎<br>② 「カメラ開始」をクリックしカメラ許可を承認<br>③ 顔を画面中央に映すとスタンプが自動で追従します'},
+  "ar.markerSetupFail":{ko:'마커 인식 엔진을 시작하지 못했어요. 브라우저가 최신 버전인지 확인하고, 페이지를 새로고침한 뒤 다시 시도해보세요.',en:'Couldn\'t start the marker recognition engine. Make sure your browser is up to date, then refresh the page and try again.',zh:'无法启动标记识别引擎。请确认浏览器为最新版本，刷新页面后重试。',ja:'マーカー認識エンジンを起動できませんでした。ブラウザが最新か確認し、ページを再読み込みして再試行してください。'}
 };
 var LANG="ko";
 function t(key){ var e=I18N[key]; return e ? (e[LANG]||e.ko) : null; }
