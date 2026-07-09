@@ -714,10 +714,14 @@
         <div class="ar-msg" id="arMsg">‘카메라 시작’을 눌러 QR을 비춰 보세요</div>
         <div class="ar-badge" id="arBadge"></div>
       </div>
+      <div class="seg" id="arModeSeg" style="max-width:320px;margin:0 auto 12px">
+        <button data-armode="qr" class="on" data-i18n="ar.mode.qr">🔲 QR 마커</button>
+        <button data-armode="face" data-i18n="ar.mode.face">🙂 얼굴 스티커</button>
+      </div>
       <div class="ar-controls">
         <button class="btn" id="arStart" data-i18n="btn.arStart">📷 카메라 시작</button>
         <button class="btn sec" id="arFlip" disabled data-i18n="btn.arFlip">전환</button>
-        <label class="fld" style="flex:1;min-width:150px;margin:0">
+        <label class="fld" id="arObjWrap" style="flex:1;min-width:150px;margin:0">
           <div class="lbl" data-i18n="lbl.arObj" style="margin-bottom:5px">AR 오브젝트</div>
           <select id="arObj">
             <option value="cube" data-i18n="opt.arCube">🧊 3D 큐브 + 정보 카드</option>
@@ -728,7 +732,31 @@
         <button class="btn" id="arShot" disabled>📸 사진 저장</button>
         <button class="btn sec" id="arStop" disabled>정지</button>
       </div>
-      <div class="hint" style="text-align:center;margin-top:10px">스튜디오에서 만든 QR을 <b>다른 화면/인쇄물</b>에 띄워 두고 이 카메라로 비추면 그 위에 AR이 나타납니다. 실시간 인식은 <b>jsQR</b>(브라우저 내 디코딩)로 동작합니다.</div>
+      <div id="arFaceControls" style="display:none">
+        <label class="fld">
+          <div class="lbl" data-i18n="lbl.stickerPick">스티커 고르기</div>
+          <div id="stickerPicker" class="picto-grid"></div>
+        </label>
+        <label class="file-btn" for="stickerFile" id="stickerLabel" data-i18n="btn.stickerUpload">＋ 내 이미지로 스티커 만들기</label>
+        <input type="file" id="stickerFile" accept="image/*" style="display:none" />
+        <button class="btn sec" id="stickerClear" style="display:none;margin-top:8px" data-i18n="btn.stickerClear">스티커 이미지 제거</button>
+        <label class="fld">
+          <div class="lbl" data-i18n="lbl.stickerAnchor">붙이는 위치</div>
+          <div class="seg seg-wrap" id="stickerAnchorSeg">
+            <button data-anchor="eyes" class="on"><span data-i18n="seg.anchor.eyes">눈</span></button>
+            <button data-anchor="forehead"><span data-i18n="seg.anchor.forehead">이마</span></button>
+            <button data-anchor="nose"><span data-i18n="seg.anchor.nose">코</span></button>
+            <button data-anchor="mouth"><span data-i18n="seg.anchor.mouth">입</span></button>
+            <button data-anchor="full"><span data-i18n="seg.anchor.full">얼굴 전체</span></button>
+          </div>
+        </label>
+        <label class="fld">
+          <div class="lbl"><span data-i18n="lbl.stickerScale">스티커 크기</span> <b id="stickerScaleOut">100%</b></div>
+          <input type="range" id="stickerScale" min="40" max="220" step="1" value="100" />
+        </label>
+        <div class="hint" data-i18n="hint.faceMode">얼굴을 인식해 선택한 스티커가 실시간으로 따라다닙니다. 처음 켤 때 인식 모델을 한 번 내려받아요(이후엔 오프라인 동작). 영상은 기기 밖으로 전송되지 않습니다.</div>
+      </div>
+      <div class="hint" id="arHintQr" style="text-align:center;margin-top:10px">스튜디오에서 만든 QR을 <b>다른 화면/인쇄물</b>에 띄워 두고 이 카메라로 비추면 그 위에 AR이 나타납니다. 실시간 인식은 <b>jsQR</b>(브라우저 내 디코딩)로 동작합니다.</div>
     </div>
   </section>
 
@@ -794,7 +822,7 @@
   <footer>
     <div>Aesthetic QR Studio · 아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.06-f</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.06-g</b></div>
   </footer>
 </div>
 
@@ -3119,6 +3147,8 @@ var qrcode = function() {
 
 <!-- ===== QR decoder (jsQR, MIT) — powers marker-based AR ===== -->
 <script src="vendor/jsQR.js"></script>
+<!-- ===== face-api.js (MIT), vendored — powers offline face-tracking AR stickers ===== -->
+<script src="vendor/face-api.min.js"></script>
 
 <!-- ===== App ===== -->
 <script>
@@ -4516,6 +4546,11 @@ var AR = (function(){
   var cam, cv, cx, stage, msg, badge;
   var sc=document.createElement("canvas"), sctx=sc.getContext("2d", {willReadFrequently:true});
   var last=null, ttl=0;   // last detection (corners+data), time-to-live for smoothing
+  var arMode="qr";  // qr | face
+  var STICKERS=["😎","🕶️","🥽","🎩","👑","🥸","🐱","🐰","🌸","🦋","💋","⭐","🎀","🔥"];
+  var FS={mode:"emoji",emoji:"😎",img:null,anchor:"eyes",scale:100};  // face-sticker state
+  var faceModelsReady=false, faceModelsLoading=false;
+  var lastFace=null, faceTtl=0, faceDetectBusy=false;
   function els(){ cam=$("arCam"); cv=$("arCanvas"); stage=$("arStage"); msg=$("arMsg"); badge=$("arBadge"); if(cv) cx=cv.getContext("2d"); }
   function fit(){ if(!cv||!stage) return; var r=stage.getBoundingClientRect(); var w=Math.max(2,Math.round(r.width)), h=Math.max(2,Math.round(r.height)); if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h;} }
   function coverDraw(g,img,W,H){ var iw=img.videoWidth||img.width, ih=img.videoHeight||img.height; if(!iw||!ih)return; var s=Math.max(W/iw,H/ih), dw=iw*s, dh=ih*s; g.drawImage(img,(W-dw)/2,(H-dh)/2,dw,dh); }
@@ -4583,16 +4618,89 @@ var AR = (function(){
     else if(kind==="card"){ neon(g,[L.tl,L.tr,L.br,L.bl],"rgba(124,92,255,0.9)",4); drawCard(g,L,L.data,t); }
     else { drawCube(g,L,t); drawCard(g,L,L.data,t); }
   }
+  // ---- face-tracking sticker mode (offline, vendor/face-api.min.js + vendor/models) ----
+  async function ensureFaceModels(){
+    if(faceModelsReady) return true;
+    if(faceModelsLoading) return false;
+    faceModelsLoading=true;
+    try{
+      if(typeof faceapi==="undefined") throw new Error("face-api not loaded");
+      await faceapi.nets.tinyFaceDetector.loadFromUri("vendor/models");
+      await faceapi.nets.faceLandmark68TinyNet.loadFromUri("vendor/models");
+      faceModelsReady=true; return true;
+    }catch(e){ return false; }
+    finally{ faceModelsLoading=false; }
+  }
+  async function detectFaceAsync(){
+    if(faceDetectBusy || !faceModelsReady || !cam || !cam.videoWidth) return;
+    faceDetectBusy=true;
+    try{
+      var det=await faceapi.detectSingleFace(cam, new faceapi.TinyFaceDetectorOptions({inputSize:224,scoreThreshold:0.5})).withFaceLandmarks(true);
+      if(det){
+        var iw=cam.videoWidth, ih=cam.videoHeight, W=cv.width, H=cv.height;
+        var s=Math.max(W/iw,H/ih), ox=(W-iw*s)/2, oy=(H-ih*s)/2;
+        function P(p){ return {x:p.x*s+ox, y:p.y*s+oy}; }
+        var b=det.detection.box;
+        lastFace={ pts:det.landmarks.positions.map(P), box:{x:b.x*s+ox,y:b.y*s+oy,width:b.width*s,height:b.height*s} };
+        faceTtl=8;
+      }
+    }catch(e){}
+    faceDetectBusy=false;
+  }
+  // computes {x,y,angle,w} for the chosen anchor from 68 landmarks + face box
+  function faceAnchor(pts,box,kind){
+    var leftEyeOuter=pts[36], rightEyeOuter=pts[45];
+    var leftEyeC=mid(pts[37],pts[40]), rightEyeC=mid(pts[43],pts[46]);
+    var eyesMid=mid(leftEyeC,rightEyeC);
+    var eyeSpan=dist(leftEyeOuter,rightEyeOuter);
+    var angle=Math.atan2(rightEyeC.y-leftEyeC.y, rightEyeC.x-leftEyeC.x);
+    var browMid=mid(pts[19],pts[24]), mouthC=mid(pts[51],pts[57]), noseTip=pts[30];
+    if(kind==="eyes") return {x:eyesMid.x,y:eyesMid.y,angle:angle,w:eyeSpan*1.9};
+    if(kind==="nose") return {x:noseTip.x,y:noseTip.y,angle:angle,w:eyeSpan*0.9};
+    if(kind==="mouth") return {x:mouthC.x,y:mouthC.y,angle:angle,w:eyeSpan*1.1};
+    if(kind==="forehead"){
+      var up=dist(browMid,pts[8])*0.45, dv=sub(browMid,mouthC), dl=Math.hypot(dv.x,dv.y)||1;
+      return {x:browMid.x+dv.x/dl*up, y:browMid.y+dv.y/dl*up, angle:angle, w:box.width*1.05};
+    }
+    return {x:box.x+box.width/2, y:box.y+box.height/2, angle:angle, w:box.width*1.15}; // full
+  }
+  function drawSticker(g,a){
+    var w=a.w*(FS.scale/100);
+    g.save(); g.translate(a.x,a.y); g.rotate(a.angle);
+    if(FS.mode==="img" && FS.img){
+      var ih=w*((FS.img.naturalHeight/FS.img.naturalWidth)||1);
+      g.drawImage(FS.img,-w/2,-ih/2,w,ih);
+    } else {
+      g.textAlign="center"; g.textBaseline="middle";
+      g.font=Math.round(w)+"px 'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif";
+      g.fillText(FS.emoji,0,0);
+    }
+    g.restore();
+  }
   function loop(ts){
     if(!stream){return;}
     fit(); var W=cv.width,H=cv.height, t=ts||0;
     cx.fillStyle="#000"; cx.fillRect(0,0,W,H);
     if(cam.readyState>=2) coverDraw(cx,cam,W,H);
     frame++;
-    if(frame%2===0){ var d=detect(W,H); if(d){ last=d; ttl=10; } else if(ttl>0){ ttl--; } else { last=null; } }
-    else if(ttl>0){ ttl--; } else { last=null; }
-    if(last){ overlay(cx,last,t); if(badge){ badge.textContent="🔎 인식됨: "+((last.data||"").slice(0,40)); badge.classList.add("on"); } if(msg)msg.style.display="none"; }
-    else { if(badge)badge.classList.remove("on"); if(msg){ msg.textContent=window.jsQR?"QR 코드를 화면에 비춰 보세요…":"QR 인식 모듈을 불러오지 못했어요(vendor/jsQR.js)."; msg.style.display="block"; } }
+    if(arMode==="face"){
+      if(faceModelsReady && frame%3===0) detectFaceAsync();
+      if(lastFace && faceTtl>0){
+        faceTtl--;
+        drawSticker(cx, faceAnchor(lastFace.pts, lastFace.box, FS.anchor));
+        if(badge){ badge.textContent="🙂 "+t("ar.faceDetected"); badge.classList.add("on"); }
+        if(msg) msg.style.display="none";
+      } else {
+        lastFace=null;
+        if(badge)badge.classList.remove("on");
+        if(msg){ msg.textContent = !faceModelsReady ? t("ar.faceLoading") : t("ar.faceSearching"); msg.style.display="block"; }
+      }
+    } else {
+      if(frame%2===0){ var d=detect(W,H); if(d){ last=d; ttl=10; } else if(ttl>0){ ttl--; } else { last=null; } }
+      else if(ttl>0){ ttl--; } else { last=null; }
+      if(last){ overlay(cx,last,t); if(badge){ badge.textContent="🔎 인식됨: "+((last.data||"").slice(0,40)); badge.classList.add("on"); } if(msg)msg.style.display="none"; }
+      else { if(badge)badge.classList.remove("on"); if(msg){ msg.textContent=window.jsQR?"QR 코드를 화면에 비춰 보세요…":"QR 인식 모듈을 불러오지 못했어요(vendor/jsQR.js)."; msg.style.display="block"; } }
+    }
     raf=requestAnimationFrame(loop);
   }
   function showMsg(txt){ if(msg){ msg.textContent=txt; msg.style.display="block"; } }
@@ -4608,13 +4716,18 @@ var AR = (function(){
     els();
     if(!window.isSecureContext){ showMsg("보안 연결(HTTPS)이 아니어서 카메라를 쓸 수 없어요. https://jay-inky.vercel.app 로 접속했는지 확인하세요."); return; }
     if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){ showMsg("이 브라우저는 카메라 API(getUserMedia)를 지원하지 않아요."); return; }
-    showMsg("카메라 권한 요청 중… (팝업이 뜨면 ‘허용’)");
+    if(arMode==="face" && !faceModelsReady){
+      showMsg(t("ar.faceLoading"));
+      var ok=await ensureFaceModels();
+      if(!ok){ showMsg(t("ar.faceLoadFail")); return; }
+    }
+    showMsg(t("ar.camPerm"));
     try{ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:facing}},audio:false}); }
     catch(err){ try{ stream=await navigator.mediaDevices.getUserMedia({video:true,audio:false}); }
       catch(e2){ showMsg(explain(e2)); return; } }
     cam.srcObject=stream; cam.setAttribute("playsinline",""); cam.muted=true;
     try{ await cam.play(); }catch(e){}
-    showMsg("QR 코드를 화면에 비춰 보세요…"); fit();
+    showMsg(arMode==="face" ? t("ar.faceSearching") : "QR 코드를 화면에 비춰 보세요…"); fit();
     $("arStart").disabled=true; $("arShot").disabled=false; $("arStop").disabled=false; $("arFlip").disabled=false;
     cv.addEventListener("click",openLink);
     if(raf)cancelAnimationFrame(raf); raf=requestAnimationFrame(loop);
@@ -4622,7 +4735,7 @@ var AR = (function(){
   function stop(){
     if(raf){cancelAnimationFrame(raf);raf=null;}
     if(stream){ stream.getTracks().forEach(function(t){t.stop();}); stream=null; }
-    if(cam) cam.srcObject=null; last=null; ttl=0;
+    if(cam) cam.srcObject=null; last=null; ttl=0; lastFace=null; faceTtl=0;
     if(cx&&cv){ cx.clearRect(0,0,cv.width,cv.height); }
     if(badge)badge.classList.remove("on");
     if(cv) cv.removeEventListener("click",openLink);
@@ -4632,12 +4745,60 @@ var AR = (function(){
   async function flip(){ facing=(facing==="environment")?"user":"environment"; if(stream){ stream.getTracks().forEach(function(t){t.stop();}); stream=null; } $("arStart").disabled=false; await start(); }
   function shot(){ if(!stream||!cv)return; cv.toBlob(function(b){ if(!b)return; download(URL.createObjectURL(b),"qr-ar.png"); toast("AR 사진 저장됨"); },"image/png"); }
   function leave(){ if(stream) stop(); }
+  function buildStickerPicker(){
+    var box=$("stickerPicker"); if(!box) return; box.innerHTML="";
+    STICKERS.forEach(function(sym){
+      var b=document.createElement("button"); b.type="button"; b.textContent=sym;
+      if(FS.mode==="emoji" && FS.emoji===sym) b.classList.add("on");
+      b.addEventListener("click",function(){
+        FS.mode="emoji"; FS.emoji=sym;
+        Array.prototype.forEach.call(box.children,function(x){x.classList.toggle("on",x===b);});
+      });
+      box.appendChild(b);
+    });
+  }
+  function setArMode(m){
+    arMode=m;
+    Array.prototype.forEach.call($("arModeSeg").children,function(x){x.classList.toggle("on",x.dataset.armode===m);});
+    if($("arObjWrap")) $("arObjWrap").style.display=(m==="qr")?"":"none";
+    if($("arFaceControls")) $("arFaceControls").style.display=(m==="face")?"block":"none";
+    if($("arHintQr")) $("arHintQr").style.display=(m==="qr")?"":"none";
+    last=null; ttl=0; lastFace=null; faceTtl=0;
+    if(msg) msg.style.display="block";
+    showMsg(stream ? (m==="face"?t("ar.faceSearching"):"QR 코드를 화면에 비춰 보세요…") : (m==="face"?t("ar.faceHint"):"‘카메라 시작’을 눌러 QR을 비춰 보세요"));
+  }
   return {
     init:function(){ els();
       $("arStart").addEventListener("click",start);
       $("arStop").addEventListener("click",stop);
       $("arFlip").addEventListener("click",flip);
       $("arShot").addEventListener("click",shot);
+      $("arModeSeg").addEventListener("click",function(e){ var b=e.target.closest("button"); if(b) setArMode(b.dataset.armode); });
+      buildStickerPicker();
+      $("stickerFile").addEventListener("change",function(e){
+        var f=e.target.files&&e.target.files[0]; if(!f) return;
+        var img=new Image();
+        img.onload=function(){
+          FS.mode="img"; FS.img=img;
+          $("stickerLabel").textContent=t("btn.stickerOk");
+          $("stickerClear").style.display="inline-block";
+          Array.prototype.forEach.call($("stickerPicker").children,function(x){x.classList.remove("on");});
+        };
+        img.onerror=function(){ toast(t("toast.stickerFail")); };
+        img.src=URL.createObjectURL(f);
+      });
+      $("stickerClear").addEventListener("click",function(){
+        FS.mode="emoji"; FS.img=null; $("stickerFile").value="";
+        $("stickerLabel").textContent=t("btn.stickerUpload");
+        $("stickerClear").style.display="none";
+        Array.prototype.forEach.call($("stickerPicker").children,function(x){x.classList.toggle("on",x.textContent===FS.emoji);});
+      });
+      $("stickerAnchorSeg").addEventListener("click",function(e){
+        var b=e.target.closest("button"); if(!b) return;
+        FS.anchor=b.dataset.anchor;
+        Array.prototype.forEach.call(this.children,function(x){x.classList.toggle("on",x===b);});
+      });
+      $("stickerScale").addEventListener("input",function(e){ FS.scale=+e.target.value; $("stickerScaleOut").textContent=e.target.value+"%"; });
     },
     refresh:function(){ els(); fit(); },
     leave:leave
@@ -5431,7 +5592,28 @@ var I18N = {
   "lbl.evEnd":{ko:'종료',en:'End',zh:'结束',ja:'終了'},
   "hint.ev":{ko:'스캔하면 캘린더에 이 일정을 추가할 수 있습니다(iCalendar 표준).',en:'Scanning lets you add this event to the calendar (iCalendar standard).',zh:'扫描后可将此日程加入日历（iCalendar 标准）。',ja:'スキャンでこの予定をカレンダーに追加できます（iCalendar標準）。'},
   "lbl.geoLat":{ko:'위도',en:'Latitude',zh:'纬度',ja:'緯度'},
-  "lbl.geoLng":{ko:'경도',en:'Longitude',zh:'经度',ja:'経度'}
+  "lbl.geoLng":{ko:'경도',en:'Longitude',zh:'经度',ja:'経度'},
+  "ar.mode.qr":{ko:'🔲 QR 마커',en:'🔲 QR marker',zh:'🔲 二维码标记',ja:'🔲 QRマーカー'},
+  "ar.mode.face":{ko:'🙂 얼굴 스티커',en:'🙂 Face sticker',zh:'🙂 面部贴纸',ja:'🙂 顔スタンプ'},
+  "lbl.stickerPick":{ko:'스티커 고르기',en:'Pick a sticker',zh:'选择贴纸',ja:'スタンプを選ぶ'},
+  "btn.stickerUpload":{ko:'＋ 내 이미지로 스티커 만들기',en:'＋ Make a sticker from my image',zh:'＋ 用我的图片制作贴纸',ja:'＋ 自分の画像でスタンプ作成'},
+  "btn.stickerOk":{ko:'✓ 내 스티커 적용됨 — 변경하려면 클릭',en:'✓ Custom sticker applied — click to change',zh:'✓ 已应用自定义贴纸 — 点击更换',ja:'✓ カスタムスタンプ適用済み — 変更するにはクリック'},
+  "btn.stickerClear":{ko:'스티커 이미지 제거',en:'Remove sticker image',zh:'移除贴纸图片',ja:'スタンプ画像を削除'},
+  "lbl.stickerAnchor":{ko:'붙이는 위치',en:'Attach to',zh:'粘贴位置',ja:'貼り付け位置'},
+  "seg.anchor.eyes":{ko:'눈',en:'Eyes',zh:'眼睛',ja:'目'},
+  "seg.anchor.forehead":{ko:'이마',en:'Forehead',zh:'额头',ja:'額'},
+  "seg.anchor.nose":{ko:'코',en:'Nose',zh:'鼻子',ja:'鼻'},
+  "seg.anchor.mouth":{ko:'입',en:'Mouth',zh:'嘴巴',ja:'口'},
+  "seg.anchor.full":{ko:'얼굴 전체',en:'Whole face',zh:'整张脸',ja:'顔全体'},
+  "lbl.stickerScale":{ko:'스티커 크기',en:'Sticker size',zh:'贴纸大小',ja:'スタンプサイズ'},
+  "hint.faceMode":{ko:'얼굴을 인식해 선택한 스티커가 실시간으로 따라다닙니다. 처음 켤 때 인식 모델을 한 번 내려받아요(이후엔 오프라인 동작). 영상은 기기 밖으로 전송되지 않습니다.',en:'Detects your face and tracks the chosen sticker in real time. The recognition model downloads once on first use (fully offline afterward). Video never leaves your device.',zh:'识别人脸后，所选贴纸会实时跟随。首次使用会下载一次识别模型（之后离线运行）。视频不会离开您的设备。',ja:'顔を認識して選んだスタンプをリアルタイムで追従させます。初回のみ認識モデルを一度ダウンロード（以降はオフライン動作）。映像は端末外に送信されません。'},
+  "ar.faceLoading":{ko:'얼굴 인식 모델 불러오는 중…',en:'Loading face recognition model…',zh:'正在加载人脸识别模型…',ja:'顔認識モデルを読み込み中…'},
+  "ar.faceLoadFail":{ko:'얼굴 인식 모델을 불러오지 못했어요. 네트워크를 확인하고 다시 시도하세요.',en:'Couldn\'t load the face recognition model. Check your network and try again.',zh:'无法加载人脸识别模型，请检查网络后重试。',ja:'顔認識モデルを読み込めませんでした。ネットワークを確認して再試行してください。'},
+  "ar.faceSearching":{ko:'얼굴을 화면 중앙에 비춰 보세요…',en:'Show your face in the center of the frame…',zh:'请将脸对准画面中央…',ja:'顔を画面中央に映してください…'},
+  "ar.faceDetected":{ko:'인식됨',en:'Detected',zh:'已识别',ja:'認識済み'},
+  "ar.camPerm":{ko:'카메라 권한 요청 중… (팝업이 뜨면 ‘허용’)',en:'Requesting camera permission… (tap “Allow” if prompted)',zh:'正在请求摄像头权限…（弹窗请点“允许”）',ja:'カメラ権限をリクエスト中…（ポップアップが出たら「許可」）'},
+  "ar.faceHint":{ko:'‘카메라 시작’을 눌러 얼굴 스티커를 비춰 보세요',en:'Tap “Start camera” to try face stickers',zh:'点击「启动相机」体验面部贴纸',ja:'「カメラ開始」を押して顔スタンプを試してください'},
+  "toast.stickerFail":{ko:'이미지를 불러오지 못했어요',en:'Couldn\'t load the image',zh:'无法加载图片',ja:'画像を読み込めませんでした'}
 };
 var LANG="ko";
 function t(key){ var e=I18N[key]; return e ? (e[LANG]||e.ko) : null; }
