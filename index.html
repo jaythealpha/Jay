@@ -714,9 +714,10 @@
         <div class="ar-msg" id="arMsg">‘카메라 시작’을 눌러 QR을 비춰 보세요</div>
         <div class="ar-badge" id="arBadge"></div>
       </div>
-      <div class="seg" id="arModeSeg" style="max-width:320px;margin:0 auto 12px">
+      <div class="seg" id="arModeSeg" style="max-width:460px;margin:0 auto 12px">
         <button data-armode="qr" class="on" data-i18n="ar.mode.qr">🔲 QR 마커</button>
         <button data-armode="face" data-i18n="ar.mode.face">🙂 얼굴 스티커</button>
+        <button data-armode="marker" data-i18n="ar.mode.marker">🖼️ 이미지 마커</button>
       </div>
       <div class="ar-controls">
         <button class="btn" id="arStart" data-i18n="btn.arStart">📷 카메라 시작</button>
@@ -732,6 +733,17 @@
         <button class="btn" id="arShot" disabled>📸 사진 저장</button>
         <button class="btn sec" id="arStop" disabled>정지</button>
       </div>
+      <div id="arMarkerUpload" style="display:none">
+        <label class="fld" style="display:flex;gap:10px;align-items:center">
+          <img id="markerThumb" style="display:none;width:52px;height:52px;object-fit:cover;border-radius:8px;border:1px solid var(--line2);flex:none" />
+          <span style="flex:1;min-width:0">
+            <label class="file-btn" for="markerFile" id="markerLabel" data-i18n="btn.markerUpload" style="display:block">＋ 마커로 쓸 이미지 업로드 (로고·포스터·사진 등)</label>
+          </span>
+        </label>
+        <input type="file" id="markerFile" accept="image/*" style="display:none" />
+        <button class="btn sec" id="markerClear" style="display:none;margin-top:8px" data-i18n="btn.markerClear">마커 제거</button>
+        <div class="hint" data-i18n="hint.markerMode">아무 사진·로고·포스터나 마커로 등록하면, 카메라로 그 이미지를 비출 때 아래 스티커가 나타나 실시간으로 따라다닙니다. 마커 인식도 100% 브라우저 안에서 처리됩니다(전송 없음). 무늬나 글자가 뚜렷한 이미지일수록 잘 인식돼요.</div>
+      </div>
       <div id="arFaceControls" style="display:none">
         <label class="fld">
           <div class="lbl" data-i18n="lbl.stickerPick">스티커 고르기</div>
@@ -740,7 +752,7 @@
         <label class="file-btn" for="stickerFile" id="stickerLabel" data-i18n="btn.stickerUpload">＋ 내 이미지로 스티커 만들기</label>
         <input type="file" id="stickerFile" accept="image/*" style="display:none" />
         <button class="btn sec" id="stickerClear" style="display:none;margin-top:8px" data-i18n="btn.stickerClear">스티커 이미지 제거</button>
-        <label class="fld">
+        <label class="fld" id="stickerAnchorWrap">
           <div class="lbl" data-i18n="lbl.stickerAnchor">붙이는 위치</div>
           <div class="seg seg-wrap" id="stickerAnchorSeg">
             <button data-anchor="eyes" class="on"><span data-i18n="seg.anchor.eyes">눈</span></button>
@@ -754,7 +766,7 @@
           <div class="lbl"><span data-i18n="lbl.stickerScale">스티커 크기</span> <b id="stickerScaleOut">100%</b></div>
           <input type="range" id="stickerScale" min="40" max="220" step="1" value="100" />
         </label>
-        <div class="hint" data-i18n="hint.faceMode">얼굴을 인식해 선택한 스티커가 실시간으로 따라다닙니다. 처음 켤 때 인식 모델을 한 번 내려받아요(이후엔 오프라인 동작). 영상은 기기 밖으로 전송되지 않습니다.</div>
+        <div class="hint" id="hintFaceMode" data-i18n="hint.faceMode">얼굴을 인식해 선택한 스티커가 실시간으로 따라다닙니다. 처음 켤 때 인식 모델을 한 번 내려받아요(이후엔 오프라인 동작). 영상은 기기 밖으로 전송되지 않습니다.</div>
       </div>
       <div class="hint" id="arHintQr" style="text-align:center;margin-top:10px">스튜디오에서 만든 QR을 <b>다른 화면/인쇄물</b>에 띄워 두고 이 카메라로 비추면 그 위에 AR이 나타납니다. 실시간 인식은 <b>jsQR</b>(브라우저 내 디코딩)로 동작합니다.</div>
     </div>
@@ -822,7 +834,7 @@
   <footer>
     <div>Aesthetic QR Studio · 아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.06-g</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.06-h</b></div>
   </footer>
 </div>
 
@@ -3148,7 +3160,7 @@ var qrcode = function() {
 <!-- ===== QR decoder (jsQR, MIT) — powers marker-based AR ===== -->
 <script src="vendor/jsQR.js"></script>
 <!-- ===== face-api.js (MIT), vendored — powers offline face-tracking AR stickers ===== -->
-<script src="vendor/face-api.min.js"></script>
+<!-- ===== MindAR image-target engine (MIT), vendored — loaded on demand via import(), powers offline image-marker AR ===== -->
 
 <!-- ===== App ===== -->
 <script>
@@ -4549,8 +4561,10 @@ var AR = (function(){
   var arMode="qr";  // qr | face
   var STICKERS=["😎","🕶️","🥽","🎩","👑","🥸","🐱","🐰","🌸","🦋","💋","⭐","🎀","🔥"];
   var FS={mode:"emoji",emoji:"😎",img:null,anchor:"eyes",scale:100};  // face-sticker state
-  var faceModelsReady=false, faceModelsLoading=false;
+  var faceModelsReady=false, faceModelsLoading=false, faceModelsConflict=false;
   var lastFace=null, faceTtl=0, faceDetectBusy=false;
+  var MindARMod=null, markerImg=null, markerBuffer=null, markerController=null, markerControllerDims=null;
+  var lastMarker=null, markerTtl=0;
   function els(){ cam=$("arCam"); cv=$("arCanvas"); stage=$("arStage"); msg=$("arMsg"); badge=$("arBadge"); if(cv) cx=cv.getContext("2d"); }
   function fit(){ if(!cv||!stage) return; var r=stage.getBoundingClientRect(); var w=Math.max(2,Math.round(r.width)), h=Math.max(2,Math.round(r.height)); if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h;} }
   function coverDraw(g,img,W,H){ var iw=img.videoWidth||img.width, ih=img.videoHeight||img.height; if(!iw||!ih)return; var s=Math.max(W/iw,H/ih), dw=iw*s, dh=ih*s; g.drawImage(img,(W-dw)/2,(H-dh)/2,dw,dh); }
@@ -4619,16 +4633,28 @@ var AR = (function(){
     else { drawCube(g,L,t); drawCard(g,L,L.data,t); }
   }
   // ---- face-tracking sticker mode (offline, vendor/face-api.min.js + vendor/models) ----
+  function loadScriptOnce(src){
+    return new Promise(function(resolve,reject){
+      var existing=document.querySelector('script[src="'+src+'"]');
+      if(existing){ if(existing.dataset.loaded==="1") resolve(); else existing.addEventListener("load",function(){resolve();}); existing.addEventListener("error",reject); return; }
+      var el=document.createElement("script"); el.src=src;
+      el.onload=function(){ el.dataset.loaded="1"; resolve(); };
+      el.onerror=reject;
+      document.head.appendChild(el);
+    });
+  }
   async function ensureFaceModels(){
     if(faceModelsReady) return true;
     if(faceModelsLoading) return false;
     faceModelsLoading=true;
     try{
+      if(MindARMod) throw new Error("tfjs-conflict");
+      if(typeof faceapi==="undefined") await loadScriptOnce("vendor/face-api.min.js");
       if(typeof faceapi==="undefined") throw new Error("face-api not loaded");
       await faceapi.nets.tinyFaceDetector.loadFromUri("vendor/models");
       await faceapi.nets.faceLandmark68TinyNet.loadFromUri("vendor/models");
       faceModelsReady=true; return true;
-    }catch(e){ return false; }
+    }catch(e){ faceModelsConflict=(e&&e.message==="tfjs-conflict"); return false; }
     finally{ faceModelsLoading=false; }
   }
   async function detectFaceAsync(){
@@ -4664,6 +4690,59 @@ var AR = (function(){
     }
     return {x:box.x+box.width/2, y:box.y+box.height/2, angle:angle, w:box.width*1.15}; // full
   }
+  // ---- image-marker tracking mode (offline, vendor/mindar-image.prod.js, MIT) ----
+  async function ensureMindAR(){
+    if(MindARMod) return MindARMod;
+    if(typeof window.faceapi!=="undefined") throw new Error("tfjs-conflict");
+    MindARMod=await import("./vendor/mindar-image.prod.js");
+    return MindARMod;
+  }
+  function mulColMajor(M,v){
+    return [
+      M[0]*v[0]+M[4]*v[1]+M[8]*v[2]+M[12]*v[3],
+      M[1]*v[0]+M[5]*v[1]+M[9]*v[2]+M[13]*v[3],
+      M[2]*v[0]+M[6]*v[1]+M[10]*v[2]+M[14]*v[3],
+      M[3]*v[0]+M[7]*v[1]+M[11]*v[2]+M[15]*v[3]
+    ];
+  }
+  function projectMarkerPoint(world,proj,x,y,z,VW,VH){
+    var eye=mulColMajor(world,[x,y,z,1]);
+    var clip=mulColMajor(proj,eye);
+    return { x:(clip[0]/clip[3]+1)/2*VW, y:(clip[1]/clip[3]+1)/2*VH };
+  }
+  async function ensureMarkerController(){
+    if(!markerBuffer || !cam || !cam.videoWidth) return false;
+    var VW=cam.videoWidth, VH=cam.videoHeight;
+    if(markerController && markerControllerDims && markerControllerDims[0]===VW && markerControllerDims[1]===VH) return true;
+    var mod=await ensureMindAR();
+    if(markerController){ try{ markerController.stopProcessVideo(); markerController.dispose(); }catch(e){} }
+    markerController=new mod.Controller({
+      inputWidth:VW, inputHeight:VH,
+      onUpdate:function(data){
+        if(data.type==="updateMatrix"){
+          if(data.worldMatrix){ lastMarker={world:data.worldMatrix, proj:markerController.getProjectionMatrix(), dims:markerController.markerDimensions[0], VW:VW, VH:VH}; markerTtl=6; }
+        }
+      }
+    });
+    markerController.addImageTargetsFromBuffer(markerBuffer);
+    markerControllerDims=[VW,VH];
+    return true;
+  }
+  // marker quad (video-native px) → single center anchor in CANVAS space, via the same cover-transform as face mode
+  function markerAnchor(m){
+    var mw=m.dims[0], mh=m.dims[1];
+    var tl=projectMarkerPoint(m.world,m.proj,0,0,0,m.VW,m.VH);
+    var tr=projectMarkerPoint(m.world,m.proj,mw,0,0,m.VW,m.VH);
+    var br=projectMarkerPoint(m.world,m.proj,mw,mh,0,m.VW,m.VH);
+    var bl=projectMarkerPoint(m.world,m.proj,0,mh,0,m.VW,m.VH);
+    var W=cv.width,H=cv.height, s=Math.max(W/m.VW,H/m.VH), ox=(W-m.VW*s)/2, oy=(H-m.VH*s)/2;
+    function C(p){ return {x:p.x*s+ox, y:p.y*s+oy}; }
+    tl=C(tl); tr=C(tr); br=C(br); bl=C(bl);
+    var cx=(tl.x+tr.x+br.x+bl.x)/4, cy=(tl.y+tr.y+br.y+bl.y)/4;
+    var angle=Math.atan2(tr.y-tl.y, tr.x-tl.x);
+    var w=(dist(tl,tr)+dist(bl,br))/2;
+    return {x:cx,y:cy,angle:angle,w:w};
+  }
   function drawSticker(g,a){
     var w=a.w*(FS.scale/100);
     g.save(); g.translate(a.x,a.y); g.rotate(a.angle);
@@ -4695,6 +4774,17 @@ var AR = (function(){
         if(badge)badge.classList.remove("on");
         if(msg){ msg.textContent = !faceModelsReady ? t("ar.faceLoading") : t("ar.faceSearching"); msg.style.display="block"; }
       }
+    } else if(arMode==="marker"){
+      if(lastMarker && markerTtl>0){
+        markerTtl--;
+        try{ drawSticker(cx, markerAnchor(lastMarker)); }catch(e){}
+        if(badge){ badge.textContent="🖼️ "+t("ar.markerDetected"); badge.classList.add("on"); }
+        if(msg) msg.style.display="none";
+      } else {
+        lastMarker=null;
+        if(badge)badge.classList.remove("on");
+        if(msg){ msg.textContent = !markerBuffer ? t("ar.markerNeeded") : t("ar.markerSearching"); msg.style.display="block"; }
+      }
     } else {
       if(frame%2===0){ var d=detect(W,H); if(d){ last=d; ttl=10; } else if(ttl>0){ ttl--; } else { last=null; } }
       else if(ttl>0){ ttl--; } else { last=null; }
@@ -4719,15 +4809,21 @@ var AR = (function(){
     if(arMode==="face" && !faceModelsReady){
       showMsg(t("ar.faceLoading"));
       var ok=await ensureFaceModels();
-      if(!ok){ showMsg(t("ar.faceLoadFail")); return; }
+      if(!ok){ showMsg(faceModelsConflict ? t("ar.tfConflict") : t("ar.faceLoadFail")); return; }
     }
+    if(arMode==="marker" && !markerBuffer){ showMsg(t("ar.markerNeeded")); return; }
     showMsg(t("ar.camPerm"));
     try{ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:facing}},audio:false}); }
     catch(err){ try{ stream=await navigator.mediaDevices.getUserMedia({video:true,audio:false}); }
       catch(e2){ showMsg(explain(e2)); return; } }
     cam.srcObject=stream; cam.setAttribute("playsinline",""); cam.muted=true;
     try{ await cam.play(); }catch(e){}
-    showMsg(arMode==="face" ? t("ar.faceSearching") : "QR 코드를 화면에 비춰 보세요…"); fit();
+    if(arMode==="marker"){
+      showMsg(t("ar.markerLoading"));
+      var mok=await ensureMarkerController();
+      if(mok && markerController) markerController.processVideo(cam);
+    }
+    showMsg(arMode==="face" ? t("ar.faceSearching") : arMode==="marker" ? t("ar.markerSearching") : "QR 코드를 화면에 비춰 보세요…"); fit();
     $("arStart").disabled=true; $("arShot").disabled=false; $("arStop").disabled=false; $("arFlip").disabled=false;
     cv.addEventListener("click",openLink);
     if(raf)cancelAnimationFrame(raf); raf=requestAnimationFrame(loop);
@@ -4735,7 +4831,8 @@ var AR = (function(){
   function stop(){
     if(raf){cancelAnimationFrame(raf);raf=null;}
     if(stream){ stream.getTracks().forEach(function(t){t.stop();}); stream=null; }
-    if(cam) cam.srcObject=null; last=null; ttl=0; lastFace=null; faceTtl=0;
+    if(cam) cam.srcObject=null; last=null; ttl=0; lastFace=null; faceTtl=0; lastMarker=null; markerTtl=0;
+    if(markerController){ try{ markerController.stopProcessVideo(); }catch(e){} }
     if(cx&&cv){ cx.clearRect(0,0,cv.width,cv.height); }
     if(badge)badge.classList.remove("on");
     if(cv) cv.removeEventListener("click",openLink);
@@ -4758,14 +4855,24 @@ var AR = (function(){
     });
   }
   function setArMode(m){
+    var prevMode=arMode;
     arMode=m;
     Array.prototype.forEach.call($("arModeSeg").children,function(x){x.classList.toggle("on",x.dataset.armode===m);});
     if($("arObjWrap")) $("arObjWrap").style.display=(m==="qr")?"":"none";
-    if($("arFaceControls")) $("arFaceControls").style.display=(m==="face")?"block":"none";
+    if($("arMarkerUpload")) $("arMarkerUpload").style.display=(m==="marker")?"block":"none";
+    if($("arFaceControls")) $("arFaceControls").style.display=(m==="face"||m==="marker")?"block":"none";
+    if($("stickerAnchorWrap")) $("stickerAnchorWrap").style.display=(m==="face")?"":"none";
+    if($("hintFaceMode")) $("hintFaceMode").style.display=(m==="face")?"":"none";
     if($("arHintQr")) $("arHintQr").style.display=(m==="qr")?"":"none";
-    last=null; ttl=0; lastFace=null; faceTtl=0;
+    last=null; ttl=0; lastFace=null; faceTtl=0; lastMarker=null; markerTtl=0;
+    if(prevMode==="marker" && m!=="marker" && markerController){ try{ markerController.stopProcessVideo(); }catch(e){} }
+    if(stream && m==="marker" && markerBuffer){
+      ensureMarkerController().then(function(ok){ if(ok && markerController) markerController.processVideo(cam); });
+    }
     if(msg) msg.style.display="block";
-    showMsg(stream ? (m==="face"?t("ar.faceSearching"):"QR 코드를 화면에 비춰 보세요…") : (m==="face"?t("ar.faceHint"):"‘카메라 시작’을 눌러 QR을 비춰 보세요"));
+    var hintMap={qr:"QR 코드를 화면에 비춰 보세요…", face:t("ar.faceSearching"), marker: markerBuffer?t("ar.markerSearching"):t("ar.markerNeeded")};
+    var idleMap={qr:"‘카메라 시작’을 눌러 QR을 비춰 보세요", face:t("ar.faceHint"), marker: markerBuffer?t("ar.markerHint"):t("ar.markerNeeded")};
+    showMsg(stream ? hintMap[m] : idleMap[m]);
   }
   return {
     init:function(){ els();
@@ -4774,6 +4881,38 @@ var AR = (function(){
       $("arFlip").addEventListener("click",flip);
       $("arShot").addEventListener("click",shot);
       $("arModeSeg").addEventListener("click",function(e){ var b=e.target.closest("button"); if(b) setArMode(b.dataset.armode); });
+      $("markerFile").addEventListener("change",function(e){
+        var f=e.target.files&&e.target.files[0]; if(!f) return;
+        var img=new Image();
+        img.onload=async function(){
+          markerImg=img;
+          $("markerThumb").src=img.src; $("markerThumb").style.display="block";
+          $("markerLabel").textContent=t("btn.markerCompiling")+" 0%";
+          markerBuffer=null; markerController=null; markerControllerDims=null;
+          try{
+            var mod=await ensureMindAR();
+            var compiler=new mod.Compiler();
+            await compiler.compileImageTargets([img], function(pc){ $("markerLabel").textContent=t("btn.markerCompiling")+" "+Math.round(pc)+"%"; });
+            markerBuffer=compiler.exportData();
+            $("markerLabel").textContent=t("btn.markerOk");
+            $("markerClear").style.display="inline-block";
+            if(arMode==="marker") showMsg(stream?t("ar.markerSearching"):t("ar.markerHint"));
+          }catch(err){
+            $("markerLabel").textContent=t("btn.markerUpload");
+            $("markerThumb").style.display="none";
+            toast(err && err.message==="tfjs-conflict" ? t("ar.tfConflict") : t("toast.markerFail"));
+          }
+        };
+        img.onerror=function(){ toast(t("toast.stickerFail")); };
+        img.src=URL.createObjectURL(f);
+      });
+      $("markerClear").addEventListener("click",function(){
+        markerImg=null; markerBuffer=null; markerController=null; markerControllerDims=null; lastMarker=null; markerTtl=0;
+        $("markerFile").value=""; $("markerThumb").style.display="none"; $("markerThumb").src="";
+        $("markerLabel").textContent=t("btn.markerUpload");
+        $("markerClear").style.display="none";
+        if(arMode==="marker") showMsg(stream?t("ar.markerNeeded"):t("ar.markerNeeded"));
+      });
       buildStickerPicker();
       $("stickerFile").addEventListener("change",function(e){
         var f=e.target.files&&e.target.files[0]; if(!f) return;
@@ -5613,7 +5752,20 @@ var I18N = {
   "ar.faceDetected":{ko:'인식됨',en:'Detected',zh:'已识别',ja:'認識済み'},
   "ar.camPerm":{ko:'카메라 권한 요청 중… (팝업이 뜨면 ‘허용’)',en:'Requesting camera permission… (tap “Allow” if prompted)',zh:'正在请求摄像头权限…（弹窗请点“允许”）',ja:'カメラ権限をリクエスト中…（ポップアップが出たら「許可」）'},
   "ar.faceHint":{ko:'‘카메라 시작’을 눌러 얼굴 스티커를 비춰 보세요',en:'Tap “Start camera” to try face stickers',zh:'点击「启动相机」体验面部贴纸',ja:'「カメラ開始」を押して顔スタンプを試してください'},
-  "toast.stickerFail":{ko:'이미지를 불러오지 못했어요',en:'Couldn\'t load the image',zh:'无法加载图片',ja:'画像を読み込めませんでした'}
+  "toast.stickerFail":{ko:'이미지를 불러오지 못했어요',en:'Couldn\'t load the image',zh:'无法加载图片',ja:'画像を読み込めませんでした'},
+  "ar.mode.marker":{ko:'🖼️ 이미지 마커',en:'🖼️ Image marker',zh:'🖼️ 图像标记',ja:'🖼️ 画像マーカー'},
+  "btn.markerUpload":{ko:'＋ 마커로 쓸 이미지 업로드 (로고·포스터·사진 등)',en:'＋ Upload an image to use as a marker (logo, poster, photo…)',zh:'＋ 上传作为标记的图片（Logo·海报·照片等）',ja:'＋ マーカーにする画像をアップロード（ロゴ・ポスター・写真など）'},
+  "btn.markerClear":{ko:'마커 제거',en:'Remove marker',zh:'移除标记',ja:'マーカーを削除'},
+  "btn.markerCompiling":{ko:'마커 분석 중…',en:'Analyzing marker…',zh:'正在分析标记…',ja:'マーカー解析中…'},
+  "btn.markerOk":{ko:'✓ 마커 등록됨 — 변경하려면 클릭',en:'✓ Marker registered — click to change',zh:'✓ 已注册标记 — 点击更换',ja:'✓ マーカー登録済み — 変更するにはクリック'},
+  "hint.markerMode":{ko:'아무 사진·로고·포스터나 마커로 등록하면, 카메라로 그 이미지를 비출 때 아래 스티커가 나타나 실시간으로 따라다닙니다. 마커 인식도 100% 브라우저 안에서 처리됩니다(전송 없음). 무늬나 글자가 뚜렷한 이미지일수록 잘 인식돼요.',en:'Register any photo, logo, or poster as a marker — point the camera at it and the sticker below appears and tracks it live. Marker recognition also runs 100% in your browser (nothing uploaded). Images with clear patterns or text work best.',zh:'将任意照片、Logo 或海报注册为标记后，用相机对准它时，下方贴纸会实时出现并跟随。标记识别同样 100% 在浏览器内完成（不上传）。图案或文字清晰的图片识别效果更好。',ja:'任意の写真・ロゴ・ポスターをマーカーとして登録すると、カメラでそれを映した時に下のスタンプがリアルタイムで追従します。マーカー認識も100%ブラウザ内で処理（送信なし）。柄や文字がはっきりした画像ほど認識しやすいです。'},
+  "ar.markerNeeded":{ko:'먼저 위에서 마커 이미지를 업로드하세요',en:'Upload a marker image above first',zh:'请先在上方上传标记图片',ja:'まず上でマーカー画像をアップロードしてください'},
+  "ar.markerLoading":{ko:'마커 인식 엔진 불러오는 중…',en:'Loading marker recognition engine…',zh:'正在加载标记识别引擎…',ja:'マーカー認識エンジンを読み込み中…'},
+  "ar.markerSearching":{ko:'등록한 마커 이미지를 화면에 비춰 보세요…',en:'Show your marker image to the camera…',zh:'请将已注册的标记图片对准镜头…',ja:'登録したマーカー画像をカメラに映してください…'},
+  "ar.markerDetected":{ko:'인식됨',en:'Detected',zh:'已识别',ja:'認識済み'},
+  "ar.markerHint":{ko:'‘카메라 시작’을 눌러 마커를 비춰 보세요',en:'Tap “Start camera” to try your marker',zh:'点击「启动相机」体验标记',ja:'「カメラ開始」を押してマーカーを試してください'},
+  "toast.markerFail":{ko:'마커를 분석하지 못했어요. 다른 이미지로 시도해 보세요.',en:'Couldn\'t analyze the marker. Try a different image.',zh:'无法分析标记，请尝试其他图片。',ja:'マーカーを解析できませんでした。別の画像でお試しください。'},
+  "ar.tfConflict":{ko:'얼굴 스티커와 이미지 마커는 같은 브라우저 세션에서 함께 쓰면 충돌할 수 있어요. 페이지를 새로고침한 뒤 이 기능만 사용해 보세요.',en:'Face sticker and image marker can conflict when used together in the same session. Please refresh the page and use only this feature this time.',zh:'面部贴纸和图像标记在同一浏览器会话中一起使用可能会冲突。请刷新页面后只使用此功能。',ja:'顔スタンプと画像マーカーは同じセッションで併用すると競合することがあります。ページを再読み込みしてこの機能だけをお試しください。'}
 };
 var LANG="ko";
 function t(key){ var e=I18N[key]; return e ? (e[LANG]||e.ko) : null; }
