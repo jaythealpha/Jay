@@ -281,6 +281,31 @@
   .kpi .k-value { margin-top: 5px; font-size: 17px; font-weight: 800; color: var(--ink-1); letter-spacing: -.01em; line-height: 1.25; }
   .kpi .k-sub { margin-top: 2px; font-size: 11px; color: var(--ink-3); }
 
+  /* --- data confidence panel --- */
+  /* semantic tones (separate from the gold accent), calm on both themes */
+  :root { --tone-good: #5fd0a0; --tone-mid: #e0a838; --tone-low: #e08a5a; }
+  :root[data-theme="atelier"] { --tone-good: #12855c; --tone-mid: #9a6a1f; --tone-low: #b5622f; }
+  .conf-card { border-left: 3px solid var(--line); }
+  .conf-card.tone-good { border-left-color: var(--tone-good); }
+  .conf-card.tone-mid  { border-left-color: var(--tone-mid); }
+  .conf-card.tone-low  { border-left-color: var(--tone-low); }
+  .conf-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .conf-en { font-size: 10.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
+  .conf-word { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 800; color: var(--ink-1); margin-top: 5px; }
+  .conf-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  .conf-dot.tone-good { background: var(--tone-good); }
+  .conf-dot.tone-mid  { background: var(--tone-mid); }
+  .conf-dot.tone-low  { background: var(--tone-low); }
+  .cov-meter { display: flex; gap: 4px; flex: none; }
+  .cov-seg { width: 20px; height: 7px; border-radius: 999px; background: var(--track); }
+  .cov-seg.on.tone-good { background: var(--tone-good); }
+  .cov-seg.on.tone-mid  { background: var(--tone-mid); }
+  .cov-seg.on.tone-low  { background: var(--tone-low); }
+  .conf-basis { font-size: 13px; color: var(--ink-2); line-height: 1.65; margin-top: 12px; }
+  .conf-meta { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--grid); }
+  .conf-meta span { font-size: 12px; color: var(--ink-3); }
+  .conf-meta b { color: var(--ink-1); font-weight: 700; }
+
   /* --- cards & section headers --- */
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 18px 18px 17px; margin-top: 12px; }
   .sec { display: flex; align-items: baseline; gap: 10px; margin-bottom: 15px; }
@@ -876,12 +901,23 @@ const SYSTEM_PROMPT =
 한국 전통주 소믈리에를 겸합니다. 제공된 술 라벨 사진에서 먼저 주종(category)을 판별하고,
 그 주종의 애호가에게 유용한 정보를 한국어로 정리합니다. 라벨에서 읽히지 않는 사실은 일반적인
 지식과 해당 생산자/지역/원료의 특성으로 합리적으로 추정하되, 불확실하면 겸손하게 표현합니다.
+
+[정직성 원칙 — 매우 중요]
+- 이 제품을 실제로 아는지, 아니면 주종·지역·품종의 일반적 특성으로 추정하는지를 스스로 구분해
+  knowledge 값으로 솔직히 표기하세요. 유명 제품이면 rich, 어느 정도 알면 moderate,
+  거의 모르는 소규모·지역·신제품이면 sparse.
+- 모르는 제품을 아는 척 지어내지 마세요. sparse일 때는 basis에 "대부분 일반적 추정"임을 밝히고,
+  히스토리·스토리 등 확실치 않은 항목은 추측을 단정적으로 쓰지 말고 겸손하게 표현하세요.
+- 술 라벨이 아니거나 판독 불가하면 found=false.
+
 반드시 아래 JSON 스키마 하나만 출력하고, 코드펜스나 다른 텍스트는 절대 붙이지 마세요.`;
 
 const JSON_SCHEMA = `{
   "found": true,                       // 라벨을 술로 인식했으면 true, 아니면 false
   "reason": "",                        // found=false일 때 이유
-  "confidence": "high|medium|low",     // 라벨 인식 확신도
+  "confidence": "high|medium|low",     // 라벨 인식(글자 판독) 확신도
+  "knowledge": "rich|moderate|sparse", // 이 '특정 제품'에 대해 실제로 보유한 지식량. rich=유명해서 상세정보 충분, moderate=어느 정도 앎, sparse=거의 모름(대부분 일반적 추정)
+  "basis": "이 결과가 무엇에 근거했는지 1~2문장. 어떤 부분이 라벨에서 읽은 사실이고 어떤 부분이 일반적 추정인지 솔직히.",
   "category": "wine|sake|whisky|traditional|beer|brandy|baijiu|tequila|rum|gin|soju|spirits",  // 주종: 와인|사케|위스키|한국 전통주|맥주|브랜디·코냑|중국 백주|데킬라·메즈칼|럼|진|희석식 소주|기타(보드카 등)
   "name": "제품명(라벨 표기 그대로)",
   "producer": "생산자(와이너리/양조장/증류소/브루어리) 이름",
@@ -1050,6 +1086,38 @@ function scaleRow(nameKo, nameEn, val, anchors, words) {
       <span class="dot" style="left:${v}%"></span>
     </div>
     <div class="scale-anchors"><span>${esc(anchors[0])}</span><span>${esc(anchors[1])}</span></div>
+  </div>`;
+}
+
+/* data-confidence panel: how much the model actually knows about THIS product */
+const KNOW = {
+  rich:     { lvl: 3, word: '정보 충분',   sub: '잘 알려진 제품이라 상세 정보를 보유', tone: 'good' },
+  moderate: { lvl: 2, word: '정보 보통',   sub: '일부는 사실, 일부는 일반적 추정',     tone: 'mid' },
+  sparse:   { lvl: 1, word: '정보 제한적', sub: '대부분 주종·지역의 일반적 추정',       tone: 'low' },
+};
+const CONF_WORD = { high: '선명', medium: '보통', low: '흐림' };
+function confidencePanel(d) {
+  // backward-compat: derive knowledge from label confidence when absent
+  let k = d.knowledge;
+  if (!KNOW[k]) k = d.confidence === 'low' ? 'sparse' : d.confidence === 'medium' ? 'moderate' : 'rich';
+  const info = KNOW[k];
+  const conf = d.confidence === 'low' ? 'low' : d.confidence === 'medium' ? 'medium' : 'high';
+  const basis = d.basis || info.sub;
+  const dots = [1, 2, 3].map(n =>
+    `<span class="cov-seg${n <= info.lvl ? ' on tone-' + info.tone : ''}"></span>`).join('');
+  return `<div class="card conf-card tone-${info.tone}">
+    <div class="conf-head">
+      <div>
+        <div class="conf-en">DATA CONFIDENCE · 정보 신뢰도</div>
+        <div class="conf-word"><span class="conf-dot tone-${info.tone}"></span>${info.word}</div>
+      </div>
+      <div class="cov-meter" role="img" aria-label="정보 보유량 ${info.lvl}/3, ${info.word}">${dots}</div>
+    </div>
+    <p class="conf-basis">${esc(basis)}</p>
+    <div class="conf-meta">
+      <span>🔎 라벨 인식 <b>${CONF_WORD[conf]}</b></span>
+      <span>📚 AI 지식 보유 <b>${info.word.replace('정보 ', '')}</b></span>
+    </div>
   </div>`;
 }
 
@@ -1233,6 +1301,9 @@ function renderResult(session) {
       </div>
     </div>
 
+    <!-- data confidence -->
+    ${confidencePanel(d)}
+
     <!-- price -->
     <div class="card">
       ${sec('Price Position', '가격 포지션')}
@@ -1414,6 +1485,8 @@ function handleFile(file) {
 const DEMOS = [
 {
   found: true, confidence: 'high', category: 'wine',
+  knowledge: 'rich',
+  basis: '라벨의 생산자·빈티지를 명확히 읽었고, 보르도 1등급으로 널리 알려진 와인이라 등급·평가·숙성 정보까지 신뢰도 높게 제공됩니다.',
   name: 'Château Margaux',
   producer: 'Château Margaux (샤토 마고)',
   type: '레드',
@@ -1894,6 +1967,44 @@ const DEMOS = [
     '맥주와 섞으면 "소맥" — 소주:맥주 = 3:7 전후가 대중적입니다.',
     '증류식 소주(화요·일품진로)는 원료 풍미가 살아 있어 스트레이트로 즐기기 좋습니다.',
     '숙취를 줄이려면 물을 충분히 곁들여 천천히 드세요.',
+  ],
+},
+{
+  // 정보 제한적 예시 — 잘 알려지지 않은 소규모 제품을 스캔했을 때
+  found: true, confidence: 'medium', knowledge: 'sparse',
+  basis: '라벨에서 주종·도수 정도만 확인했습니다. 널리 알려지지 않은 소규모 제품이라 아래 상세 정보(맛 프로필·페어링·히스토리 등)는 대부분 해당 주종의 일반적 특성에서 추정한 것으로, 실제와 다를 수 있습니다.',
+  category: 'spirits',
+  name: '무명 크래프트 증류주',
+  producer: '소규모 지역 증류소 (미상)',
+  type: '증류주 (세부 분류 미상)',
+  vintage: '미상',
+  region: '지역 미상',
+  country: '—',
+  ingredients: ['라벨상 확인 어려움'],
+  alcohol: '40%',
+  priceRange: '정보 부족',
+  priceNote: '유통 정보가 적어 가격대를 특정하기 어렵습니다',
+  priceTier: 0,
+  tasteProfile: [
+    { name: '바디', en: 'Body', value: 50, left: '라이트', right: '풀' },
+    { name: '단맛', en: 'Sweetness', value: 40, left: '드라이', right: '스위트' },
+    { name: '오크', en: 'Oak', value: 45, left: '약함', right: '진함' },
+    { name: '스파이스', en: 'Spice', value: 45, left: '순함', right: '알싸함' },
+  ],
+  specs: [{ label: '분류', value: '증류주(추정)' }, { label: '도수', value: '40% (라벨 표기)' }],
+  tastingNotes: '해당 주종의 일반적 특성상 곡물·과실 계열의 향에 오크 숙성 뉘앙스가 있을 것으로 추정되나, 이 제품의 실제 프로필은 확인되지 않았습니다.',
+  drinkFrom: null, drinkPeak: null, drinkUntil: null,
+  history: [{ year: '—', text: '제품·생산자 관련 확인된 기록이 부족합니다' }],
+  story: '이 제품에 대해 신뢰할 만한 배경 정보를 충분히 확보하지 못했습니다. 정확한 정보는 생산자 공식 자료나 판매처를 확인해 주세요.',
+  winery: '생산자에 대한 상세 정보가 부족합니다.',
+  foodPairing: ['🧀 치즈', '🥜 견과류'],
+  servingTemp: '실온 또는 온더록',
+  servingNote: '일반적인 증류주 기준 — 니트로 향을 먼저 확인해 보세요',
+  aging: '증류주는 병입 후 숙성되지 않습니다',
+  tips: [
+    '아래 정보는 대부분 추정이니 구매·시음 전 공식 정보를 확인하세요.',
+    '라벨의 도수·원산지·수입사 표기를 함께 살펴보면 정체를 좁힐 수 있습니다.',
+    '더 정확한 인식을 원하면 라벨 앞·뒷면을 밝은 곳에서 선명하게 다시 촬영해 보세요.',
   ],
 },
 ];
