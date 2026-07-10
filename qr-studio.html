@@ -849,7 +849,7 @@
   <footer>
     <div>Aesthetic QR Studio · 아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.06-m</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.06-n</b></div>
   </footer>
 </div>
 
@@ -3644,18 +3644,23 @@ function render(g2, exportSize){
     }
   }
 
-  // logo
+  // logo / centre object — sits cleanly in the QR centre (aspect-ratio preserved) on top of any
+  // art background. Over art we always lay a white quiet-zone card so the object reads crisply and
+  // the centre still scans (relies on ECC-H); otherwise the card honours the logoPad toggle.
   if (S.logo && !S.aiArt){
     var ls = (S.logoSize/100) * (n*unit);
-    var lx = ox + (n*unit-ls)/2, ly = oy + (n*unit-ls)/2;
-    if (S.logoPad){
-      var pad = ls*0.12;
-      g.fillStyle = S.transparent ? "#ffffff" : S.bg;
-      roundRect(g, lx-pad, ly-pad, ls+pad*2, ls+pad*2, ls*0.18); g.fill();
+    var liw = S.logo.naturalWidth||S.logo.width||1, lih = S.logo.naturalHeight||S.logo.height||1;
+    var lscale = Math.min(ls/liw, ls/lih);
+    var dw = liw*lscale, dh = lih*lscale;
+    var lx = ox + (n*unit-dw)/2, ly = oy + (n*unit-dh)/2;
+    if (S.logoPad || S.artImg){
+      var pad = ls*(S.artImg?0.09:0.12);
+      g.fillStyle = (S.artImg || S.transparent) ? "#ffffff" : S.bg;
+      roundRect(g, lx-pad, ly-pad, dw+pad*2, dh+pad*2, ls*0.16); g.fill();
     }
     g.save();
-    roundRect(g, lx, ly, ls, ls, ls*0.14); g.clip();
-    try { g.drawImage(S.logo, lx, ly, ls, ls); } catch(e){}
+    roundRect(g, lx, ly, dw, dh, Math.min(dw,dh)*0.14); g.clip();
+    try { g.drawImage(S.logo, lx, ly, dw, dh); } catch(e){}
     g.restore();
   }
 
@@ -5192,7 +5197,7 @@ function makeScene(kind){
 var GAL_TR = {
   '프리미엄 라거':{en:'Premium Lager',zh:'优质拉格',ja:'プレミアムラガー'},
   '골든 에일':{en:'Golden Ale',zh:'金色艾尔',ja:'ゴールデンエール'},
-  '브랜드 로고·아트':{en:'Brand logo · art',zh:'品牌 Logo·艺术',ja:'ブランドロゴ・アート'},
+  '로고 중앙 배치·아트':{en:'Centered logo · art',zh:'居中 Logo·艺术',ja:'中央ロゴ・アート'},
   '서클아트 그린':{en:'Circle Art Green',zh:'环形艺术·绿',ja:'サークルアート グリーン'},
   '서클아트 바이올렛':{en:'Circle Art Violet',zh:'环形艺术·紫',ja:'サークルアート バイオレット'},
   '도트 링 배지':{en:'Dot-ring badge',zh:'圆点环徽章',ja:'ドットリングバッジ'},
@@ -5356,8 +5361,8 @@ var CATS = {
     {name:"크리스탈",tag:"유리 판타지·펄스",s:{artUrl:"assets/anim-17.webp",anim:true,animKind:"pulse",fg1:"#2a3a6b",dot:"dots",eye:"square",artVisibility:56}}
   ],
   logo:[
-    {name:"프리미엄 라거",tag:"브랜드 로고·아트",s:{artUrl:"assets/logo-beer-1.webp",anim:true,animKind:"shine",fg1:"#063d1c",dot:"dots",eye:"square",artVisibility:60}},
-    {name:"골든 에일",tag:"브랜드 로고·아트",s:{artUrl:"assets/logo-beer-2.webp",anim:true,animKind:"shine",fg1:"#3a2410",dot:"dots",eye:"square",artVisibility:58}},
+    {name:"프리미엄 라거",tag:"로고 중앙 배치·아트",s:{artUrl:"assets/logo-beer-bg-1.webp",centerLogoUrl:"assets/logo-beer-obj-1.png",anim:true,animKind:"shine",fg1:"#063d1c",dot:"dots",eye:"square",artVisibility:56,logoSize:26,logoPad:true}},
+    {name:"골든 에일",tag:"로고 중앙 배치·아트",s:{artUrl:"assets/logo-beer-bg-2.webp",centerLogoUrl:"assets/logo-beer-obj-2.png",anim:true,animKind:"shine",fg1:"#3a2410",dot:"dots",eye:"square",artVisibility:54,logoSize:26,logoPad:true}},
     {name:"ACME",tag:"텍스트 로고",s:{fill:"solid",fg1:"#e11d48",bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"text",centerText:"ACME",centerColor:"#e11d48",centerScale:30}},
     {name:"NOVA",tag:"텍스트 로고",s:{fill:"linear",fg1:"#2563eb",fg2:"#4f46e5",angle:120,dot:"dots",eye:"circle",bg:"#ffffff",centerMode:"text",centerText:"NOVA",centerColor:"#1d4ed8",centerScale:30}},
     {name:"PIXEL",tag:"텍스트 로고",s:{fill:"linear",fg1:"#7c3aed",fg2:"#db2777",angle:135,dot:"rounded",eye:"rounded",bg:"#ffffff",centerMode:"text",centerText:"PIXEL",centerColor:"#7c3aed",centerScale:28}},
@@ -5419,6 +5424,7 @@ function renderPreset(cv, ps, phase){
   for(var k in ps) S[k]=ps[k];
   if(ps.scene){ S.artImg=makeScene(ps.scene); S.artIsVideo=false; }
   else if(ps.artUrl){ var im=getArtImg(ps.artUrl); if(im){ S.artImg=im; S.artIsVideo=false; } }
+  if(ps.centerLogoUrl){ var lim=getArtImg(ps.centerLogoUrl); if(lim){ S.logo=lim; } }
   if(phase!=null) _phase=phase;
   var pm=S.margin; S.margin=Math.min(S.margin,2);
   try{ render(cv.getContext("2d"), cv.width); }catch(e){}
@@ -5451,7 +5457,7 @@ function buildGallery(){
     var cv=card.querySelector("canvas");
     renderPreset(cv, p.s);
     if(animate) galItems.push({cv:cv, ps:p.s});
-    else if(p.s.artUrl){ (function(cvv,pss){ getArtImg(pss.artUrl, function(){ renderPreset(cvv, pss); }); })(cv,p.s); }
+    else if(p.s.artUrl || p.s.centerLogoUrl){ (function(cvv,pss){ function rr(){ renderPreset(cvv, pss); } if(pss.artUrl) getArtImg(pss.artUrl, rr); if(pss.centerLogoUrl) getArtImg(pss.centerLogoUrl, rr); })(cv,p.s); }
     card.addEventListener("click",function(){ applyPreset(p.s, p); });
   });
   if(animate && galItems.length) startGalAnim();
@@ -5480,6 +5486,7 @@ function applyPreset(ps, meta){
   for(var k in ps) S[k]=ps[k];
   if(ps.scene){ S.artImg=makeScene(ps.scene); S.artIsVideo=false; }
   else if(ps.artUrl){ getArtImg(ps.artUrl, function(img){ if(img){ S.artImg=img; S.artIsVideo=false; $("artControls").style.display="block"; $("artLabel").textContent=t("art.webOk"); rerender(); } }); }
+  if(ps.centerLogoUrl){ getArtImg(ps.centerLogoUrl, function(img){ if(img){ S.logo=img; if($("logoSizeWrap")) $("logoSizeWrap").style.display="block"; if($("logoBgWrap")) $("logoBgWrap").style.display="flex"; if($("logoClear")) $("logoClear").style.display="block"; if($("logoLabel")) $("logoLabel").textContent="✓ 로고 업로드됨 — 변경하려면 클릭"; rerender(); } }); }
   // use-case presets carry a connection type + prefilled form fields (e.g. Wi-Fi SSID)
   if(meta && meta.ct){
     selectCType(meta.ct);
