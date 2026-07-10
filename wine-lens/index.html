@@ -32,9 +32,57 @@
     --hairline: rgba(220,165,77,.32);
     --shadow: 0 18px 50px rgba(0,0,0,.45);
     --focus: #f0c674;                /* keyboard focus ring — gold, ≥3:1 on every surface */
+    /* themeable surfaces (swapped wholesale by the alternate template) */
+    --page-bg:
+      radial-gradient(1200px 700px at 15% -10%, #3a0e1d 0%, transparent 55%),
+      radial-gradient(1000px 700px at 110% 10%, #2a0f2e 0%, transparent 50%),
+      var(--bg);
+    --topbar-fade: linear-gradient(180deg, rgba(23,6,16,.96) 60%, rgba(23,6,16,0));
+    --plate-grad: linear-gradient(160deg, #4a1226 0%, #260a15 62%, #1c0710 100%);
+    --plate-veil: radial-gradient(120% 90% at 50% 0%, transparent 30%, rgba(18,4,10,.88) 100%);
+    --plate-frame: rgba(220,165,77,.14);
+    --accent-wash: rgba(220,165,77,.13);
+    --overlay-bg: rgba(0,0,0,.55);
+    --cam-bg: #0e0409;
     --serif: "Noto Serif KR", "Nanum Myeongjo", Georgia, "Times New Roman", serif;
     --sans: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
   }
+
+  /* ===== Alternate template: "Atelier" — light editorial (gallery label) ===== */
+  :root[data-theme="atelier"] {
+    --bg: #efe7e9;
+    --bg2: #f8f3f4;
+    --card: #fdfafb;
+    --card-2: #f4ecef;
+    --line: #e6d7dc;
+    --wine: #8e1e3c;
+    --wine-light: #a5294a;
+    --gold: #9a6a1f;          /* data mark — deep bronze, ≥3:1 on light card */
+    --gold-soft: #7c1d38;     /* emphasis text — deep bordeaux */
+    --gold-dim: #a98a53;
+    --green: #12855c;
+    --ink-1: #23131a;
+    --ink-2: #6b565d;
+    --ink-3: #9a8790;
+    --grid: rgba(35,19,26,.09);
+    --track: rgba(142,30,60,.13);
+    --hairline: rgba(142,30,60,.26);
+    --shadow: 0 16px 40px rgba(90,25,45,.14);
+    --focus: #8e1e3c;
+    --page-bg:
+      radial-gradient(1200px 700px at 15% -10%, #fbe6ec 0%, transparent 55%),
+      radial-gradient(1000px 700px at 110% 8%, #efe4f0 0%, transparent 55%),
+      var(--bg);
+    --topbar-fade: linear-gradient(180deg, rgba(239,231,233,.96) 60%, rgba(239,231,233,0));
+    --plate-grad: linear-gradient(160deg, #fdf4f6 0%, #f7ebef 62%, #f2e4ea 100%);
+    --plate-veil: radial-gradient(120% 90% at 50% 0%, transparent 34%, rgba(250,244,246,.9) 100%);
+    --plate-frame: rgba(142,30,60,.14);
+    --accent-wash: rgba(142,30,60,.09);
+    --overlay-bg: rgba(40,18,26,.34);
+    --cam-bg: #1b0d12;
+  }
+  :root[data-theme="atelier"] .brand .logo,
+  :root[data-theme="atelier"] .btn-primary { box-shadow: 0 8px 20px rgba(142,30,60,.28); }
 
   /* Accessibility: visible keyboard focus everywhere (mouse taps stay clean) */
   :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
@@ -51,10 +99,8 @@
   html, body { height: 100%; }
   body {
     font-family: var(--sans);
-    background:
-      radial-gradient(1200px 700px at 15% -10%, #3a0e1d 0%, transparent 55%),
-      radial-gradient(1000px 700px at 110% 10%, #2a0f2e 0%, transparent 50%),
-      var(--bg);
+    background: var(--page-bg);
+    background-attachment: fixed;
     color: var(--ink-1);
     min-height: 100vh;
     line-height: 1.55;
@@ -70,7 +116,7 @@
     display: flex; align-items: center; gap: 12px;
     padding: calc(14px + env(safe-area-inset-top)) 16px 14px;
     max-width: 720px; margin: 0 auto;
-    background: linear-gradient(180deg, rgba(23,6,16,.96) 60%, rgba(23,6,16,0));
+    background: var(--topbar-fade);
     backdrop-filter: blur(8px);
   }
   .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: -.02em; }
@@ -129,7 +175,7 @@
     background: var(--card); border: 1px solid var(--line); box-shadow: var(--shadow);
   }
   .cam-stage {
-    position: relative; aspect-ratio: 3/4; max-height: 60vh; background: #0e0409;
+    position: relative; aspect-ratio: 3/4; max-height: 60vh; background: var(--cam-bg);
     display: grid; place-items: center; overflow: hidden;
   }
   .cam-stage video, .cam-stage img.preview {
@@ -194,17 +240,17 @@
   /* --- label plate hero --- */
   .plate {
     position: relative; border-radius: 20px; overflow: hidden; box-shadow: var(--shadow);
-    background: linear-gradient(160deg, #4a1226 0%, #260a15 62%, #1c0710 100%);
+    background: var(--plate-grad);
     border: 1px solid var(--line);
   }
   .plate .photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .22; filter: saturate(.85); }
-  .plate .veil { position: absolute; inset: 0; background: radial-gradient(120% 90% at 50% 0%, transparent 30%, rgba(18,4,10,.88) 100%); }
+  .plate .veil { position: absolute; inset: 0; background: var(--plate-veil); }
   .plate .frame {
     position: relative; margin: 10px; padding: 26px 20px 22px; text-align: center;
     border: 1px solid var(--hairline); border-radius: 14px;
   }
   .plate .frame::before {
-    content: ""; position: absolute; inset: 4px; border: 1px solid rgba(220,165,77,.14); border-radius: 11px; pointer-events: none;
+    content: ""; position: absolute; inset: 4px; border: 1px solid var(--plate-frame); border-radius: 11px; pointer-events: none;
   }
   .plate .kicker {
     font-size: 11px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase;
@@ -224,7 +270,7 @@
   .plate .origin b { color: var(--ink-1); font-weight: 700; }
   .plate .badges { display: flex; gap: 7px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
   .tag { font-size: 11px; font-weight: 700; padding: 5px 11px; border-radius: 999px; letter-spacing: .06em; }
-  .tag.type { background: rgba(220,165,77,.13); color: var(--gold-soft); border: 1px solid var(--hairline); }
+  .tag.type { background: var(--accent-wash); color: var(--gold-soft); border: 1px solid var(--hairline); }
   .tag.conf { background: rgba(95,208,160,.1); color: var(--green); border: 1px solid rgba(95,208,160,.3); }
   .tag.conf.low { background: rgba(239,71,111,.1); color: #ff8fa8; border-color: rgba(239,71,111,.35); }
 
@@ -332,7 +378,7 @@
     display: flex; align-items: center; gap: 10px; padding: 11px 12px;
     background: var(--card-2); border: 1px solid var(--line); border-radius: 13px;
   }
-  .pair .pe { font-size: 20px; flex: none; width: 34px; height: 34px; display: grid; place-items: center; background: rgba(220,165,77,.1); border-radius: 10px; }
+  .pair .pe { font-size: 20px; flex: none; width: 34px; height: 34px; display: grid; place-items: center; background: var(--accent-wash); border-radius: 10px; }
   .pair .pt { font-size: 13px; font-weight: 600; color: var(--ink-1); line-height: 1.35; }
 
   /* --- timeline --- */
@@ -405,7 +451,7 @@
   }
 
   /* ---------- History drawer ---------- */
-  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.55); backdrop-filter: blur(3px); z-index: 60; opacity: 0; pointer-events: none; transition: .25s; }
+  .overlay { position: fixed; inset: 0; background: var(--overlay-bg); backdrop-filter: blur(3px); z-index: 60; opacity: 0; pointer-events: none; transition: .25s; }
   .overlay.show { opacity: 1; pointer-events: auto; }
   .drawer {
     position: fixed; top: 0; right: 0; bottom: 0; width: min(400px, 88vw); z-index: 70;
@@ -450,15 +496,25 @@
   .modal-card.show { opacity: 1; pointer-events: auto; transform: translate(-50%,-50%) scale(1); }
   .modal-card h3 { font-size: 19px; font-weight: 800; margin-bottom: 4px; }
   .modal-card .sub { color: var(--ink-2); font-size: 13px; margin-bottom: 18px; }
-  label.field { display: block; margin-bottom: 16px; }
-  label.field .lbl { font-size: 13px; font-weight: 700; color: var(--gold-soft); margin-bottom: 7px; display: block; }
-  label.field input, label.field select {
+  .field { display: block; margin-bottom: 16px; }
+  .field .lbl { font-size: 13px; font-weight: 700; color: var(--gold-soft); margin-bottom: 7px; display: block; }
+  .field input, .field select {
     width: 100%; padding: 12px 14px; border-radius: 12px; font-family: inherit; font-size: 15px;
     background: var(--card); border: 1px solid var(--line); color: var(--ink-1);
   }
-  label.field input:focus, label.field select:focus { outline: none; border-color: var(--gold); }
-  label.field .hint { font-size: 11.5px; color: var(--ink-3); margin-top: 6px; line-height: 1.5; }
-  label.field .hint a { color: var(--gold); }
+  .field input:focus, .field select:focus { outline: none; border-color: var(--gold); }
+  .field .hint { font-size: 11.5px; color: var(--ink-3); margin-top: 6px; line-height: 1.5; }
+  .field .hint a { color: var(--gold); }
+  /* theme segmented control */
+  .seg { display: flex; gap: 6px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 4px; }
+  .seg-btn {
+    flex: 1; padding: 10px 8px; border: none; border-radius: 9px; cursor: pointer; font-family: inherit;
+    font-size: 14px; font-weight: 700; color: var(--ink-2); background: transparent; transition: .15s;
+  }
+  .seg-btn small { font-weight: 600; font-size: 11px; color: var(--ink-3); margin-left: 2px; }
+  .seg-btn:hover { color: var(--ink-1); }
+  .seg-btn[aria-checked="true"] { background: var(--wine); color: #fff; box-shadow: 0 4px 12px rgba(142,30,60,.3); }
+  .seg-btn[aria-checked="true"] small { color: rgba(255,255,255,.75); }
   .modal-card .row { display: flex; gap: 10px; margin-top: 6px; }
   .modal-card .row .btn { flex: 1; }
   .keystat { font-size: 12px; padding: 8px 12px; border-radius: 10px; background: var(--card); border: 1px solid var(--line); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
@@ -477,6 +533,13 @@
 
   .hidden { display: none !important; }
 </style>
+<script>
+  // set the saved template before first paint (no theme flash)
+  try {
+    var t = localStorage.getItem('wl_theme');
+    if (t === 'atelier') document.documentElement.setAttribute('data-theme', 'atelier');
+  } catch (e) {}
+</script>
 </head>
 <body>
 
@@ -579,6 +642,15 @@
   <h3 id="settingsTitle">⚙️ 설정</h3>
   <p class="sub">Claude 비전 API로 실제 라벨을 인식합니다. 키는 <b>이 브라우저에만</b> 저장되며 서버로 전송되지 않습니다.</p>
 
+  <div class="field">
+    <span class="lbl">디자인 테마</span>
+    <div class="seg" id="themeSeg" role="radiogroup" aria-label="디자인 테마">
+      <button class="seg-btn" data-theme-choice="cellar" role="radio" aria-checked="true">🌙 셀러 <small>다크</small></button>
+      <button class="seg-btn" data-theme-choice="atelier" role="radio" aria-checked="false">☀️ 아틀리에 <small>라이트</small></button>
+    </div>
+    <span class="hint">라벨을 밝은 곳(매장)에서 볼 땐 아틀리에, 어두운 바에선 셀러가 편해요.</span>
+  </div>
+
   <div class="keystat no" id="keyStat">🔑 API 키가 설정되지 않았어요 (데모 모드)</div>
 
   <label class="field">
@@ -625,11 +697,24 @@ const $$ = (s) => document.querySelectorAll(s);
 const store = {
   key:   () => localStorage.getItem('wl_apikey') || '',
   model: () => localStorage.getItem('wl_model') || 'claude-sonnet-5',
+  theme: () => localStorage.getItem('wl_theme') || 'cellar',
   setKey:   (v) => v ? localStorage.setItem('wl_apikey', v) : localStorage.removeItem('wl_apikey'),
   setModel: (v) => localStorage.setItem('wl_model', v),
+  setTheme: (v) => localStorage.setItem('wl_theme', v),
   sessions: () => { try { return JSON.parse(localStorage.getItem('wl_sessions') || '[]'); } catch { return []; } },
   saveSessions: (arr) => localStorage.setItem('wl_sessions', JSON.stringify(arr)),
 };
+
+/* ---------- Theme (design template) ---------- */
+const THEME_COLOR = { cellar: '#1c0a11', atelier: '#efe7e9' };
+function applyTheme(name) {
+  const t = name === 'atelier' ? 'atelier' : 'cellar';
+  document.documentElement.setAttribute('data-theme', t);
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', THEME_COLOR[t]);
+  document.querySelectorAll('#themeSeg .seg-btn').forEach(b =>
+    b.setAttribute('aria-checked', String(b.getAttribute('data-theme-choice') === t)));
+}
 
 let stream = null;           // MediaStream
 let facing = 'environment';  // camera facing
@@ -1860,6 +1945,14 @@ $('#histFilter').addEventListener('click', (e) => {
   if (chip) { histFilter = chip.getAttribute('data-filter'); renderHistory(); }
 });
 
+$('#themeSeg').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-theme-choice]');
+  if (!b) return;
+  const choice = b.getAttribute('data-theme-choice');
+  store.setTheme(choice);
+  applyTheme(choice);
+});
+
 $('#btnSettings').addEventListener('click', openSettings);
 $('#btnSettingsCancel').addEventListener('click', closeSettings);
 $('#btnSaveKey').addEventListener('click', () => {
@@ -1886,6 +1979,7 @@ window.addEventListener('scroll', syncFab, { passive: true });
 document.addEventListener('visibilitychange', () => { if (document.hidden) stopCamera(); });
 
 /* ================= INIT ================= */
+applyTheme(store.theme());
 updateHistBadge();
 </script>
 </body>
