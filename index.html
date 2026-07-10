@@ -486,6 +486,8 @@
                 <button data-dot="dots"><span data-i18n="seg.dot.dots">점</span></button>
                 <button data-dot="classy"><span data-i18n="seg.dot.classy">클래시</span></button>
                 <button data-dot="diamond"><span data-i18n="seg.dot.diamond">다이아</span></button>
+                <button data-dot="hexagon"><span data-i18n="seg.dot.hexagon">육각형</span></button>
+                <button data-dot="star"><span data-i18n="seg.dot.star">별</span></button>
               </div>
             </label>
             <label class="fld">
@@ -628,6 +630,7 @@
                   <button data-fstyle="polaroid"><span data-i18n="seg.fstyle.polaroid">폴라로이드</span></button>
                   <button data-fstyle="shadow"><span data-i18n="seg.fstyle.shadow">섀도우박스</span></button>
                   <button data-fstyle="neon"><span data-i18n="seg.fstyle.neon">네온</span></button>
+                  <button data-fstyle="circle"><span data-i18n="seg.fstyle.circle">서클아트</span></button>
                 </div>
               </label>
               <div id="frameBgFields">
@@ -846,7 +849,7 @@
   <footer>
     <div>Aesthetic QR Studio · 아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.06-k</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.06-l</b></div>
   </footer>
 </div>
 
@@ -3344,6 +3347,38 @@ function drawFrameBackground(g, size, fi, rg){
     roundRect(g,x-fi*0.2,y-fi*0.2,w+fi*0.4,h+fi*0.4,fi*0.5); g.stroke();
     g.shadowBlur=size*0.02; g.stroke(); g.restore();
     fillRoundCard(rg*0.05);
+  } else if (style==="circle"){
+    // circle-art: soft neutral backdrop, concentric decorative dot rings kept well clear of the
+    // QR's own quiet zone (closer placement was tested and DID break scanning), + optional corner
+    // badge showing the uploaded logo. Purely decorative — never touches QR module pixels.
+    g.fillStyle = "#fafbfc"; g.fillRect(0,0,size,size);
+    var ccx=size/2, ccy=size/2, qrHalf=rg/2;
+    var ringDefs=[
+      {r:qrHalf+fi*0.32, n:40, rs:size*0.0052, color:"#d4dae0"},
+      {r:qrHalf+fi*0.42, n:52, rs:size*0.0042, color:"#e6eaee"},
+      {r:qrHalf+fi*0.50, n:30, rs:size*0.0068, color:"#bcc5cd"}
+    ];
+    ringDefs.forEach(function(rd){
+      for(var i=0;i<rd.n;i++){
+        var a=(i/rd.n)*Math.PI*2;
+        g.fillStyle=rd.color;
+        g.beginPath(); g.arc(ccx+Math.cos(a)*rd.r, ccy+Math.sin(a)*rd.r, rd.rs, 0, Math.PI*2); g.fill();
+      }
+    });
+    fillRoundCard(rg*0.03);
+    if (S.logo){
+      var badgeDist=qrHalf+fi*0.52, br=size*0.034, bAngle=Math.PI*0.29;
+      var bx=ccx+Math.cos(bAngle)*badgeDist, by=ccy+Math.sin(bAngle)*badgeDist;
+      g.save();
+      g.shadowColor="rgba(0,0,0,.18)"; g.shadowBlur=size*0.008; g.shadowOffsetY=size*0.002;
+      g.fillStyle = S.frameBg1||"#1fae63";
+      g.beginPath(); g.arc(bx,by,br,0,Math.PI*2); g.fill();
+      g.restore();
+      g.save();
+      g.beginPath(); g.arc(bx,by,br*0.78,0,Math.PI*2); g.clip();
+      try{ g.drawImage(S.logo, bx-br*0.78, by-br*0.78, br*1.56, br*1.56); }catch(e){}
+      g.restore();
+    }
   } else {
     // "card": original coloured/gradient backdrop + white rounded card
     g.fillStyle = frameFill(g, size); g.fillRect(0,0,size,size);
@@ -3378,6 +3413,21 @@ function drawModule(g, x, y, s, style, nb){
     case "classy":
       // leaf-style: two opposite corners rounded, two sharp — distinct from dots/rounded
       classyRect(g, x, y, s+0.4, s+0.4, s*0.55); g.fill(); break;
+    case "hexagon":
+      // flat-top hexagon, ~90% cell coverage (only small corner triangles left unfilled) — scan-safe
+      g.beginPath();
+      g.moveTo(x+s*0.10,y); g.lineTo(x+s*0.90,y); g.lineTo(x+s,y+s*0.5);
+      g.lineTo(x+s*0.90,y+s); g.lineTo(x+s*0.10,y+s); g.lineTo(x,y+s*0.5);
+      g.closePath(); g.fill(); break;
+    case "star":
+      // very fat 6-point star: high inner radius keeps ink coverage close to "dots" so it stays
+      // scan-safe (a slender 5-point star was tested and measurably hurt jsQR decode reliability)
+      g.beginPath();
+      var scx=x+s/2, scy=y+s/2, sR=s*0.62, sr=sR*0.82;
+      for(var si=0;si<12;si++){ var sa=-Math.PI/2+si*Math.PI/6, srr=(si%2)?sr:sR;
+        var spx=scx+Math.cos(sa)*srr, spy=scy+Math.sin(sa)*srr;
+        if(si===0) g.moveTo(spx,spy); else g.lineTo(spx,spy); }
+      g.closePath(); g.fill(); break;
     case "diamond":
       g.beginPath();
       g.moveTo(x+s/2,y+s*0.04); g.lineTo(x+s*0.96,y+s/2); g.lineTo(x+s/2,y+s*0.96); g.lineTo(x+s*0.04,y+s/2);
@@ -3540,7 +3590,7 @@ function render(g2, exportSize){
   var labelFont = S.labelOn ? Math.max(8, Math.round(size*(S.labelSize/100)*0.050)) : 0;
   var labelSpace = S.labelOn ? Math.round(labelFont*1.7) : 0;
   // framed background (backdrop + white card) reserves an outer inset
-  var frameInset = S.frameOn ? Math.round(size*0.07) : 0;
+  var frameInset = S.frameOn ? Math.round(size*((S.frameStyle==="circle")?0.20:0.07)) : 0;
   var region = size - frameInset*2;               // area the QR block lives in
   var avail = region - labelSpace;                // square QR block size
   var total = n + quiet*2;
@@ -4431,7 +4481,7 @@ $("labelOffset").addEventListener("input",function(e){S.labelOffset=+e.target.va
 // ---- frame background & centre content (text logo / emoji pictogram) ----
 $("frameOn").addEventListener("change",function(e){ S.frameOn=e.target.checked; $("frameControls").style.display=e.target.checked?"block":"none"; rerender(); });
 // only "card"/"shadow"/"neon" use the backdrop colour fields; wood/gold/polaroid are self-styled
-function frameStyleVis(){ var s=S.frameStyle||"card"; $("frameBgFields").style.display=(s==="card"||s==="shadow"||s==="neon")?"block":"none"; $("frameBg2Wrap").style.display=(S.frameMode!=="solid"&&(s==="card"||s==="shadow"))?"block":"none"; }
+function frameStyleVis(){ var s=S.frameStyle||"card"; $("frameBgFields").style.display=(s==="card"||s==="shadow"||s==="neon"||s==="circle")?"block":"none"; $("frameBg2Wrap").style.display=(S.frameMode!=="solid"&&(s==="card"||s==="shadow"))?"block":"none"; if(s==="neon"||s==="circle") $("frameBg2Wrap").style.display="none"; }
 $("frameStyleSeg").addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b)return; Array.prototype.forEach.call(this.children,function(x){x.classList.remove("on");}); b.classList.add("on"); S.frameStyle=b.dataset.fstyle; frameStyleVis(); rerender(); });
 $("frameModeSeg").addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b)return; Array.prototype.forEach.call(this.children,function(x){x.classList.remove("on");}); b.classList.add("on"); S.frameMode=b.dataset.fmode; frameStyleVis(); rerender(); });
 $("frameBg1").addEventListener("input",function(e){ S.frameBg1=e.target.value; rerender(); });
@@ -5140,6 +5190,9 @@ function makeScene(kind){
 }
 
 var GAL_TR = {
+  '서클아트 그린':{en:'Circle Art Green',zh:'环形艺术·绿',ja:'サークルアート グリーン'},
+  '서클아트 바이올렛':{en:'Circle Art Violet',zh:'环形艺术·紫',ja:'サークルアート バイオレット'},
+  '도트 링 배지':{en:'Dot-ring badge',zh:'圆点环徽章',ja:'ドットリングバッジ'},
   '네온 펄스':{en:'Neon Pulse',zh:'霓虹脉冲',ja:'ネオンパルス'},
   '스카이':{en:'Sky',zh:'天空',ja:'スカイ'},
   '오션':{en:'Ocean',zh:'海洋',ja:'オーシャン'},
@@ -5339,7 +5392,9 @@ var CATS = {
     {name:"골드 브랜드",tag:"액자+로고",s:{fill:"solid",fg1:"#6b4e12",bg:"#fffdf5",dot:"classy",eye:"leaf",frameOn:true,frameStyle:"gold",centerMode:"text",centerText:"LUXE",centerColor:"#6b4e12",centerScale:22}},
     {name:"에메랄드 카드",tag:"컬러 카드",s:{fill:"solid",fg1:"#0b3d22",bg:"#ffffff",dot:"rounded",eye:"rounded",frameOn:true,frameStyle:"card",frameMode:"linear",frameBg1:"#16a34a",frameBg2:"#0b3d22",frameAngle:135}},
     {name:"선셋 카드",tag:"컬러 카드",s:{fill:"solid",fg1:"#7c2d12",bg:"#ffffff",dot:"rounded",eye:"rounded",frameOn:true,frameStyle:"card",frameMode:"linear",frameBg1:"#fb7185",frameBg2:"#f97316",frameAngle:120}},
-    {name:"모노 카드",tag:"컬러 카드",s:{fill:"solid",fg1:"#111111",bg:"#ffffff",dot:"square",eye:"square",frameOn:true,frameStyle:"card",frameMode:"solid",frameBg1:"#111111"}}
+    {name:"모노 카드",tag:"컬러 카드",s:{fill:"solid",fg1:"#111111",bg:"#ffffff",dot:"square",eye:"square",frameOn:true,frameStyle:"card",frameMode:"solid",frameBg1:"#111111"}},
+    {name:"서클아트 그린",tag:"도트 링 배지",s:{fill:"linear",fg1:"#2fb56f",fg2:"#1a8a52",angle:120,bg:"#ffffff",dot:"rounded",eye:"rounded",frameOn:true,frameStyle:"circle",frameMode:"solid",frameBg1:"#1fae63"}},
+    {name:"서클아트 바이올렛",tag:"도트 링 배지",s:{fill:"linear",fg1:"#7c5cff",fg2:"#5b3adb",angle:120,bg:"#ffffff",dot:"hexagon",eye:"rounded",frameOn:true,frameStyle:"circle",frameMode:"solid",frameBg1:"#7c5cff"}}
   ],
   usecase:[
     {name:"카페 Wi-Fi",tag:"스캔 → 와이파이 자동 접속",s:{fill:"solid",fg1:"#5b3a1a",bg:"#fffaf2",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"☕",centerScale:26,frameOn:true,frameStyle:"wood"},ct:"wifi",fields:{wifiSsid:"MyCafe_WiFi",wifiPass:"cafe1234"}},
@@ -5851,7 +5906,10 @@ var I18N = {
   "btn.arShareMarker":{ko:'🔗 이 데모로 스캔용 QR 만들기',en:'🔗 Make a scan-to-try QR for this demo',zh:'🔗 为此演示生成扫描体验二维码',ja:'🔗 このデモのスキャン用QRを作成'},
   "btn.arShareFace":{ko:'🔗 이 스티커로 스캔용 QR 만들기',en:'🔗 Make a scan-to-try QR for this sticker',zh:'🔗 为此贴纸生成扫描体验二维码',ja:'🔗 このスタンプのスキャン用QRを作成'},
   "toast.arShareOk":{ko:'QR이 생성됐어요 — 저장 후 다른 기기 카메라로 스캔해보세요',en:'QR created — save it and scan with another device\'s camera',zh:'二维码已生成 — 保存后用另一台设备的相机扫描试试',ja:'QRを作成しました — 保存して別の端末のカメラでスキャンしてみてください'},
-  "toast.arShareCustomWarn":{ko:'직접 업로드한 마커·스티커는 아직 QR 공유가 안 돼요 — 데모 마커나 기본 이모지 스티커로 시도해보세요',en:'Custom uploaded markers/stickers can\'t be shared via QR yet — try the demo marker or a built-in emoji sticker',zh:'自定义上传的标记/贴纸暂不支持二维码分享 — 请使用演示标记或内置表情贴纸',ja:'自分でアップロードしたマーカー・スタンプはまだQR共有できません — デモマーカーか内蔵の絵文字スタンプでお試しください'}
+  "toast.arShareCustomWarn":{ko:'직접 업로드한 마커·스티커는 아직 QR 공유가 안 돼요 — 데모 마커나 기본 이모지 스티커로 시도해보세요',en:'Custom uploaded markers/stickers can\'t be shared via QR yet — try the demo marker or a built-in emoji sticker',zh:'自定义上传的标记/贴纸暂不支持二维码分享 — 请使用演示标记或内置表情贴纸',ja:'自分でアップロードしたマーカー・スタンプはまだQR共有できません — デモマーカーか内蔵の絵文字スタンプでお試しください'},
+  "seg.fstyle.circle":{ko:'서클아트',en:'Circle art',zh:'环形艺术',ja:'サークルアート'},
+  "seg.dot.hexagon":{ko:'육각형',en:'Hexagon',zh:'六角形',ja:'六角形'},
+  "seg.dot.star":{ko:'별',en:'Star',zh:'星形',ja:'星'}
 };
 var LANG="ko";
 function t(key){ var e=I18N[key]; return e ? (e[LANG]||e.ko) : null; }
