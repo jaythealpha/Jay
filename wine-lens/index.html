@@ -315,6 +315,12 @@
   .card p.body { font-size: 14px; color: var(--ink-2); line-height: 1.75; }
   .card p.body b, .card p.body strong { color: var(--ink-1); }
 
+  /* --- flavor signature radar --- */
+  .radar-wrap { display: flex; justify-content: center; padding: 4px 0 14px; margin-bottom: 6px; border-bottom: 1px solid var(--grid); }
+  .radar { width: 100%; max-width: 236px; height: auto; overflow: visible; }
+  .radar polygon[fill-opacity] { animation: radar-in .6s cubic-bezier(.2,.7,.3,1) both; transform-origin: 100px 100px; }
+  @keyframes radar-in { from { transform: scale(.3); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
   /* --- taste profile scales --- */
   .scale { padding: 11px 0 13px; }
   .scale + .scale { border-top: 1px solid var(--grid); }
@@ -1089,6 +1095,43 @@ function scaleRow(nameKo, nameEn, val, anchors, words) {
   </div>`;
 }
 
+/* Flavor Signature — a small radar polygon giving each drink a recognizable shape.
+   Summary-before-detail: sits above the precise bar scales. Theme-aware via tokens. */
+function flavorRadar(axes) {
+  const n = axes.length;
+  if (n < 3) return '';
+  const C = 100, R = 66;                 // center, max radius in a 200x200 viewBox
+  const ang = (i) => (-90 + i * 360 / n) * Math.PI / 180;
+  const pt = (i, r) => [C + r * Math.cos(ang(i)), C + r * Math.sin(ang(i))];
+  const poly = (r) => axes.map((_, i) => pt(i, r).map(x => x.toFixed(1)).join(',')).join(' ');
+  // guide rings at 33/66/100%
+  const rings = [0.34, 0.67, 1].map(f =>
+    `<polygon points="${poly(R * f)}" fill="none" stroke="var(--grid)" stroke-width="1"/>`).join('');
+  const spokes = axes.map((_, i) => {
+    const [x, y] = pt(i, R);
+    return `<line x1="${C}" y1="${C}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="var(--grid)" stroke-width="1"/>`;
+  }).join('');
+  const dataPts = axes.map((a, i) => pt(i, R * clamp01(a.value) / 100));
+  const dataPoly = dataPts.map(p => p.map(x => x.toFixed(1)).join(',')).join(' ');
+  const verts = dataPts.map(p =>
+    `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.2" fill="var(--gold)"/>`).join('');
+  const labels = axes.map((a, i) => {
+    const [x, y] = pt(i, R + 16);
+    const anchor = Math.abs(x - C) < 6 ? 'middle' : (x > C ? 'start' : 'end');
+    const dy = y < C - 6 ? '0' : (y > C + 6 ? '.7em' : '.32em');
+    return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="${anchor}" dy="${dy}"
+      font-size="11" font-weight="700" fill="var(--ink-2)">${esc(a.ko)}</text>`;
+  }).join('');
+  return `<div class="radar-wrap">
+    <svg viewBox="0 0 200 200" class="radar" role="img" aria-label="맛 프로필 시그니처 다이어그램">
+      ${rings}${spokes}
+      <polygon points="${dataPoly}" fill="var(--gold)" fill-opacity="0.20"
+        stroke="var(--gold)" stroke-width="2" stroke-linejoin="round"/>
+      ${verts}${labels}
+    </svg>
+  </div>`;
+}
+
 /* data-confidence panel: how much the model actually knows about THIS product */
 const KNOW = {
   rich:     { lvl: 3, word: '정보 충분',   sub: '잘 알려진 제품이라 상세 정보를 보유', tone: 'good' },
@@ -1249,7 +1292,9 @@ function renderResult(session) {
   ).join('') || '<p class="body">기록 정보가 없습니다.</p>';
   const tips = (d.tips || []).map(t => `<li>${esc(t)}</li>`).join('');
 
-  const scales = tasteAxes(d).map(a => scaleRow(a.ko, a.en, a.value, a.anchors, a.words)).join('');
+  const axes = tasteAxes(d);
+  const radar = axes.length >= 3 ? flavorRadar(axes) : '';
+  const scales = axes.map(a => scaleRow(a.ko, a.en, a.value, a.anchors, a.words)).join('');
 
   const specs = (d.specs || []).filter(s => s && s.label && s.value).map(s =>
     `<div class="serve"><div class="s-label">${esc(s.label)}</div><div class="s-value">${esc(s.value)}</div></div>`
@@ -1319,7 +1364,7 @@ function renderResult(session) {
     ${beerViz ? `<div class="card">${sec('Beer Meter', '맥주 지표')}<div class="serve-grid">${beerViz}</div></div>` : ''}
 
     <!-- taste profile -->
-    ${scales ? `<div class="card">${sec('Taste Profile', '맛 프로필')}${scales}</div>` : ''}
+    ${scales ? `<div class="card">${sec('Taste Profile', '맛 프로필')}${radar}${scales}</div>` : ''}
 
     <!-- tasting notes -->
     <div class="card">
