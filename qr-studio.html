@@ -184,15 +184,15 @@
 
   /* ---- hover/focus tooltips (data-tip) ---- */
   [data-tip]{position:relative}
-  [data-tip]:hover::after,[data-tip]:focus-visible::after{
+  [data-tip]:hover::after{
     content:attr(data-tip);position:absolute;left:50%;top:calc(100% + 8px);transform:translateX(-50%);
     background:#0b0d14;color:#e8ecf5;border:1px solid var(--acc);border-radius:9px;padding:8px 11px;
     font-size:11.5px;font-weight:500;line-height:1.5;white-space:normal;width:max-content;max-width:230px;
     text-align:left;z-index:80;box-shadow:0 8px 24px rgba(0,0,0,.45);pointer-events:none}
-  [data-tip]:hover::before,[data-tip]:focus-visible::before{
+  [data-tip]:hover::before{
     content:"";position:absolute;left:50%;top:calc(100% + 2px);transform:translateX(-50%);
     border:6px solid transparent;border-bottom-color:var(--acc);z-index:80;pointer-events:none}
-  .seg [data-tip]:hover::after,.seg [data-tip]:focus-visible::after{max-width:210px}
+  .seg [data-tip]:hover::after{max-width:210px}
   .help-dot{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;margin-left:6px;
     border-radius:50%;background:var(--bg2);border:1px solid var(--line2);color:var(--mut);font-size:10px;
     font-weight:700;cursor:help;vertical-align:middle}
@@ -849,7 +849,7 @@
   <footer>
     <div>Aesthetic QR Studio · 아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.06-n</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.06-o</b></div>
   </footer>
 </div>
 
@@ -3462,6 +3462,26 @@ function roundRect(g,x,y,w,h,r){
   g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r);
   g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath();
 }
+// render an emoji once to an offscreen canvas and find its TIGHT ink bounding box, so callers can
+// blit it perfectly centred (fillText+baseline drifts off-centre by up to ~6%, and the drift
+// direction depends on the platform emoji font). Cached by emoji+size.
+var _emojiSprites={};
+function emojiSprite(emoji, px){
+  px=Math.max(8, px|0);
+  var key=emoji+"@"+px;
+  if(_emojiSprites.hasOwnProperty(key)) return _emojiSprites[key];
+  var W=Math.round(px*2.2);
+  var c=document.createElement("canvas"); c.width=W; c.height=W;
+  var g=c.getContext("2d",{willReadFrequently:true});
+  g.textAlign="center"; g.textBaseline="middle";
+  g.font=px+"px 'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif";
+  g.fillText(emoji, W/2, W/2);
+  var d; try{ d=g.getImageData(0,0,W,W).data; }catch(e){ _emojiSprites[key]=null; return null; }
+  var minx=W,maxx=-1,miny=W,maxy=-1;
+  for(var y=0;y<W;y++){ var row=y*W*4; for(var x=0;x<W;x++){ if(d[row+x*4+3]>16){ if(x<minx)minx=x; if(x>maxx)maxx=x; if(y<miny)miny=y; if(y>maxy)maxy=y; } } }
+  var spr=(maxx<minx)?null:{canvas:c, sx:minx, sy:miny, sw:maxx-minx+1, sh:maxy-miny+1};
+  _emojiSprites[key]=spr; return spr;
+}
 // ---------- built-in vector icons (canvas primitives) for logo / pictogram ----------
 // each: fn(g, cx, cy, r, col)  where r = half the icon size
 var ICONS = {
@@ -3672,11 +3692,19 @@ function render(g2, exportSize){
     var bgc = S.transparent ? "#ffffff" : S.bg;
     g.textAlign="center"; g.textBaseline="middle";
     if (S.centerMode==="emoji"){
-      // clean rounded card + the emoji (colourful, instantly recognisable)
+      // clean rounded card + the emoji, blitted from its tight ink bbox so it is exactly centred
+      // regardless of the platform emoji font's glyph metrics (fillText+baseline drifts off-centre).
       var pad = isz*0.16;
       g.fillStyle = bgc; roundRect(g, icx-isz/2-pad, icy-isz/2-pad, isz+2*pad, isz+2*pad, isz*0.24); g.fill();
-      g.font = Math.round(isz*0.96)+"px 'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif";
-      g.fillText(S.centerText, icx, icy+isz*0.02);
+      var spr = emojiSprite(S.centerText, Math.round(isz*1.15));
+      if (spr && spr.sw>0){
+        var esc = isz/Math.max(spr.sw, spr.sh), edw = spr.sw*esc, edh = spr.sh*esc;
+        g.drawImage(spr.canvas, spr.sx, spr.sy, spr.sw, spr.sh, icx-edw/2, icy-edh/2, edw, edh);
+      } else {
+        g.textAlign="center"; g.textBaseline="middle";
+        g.font = Math.round(isz*0.96)+"px 'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif";
+        g.fillText(S.centerText, icx, icy+isz*0.02);
+      }
     } else if (S.centerMode==="mark"){
       // vector brand mark on a badge — the badge forms the quiet zone
       var mpad = isz*0.18, mbw = isz+2*mpad;
@@ -4235,6 +4263,7 @@ $("ctypeSeg").addEventListener("click", function(e){
   var b=e.target.closest("button"); if(!b) return;
   selectCType(b.dataset.ct);
   buildContent();
+  try{ b.blur(); }catch(x){}  // don't leave the button focused (would keep its tooltip showing)
 });
 $("ppCurSeg").addEventListener("click", function(e){ var b=e.target.closest("button"); if(!b) return; Array.prototype.forEach.call(this.children,function(x){x.classList.toggle("on",x===b);}); buildContent(); });
 ["content","wifiSsid","wifiPass","vcName","vcTel","vcEmail","vcOrg","vcUrl","telNum","smsNum","smsMsg","emTo","emSubj","emBody","geoLat","geoLng","waNum","waMsg","ppUser","ppAmt","cyAddr","cyAmt","evTitle","evLoc","evStart","evEnd"].forEach(function(id){
