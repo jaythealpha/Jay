@@ -31,8 +31,21 @@
     --track: rgba(220,165,77,.16);   /* lighter step of gold ramp */
     --hairline: rgba(220,165,77,.32);
     --shadow: 0 18px 50px rgba(0,0,0,.45);
+    --focus: #f0c674;                /* keyboard focus ring — gold, ≥3:1 on every surface */
     --serif: "Noto Serif KR", "Nanum Myeongjo", Georgia, "Times New Roman", serif;
     --sans: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+  }
+
+  /* Accessibility: visible keyboard focus everywhere (mouse taps stay clean) */
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
+  .shutter:focus-visible { outline-offset: 4px; }
+
+  /* Respect reduced-motion: keep transitions instant, drop looping/entrance animation */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: .001ms !important; animation-iteration-count: 1 !important;
+      transition-duration: .001ms !important; scroll-behavior: auto !important;
+    }
   }
 
   html, body { height: 100%; }
@@ -361,6 +374,29 @@
   .result-actions .btn { flex: 1; }
   .disclaimer { font-size: 11.5px; color: var(--ink-3); text-align: center; margin-top: 16px; line-height: 1.5; }
 
+  /* staggered entrance for result blocks (disabled under reduced-motion via global rule) */
+  @keyframes card-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+  .result > * { animation: card-in .5s cubic-bezier(.2,.7,.3,1) both; }
+  .result > *:nth-child(1) { animation-delay: 0s; }
+  .result > *:nth-child(2) { animation-delay: .05s; }
+  .result > *:nth-child(3) { animation-delay: .10s; }
+  .result > *:nth-child(4) { animation-delay: .15s; }
+  .result > *:nth-child(5) { animation-delay: .20s; }
+  .result > *:nth-child(6) { animation-delay: .24s; }
+  .result > *:nth-child(n+7) { animation-delay: .28s; }
+
+  /* scroll-to-top FAB (result screen, appears after scrolling down) */
+  .fab {
+    position: fixed; right: 16px; bottom: calc(96px + env(safe-area-inset-bottom)); z-index: 50;
+    width: 46px; height: 46px; border-radius: 50%; cursor: pointer;
+    background: var(--card-2); border: 1px solid var(--hairline); color: var(--gold-soft); font-size: 20px;
+    display: grid; place-items: center; box-shadow: var(--shadow);
+    opacity: 0; transform: translateY(12px) scale(.9); pointer-events: none; transition: .22s;
+  }
+  .fab.show { opacity: 1; transform: none; pointer-events: auto; }
+  .fab:hover { background: var(--card); border-color: var(--gold); }
+  .fab:active { transform: scale(.92); }
+
   @media (max-width: 400px) {
     .plate h2 { font-size: 23px; }
     .plate .vintage { font-size: 40px; }
@@ -381,6 +417,15 @@
   .drawer .dh { display: flex; align-items: center; gap: 10px; padding: calc(16px + env(safe-area-inset-top)) 16px 14px; border-bottom: 1px solid var(--line); }
   .drawer .dh h3 { font-size: 17px; font-weight: 800; }
   .drawer .dh .spacer { flex: 1; }
+  .hist-filter { display: flex; gap: 7px; overflow-x: auto; padding: 12px 12px 4px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .hist-filter::-webkit-scrollbar { display: none; }
+  .hist-filter:empty { display: none; }
+  .fchip {
+    flex: none; font-size: 12.5px; font-weight: 700; padding: 6px 12px; border-radius: 999px; cursor: pointer;
+    background: var(--card); border: 1px solid var(--line); color: var(--ink-2); transition: .15s; white-space: nowrap;
+  }
+  .fchip:hover { background: var(--card-2); }
+  .fchip[aria-pressed="true"] { background: rgba(220,165,77,.14); border-color: var(--gold); color: var(--gold-soft); }
   .drawer .list { overflow-y: auto; padding: 12px; flex: 1; display: flex; flex-direction: column; gap: 10px; }
   .sess {
     display: flex; gap: 12px; align-items: center; padding: 10px; border-radius: 14px;
@@ -444,8 +489,8 @@
     </div>
   </div>
   <div class="spacer"></div>
-  <button class="icon-btn badge" id="btnHistory" title="스캔 기록">🗂️<span class="count hidden" id="histCount">0</span></button>
-  <button class="icon-btn" id="btnSettings" title="설정">⚙️</button>
+  <button class="icon-btn badge" id="btnHistory" title="스캔 기록" aria-label="스캔 기록 열기" aria-haspopup="dialog"><span aria-hidden="true">🗂️</span><span class="count hidden" id="histCount">0</span></button>
+  <button class="icon-btn" id="btnSettings" title="설정" aria-label="설정 열기" aria-haspopup="dialog"><span aria-hidden="true">⚙️</span></button>
 </header>
 
 <div class="app">
@@ -469,9 +514,9 @@
       </div>
 
       <div class="cam-tools" id="camTools">
-        <button class="round-tool" id="btnGallery" title="갤러리">🖼️</button>
-        <button class="shutter" id="btnShutter" title="촬영"></button>
-        <button class="round-tool" id="btnFlip" title="카메라 전환">🔄</button>
+        <button class="round-tool" id="btnGallery" title="갤러리" aria-label="갤러리에서 사진 불러오기"><span aria-hidden="true">🖼️</span></button>
+        <button class="shutter" id="btnShutter" title="촬영" aria-label="카메라 켜기 · 촬영"></button>
+        <button class="round-tool" id="btnFlip" title="카메라 전환" aria-label="전·후면 카메라 전환"><span aria-hidden="true">🔄</span></button>
       </div>
 
       <div class="capture-actions" id="captureActions">
@@ -518,19 +563,20 @@
 
 <!-- ========== History drawer ========== -->
 <div class="overlay" id="overlay"></div>
-<aside class="drawer" id="drawer">
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
   <div class="dh">
-    <h3>🗂️ 스캔 기록</h3>
+    <h3 id="drawerTitle">🗂️ 스캔 기록</h3>
     <div class="spacer"></div>
-    <button class="icon-btn" id="btnClearAll" title="전체 삭제">🗑️</button>
-    <button class="icon-btn" id="btnCloseDrawer">✕</button>
+    <button class="icon-btn" id="btnClearAll" title="전체 삭제" aria-label="기록 전체 삭제"><span aria-hidden="true">🗑️</span></button>
+    <button class="icon-btn" id="btnCloseDrawer" title="닫기" aria-label="기록 닫기"><span aria-hidden="true">✕</span></button>
   </div>
+  <div class="hist-filter" id="histFilter"></div>
   <div class="list" id="histList"></div>
 </aside>
 
 <!-- ========== Settings modal ========== -->
-<div class="modal-card" id="settingsModal">
-  <h3>⚙️ 설정</h3>
+<div class="modal-card" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+  <h3 id="settingsTitle">⚙️ 설정</h3>
   <p class="sub">Claude 비전 API로 실제 라벨을 인식합니다. 키는 <b>이 브라우저에만</b> 저장되며 서버로 전송되지 않습니다.</p>
 
   <div class="keystat no" id="keyStat">🔑 API 키가 설정되지 않았어요 (데모 모드)</div>
@@ -559,6 +605,7 @@
   </div>
 </div>
 
+<button class="fab" id="fabTop" title="맨 위로" aria-label="맨 위로 이동"><span aria-hidden="true">↑</span></button>
 <input type="file" id="fileInput" accept="image/*" capture="environment" class="hidden">
 <canvas id="canvas" class="hidden"></canvas>
 <div class="toast" id="toast"></div>
@@ -594,6 +641,8 @@ function show(id) {
   $$('.screen').forEach(s => s.classList.remove('active'));
   $('#screen-' + id).classList.add('active');
   window.scrollTo({ top: 0, behavior: 'smooth' });
+  const fab = document.getElementById('fabTop');
+  if (fab) fab.classList.remove('show');
 }
 
 /* ---------- Toast ---------- */
@@ -1189,28 +1238,52 @@ function fmtDate(iso) {
     return `${dt.getFullYear()}.${String(dt.getMonth()+1).padStart(2,'0')}.${String(dt.getDate()).padStart(2,'0')} ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
   } catch { return ''; }
 }
+let histFilter = 'all';  // active category filter in the drawer
 function renderHistory() {
   const list = $('#histList');
+  const filterBar = $('#histFilter');
   const sessions = store.sessions();
   if (!sessions.length) {
+    filterBar.innerHTML = '';
     list.innerHTML = `<div class="empty-hist"><span class="big">🍷</span>아직 스캔 기록이 없어요.<br>첫 라벨을 찍어보세요!</div>`;
     return;
   }
-  list.innerHTML = sessions.map(s => {
+
+  // build filter chips from categories actually present (in registry order), each with a count
+  const counts = {};
+  sessions.forEach(s => { const c = (s.data && s.data.category) || 'wine'; counts[c] = (counts[c] || 0) + 1; });
+  const present = Object.keys(CATS).filter(c => counts[c]);
+  if (present.length > 1) {
+    if (!counts[histFilter] && histFilter !== 'all') histFilter = 'all';
+    const chip = (key, label) =>
+      `<button class="fchip" data-filter="${key}" aria-pressed="${histFilter === key}">${label}</button>`;
+    filterBar.innerHTML =
+      chip('all', `전체 ${sessions.length}`) +
+      present.map(c => chip(c, `${CATS[c].icon} ${CATS[c].label} ${counts[c]}`)).join('');
+  } else {
+    filterBar.innerHTML = '';
+  }
+
+  const shown = sessions.filter(s => histFilter === 'all' || ((s.data && s.data.category) || 'wine') === histFilter);
+  list.innerHTML = shown.map(s => {
     const d = s.data || {};
     const cat = catOf(d);
-    return `<div class="sess" data-id="${s.id}">
-      ${s.photo ? `<img class="thumb" src="${s.photo}" alt="">` : `<div class="thumb" style="display:grid;place-items:center;font-size:22px">${cat.icon}</div>`}
+    return `<div class="sess" data-id="${s.id}" role="button" tabindex="0" aria-label="${esc(cat.label)} ${esc(d.name || '이름 미상')} 다시 보기">
+      ${s.photo ? `<img class="thumb" src="${s.photo}" alt="">` : `<div class="thumb" style="display:grid;place-items:center;font-size:22px" aria-hidden="true">${cat.icon}</div>`}
       <div class="info">
         <b>${cat.icon} ${esc(d.name || '이름 미상')}</b>
         <span>${esc(cat.label)}${d.producer ? ' · ' + esc(d.producer) : ''}${d.vintage && !/미상/.test(d.vintage) ? ' · ' + esc(d.vintage) : ''}</span>
         <span style="color:var(--ink-3);font-size:11px">${fmtDate(s.at)}</span>
       </div>
-      <button class="del" data-del="${s.id}" title="삭제">🗑️</button>
+      <button class="del" data-del="${s.id}" title="삭제" aria-label="${esc(d.name || '이 기록')} 삭제"><span aria-hidden="true">🗑️</span></button>
     </div>`;
   }).join('');
 }
-function openDrawer() { renderHistory(); $('#overlay').classList.add('show'); $('#drawer').classList.add('show'); }
+function openDrawer() {
+  histFilter = 'all'; renderHistory();
+  $('#overlay').classList.add('show'); $('#drawer').classList.add('show');
+  setTimeout(() => $('#btnCloseDrawer').focus(), 60);
+}
 function closeDrawer() { $('#drawer').classList.remove('show'); if (!$('#settingsModal').classList.contains('show')) $('#overlay').classList.remove('show'); }
 
 /* ================= SETTINGS UI ================= */
@@ -1220,6 +1293,7 @@ function openSettings() {
   refreshKeyStat();
   $('#overlay').classList.add('show');
   $('#settingsModal').classList.add('show');
+  setTimeout(() => $('#apiKeyInput').focus(), 60);
 }
 function closeSettings() { $('#settingsModal').classList.remove('show'); if (!$('#drawer').classList.contains('show')) $('#overlay').classList.remove('show'); }
 function refreshKeyStat() {
@@ -1766,14 +1840,24 @@ $('#btnClearAll').addEventListener('click', () => {
   if (!store.sessions().length) return;
   if (confirm('스캔 기록을 모두 삭제할까요?')) { store.saveSessions([]); renderHistory(); updateHistBadge(); }
 });
+function openSessionFromEl(sess) {
+  const s = store.sessions().find(x => x.id === sess.getAttribute('data-id'));
+  if (s) { renderResult(s); closeDrawer(); show('result'); }
+}
 $('#histList').addEventListener('click', (e) => {
   const del = e.target.closest('[data-del]');
   if (del) { e.stopPropagation(); deleteSession(del.getAttribute('data-del')); return; }
   const sess = e.target.closest('.sess');
-  if (sess) {
-    const s = store.sessions().find(x => x.id === sess.getAttribute('data-id'));
-    if (s) { renderResult(s); closeDrawer(); show('result'); }
-  }
+  if (sess) openSessionFromEl(sess);
+});
+$('#histList').addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  const sess = e.target.closest('.sess');
+  if (sess) { e.preventDefault(); openSessionFromEl(sess); }
+});
+$('#histFilter').addEventListener('click', (e) => {
+  const chip = e.target.closest('[data-filter]');
+  if (chip) { histFilter = chip.getAttribute('data-filter'); renderHistory(); }
 });
 
 $('#btnSettings').addEventListener('click', openSettings);
@@ -1788,6 +1872,15 @@ $('#btnSaveKey').addEventListener('click', () => {
 
 $('#overlay').addEventListener('click', () => { closeDrawer(); closeSettings(); });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeDrawer(); closeSettings(); } });
+
+// Scroll-to-top FAB: visible only while reading a long result page
+const fabTop = $('#fabTop');
+fabTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+const syncFab = () => {
+  const onResult = $('#screen-result').classList.contains('active');
+  fabTop.classList.toggle('show', onResult && window.scrollY > 620);
+};
+window.addEventListener('scroll', syncFab, { passive: true });
 
 // Stop camera when tab hidden (battery / privacy)
 document.addEventListener('visibilitychange', () => { if (document.hidden) stopCamera(); });
