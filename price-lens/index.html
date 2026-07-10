@@ -160,6 +160,11 @@
 
   .tips-row { display: flex; gap: 8px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
   .chip { font-size: 12px; color: var(--ink-2); background: var(--card); border: 1px solid var(--line-solid); padding: 6px 11px; border-radius: 999px; }
+  .barcode-badge {
+    display: block; width: fit-content; margin: 12px auto 0; font-weight: 700;
+    color: var(--mint); background: rgba(53,208,165,.12); border-color: rgba(53,208,165,.35);
+    font-variant-numeric: tabular-nums;
+  }
 
   /* ---------- Text search (no photo) ---------- */
   .text-search { display: flex; gap: 8px; }
@@ -233,6 +238,12 @@
   .tag.conf { background: rgba(53,208,165,.1); color: var(--mint); border: 1px solid rgba(53,208,165,.3); }
   .tag.conf.low { background: rgba(239,71,111,.1); color: var(--red-soft); border-color: rgba(239,71,111,.35); }
   .plate .summary { margin-top: 12px; font-size: 13px; color: var(--ink-2); line-height: 1.6; }
+  .plate .id-basis { margin-top: 10px; font-size: 11px; color: var(--ink-3); font-weight: 600; }
+  .plate .low-conf-warn {
+    margin-top: 12px; font-size: 12px; line-height: 1.6; text-align: left;
+    color: var(--red-soft); background: rgba(239,71,111,.1); border: 1px solid rgba(239,71,111,.3);
+    border-radius: 10px; padding: 10px 12px;
+  }
 
   /* --- KPI row --- */
   .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px; }
@@ -472,7 +483,10 @@
       </div>
     </div>
 
+    <div class="chip barcode-badge hidden" id="barcodeBadge"></div>
+
     <div class="tips-row">
+      <span class="chip">🅱️ 브랜드 로고·상품명이 보이게</span>
       <span class="chip">🏷️ 가격표·품번이 보이게</span>
       <span class="chip">💡 밝은 곳에서</span>
       <span class="chip">🚫 반사 피하기</span>
@@ -589,6 +603,7 @@ let stream = null;           // MediaStream
 let facing = 'environment';  // camera facing
 let capturedDataUrl = null;  // full-res preview (data URL)
 let capturedForApi = null;   // downsized base64 (no prefix)
+let capturedBarcode = null;  // { value, format } from real barcode decode, or null
 
 /* ---------- Screen switching ---------- */
 function show(id) {
@@ -649,6 +664,8 @@ function captureFrame() {
 /* Set captured image (from camera or file) and prep API-size copy */
 function setCaptured(dataUrl) {
   capturedDataUrl = dataUrl;
+  capturedBarcode = null;
+  $('#barcodeBadge').classList.add('hidden');
   const img = $('#preview');
   img.src = dataUrl;
   img.classList.remove('hidden');
@@ -658,10 +675,10 @@ function setCaptured(dataUrl) {
   $('#camTools').classList.add('hidden');
   $('#captureActions').classList.add('show');
 
-  // build downsized base64 for API (max 1400px — 품번 글자가 읽혀야 함)
+  // build downsized base64 for API (max 1568px — Claude 권장 해상도, 작은 품번 글자도 읽혀야 함)
   const tmp = new Image();
   tmp.onload = () => {
-    const max = 1400;
+    const max = 1568;
     let { width: w, height: h } = tmp;
     if (Math.max(w, h) > max) {
       const r = max / Math.max(w, h); w = Math.round(w * r); h = Math.round(h * r);
@@ -669,14 +686,43 @@ function setCaptured(dataUrl) {
     const c = document.createElement('canvas');
     c.width = w; c.height = h;
     c.getContext('2d').drawImage(tmp, 0, 0, w, h);
-    capturedForApi = c.toDataURL('image/jpeg', 0.85).split(',')[1];
+    capturedForApi = c.toDataURL('image/jpeg', 0.88).split(',')[1];
   };
   tmp.src = dataUrl;
+
+  detectBarcode(dataUrl);
+}
+
+/* ================= BARCODE DECODE (실제 디코딩 — LLM 눈짐작 방지) =================
+   브라우저 내장 BarcodeDetector API로 EAN/UPC/CODE128 등을 실제로 디코딩한다.
+   LLM은 바코드 막대무늬를 숫자로 "판독"할 수 없으므로(할루시네이션의 주 원인),
+   여기서 얻은 값만 신뢰할 수 있는 바코드 번호로 취급해 프롬프트에 넘긴다.
+   미지원 브라우저(구형 Safari 등)에서는 조용히 건너뛴다 — 텍스트 인식은 별도로 동작. */
+async function detectBarcode(dataUrl) {
+  if (!('BarcodeDetector' in window)) return;
+  try {
+    const formats = await window.BarcodeDetector.getSupportedFormats();
+    const useFormats = ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'itf', 'qr_code']
+      .filter(f => formats.includes(f));
+    if (!useFormats.length) return;
+    const detector = new window.BarcodeDetector({ formats: useFormats });
+    const img = new Image();
+    await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = dataUrl; });
+    const bitmap = await createImageBitmap(img);
+    const codes = await detector.detect(bitmap);
+    if (codes && codes.length) {
+      capturedBarcode = { value: codes[0].rawValue, format: codes[0].format };
+      const b = $('#barcodeBadge');
+      b.textContent = `📊 바코드 인식됨: ${capturedBarcode.value}`;
+      b.classList.remove('hidden');
+    }
+  } catch { /* 디코딩 실패 시 조용히 무시 — 텍스트 기반 인식으로 진행 */ }
 }
 
 function resetCapture() {
-  capturedDataUrl = null; capturedForApi = null;
+  capturedDataUrl = null; capturedForApi = null; capturedBarcode = null;
   $('#preview').classList.add('hidden');
+  $('#barcodeBadge').classList.add('hidden');
   $('#captureActions').classList.remove('show');
   $('#camTools').classList.remove('hidden');
   $('#camPlaceholder').classList.remove('hidden');
@@ -705,7 +751,7 @@ function runLoadSteps(withSearch) {
 
 async function analyze() {
   if (!capturedForApi) { toast('먼저 라벨을 촬영하거나 불러오세요.', true); return; }
-  runAnalysis({ image: capturedForApi }, capturedDataUrl);
+  runAnalysis({ image: capturedForApi, barcode: capturedBarcode }, capturedDataUrl);
 }
 
 /* 사진 없이 상품명/품번 텍스트로 검색 */
@@ -753,10 +799,23 @@ const SYSTEM_PROMPT =
 `당신은 대한민국 온라인 쇼핑 가격 비교 전문가입니다. 사용자가 촬영한 상품 라벨(의류 가격표, 품질표시 라벨 등)
 사진을 분석해 상품을 식별하고, 웹 검색 도구로 "현재 판매 중인 인터넷 가격"을 조사해 한국어로 정리합니다.
 
+⚠️ 가장 중요한 규칙 — 지어내지 않기:
+- 바코드(세로 막대무늬) 그림 자체를 눈으로 보고 숫자를 "판독"하려 하지 마세요. 그건 당신이 할 수 없는 일이고,
+  시도하면 반드시 틀린 숫자를 만들어내 완전히 다른 상품으로 이어집니다. 바코드 근처에 인쇄된 사람이 읽을 수 있는
+  숫자/문자 텍스트만 그대로 옮겨 적으세요. 사용자 메시지에 "디코딩된 바코드 값"이 별도로 주어지면, 그것만
+  진짜 바코드 번호로 신뢰하고 검색에 사용하세요 — 이미지 속 막대무늬 자체는 절대 재해석하지 마세요.
+- 라벨에 브랜드명이나 상품명이 텍스트로 전혀 보이지 않으면, 절대 그럴듯한 브랜드/상품명을 지어내지 마세요.
+  이 경우 brand/productName은 빈 문자열로 두고 confidence를 "low"로 설정하며, summary에 "라벨에 브랜드 텍스트가
+  보이지 않아 품번/사이즈 코드만으로 검색합니다"라고 명시하세요.
+- 검색으로 찾은 상품이 라벨에서 읽은 사이즈·색상·카테고리와 뚜렷이 다르면(예: 코드가 우연히 겹치는 다른
+  브랜드), 그 결과를 listings에 넣지 말고 무시하세요. 불확실하면 넣지 않는 편이 낫습니다.
+
 작업 순서:
-1. 라벨에서 브랜드, 상품명, 품번(모델 코드), 사이즈, 색상, 정가(택가)를 최대한 정확히 읽습니다.
-2. 웹 검색 도구를 4~6회 사용해 현재 판매가를 조사합니다. 품번+브랜드, 상품명+최저가 등으로 검색하고,
-   네이버쇼핑·다나와·쿠팡·G마켓·11번가·무신사·크림(KREAM)·번개장터 등 한국 쇼핑몰 결과를 우선합니다.
+1. 라벨에서 브랜드, 상품명, 품번(모델 코드), 사이즈, 색상, 정가(택가)를 인쇄된 텍스트 그대로 정확히 옮겨 적습니다.
+   위의 바코드 규칙을 반드시 지키세요.
+2. 웹 검색 도구를 4~6회 사용해 현재 판매가를 조사합니다. (디코딩된 바코드 값이 있다면 그 번호로도 검색),
+   품번+브랜드, 상품명+최저가 등으로 검색하고, 네이버쇼핑·다나와·쿠팡·G마켓·11번가·무신사·크림(KREAM)·
+   번개장터 등 한국 쇼핑몰 결과를 우선합니다.
 3. 검색 결과에서 실제로 확인된 가격과 URL만 listings에 담습니다. 가격을 지어내지 마세요.
    정확히 같은 상품이 아니면 note에 "동일 모델 다른 색상" 등으로 표기합니다. 확인된 것이 없으면 listings는 빈 배열로 두세요.
 4. 최근 1년 최저가 추이는 검색에서 발견한 과거 가격 정보(세일 소식, 커뮤니티 글, 시세 그래프 언급 등)와
@@ -767,16 +826,17 @@ const SYSTEM_PROMPT =
 const JSON_SCHEMA = `{
   "found": true,                          // 상품 라벨로 인식했으면 true, 아니면 false
   "reason": "",                           // found=false일 때 이유
-  "confidence": "high|medium|low",        // 상품 식별 확신도
-  "brand": "브랜드명",
-  "productName": "상품명(한국어, 식별 가능한 만큼)",
+  "confidence": "high|medium|low",        // 상품 식별 확신도 (브랜드/상품명을 텍스트로 못 읽었으면 low)
+  "identificationBasis": "라벨 텍스트로 식별|디코딩된 바코드 번호로 검색|검색어 직접 입력", // 무엇을 근거로 식별했는지
+  "brand": "브랜드명 (라벨에 텍스트로 없으면 빈 문자열, 지어내지 않음)",
+  "productName": "상품명(한국어, 식별 가능한 만큼. 없으면 빈 문자열)",
   "modelCode": "품번/모델코드 (없으면 '')",
   "category": "카테고리 예: 남성 정장, 골프 베스트",
   "color": "색상 (없으면 '')",
   "size": "사이즈 (없으면 '')",
   "tagPrice": 350000,                     // 라벨에 인쇄된 정가(원), 없으면 null
   "searchQuery": "가격 검색에 가장 잘 맞는 대표 검색어",
-  "summary": "이 상품에 대한 한 줄 설명",
+  "summary": "이 상품에 대한 한 줄 설명. 식별이 불확실하면 그 사실을 솔직히 언급",
   "listings": [                           // 검색으로 확인된 현재 판매가. 낮은 가격부터 정렬
     { "site": "판매처 이름", "title": "판매 상품명", "price": 89000,
       "shipping": "무료배송|배송비 3,000원|불명", "condition": "새상품|중고|리퍼|불명",
@@ -796,10 +856,13 @@ const JSON_SCHEMA = `{
 async function callClaude(key, model, input) {
   const content = [];
   if (input.image) {
+    const bc = input.barcode
+      ? `\n\n디코딩된 바코드 값(브라우저가 실제로 해독한 것 — 이 숫자만 진짜 바코드 번호로 신뢰하세요): "${input.barcode.value}" (형식: ${input.barcode.format})`
+      : '\n\n(이 사진에서는 바코드가 자동 디코딩되지 않았습니다. 라벨의 인쇄된 텍스트만으로 식별하고, 바코드 막대무늬 자체는 판독하지 마세요.)';
     content.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: input.image } });
-    content.push({ type: 'text', text: `이 라벨의 상품을 식별하고, 웹 검색으로 현재 인터넷 판매가(최저가 오름차순)와 최근 1년 가격 추이를 조사한 뒤 다음 JSON 스키마로만 응답하세요. 오늘 날짜: ${todayStr()}\n\n${JSON_SCHEMA}` });
+    content.push({ type: 'text', text: `이 라벨의 상품을 식별하고, 웹 검색으로 현재 인터넷 판매가(최저가 오름차순)와 최근 1년 가격 추이를 조사한 뒤 다음 JSON 스키마로만 응답하세요. 오늘 날짜: ${todayStr()}${bc}\n\n${JSON_SCHEMA}` });
   } else {
-    content.push({ type: 'text', text: `라벨 사진 없이 사용자가 직접 입력한 검색어입니다: "${input.query}"\n이 검색어로 상품을 식별하고(라벨 판독 단계는 건너뜀), 웹 검색으로 현재 인터넷 판매가(최저가 오름차순)와 최근 1년 가격 추이를 조사한 뒤 다음 JSON 스키마로만 응답하세요. tagPrice는 검색에서 정가를 확인한 경우에만 채우세요. 오늘 날짜: ${todayStr()}\n\n${JSON_SCHEMA}` });
+    content.push({ type: 'text', text: `라벨 사진 없이 사용자가 직접 입력한 검색어입니다: "${input.query}"\n이 검색어로 상품을 식별하고(라벨 판독 단계는 건너뜀), 웹 검색으로 현재 인터넷 판매가(최저가 오름차순)와 최근 1년 가격 추이를 조사한 뒤 다음 JSON 스키마로만 응답하세요. identificationBasis는 "검색어 직접 입력"으로 두세요. tagPrice는 검색에서 정가를 확인한 경우에만 채우세요. 오늘 날짜: ${todayStr()}\n\n${JSON_SCHEMA}` });
   }
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -1149,7 +1212,9 @@ function renderResult(session) {
           ${specs.map(s => `<span class="tag spec">${esc(s)}</span>`).join('')}
           <span class="tag conf ${confClass}">식별 확신도 ${confMap[d.confidence] || '보통'}</span>
         </div>
+        ${d.identificationBasis ? `<div class="id-basis">🔍 ${esc(d.identificationBasis)}</div>` : ''}
         ${d.summary ? `<p class="summary">${esc(d.summary)}</p>` : ''}
+        ${confClass === 'low' ? `<p class="low-conf-warn">⚠️ 라벨에서 브랜드/상품명을 명확히 읽지 못했어요. 아래 결과가 실제 상품과 다를 수 있으니, 사진을 다시 찍거나 검색어를 직접 입력해 다시 확인해 주세요.</p>` : ''}
       </div>
     </div>
 
@@ -1318,6 +1383,7 @@ function handleFile(file) {
    첨부 예시 라벨(바스키아 브루클린 22SS 골프 베스트) 기반 가상 시나리오 */
 const DEMO_DATA = {
   found: true, confidence: 'high',
+  identificationBasis: '라벨 텍스트로 식별 (데모)',
   brand: '바스키아 브루클린',
   productName: '22SS 라임 골프 베스트 (오프화이트)',
   modelCode: '12233641457',
