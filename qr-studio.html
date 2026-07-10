@@ -165,6 +165,8 @@
   .ar-msg{position:absolute;color:var(--mut);font-size:14px;pointer-events:none;text-align:center;padding:24px;line-height:1.6}
   .ar-badge{position:absolute;top:12px;left:12px;background:rgba(11,13,18,.72);backdrop-filter:blur(6px);border:1px solid var(--line2);color:#fff;font-size:12px;font-weight:600;padding:6px 12px;border-radius:20px;pointer-events:none;opacity:0;transition:.2s;max-width:80%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .ar-badge.on{opacity:1}
+  .pulse-cta{animation:pulseCta 1.1s ease-in-out 5}
+  @keyframes pulseCta{0%,100%{box-shadow:0 0 0 0 rgba(124,92,255,.7)}50%{box-shadow:0 0 0 12px rgba(124,92,255,0)}}
   .ar-controls{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-top:14px}
   .about{max-width:820px;margin:0 auto}
   .about h3{font-size:19px;margin:26px 0 10px}
@@ -739,6 +741,7 @@
           <img id="demoMarkerPreview" src="assets/anim-1.webp" style="width:100%;max-width:180px;border-radius:10px;display:block;margin:0 auto 10px" />
           <button class="btn" id="markerDemoBtn" style="width:100%;max-width:280px" data-i18n="btn.markerDemo">🎬 데모로 바로 체험하기 (대기 없음)</button>
           <div class="hint" style="margin-top:6px" data-i18n="hint.markerDemo">위 이미지를 다른 기기 화면에 띄우고 이 카메라로 비춰보세요</div>
+          <button class="btn sec" id="arShareMarkerBtn" style="width:100%;max-width:280px;margin-top:8px" data-i18n="btn.arShareMarker">🔗 이 데모로 스캔용 QR 만들기</button>
         </div>
         <div style="height:1px;background:var(--line);margin:14px 0"></div>
         <label class="fld" style="display:flex;gap:10px;align-items:center">
@@ -774,6 +777,7 @@
           <div class="lbl"><span data-i18n="lbl.stickerScale">스티커 크기</span> <b id="stickerScaleOut">100%</b></div>
           <input type="range" id="stickerScale" min="40" max="220" step="1" value="100" />
         </label>
+        <button class="btn sec" id="arShareFaceBtn" style="width:100%;display:none" data-i18n="btn.arShareFace">🔗 이 스티커로 스캔용 QR 만들기</button>
         <div class="hint" id="hintFaceMode" data-i18n="hint.faceMode">얼굴을 인식해 선택한 스티커가 실시간으로 따라다닙니다. 처음 켤 때 인식 모델을 한 번 내려받아요(이후엔 오프라인 동작). 영상은 기기 밖으로 전송되지 않습니다.</div>
       </div>
       <div class="hint" id="arHintQr" style="text-align:center;margin-top:10px">스튜디오에서 만든 QR을 <b>다른 화면/인쇄물</b>에 띄워 두고 이 카메라로 비추면 그 위에 AR이 나타납니다. 실시간 인식은 <b>jsQR</b>(브라우저 내 디코딩)로 동작합니다.</div>
@@ -842,7 +846,7 @@
   <footer>
     <div>Aesthetic QR Studio · 아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.06-j</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.06-k</b></div>
   </footer>
 </div>
 
@@ -4886,6 +4890,7 @@ var AR = (function(){
     if($("arMarkerUpload")) $("arMarkerUpload").style.display=(m==="marker")?"block":"none";
     if($("arFaceControls")) $("arFaceControls").style.display=(m==="face"||m==="marker")?"block":"none";
     if($("stickerAnchorWrap")) $("stickerAnchorWrap").style.display=(m==="face")?"":"none";
+    if($("arShareFaceBtn")) $("arShareFaceBtn").style.display=(m==="face")?"block":"none";
     if($("hintFaceMode")) $("hintFaceMode").style.display=(m==="face")?"":"none";
     if($("stepsFaceMode")) $("stepsFaceMode").style.display=(m==="face")?"":"none";
     if($("arHintQr")) $("arHintQr").style.display=(m==="qr")?"":"none";
@@ -4901,6 +4906,36 @@ var AR = (function(){
     var hintMap={qr:"QR 코드를 화면에 비춰 보세요…", face:t("ar.faceSearching"), marker: markerBuffer?t("ar.markerSearching"):t("ar.markerNeeded")};
     var idleMap={qr:"‘카메라 시작’을 눌러 QR을 비춰 보세요", face:t("ar.faceHint"), marker: markerBuffer?t("ar.markerHint"):t("ar.markerNeeded")};
     showMsg(stream ? hintMap[m] : idleMap[m]);
+  }
+  async function loadDemoMarker(){
+    try{
+      var resp=await fetch("assets/demo-marker.mind");
+      if(!resp.ok) throw new Error("fetch failed");
+      markerBuffer=await resp.arrayBuffer();
+      markerController=null; markerControllerDims=null; markerSetupFailed=false;
+      markerImg=$("demoMarkerPreview");
+      if($("markerThumb")){ $("markerThumb").src="assets/anim-1.webp"; $("markerThumb").style.display="block"; }
+      if($("markerLabel")) $("markerLabel").textContent=t("btn.markerOk");
+      if($("markerClear")) $("markerClear").style.display="inline-block";
+      if(arMode==="marker") showMsg(stream?t("ar.markerSearching"):t("ar.markerHint"));
+      return true;
+    }catch(e){ return false; }
+  }
+  // entry point for "scan QR -> land straight in AR" links (?ar=marker&src=demo / ?ar=face&sticker=...)
+  async function enterFromLink(mode,opts){
+    opts=opts||{};
+    if(mode==="marker"){
+      setArMode("marker");
+      if(opts.src==="demo") await loadDemoMarker();
+    } else if(mode==="face"){
+      setArMode("face");
+      if(opts.sticker){
+        FS.mode="emoji"; FS.emoji=opts.sticker;
+        if($("stickerPicker")) Array.prototype.forEach.call($("stickerPicker").children,function(x){x.classList.toggle("on",x.textContent===opts.sticker);});
+      }
+    } else {
+      setArMode("qr");
+    }
   }
   return {
     init:function(){ els();
@@ -4944,22 +4979,9 @@ var AR = (function(){
       });
       $("markerDemoBtn").addEventListener("click",async function(){
         var btn=$("markerDemoBtn"); btn.disabled=true; var origTxt=btn.textContent; btn.textContent=t("btn.markerDemoLoading");
-        try{
-          var resp=await fetch("assets/demo-marker.mind");
-          if(!resp.ok) throw new Error("fetch failed");
-          markerBuffer=await resp.arrayBuffer();
-          markerController=null; markerControllerDims=null; markerSetupFailed=false;
-          markerImg=$("demoMarkerPreview");
-          $("markerThumb").src="assets/anim-1.webp"; $("markerThumb").style.display="block";
-          $("markerLabel").textContent=t("btn.markerOk");
-          $("markerClear").style.display="inline-block";
-          if(arMode==="marker") showMsg(stream?t("ar.markerSearching"):t("ar.markerHint"));
-          toast(t("toast.markerDemoOk"));
-        }catch(e){
-          toast(t("toast.markerFail"));
-        }finally{
-          btn.disabled=false; btn.textContent=origTxt;
-        }
+        var ok=await loadDemoMarker();
+        btn.disabled=false; btn.textContent=origTxt;
+        if(ok) toast(t("toast.markerDemoOk")); else toast(t("toast.markerFail"));
       });
       buildStickerPicker();
       $("stickerFile").addEventListener("change",function(e){
@@ -4988,7 +5010,11 @@ var AR = (function(){
       $("stickerScale").addEventListener("input",function(e){ FS.scale=+e.target.value; $("stickerScaleOut").textContent=e.target.value+"%"; });
     },
     refresh:function(){ els(); fit(); },
-    leave:leave
+    leave:leave,
+    enterFromLink:enterFromLink,
+    getMode:function(){ return arMode; },
+    isDemoMarker:function(){ return !!(markerBuffer && markerImg===$("demoMarkerPreview")); },
+    getFaceSticker:function(){ return FS.mode==="emoji" ? FS.emoji : null; }
   };
 })();
 
@@ -5821,7 +5847,11 @@ var I18N = {
   "hint.markerDemo":{ko:'위 이미지를 다른 기기 화면에 띄우고 이 카메라로 비춰보세요',en:'Show the image above on another device\'s screen and point this camera at it',zh:'请在另一台设备屏幕上显示上方图片，并用本相机对准',ja:'上の画像を別の端末の画面に表示し、このカメラで映してください'},
   "toast.markerDemoOk":{ko:'데모 마커 준비 완료 — 카메라를 시작하세요',en:'Demo marker ready — start the camera',zh:'演示标记已就绪 — 请启动相机',ja:'デモマーカー準備完了 — カメラを開始してください'},
   "hint.faceSteps":{ko:'<b>사용 방법</b><br>① 아래에서 스티커(이모지)를 고르세요 — 기본은 😎<br>② ‘카메라 시작’ 클릭 후 카메라 권한을 허용하세요<br>③ 얼굴을 화면 중앙에 비추면 스티커가 자동으로 따라다닙니다',en:'<b>How to use</b><br>① Pick a sticker (emoji) below — 😎 by default<br>② Tap “Start camera” and allow camera access<br>③ Show your face in the center of the frame and the sticker follows automatically',zh:'<b>使用方法</b><br>① 在下方选择贴纸（表情符号）— 默认为 😎<br>② 点击“启动相机”并允许摄像头权限<br>③ 将脸对准画面中央，贴纸会自动跟随',ja:'<b>使い方</b><br>① 下でスタンプ（絵文字）を選択 — デフォルトは😎<br>② 「カメラ開始」をクリックしカメラ許可を承認<br>③ 顔を画面中央に映すとスタンプが自動で追従します'},
-  "ar.markerSetupFail":{ko:'마커 인식 엔진을 시작하지 못했어요. 브라우저가 최신 버전인지 확인하고, 페이지를 새로고침한 뒤 다시 시도해보세요.',en:'Couldn\'t start the marker recognition engine. Make sure your browser is up to date, then refresh the page and try again.',zh:'无法启动标记识别引擎。请确认浏览器为最新版本，刷新页面后重试。',ja:'マーカー認識エンジンを起動できませんでした。ブラウザが最新か確認し、ページを再読み込みして再試行してください。'}
+  "ar.markerSetupFail":{ko:'마커 인식 엔진을 시작하지 못했어요. 브라우저가 최신 버전인지 확인하고, 페이지를 새로고침한 뒤 다시 시도해보세요.',en:'Couldn\'t start the marker recognition engine. Make sure your browser is up to date, then refresh the page and try again.',zh:'无法启动标记识别引擎。请确认浏览器为最新版本，刷新页面后重试。',ja:'マーカー認識エンジンを起動できませんでした。ブラウザが最新か確認し、ページを再読み込みして再試行してください。'},
+  "btn.arShareMarker":{ko:'🔗 이 데모로 스캔용 QR 만들기',en:'🔗 Make a scan-to-try QR for this demo',zh:'🔗 为此演示生成扫描体验二维码',ja:'🔗 このデモのスキャン用QRを作成'},
+  "btn.arShareFace":{ko:'🔗 이 스티커로 스캔용 QR 만들기',en:'🔗 Make a scan-to-try QR for this sticker',zh:'🔗 为此贴纸生成扫描体验二维码',ja:'🔗 このスタンプのスキャン用QRを作成'},
+  "toast.arShareOk":{ko:'QR이 생성됐어요 — 저장 후 다른 기기 카메라로 스캔해보세요',en:'QR created — save it and scan with another device\'s camera',zh:'二维码已生成 — 保存后用另一台设备的相机扫描试试',ja:'QRを作成しました — 保存して別の端末のカメラでスキャンしてみてください'},
+  "toast.arShareCustomWarn":{ko:'직접 업로드한 마커·스티커는 아직 QR 공유가 안 돼요 — 데모 마커나 기본 이모지 스티커로 시도해보세요',en:'Custom uploaded markers/stickers can\'t be shared via QR yet — try the demo marker or a built-in emoji sticker',zh:'自定义上传的标记/贴纸暂不支持二维码分享 — 请使用演示标记或内置表情贴纸',ja:'自分でアップロードしたマーカー・スタンプはまだQR共有できません — デモマーカーか内蔵の絵文字スタンプでお試しください'}
 };
 var LANG="ko";
 function t(key){ var e=I18N[key]; return e ? (e[LANG]||e.ko) : null; }
@@ -5845,6 +5875,31 @@ function applyLang(lang){
   document.addEventListener("click",function(e){ var b=e.target.closest(".lang-switch button[data-lang]"); if(b) applyLang(b.dataset.lang); });
 })();
 
+// ---------- AR share-link QR (scan -> land directly in the right AR mode) ----------
+function buildArLinkUrl(mode,opts){
+  opts=opts||{};
+  var u=new URL(location.origin+location.pathname);
+  u.searchParams.set("ar",mode);
+  if(opts.src) u.searchParams.set("src",opts.src);
+  if(opts.sticker) u.searchParams.set("sticker",opts.sticker);
+  return u.toString();
+}
+function pushArLinkToStudio(url){
+  selectCType("url");
+  $("content").value=url;
+  buildContent();
+  gotoView("studio");
+  toast(t("toast.arShareOk"));
+}
+if($("arShareMarkerBtn")) $("arShareMarkerBtn").addEventListener("click",function(){
+  if(!AR.isDemoMarker()){ toast(t("toast.arShareCustomWarn")); return; }
+  pushArLinkToStudio(buildArLinkUrl("marker",{src:"demo"}));
+});
+if($("arShareFaceBtn")) $("arShareFaceBtn").addEventListener("click",function(){
+  var sym=AR.getFaceSticker();
+  if(!sym){ toast(t("toast.arShareCustomWarn")); return; }
+  pushArLinkToStudio(buildArLinkUrl("face",{sticker:sym}));
+});
 // ---------- init ----------
 if (typeof qrcode === "undefined"){
   document.body.innerHTML='<div style="padding:40px;color:#fff;font-family:sans-serif">QR 인코더 로드 실패</div>';
@@ -5855,6 +5910,22 @@ if (typeof qrcode === "undefined"){
   buildMarkPicker();
   buildGallery();
   AR.init();
+  (function initFromLink(){
+    try{
+      var qp=new URLSearchParams(location.search);
+      var ar=qp.get("ar");
+      if(!ar) return;
+      gotoView("ar");
+      var opts={ src:qp.get("src")||"", sticker:qp.get("sticker")||"" };
+      AR.enterFromLink(ar,opts).then(function(){
+        var banner=$("arMsg");
+        setTimeout(function(){
+          var btn=$("arStart");
+          if(btn){ btn.scrollIntoView({behavior:"smooth",block:"center"}); btn.classList.add("pulse-cta"); setTimeout(function(){btn.classList.remove("pulse-cta");},6000); }
+        },300);
+      });
+    }catch(e){}
+  })();
 }
 })();
 </script>
