@@ -293,7 +293,8 @@
 
   /* --- KPI row --- */
   .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px; }
-  .kpi { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 13px 12px 12px; text-align: center; }
+  .kpi { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 12px 12px 12px; text-align: center; }
+  .kpi .k-ico { font-size: 17px; line-height: 1; margin-bottom: 6px; filter: saturate(.9); }
   .kpi .k-label { font-size: 10.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
   .kpi .k-value { margin-top: 5px; font-size: 17px; font-weight: 800; color: var(--ink-1); letter-spacing: -.01em; line-height: 1.25; }
   .kpi .k-sub { margin-top: 2px; font-size: 11px; color: var(--ink-3); }
@@ -423,11 +424,26 @@
   /* --- pairing grid --- */
   .pair-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .pair {
-    display: flex; align-items: center; gap: 10px; padding: 11px 12px;
+    display: flex; align-items: flex-start; gap: 10px; padding: 11px 12px;
     background: var(--card-2); border: 1px solid var(--line); border-radius: 13px;
   }
   .pair .pe { font-size: 20px; flex: none; width: 34px; height: 34px; display: grid; place-items: center; background: var(--accent-wash); border-radius: 10px; }
-  .pair .pt { font-size: 13px; font-weight: 600; color: var(--ink-1); line-height: 1.35; }
+  .pair .pt { font-size: 13px; font-weight: 600; color: var(--ink-1); line-height: 1.35; padding-top: 1px; }
+  .pair .pt b { font-weight: 700; }
+  .pair .pt em { display: block; margin-top: 2px; font-style: normal; font-size: 11px; font-weight: 500; color: var(--ink-3); line-height: 1.4; }
+  .pair-tip { margin-top: 12px; font-size: 12.5px; color: var(--ink-2); }
+  .pair-avoid { margin-top: 6px; font-size: 12px; color: var(--ink-3); }
+  /* ratings / awards */
+  .rate-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .rate { background: var(--card-2); border: 1px solid var(--line); border-radius: 13px; padding: 12px 13px; text-align: center; }
+  .rate-score { display: block; font-size: 20px; font-weight: 800; color: var(--gold-soft); letter-spacing: -.01em; }
+  .rate-src { display: block; margin-top: 3px; font-size: 11px; font-weight: 600; color: var(--ink-3); }
+  /* trivia callout */
+  .trivia { margin-top: 12px; padding: 11px 13px; border-radius: 12px; background: var(--accent-wash); border: 1px solid var(--hairline); font-size: 13px; color: var(--ink-1); line-height: 1.55; }
+  .trivia-k { font-weight: 800; color: var(--gold-soft); margin-right: 4px; }
+  /* similar pours */
+  .pill.sim::before { display: none; }
+  .pill.sim { padding-left: 13px; }
 
   /* --- timeline --- */
   .timeline { position: relative; margin-left: 3px; padding-left: 20px; }
@@ -910,6 +926,7 @@ async function analyze() {
     const session = saveSession(data, capturedDataUrl);
     renderResult(session);
     show('result');
+    try { if (navigator.vibrate) navigator.vibrate([14, 40, 22]); } catch (e) {}  // scan-complete cue
   } catch (e) {
     clearInterval(loadTimer);
     console.error(e);
@@ -975,14 +992,21 @@ const JSON_SCHEMA = `{
   "drinkFrom": 2020,                   // 음용 권장 시작 연도(정수) — 장기 숙성형 와인 위주, 해당 없으면 null
   "drinkPeak": 2027,                   // 정점 연도(정수), 해당 없으면 null
   "drinkUntil": 2035,                  // 음용 권장 마지막 연도(정수), 해당 없으면 null (사케·탁주 등 신선 음용 주류는 null)
-  "history": [ {"year":"연도/시기","text":"사건"}, ... ],  // 제품/생산자 히스토리 2~4개
+  "history": [ {"year":"연도/시기","text":"사건"}, ... ],  // 제품/생산자·지역 히스토리 3~5개(연도 오름차순, 구체적으로)
   "story": "이 술/연식에 얽힌 흥미로운 스토리 2~3문장",
   "winery": "생산자(와이너리/양조장/증류소) 소개 2~3문장(설립, 규모, 철학, 유명세)",
-  "foodPairing": ["🥩 음식1","🧀 음식2","..."],  // 이모지 포함 3~5개, 주종에 어울리게(전통주는 한식 위주)
+  "foodPairing": [                     // 3~5개. 각 항목은 {emoji, food, why}. why=왜 어울리는지 짧게(한 구절)
+    {"emoji":"🥩","food":"음식명","why":"어울리는 이유(예: 지방을 탄닌이 정리)"}
+  ],
+  "pairingTip": "페어링 전반의 원리 한 줄(예: 무게감이 비슷한 요리와 매칭)",
+  "avoidPairing": "피하면 좋은 음식/상황 한 줄(없으면 빈 문자열)",
+  "ratings": [ {"source":"평가기관/매체(예: Wine Spectator, WA)","score":"점수/수상(예: 96점, 금상)"} ],  // 신뢰할 수 있을 때만. 모르면 빈 배열 []
+  "similar": ["비슷한 스타일의 다른 술 2~4개(제품명/생산자 위주)"],  // 대체·확장 추천. 없으면 []
+  "trivia": "알아두면 좋은 흥미로운 한 줄 상식(없으면 빈 문자열)",
   "servingTemp": "권장 서빙 온도 예: 16~18℃ (사케는 온도대별 스타일 병기 가능)",
   "servingNote": "서빙 팁 — 와인: 디캔팅, 위스키: 니트/가수/글라스, 사케: 히야·누루캉 등 온도 스타일, 전통주: 흔들기·잔 추천",
   "aging": "적정 음용 시기/숙성·보관 잠재력 한 줄",
-  "tips": ["애호가를 위한 실전 팁 3~4개(구매/보관/서빙/유사 제품 추천 등)"]
+  "tips": ["애호가를 위한 실전 팁 3~4개(구매/보관/서빙 등)"]
 }`;
 
 async function callClaude(key, model, base64) {
@@ -1355,16 +1379,28 @@ function renderResult(session) {
   const grapes = (d.ingredients || d.grapes || []).map(g => `<span class="pill">${esc(g)}</span>`).join('')
     || '<p class="body">원료 정보가 없습니다.</p>';
   const pairing = (d.foodPairing || []).map(f => {
-    const s = String(f).trim();
-    const m = s.match(/^(\p{Extended_Pictographic}[️‍\p{Extended_Pictographic}]*)\s*(.*)$/u);
-    const emoji = m && m[2] ? m[1] : '🍽️';
-    const label = m && m[2] ? m[2] : s;
-    return `<div class="pair"><span class="pe">${esc(emoji)}</span><span class="pt">${esc(label)}</span></div>`;
+    let emoji = '🍽️', food = '', why = '';
+    if (f && typeof f === 'object') {           // {emoji, food, why}
+      emoji = f.emoji || '🍽️'; food = f.food || ''; why = f.why || '';
+    } else {                                     // legacy "🥩 음식" string
+      const s = String(f).trim();
+      const m = s.match(/^(\p{Extended_Pictographic}[️‍\p{Extended_Pictographic}]*)\s*(.*)$/u);
+      emoji = m && m[2] ? m[1] : '🍽️'; food = m && m[2] ? m[2] : s;
+    }
+    return `<div class="pair"><span class="pe">${esc(emoji)}</span>
+      <span class="pt"><b>${esc(food)}</b>${why ? `<em>${esc(why)}</em>` : ''}</span></div>`;
   }).join('') || '<p class="body">페어링 정보가 없습니다.</p>';
   const history = (d.history || []).map(h =>
     `<div class="tl-item"><span class="yr">${esc(h.year)}</span><div class="tx">${esc(h.text)}</div></div>`
   ).join('') || '<p class="body">기록 정보가 없습니다.</p>';
   const tips = (d.tips || []).map(t => `<li>${esc(t)}</li>`).join('');
+
+  // ratings / awards (honesty-gated: only when provided)
+  const ratings = (d.ratings || []).filter(r => r && r.source && r.score).map(r =>
+    `<div class="rate"><span class="rate-score">${esc(r.score)}</span><span class="rate-src">${esc(r.source)}</span></div>`
+  ).join('');
+  const similar = (d.similar || []).filter(Boolean).map(s =>
+    `<span class="pill sim">${esc(s)}</span>`).join('');
 
   const axes = tasteAxes(d);
   const radar = axes.length >= 3 ? flavorRadar(axes) : '';
@@ -1405,19 +1441,21 @@ function renderResult(session) {
     <!-- KPI row -->
     <div class="kpis">
       <div class="kpi">
+        <div class="k-ico" aria-hidden="true">💰</div>
         <div class="k-label">예상가</div>
         <div class="k-value">${esc(d.priceRange || '—')}</div>
       </div>
       <div class="kpi">
+        <div class="k-ico" aria-hidden="true">🍸</div>
         <div class="k-label">도수</div>
         <div class="k-value">${esc(d.alcohol || '—')}</div>
       </div>
       <div class="kpi">
         ${d.drinkPeak
-          ? `<div class="k-label">정점 시기</div><div class="k-value">${esc(d.drinkPeak)}</div><div class="k-sub">음용 최적</div>`
+          ? `<div class="k-ico" aria-hidden="true">⏳</div><div class="k-label">정점 시기</div><div class="k-value">${esc(d.drinkPeak)}</div><div class="k-sub">음용 최적</div>`
           : (d.specs && d.specs[0] && d.specs[0].label
-            ? `<div class="k-label">${esc(d.specs[0].label)}</div><div class="k-value">${esc(d.specs[0].value)}</div>`
-            : `<div class="k-label">지역</div><div class="k-value" style="font-size:14px">${esc(d.region || d.country || '—')}</div>`)}
+            ? `<div class="k-ico" aria-hidden="true">📋</div><div class="k-label">${esc(d.specs[0].label)}</div><div class="k-value">${esc(d.specs[0].value)}</div>`
+            : `<div class="k-ico" aria-hidden="true">📍</div><div class="k-label">지역</div><div class="k-value" style="font-size:14px">${esc(d.region || d.country || '—')}</div>`)}
       </div>
     </div>
 
@@ -1475,7 +1513,11 @@ function renderResult(session) {
     <div class="card">
       ${sec('Food Pairing', '음식 페어링')}
       <div class="pair-grid">${pairing}</div>
+      ${d.pairingTip ? `<p class="pair-tip">🍶 ${esc(d.pairingTip)}</p>` : ''}
+      ${d.avoidPairing ? `<p class="pair-avoid">⃠ 피하기 — ${esc(d.avoidPairing)}</p>` : ''}
     </div>
+
+    ${ratings ? `<div class="card">${sec('Ratings & Awards', '평점 · 수상')}<div class="rate-grid">${ratings}</div></div>` : ''}
 
     <!-- history -->
     <div class="card">
@@ -1487,6 +1529,7 @@ function renderResult(session) {
     <div class="card">
       ${sec('Story', '스토리')}
       <div class="editorial"><p>${esc(d.story || '정보 없음')}</p></div>
+      ${d.trivia ? `<div class="trivia"><span class="trivia-k">알아두면</span> ${esc(d.trivia)}</div>` : ''}
     </div>
 
     <!-- producer -->
@@ -1494,6 +1537,8 @@ function renderResult(session) {
       ${sec(cat.prodTitle[0], cat.prodTitle[1])}
       <div class="editorial"><p>${esc(d.winery || '정보 없음')}</p></div>
     </div>
+
+    ${similar ? `<div class="card">${sec('Similar Pours', '비슷한 한 잔')}<div class="pills">${similar}</div></div>` : ''}
 
     ${tips ? `<div class="card">${sec('Pro Tips', '애호가를 위한 팁')}<ol class="tips">${tips}</ol></div>` : ''}
 
@@ -1632,19 +1677,34 @@ const DEMOS = [
   drinkFrom: 2023, drinkPeak: 2035, drinkUntil: 2050,
   history: [
     { year: '1152', text: '마고 지역에서 와인 재배가 시작된 것으로 기록' },
+    { year: '1705', text: '런던 가제트에 "Margaux"가 등장 — 영국 상류층이 즐긴 최초의 클라레 중 하나' },
     { year: '1855', text: '보르도 그랑 크뤼 등급에서 최고 등급(프리미에 크뤼) 선정' },
+    { year: '1977', text: '멘첼로풀로스 가문 인수 후 대대적 투자로 명성 회복' },
     { year: '2015', text: '보르도의 전설적 빈티지 — 이상적 기후로 완숙한 포도 수확' },
   ],
   story: '2015 빈티지는 온화한 봄과 뜨거운 여름이 만든 균형이 돋보이는 해로, 평론가들이 "고전적 마고의 재현"이라 극찬했습니다. 고(故) 폴 퐁탈리에 총괄이 마지막으로 완성한 빈티지 중 하나로도 의미가 깊습니다.',
+  trivia: '나폴레옹 3세 시절 1855년 등급은 지금까지 거의 그대로 유지되고 있어, 샤토 마고의 1등급 지위는 160년 넘게 이어지고 있습니다.',
   winery: '1152년까지 거슬러 올라가는 유서 깊은 샤토로, 신고전주의 양식의 상징적 건축물로도 유명합니다. 265ha 부지 중 약 100ha에서 포도를 재배하며, 세계에서 가장 존경받는 와인 생산자 중 하나입니다.',
-  foodPairing: ['🥩 숙성 스테이크', '🦆 오리 콩피', '🧀 하드 치즈', '🍄 트러플 요리'],
+  foodPairing: [
+    { emoji: '🥩', food: '숙성 스테이크', why: '지방을 탄닌이 깔끔히 정리' },
+    { emoji: '🦆', food: '오리 콩피', why: '진한 풍미가 바디와 균형' },
+    { emoji: '🧀', food: '하드 치즈(콩테)', why: '감칠맛이 여운을 늘림' },
+    { emoji: '🍄', food: '트러플 요리', why: '흙내음 향이 부케와 공명' },
+  ],
+  pairingTip: '무게감이 비슷한 요리와 매칭하면 실패가 적습니다.',
+  avoidPairing: '매운 양념·식초 강한 소스는 탄닌을 거칠게 만듭니다.',
+  ratings: [
+    { source: 'Wine Advocate', score: '99점' },
+    { source: 'Wine Spectator', score: '96점' },
+    { source: 'James Suckling', score: '98점' },
+  ],
+  similar: ['Château Palmer (마고 3등급)', 'Château Lafite Rothschild (포이약 1등급)', 'Château Rauzan-Ségla'],
   servingTemp: '16~18℃',
   servingNote: '음용 1~2시간 전 디캔팅 권장',
   aging: '지금도 훌륭하나 2035년 전후 정점, 2050년까지 숙성 잠재력 보유',
   tips: [
     '개봉 후 시간이 지날수록 향이 열리니 서두르지 마세요.',
     '세울 수 없다면 눕혀서 12~14℃ 어두운 곳에 보관하세요.',
-    '비슷한 스타일을 찾는다면 Château Palmer, Pauillac 1등급을 참고하세요.',
     '영 빈티지는 넓은 보르도 글라스를 사용하면 향이 잘 삽니다.',
   ],
 },
@@ -1719,20 +1779,34 @@ const DEMOS = [
   tastingNotes: '건포도·무화과 등 셰리의 달콤한 과실향에 바닐라와 진저, 오크 스파이스가 어우러집니다. 부드럽고 긴 피니시에 말린 과일과 우드 스모크가 남습니다.',
   drinkFrom: null, drinkPeak: null, drinkUntil: null,
   history: [
-    { year: '1824', text: '스페이사이드에서 합법 면허를 받은 초기 증류소로 설립' },
+    { year: '1700년대', text: '이스터 엘키스 농장에서 소규모 증류가 이뤄진 것으로 전해짐' },
+    { year: '1824', text: '알렉산더 리드가 합법 면허를 받아 정식 증류소로 설립' },
     { year: '1950~60년대', text: '셰리 캐스크 숙성 원액이 훗날 전설적 올드보틀로 재평가' },
+    { year: '1980년대', text: '싱글몰트를 전면에 내세운 마케팅으로 프리미엄 시장 개척' },
     { year: '2018', text: '2억 파운드 규모의 새 증류소 완공 — 럭셔리 브랜드로 자리매김' },
   ],
   story: '맥캘란은 스페인 헤레스에서 셰리를 담았던 오크통을 직접 관리해 들여오는 것으로 유명합니다. "싱글몰트의 롤스로이스"라는 별칭처럼, 경매 시장 최고가 기록을 여러 차례 갈아치운 브랜드입니다.',
+  trivia: '2019년 맥캘란 1926 한 병이 경매에서 약 150만 파운드에 낙찰되며 세계에서 가장 비싼 위스키 기록을 세웠습니다.',
   winery: '맥캘란 증류소는 유난히 작은 증류기(스틸)에서 풍부하고 오일리한 스피릿을 뽑아내는 것이 특징입니다. 캐스크에 대한 집착적인 투자로 색소 무첨가의 자연스러운 색을 고집합니다.',
-  foodPairing: ['🍫 다크 초콜릿', '🧀 숙성 체다', '🥜 견과류', '🍖 훈제 요리'],
+  foodPairing: [
+    { emoji: '🍫', food: '다크 초콜릿', why: '카카오 쓴맛이 셰리 단맛과 대비' },
+    { emoji: '🧀', food: '숙성 체다', why: '짠 감칠맛이 오크와 조화' },
+    { emoji: '🥜', food: '구운 견과류', why: '고소함이 너티한 피니시 강조' },
+    { emoji: '🍖', food: '훈제 요리', why: '스모키함이 우드 스파이스와 공명' },
+  ],
+  pairingTip: '단맛·훈연·감칠맛 세 방향으로 매칭하면 잘 맞습니다.',
+  avoidPairing: '산미 강한 시트러스 디저트는 오크향을 눌러버립니다.',
+  ratings: [
+    { source: 'Jim Murray Bible', score: '92.5점' },
+    { source: 'Whisky Advocate', score: '90점' },
+  ],
+  similar: ['글렌드로낙 12 (셰리)', '아벨라워 12', '글렌파클라스 12'],
   servingTemp: '실온 (18~22℃)',
   servingNote: '니트로 먼저, 이후 물 몇 방울을 더해 향의 변화를 즐겨보세요',
   aging: '병입 후 숙성되지 않으니 개봉 후 1년 내 음용 권장 (직사광선 피해 보관)',
   tips: [
     '글렌캐런 글라스를 쓰면 셰리향이 집중되어 올라옵니다.',
     '얼음은 향을 닫으니 첫 잔은 니트를 추천합니다.',
-    '비슷한 셰리 스타일로 글렌드로낙 12, 아벨라워 12도 좋습니다.',
     '개봉 후 병에 술이 1/3 이하로 남으면 산화가 빨라집니다 — 작은 병에 옮겨 보관하세요.',
   ],
 },
@@ -2132,15 +2206,18 @@ let demoIdx = 0;
 let pendingDemo = null;
 
 /* ================= EVENT WIRING ================= */
+/* subtle haptic feedback on key actions (no-op where unsupported) */
+function haptic(ms) { try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) {} }
+
 $('#btnShutter').addEventListener('click', () => {
-  if (stream) captureFrame();
-  else startCamera();
+  if (stream) { haptic(18); captureFrame(); }
+  else { haptic(8); startCamera(); }
 });
-$('#btnFlip').addEventListener('click', () => { facing = facing === 'environment' ? 'user' : 'environment'; startCamera(); });
+$('#btnFlip').addEventListener('click', () => { haptic(8); facing = facing === 'environment' ? 'user' : 'environment'; startCamera(); });
 $('#btnGallery').addEventListener('click', () => $('#fileInput').click());
 $('#fileInput').addEventListener('change', (e) => handleFile(e.target.files[0]));
 $('#btnRetake').addEventListener('click', () => { resetCapture(); startCamera(); });
-$('#btnAnalyze').addEventListener('click', analyze);
+$('#btnAnalyze').addEventListener('click', () => { haptic(12); analyze(); });
 $('#btnDemo').addEventListener('click', () => {
   capturedForApi = 'demo'; capturedDataUrl = '';
   pendingDemo = DEMOS[demoIdx % DEMOS.length]; demoIdx++;
@@ -2180,6 +2257,7 @@ $('#themeSeg').addEventListener('click', (e) => {
   const b = e.target.closest('[data-theme-choice]');
   if (!b) return;
   const choice = b.getAttribute('data-theme-choice');
+  haptic(8);
   store.setTheme(choice);
   applyTheme(choice);
 });
