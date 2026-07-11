@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#1c0a11">
-<title>와인 렌즈 — 라벨을 찍으면 술이 말을 겁니다</title>
+<title>보틀 렌즈 — 라벨을 찍으면 술이 말을 겁니다</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
@@ -243,8 +243,25 @@
     background: var(--plate-grad);
     border: 1px solid var(--line);
   }
-  .plate .photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .22; filter: saturate(.85); }
+  .plate .photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .14; filter: saturate(.8) blur(1px); }
   .plate .veil { position: absolute; inset: 0; background: var(--plate-veil); }
+
+  /* --- official crest backdrop (behind the name) --- */
+  .plate-art { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+  .plate-art .liquid-glow {
+    position: absolute; left: 50%; top: 46%; width: 320px; height: 320px; transform: translate(-50%, -50%);
+    background: radial-gradient(circle, var(--liquid) 0%, transparent 62%);
+    opacity: .38; mix-blend-mode: screen; filter: blur(6px);
+  }
+  :root[data-theme="atelier"] .plate-art .liquid-glow { opacity: .30; mix-blend-mode: multiply; }
+  .plate-art .crest-holder {
+    position: absolute; left: 50%; top: 47%; transform: translate(-50%, -50%);
+    width: 230px; height: 230px; color: var(--gold-soft); opacity: .14;
+  }
+  :root[data-theme="atelier"] .plate-art .crest-holder { color: var(--wine); opacity: .12; }
+  .plate-art .crest { width: 100%; height: 100%; display: block; animation: crest-in .8s ease both; }
+  @keyframes crest-in { from { opacity: 0; transform: rotate(-8deg) scale(.9); } to { opacity: 1; transform: none; } }
+  .crest-mono { font-family: var(--serif); font-size: 74px; font-weight: 700; fill: currentColor; }
   .plate .frame {
     position: relative; margin: 10px; padding: 26px 20px 22px; text-align: center;
     border: 1px solid var(--hairline); border-radius: 14px;
@@ -578,7 +595,7 @@
   <div class="brand">
     <div class="logo">🍷</div>
     <div>
-      <b>와인 렌즈</b>
+      <b>보틀 렌즈</b>
       <small>와인부터 소주까지 · 12가지 주종 라벨 스캔</small>
     </div>
   </div>
@@ -717,7 +734,7 @@
 "use strict";
 
 /* =========================================================
-   와인 렌즈 — 자체 완결형 라벨 스캔 인포그래픽 앱
+   보틀 렌즈 — 자체 완결형 라벨 스캔 인포그래픽 앱
    - 카메라/갤러리 촬영 → Claude 비전으로 인식 → 인포그래픽
    - 세션(스캔)별 localStorage 저장 + 히스토리
    ========================================================= */
@@ -927,6 +944,7 @@ const JSON_SCHEMA = `{
   "category": "wine|sake|whisky|traditional|beer|brandy|baijiu|tequila|rum|gin|soju|spirits",  // 주종: 와인|사케|위스키|한국 전통주|맥주|브랜디·코냑|중국 백주|데킬라·메즈칼|럼|진|희석식 소주|기타(보드카 등)
   "name": "제품명(라벨 표기 그대로)",
   "producer": "생산자(와이너리/양조장/증류소/브루어리) 이름",
+  "liquidColor": "#6b1f2c",            // 이 술의 실제 액체 색을 근사한 hex (레드와인=진한 가넷, 화이트와인=옅은 금빛, 위스키=앰버, 사케·소주·진=매우 옅음, 맥주=스타일별). 결과 배경 색조로 사용
   "type": "주종 내 세부 타입 — 와인: 레드/화이트/로제/스파클링, 사케: 준마이/긴조/다이긴조, 위스키: 싱글몰트/블렌디드/버번, 전통주: 탁주/약주/청주/증류식 소주, 맥주: IPA/스타우트/라거 등 스타일, 브랜디: 코냑/아르마냑/칼바도스, 백주: 농향형/장향형/청향형, 데킬라: 블랑코/레포사도/아녜호, 럼: 화이트/골드/다크/아녜호/아그리콜, 진: 런던 드라이/올드톰/뉴웨스턴, 소주: 희석식/증류식",
   "vintage": "연식 표기 문자열 — 와인: 빈티지 연도/'NV', 위스키·브랜디: '12년'/'XO' 등 숙성 표기, 사케: 양조년도(BY)/미상, 럼: 숙성 연수/미상, 그 외: 제조년도/미상",
   "region": "지역/아펠라시옹/현(県)/도(道)/주(州)",
@@ -1055,6 +1073,62 @@ const CATS = {
   spirits:     { icon: '🍸', label: '기타 주류', en: 'Spirits', vintageCap: 'Year',     ingTitle: ['Ingredients', '원료'], prodTitle: ['The Maker', '생산자'] },
 };
 function catOf(d) { return CATS[d && d.category] || CATS.wine; }
+
+/* ---- plate crest art: an "official seal" behind the name (self-contained, offline) ---- */
+const LIQUID = {
+  wine: '#7a1f2e', sake: '#e9e3c8', whisky: '#b5701e', traditional: '#e7ddc9',
+  beer: '#c88a24', brandy: '#8a3d12', baijiu: '#e9e2cf', tequila: '#d9c07e',
+  rum: '#7c3f18', gin: '#cfe0e6', soju: '#dce8ef', spirits: '#cdb884',
+};
+function liquidOf(d) {
+  const c = String(d.liquidColor || '').trim();
+  if (/^#[0-9a-fA-F]{6}$/.test(c)) return c;
+  // wine sub-type nuance when no explicit color
+  if (d.category === 'wine' && /화이트|white/i.test(d.type || '')) return '#d9c069';
+  if (d.category === 'wine' && /로제|rose|rosé/i.test(d.type || '')) return '#d98a9a';
+  return LIQUID[d.category] || LIQUID.spirits;
+}
+function monogram(d) {
+  const src = String(d.producer || d.name || '').trim();
+  const latin = src.match(/[A-Za-z]/);
+  if (latin) return latin[0].toUpperCase();
+  const cjk = src.match(/[가-힣぀-ヿ一-鿿]/);
+  if (cjk) return cjk[0];
+  return catOf(d).icon;
+}
+/* a heraldic seal: double ring + guilloché ticks + laurel arcs + monogram */
+function crestSvg(d) {
+  const m = monogram(d);
+  const ticks = Array.from({ length: 48 }, (_, i) => {
+    const a = i * 7.5 * Math.PI / 180, r1 = 78, r2 = 83;
+    const x1 = 100 + r1 * Math.cos(a), y1 = 100 + r1 * Math.sin(a);
+    const x2 = 100 + r2 * Math.cos(a), y2 = 100 + r2 * Math.sin(a);
+    return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="currentColor" stroke-width="1"/>`;
+  }).join('');
+  // laurel: two mirrored arcs with small leaf ticks
+  const laurel = (dir) => {
+    const leaves = Array.from({ length: 6 }, (_, i) => {
+      const a = (120 + i * 24) * Math.PI / 180 * dir;
+      const r = 62, x = 100 + r * Math.cos(a), y = 100 + r * Math.sin(a);
+      return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" fill="currentColor"/>`;
+    }).join('');
+    return leaves;
+  };
+  return `<svg class="crest" viewBox="0 0 200 200" aria-hidden="true">
+    <circle cx="100" cy="100" r="88" fill="none" stroke="currentColor" stroke-width="1.5"/>
+    <circle cx="100" cy="100" r="72" fill="none" stroke="currentColor" stroke-width="1"/>
+    ${ticks}
+    ${laurel(1)}${laurel(-1)}
+    <polygon points="100,18 103,26 100,24 97,26" fill="currentColor"/>
+    <text x="100" y="100" text-anchor="middle" dy=".36em" class="crest-mono">${esc(m)}</text>
+  </svg>`;
+}
+function plateArt(d) {
+  return `<div class="plate-art">
+    <div class="liquid-glow" style="--liquid:${liquidOf(d)}"></div>
+    <div class="crest-holder">${crestSvg(d)}</div>
+  </div>`;
+}
 
 /* taste axes: model-provided per category, else wine fields from older sessions */
 function tasteAxes(d) {
@@ -1311,9 +1385,10 @@ function renderResult(session) {
     <!-- label plate -->
     <div class="plate">
       ${session.photo ? `<img class="photo" src="${session.photo}" alt="">` : ''}
+      ${plateArt(d)}
       <div class="veil"></div>
       <div class="frame">
-        <div class="kicker">Wine Lens · Scan Report</div>
+        <div class="kicker">Bottle Lens · Scan Report</div>
         ${d.producer ? `<div class="producer">${esc(d.producer)}</div>` : ''}
         <div class="orn"><i></i></div>
         <h2>${esc(d.name || '이름 미상')}</h2>
@@ -1424,7 +1499,7 @@ function renderResult(session) {
 
     <!-- colophon -->
     <div class="colophon">
-      <div class="wm">Wine Lens</div>
+      <div class="wm">Bottle Lens</div>
       <div class="meta">${fmtDate(session.at)} 스캔 · 인식 확신도 ${confMap[d.confidence] || '보통'} · AI 추정 정보</div>
     </div>
   `;
@@ -1510,9 +1585,9 @@ async function shareResult() {
   const cat = catOf(d);
   const text = `${cat.icon} ${d.name || cat.label} ${d.vintage && !/미상/.test(d.vintage) ? d.vintage : ''}\n` +
     `${d.producer || ''} · ${d.region || d.country || ''}\n` +
-    `💰 ${d.priceRange || ''}\n👃 ${d.tastingNotes || ''}\n\n— 와인 렌즈로 스캔`;
+    `💰 ${d.priceRange || ''}\n👃 ${d.tastingNotes || ''}\n\n— 보틀 렌즈로 스캔`;
   try {
-    if (navigator.share) { await navigator.share({ title: d.name || '와인 렌즈', text }); }
+    if (navigator.share) { await navigator.share({ title: d.name || '보틀 렌즈', text }); }
     else { await navigator.clipboard.writeText(text); toast('클립보드에 복사했어요!'); }
   } catch (e) { /* cancelled */ }
 }
