@@ -1,0 +1,58 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="보틀 렌즈 로고">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5c1226"/>
+      <stop offset="0.55" stop-color="#3a0e1d"/>
+      <stop offset="1" stop-color="#210810"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f3ddad"/>
+      <stop offset="0.5" stop-color="#dca54d"/>
+      <stop offset="1" stop-color="#b07d2e"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.42" r="0.55">
+      <stop offset="0" stop-color="#8e1e3c" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#8e1e3c" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- badge -->
+  <rect x="0" y="0" width="512" height="512" rx="116" fill="url(#bg)"/>
+  <circle cx="256" cy="238" r="150" fill="url(#glow)"/>
+
+  <!-- lens rings (camera aperture reference) -->
+  <circle cx="256" cy="256" r="176" fill="none" stroke="url(#gold)" stroke-width="6" opacity="0.9"/>
+  <circle cx="256" cy="256" r="150" fill="none" stroke="#dca54d" stroke-width="2" opacity="0.55"/>
+  <!-- aperture ticks -->
+  <g stroke="#dca54d" stroke-width="3" opacity="0.5">
+    <line x1="256" y1="80" x2="256" y2="96"/>
+    <line x1="256" y1="416" x2="256" y2="432"/>
+    <line x1="80" y1="256" x2="96" y2="256"/>
+    <line x1="416" y1="256" x2="432" y2="256"/>
+    <line x1="131" y1="131" x2="142" y2="142"/>
+    <line x1="381" y1="131" x2="370" y2="142"/>
+    <line x1="131" y1="381" x2="142" y2="370"/>
+    <line x1="381" y1="381" x2="370" y2="370"/>
+  </g>
+
+  <!-- bottle silhouette -->
+  <g fill="url(#gold)">
+    <path d="M241 150
+             h30
+             v34
+             c0 10 4 15 11 22
+             c14 14 21 30 21 52
+             v78
+             c0 16 -10 26 -26 26
+             h-43
+             c-16 0 -26 -10 -26 -26
+             v-78
+             c0 -22 7 -38 21 -52
+             c7 -7 11 -12 11 -22
+             z"/>
+  </g>
+  <!-- bottle label band (negative) -->
+  <rect x="221" y="290" width="70" height="40" rx="6" fill="#3a0e1d"/>
+  <!-- label monogram dot -->
+  <circle cx="256" cy="310" r="9" fill="url(#gold)"/>
+</svg>

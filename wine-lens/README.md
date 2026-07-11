@@ -60,11 +60,20 @@ GitHub Pages로 배포된 경우: `https://<user>.github.io/<repo>/wine-lens/`
 - 최근 40개까지 보관하며, 오래된 세션은 자동으로 밀려납니다.
 - 각 세션은 언제든 다시 열어 인포그래픽 전체를 볼 수 있습니다.
 
+## 🎨 브랜드 자산
+
+`assets/`에 자체 제작 로고·아이콘·소셜 이미지가 포함됩니다 (SVG 디자인 + 헤드리스 브라우저로 PNG 렌더, 외부 API/크레딧 불필요):
+- `icon.svg` — 병 + 렌즈 링 앱 마크 (파비콘 · 헤더 로고)
+- `icon-512.png` / `icon-180.png` — PNG 파비콘 · 애플 터치 아이콘
+- `og.png` — 소셜 공유용 1200×630 OG 이미지 (`og:image`/`twitter:card` 메타 연결)
+
 ## 🧱 구조
 
 ```
 wine-lens/
-├── index.html   # 앱 전체 (마크업 + 스타일 + 로직, 외부 의존성 없음)
+├── index.html        # 앱 전체 (마크업 + 스타일 + 로직, 외부 의존성 없음)
+├── assets/           # 로고·아이콘·OG 이미지
+│   ├── icon.svg  ├── icon-512.png  ├── icon-180.png  └── og.png
 └── README.md
 ```
 
