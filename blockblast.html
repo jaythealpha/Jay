@@ -230,8 +230,8 @@
     <div class="rules">
       🧩 <b>몬스터 블록</b>을 드래그해 8×8 판에 놓으세요.<br>
       ➖ 가로/세로 한 줄을 채우면 그 몬스터가 <b>무기 스킬</b> 발동!<br>
-      ⚡십자번개 🔥화염방사 💧하이드로펌프 🌿씨앗폭탄<br>
-      🔮사이코키네시스 👻섀도볼 😴몸통박치기 🎈자장가<br>
+      ⚡번개 크로스 🔥화염 폭발 💧큰 파도 🌿씨앗폭탄<br>
+      🔮염력 폭발 👻유령 장난 😴꿀잠 보너스 🎈자장가<br>
       🔥 연속 클리어 = <b>콤보 배율</b>, 여러 줄 = <b>대박 보너스</b>.<br>
       📖 처음 만난 몬스터는 <b>도감</b>에 등록 (15종 수집!).<br>
       💰 코인으로 파워업 · 📅 매일 접속 보너스.
@@ -274,34 +274,54 @@ const COST={bomb:15,hammer:8,refresh:10};
 
 // Types → color + weapon skill label
 const TYPES={
-  electric:{color:"#f5c518", skill:"10만 볼트 ⚡"},
-  fire:    {color:"#ff6a3d", skill:"화염방사 🔥"},
-  water:   {color:"#3aa0ff", skill:"하이드로펌프 💧"},
+  electric:{color:"#f5c518", skill:"번개 크로스 ⚡"},
+  fire:    {color:"#ff6a3d", skill:"화염 폭발 🔥"},
+  water:   {color:"#3aa0ff", skill:"큰 파도 💧"},
   grass:   {color:"#4cd964", skill:"씨앗폭탄 🌿"},
-  psychic: {color:"#b06bff", skill:"사이코키네시스 🔮"},
-  ghost:   {color:"#7c6cff", skill:"섀도볼 👻"},
-  normal:  {color:"#9aa0b5", skill:"몸통박치기 💥"},
+  psychic: {color:"#b06bff", skill:"염력 폭발 🔮"},
+  ghost:   {color:"#7c6cff", skill:"유령 장난 👻"},
+  normal:  {color:"#9aa0b5", skill:"꿀잠 보너스 💥"},
   fairy:   {color:"#ff8fc7", skill:"자장가 🎈"},
 };
 const TYPE_KO={electric:"전기",fire:"불꽃",water:"물",grass:"풀",psychic:"에스퍼",ghost:"고스트",normal:"노말",fairy:"페어리"};
-// 15 monsters
+// 15 original monsters (id → sprite file assets/blockblast/mon_<id>.png)
 const CHARS=[
-  {name:"피카츄",   emoji:"⚡", type:"electric"},
-  {name:"파이리",   emoji:"🦎", type:"fire"},
-  {name:"리자몽",   emoji:"🐲", type:"fire"},
-  {name:"윈디",     emoji:"🐕", type:"fire"},
-  {name:"꼬부기",   emoji:"🐢", type:"water"},
-  {name:"거북왕",   emoji:"🌊", type:"water"},
-  {name:"갸라도스", emoji:"🐍", type:"water"},
-  {name:"이상해씨", emoji:"🌱", type:"grass"},
-  {name:"이상해꽃", emoji:"🌺", type:"grass"},
-  {name:"뮤츠",     emoji:"🧬", type:"psychic"},
-  {name:"뮤",       emoji:"🌸", type:"psychic"},
-  {name:"잠만보",   emoji:"😴", type:"normal"},
-  {name:"이브이",   emoji:"🦊", type:"normal"},
-  {name:"푸린",     emoji:"🎈", type:"fairy"},
-  {name:"팬텀",     emoji:"👻", type:"ghost"},
+  {id:"jiji",     name:"지지몬",   emoji:"⚡", type:"electric"},
+  {id:"bulkkori", name:"불꼬리",   emoji:"🦎", type:"fire"},
+  {id:"hwaryong", name:"화룡이",   emoji:"🐲", type:"fire"},
+  {id:"mongbul",  name:"멍뭉불",   emoji:"🐕", type:"fire"},
+  {id:"bangul",   name:"방울이",   emoji:"🐢", type:"water"},
+  {id:"padowang", name:"파도왕",   emoji:"🌊", type:"water"},
+  {id:"mulyong",  name:"물용가리", emoji:"🐍", type:"water"},
+  {id:"saessak",  name:"새싹이",   emoji:"🌱", type:"grass"},
+  {id:"kkotbong", name:"꽃봉이",   emoji:"🌺", type:"grass"},
+  {id:"mironyang",name:"미로냥",   emoji:"🔮", type:"psychic"},
+  {id:"kkummong", name:"꿈몽이",   emoji:"🌸", type:"psychic"},
+  {id:"kulkul",   name:"쿨쿨이",   emoji:"😴", type:"normal"},
+  {id:"yeoubyeol",name:"여우별",   emoji:"🦊", type:"normal"},
+  {id:"pungseon", name:"풍선몽",   emoji:"🎈", type:"fairy"},
+  {id:"yuryeong", name:"유령몽",   emoji:"👻", type:"ghost"},
 ];
+/* sprite preload — falls back to emoji when a file is missing */
+const ASSET_DIR="assets/blockblast/";
+const SPRITE={};
+CHARS.forEach(ch=>{
+  const im=new Image();
+  im.onload=()=>{SPRITE[ch.id]=im; if(typeof paint==="function"&&grid)paint(); if(typeof renderTray==="function"&&tray)renderTray();};
+  im.src=ASSET_DIR+"mon_"+ch.id+".png";
+});
+function spriteCSS(el,ch){
+  if(SPRITE[ch.id]){
+    el.textContent="";
+    el.style.backgroundColor=hexA(TYPES[ch.type].color,.30);
+    el.style.backgroundImage=`url("${SPRITE[ch.id].src}")`;
+    el.style.backgroundSize="88%"; el.style.backgroundPosition="center"; el.style.backgroundRepeat="no-repeat";
+    el.style.imageRendering="pixelated";
+    return true;
+  }
+  return false;
+}
+function hexA(hex,a){const n=parseInt(hex.slice(1),16);return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`;}
 const PARTICLE_COLORS=Object.values(TYPES).map(t=>t.color);
 
 // piece shapes
@@ -350,13 +370,29 @@ function beep(freq,dur,type,vol){
     o.start(); o.stop(actx.currentTime+(dur||0.12));
   }catch(e){}
 }
-function sndPlace(){beep(330,0.08,"square",0.05);}
-function sndClear(n){ for(let i=0;i<n;i++) setTimeout(()=>beep(520+i*140,0.13,"square",0.07), i*70); }
-function sndCombo(c){beep(400+c*80,0.18,"sawtooth",0.08);}
+/* generated audio files (with beep fallback while loading / if missing) */
+const SFX={};
+["place","clear","combo","coin","over"].forEach(k=>{
+  const a=new Audio(ASSET_DIR+"sfx_"+k+".mp3");
+  a.preload="auto"; a.volume = k==="place"?0.5:0.6;
+  a.addEventListener("canplaythrough",()=>{SFX[k]=a;},{once:true});
+});
+let bgm=new Audio(ASSET_DIR+"bgm.mp3"); bgm.loop=true; bgm.volume=0.22; bgm.preload="auto";
+let bgmOk=false; bgm.addEventListener("canplaythrough",()=>{bgmOk=true;},{once:true});
+function bgmPlay(){ if(bgmOk&&!muted){ bgm.play().catch(()=>{}); } }
+function bgmStop(){ try{bgm.pause();}catch(e){} }
+function playSFX(k){
+  if(muted) return true;
+  const a=SFX[k]; if(!a) return false;
+  try{ a.currentTime=0; a.play().catch(()=>{}); return true; }catch(e){ return false; }
+}
+function sndPlace(){ if(!playSFX("place")) beep(330,0.08,"square",0.05); }
+function sndClear(n){ if(!playSFX("clear")) for(let i=0;i<n;i++) setTimeout(()=>beep(520+i*140,0.13,"square",0.07), i*70); }
+function sndCombo(c){ if(!playSFX("combo")) beep(400+c*80,0.18,"sawtooth",0.08); }
 function sndBad(){beep(120,0.18,"sawtooth",0.06);}
-function sndCoin(){beep(880,0.06,"sine",0.05); setTimeout(()=>beep(1180,0.08,"sine",0.05),50);}
+function sndCoin(){ if(!playSFX("coin")){ beep(880,0.06,"sine",0.05); setTimeout(()=>beep(1180,0.08,"sine",0.05),50);} }
 function sndSkill(){beep(700,0.06,"sawtooth",0.07); setTimeout(()=>beep(1050,0.14,"square",0.07),60);}
-function sndOver(){[440,330,262,196].forEach((f,i)=>setTimeout(()=>beep(f,0.22,"triangle",0.08),i*160));}
+function sndOver(){ bgmStop(); if(!playSFX("over")) [440,330,262,196].forEach((f,i)=>setTimeout(()=>beep(f,0.22,"triangle",0.08),i*160)); }
 // deep bass thump — the "punch"
 function thump(power){
   if(muted)return;
@@ -386,7 +422,7 @@ function noiseBurst(power){
 function buzz(pattern){ try{ if(navigator.vibrate) navigator.vibrate(pattern); }catch(e){} }
 
 /* ============ Persistence ============ */
-const DEX=new Set(JSON.parse(localStorage.getItem("bb_dex")||"[]"));
+const DEX=new Set(JSON.parse(localStorage.getItem("bb_dex2")||"[]"));
 function load(){
   best=+(localStorage.getItem("bb_best")||0);
   coins=+(localStorage.getItem("bb_coins")||0);
@@ -415,7 +451,7 @@ function saveMeta(){
 /* ============ Dex / Achievements ============ */
 function registerDex(char){
   if(!DEX.has(char.name)){
-    DEX.add(char.name); localStorage.setItem("bb_dex",JSON.stringify([...DEX]));
+    DEX.add(char.name); localStorage.setItem("bb_dex2",JSON.stringify([...DEX]));
     toast(char.emoji,`도감 등록! ${char.name} (${DEX.size}/15)`);
     if(DEX.size===15) setTimeout(()=>unlock("dexfull","📖","도감 완성! 몬스터 마스터!"),1300);
   }
@@ -450,8 +486,12 @@ function paint(){
   for(let r=0;r<N;r++)for(let c=0;c<N;c++){
     const d=cells[r][c], v=grid[r][c];
     d.classList.remove("hint","badhint");
-    if(v){d.classList.add("filled"); d.style.background=v.char.color; d.textContent=v.char.emoji;}
-    else{d.classList.remove("filled"); d.style.background=""; d.textContent="";}
+    if(v){
+      d.classList.add("filled");
+      d.style.background=v.char.color; d.style.backgroundImage="";
+      if(!spriteCSS(d,v.char)) d.textContent=v.char.emoji;
+    }
+    else{d.classList.remove("filled"); d.style.background=""; d.style.backgroundImage=""; d.textContent="";}
   }
   updateDanger();
 }
@@ -498,7 +538,8 @@ function makePieceEl(p,idx){
   const set=new Set(p.shape.map(s=>s[0]+","+s[1]));
   for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
     const cell=document.createElement("div");
-    if(set.has(r+","+c)){cell.className="pc"; cell.style.background=p.char.color; cell.style.fontSize=(ps*0.62)+"px"; cell.textContent=p.char.emoji;}
+    if(set.has(r+","+c)){cell.className="pc"; cell.style.background=p.char.color; cell.style.fontSize=(ps*0.62)+"px";
+      if(!spriteCSS(cell,p.char)) cell.textContent=p.char.emoji;}
     else cell.style.visibility="hidden";
     el.appendChild(cell);
   }
@@ -700,7 +741,8 @@ function attachDrag(el,idx){
     const set=new Set(p.shape.map(s=>s[0]+","+s[1]));
     for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
       const cell=document.createElement("div");
-      if(set.has(r+","+c)){cell.className="pc"; cell.style.background=p.char.color; cell.textContent=p.char.emoji;}
+      if(set.has(r+","+c)){cell.className="pc"; cell.style.background=p.char.color;
+        if(!spriteCSS(cell,p.char)) cell.textContent=p.char.emoji;}
       else cell.style.visibility="hidden";
       ghostEl.appendChild(cell);
     }
@@ -796,7 +838,10 @@ function buildDex(){
   CHARS.forEach(ch=>{
     const owned=DEX.has(ch.name);
     const d=document.createElement("div"); d.className="dexcell"+(owned?"":" locked");
-    d.innerHTML=`<div class="de">${owned?ch.emoji:"❓"}</div>
+    const face = owned && SPRITE[ch.id]
+      ? `<div class="de" style="width:44px;height:44px;background:url('${SPRITE[ch.id].src}') center/contain no-repeat;image-rendering:pixelated"></div>`
+      : `<div class="de">${owned?ch.emoji:"❓"}</div>`;
+    d.innerHTML=`${face}
       <div class="dn">${owned?ch.name:"???"}</div>
       <div class="dt" style="color:${owned?TYPES[ch.type].color:'#888'}">${owned?TYPE_KO[ch.type]:"미발견"}</div>`;
     g.appendChild(d);
@@ -816,6 +861,7 @@ function startGame(){
   document.getElementById("overOverlay").classList.add("hide");
   document.getElementById("dexOverlay").classList.add("hide");
   buildBoard(); paint(); newTray(); renderScore(); hideCombo();
+  bgmPlay();
 }
 function endGame(){
   if(gameOver)return; gameOver=true; sndOver();
@@ -838,6 +884,7 @@ document.getElementById("againBtn").onclick=startGame;
 document.getElementById("muteBtn").onclick=function(){
   muted=!muted; localStorage.setItem("bb_muted",muted?"1":"0");
   this.textContent=muted?"🔇":"🔊";
+  if(muted) bgmStop(); else if(!gameOver && grid) bgmPlay();
 };
 document.getElementById("shareBtn").onclick=async function(){
   const text=`🧩 블록 블라스트 몬스터 배틀에서 ${score.toLocaleString()}점! 📖 도감 ${DEX.size}/15 수집. 최고 ${best.toLocaleString()}점, 도전해봐! ⚔️`;
