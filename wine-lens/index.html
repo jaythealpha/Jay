@@ -6,6 +6,9 @@
 <meta name="theme-color" content="#1c0a11">
 <title>보틀 렌즈 — 라벨을 찍으면 술이 말을 겁니다</title>
 <meta name="description" content="술 라벨을 찍으면 주종을 자동 판별해 빈티지·가격·히스토리·테이스팅·페어링을 인포그래픽으로. 와인·위스키·사케·전통주 등 12주종.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Noto+Serif+KR:wght@400;500;600;700;900&family=Noto+Sans+KR:wght@400;500;700&display=swap">
 <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
 <link rel="icon" type="image/png" sizes="512x512" href="assets/icon-512.png">
 <link rel="apple-touch-icon" href="assets/icon-180.png">
@@ -61,7 +64,8 @@
     --overlay-bg: rgba(0,0,0,.55);
     --cam-bg: #0e0409;
     --serif: "Noto Serif KR", "Nanum Myeongjo", Georgia, "Times New Roman", serif;
-    --sans: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+    --display: "Cormorant Garamond", "Noto Serif KR", Georgia, serif;  /* Latin editorial display — kickers, numerals */
+    --sans: "Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
   }
 
   /* ===== Alternate template: "Atelier" — light editorial (gallery label) ===== */
@@ -121,7 +125,18 @@
     min-height: 100vh;
     line-height: 1.55;
     overflow-x: hidden;
+    font-feature-settings: "kern" 1, "liga" 1;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
   }
+  /* fine paper grain — very subtle, adds editorial depth on both themes */
+  body::before {
+    content: ""; position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: .045;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    mix-blend-mode: overlay;
+  }
+  :root[data-theme="atelier"] body::before { opacity: .06; mix-blend-mode: multiply; }
+  .app, header.topbar { position: relative; z-index: 2; }
   ::selection { background: var(--wine-light); color: #fff; }
 
   /* ---------- Layout ---------- */
@@ -135,14 +150,17 @@
     background: var(--topbar-fade);
     backdrop-filter: blur(8px);
   }
-  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: -.02em; }
+  .brand { display: flex; align-items: center; gap: 11px; }
   .brand .logo {
     width: 40px; height: 40px; border-radius: 12px; flex: none; overflow: hidden;
     box-shadow: 0 6px 16px rgba(142,30,60,.4);
   }
   .brand .logo img { width: 100%; height: 100%; display: block; }
-  .brand b { font-size: 18px; }
-  .brand small { display: block; font-size: 11px; color: var(--ink-3); font-weight: 600; letter-spacing: .02em; }
+  .brand b { font-family: var(--serif); font-size: 19px; font-weight: 600; letter-spacing: .01em; line-height: 1.1; }
+  .brand small {
+    display: block; margin-top: 2px; font-family: var(--display); font-size: 11px; font-style: italic;
+    color: var(--gold-dim); font-weight: 600; letter-spacing: .04em;
+  }
   .topbar .spacer { flex: 1; }
   .icon-btn {
     width: 42px; height: 42px; border-radius: 12px; flex: none;
@@ -180,10 +198,22 @@
   @keyframes fade { from { opacity: 0; transform: translateY(8px);} to { opacity: 1; transform: none; } }
 
   /* ---------- Hero / Capture ---------- */
-  .hero { text-align: center; padding: 26px 6px 10px; }
-  .hero h1 { font-size: 27px; font-weight: 900; letter-spacing: -.03em; line-height: 1.25; }
-  .hero h1 .accent { background: linear-gradient(120deg, var(--gold-soft), var(--gold)); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .hero p { color: var(--ink-2); margin-top: 10px; font-size: 14.5px; }
+  .hero { text-align: center; padding: 30px 6px 12px; }
+  .hero .kicker {
+    font-family: var(--display); font-style: italic; font-size: 15px; font-weight: 600;
+    letter-spacing: .06em; color: var(--gold-dim); margin-bottom: 14px;
+  }
+  .hero h1 { font-family: var(--serif); font-size: 31px; font-weight: 700; letter-spacing: -.01em; line-height: 1.32; }
+  .hero h1 .accent {
+    font-weight: 700; font-style: normal;
+    background: linear-gradient(120deg, var(--gold-soft), var(--gold)); -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .hero .orn-rule {
+    display: flex; align-items: center; gap: 12px; justify-content: center; margin: 18px auto 0; max-width: 200px;
+  }
+  .hero .orn-rule::before, .hero .orn-rule::after { content: ""; flex: 1; height: 1px; background: var(--hairline); }
+  .hero .orn-rule i { width: 5px; height: 5px; background: var(--gold); transform: rotate(45deg); flex: none; }
+  .hero p { color: var(--ink-2); margin-top: 16px; font-size: 14px; line-height: 1.7; }
 
   .capture-card {
     margin-top: 18px; border-radius: 22px; overflow: hidden;
@@ -241,7 +271,7 @@
   }
   .glass::before { content: "🍷"; font-size: 84px; position: absolute; inset: 0; display: grid; place-items: center; filter: drop-shadow(0 6px 10px rgba(0,0,0,.4)); }
   @keyframes swirl { 0%,100%{ transform: translateX(-50%) rotate(-6deg);} 50%{ transform: translateX(-50%) rotate(6deg);} }
-  .loading h2 { font-size: 19px; margin-bottom: 8px; }
+  .loading h2 { font-family: var(--serif); font-weight: 600; font-size: 21px; margin-bottom: 8px; }
   .loading .step { color: var(--ink-2); font-size: 14px; min-height: 22px; transition: .3s; }
   .bar { width: 220px; height: 6px; margin: 20px auto 0; border-radius: 999px; background: var(--card-2); overflow: hidden; }
   .bar > i { display: block; height: 100%; width: 40%; border-radius: 999px; background: linear-gradient(90deg, var(--gold), var(--wine-light)); animation: slide 1.3s ease-in-out infinite; }
@@ -278,26 +308,26 @@
   @keyframes crest-in { from { opacity: 0; transform: rotate(-8deg) scale(.9); } to { opacity: 1; transform: none; } }
   .crest-mono { font-family: var(--serif); font-size: 74px; font-weight: 700; fill: currentColor; }
   .plate .frame {
-    position: relative; margin: 10px; padding: 26px 20px 22px; text-align: center;
+    position: relative; margin: 12px; padding: 34px 22px 28px; text-align: center;
     border: 1px solid var(--hairline); border-radius: 14px;
   }
   .plate .frame::before {
     content: ""; position: absolute; inset: 4px; border: 1px solid var(--plate-frame); border-radius: 11px; pointer-events: none;
   }
   .plate .kicker {
-    font-size: 11px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase;
+    font-family: var(--display); font-size: 13px; font-weight: 600; letter-spacing: .28em; text-transform: uppercase;
     color: var(--gold-soft); margin-bottom: 12px;
   }
   .plate .orn { display: flex; align-items: center; gap: 10px; justify-content: center; margin: 0 auto 12px; max-width: 240px; }
   .plate .orn::before, .plate .orn::after { content: ""; flex: 1; height: 1px; background: var(--hairline); }
   .plate .orn i { width: 5px; height: 5px; background: var(--gold); transform: rotate(45deg); }
   .plate h2 {
-    font-family: var(--serif); font-weight: 700; font-size: 27px; line-height: 1.22;
-    letter-spacing: .01em; color: var(--ink-1);
+    font-family: var(--serif); font-weight: 700; font-size: 29px; line-height: 1.24;
+    letter-spacing: -.005em; color: var(--ink-1);
   }
   .plate .producer { margin-top: 7px; font-size: 13px; font-weight: 600; color: var(--ink-2); letter-spacing: .04em; }
-  .plate .vintage { margin-top: 14px; font-size: 46px; font-weight: 700; letter-spacing: .02em; color: var(--gold-soft); line-height: 1; }
-  .plate .vintage small { display: block; font-size: 10.5px; font-weight: 700; letter-spacing: .3em; color: var(--ink-3); margin-top: 6px; text-transform: uppercase; }
+  .plate .vintage { margin-top: 14px; font-family: var(--display); font-size: 58px; font-weight: 600; letter-spacing: .01em; color: var(--gold-soft); line-height: .95; font-variant-numeric: lining-nums; }
+  .plate .vintage small { display: block; font-family: var(--sans); font-size: 10.5px; font-weight: 700; letter-spacing: .3em; color: var(--ink-3); margin-top: 8px; text-transform: uppercase; }
   .plate .origin { margin-top: 14px; font-size: 13.5px; color: var(--ink-2); }
   .plate .origin b { color: var(--ink-1); font-weight: 700; }
   .plate .badges { display: flex; gap: 7px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
@@ -342,8 +372,8 @@
   /* --- cards & section headers --- */
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 18px 18px 17px; margin-top: 12px; }
   .sec { display: flex; align-items: baseline; gap: 10px; margin-bottom: 15px; }
-  .sec .en { font-size: 10.5px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--gold); white-space: nowrap; }
-  .sec .ko { font-size: 15px; font-weight: 800; color: var(--ink-1); white-space: nowrap; }
+  .sec .en { font-family: var(--display); font-style: italic; font-size: 14px; font-weight: 600; letter-spacing: .04em; color: var(--gold); white-space: nowrap; }
+  .sec .ko { font-family: var(--serif); font-size: 16px; font-weight: 600; color: var(--ink-1); white-space: nowrap; }
   .sec::after { content: ""; flex: 1; height: 1px; background: var(--grid); transform: translateY(-3px); }
   .card p.body { font-size: 14px; color: var(--ink-2); line-height: 1.75; }
   .card p.body b, .card p.body strong { color: var(--ink-1); }
@@ -374,7 +404,7 @@
 
   /* --- price tier meter --- */
   .price-lead { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
-  .price-lead .val { font-size: 27px; font-weight: 800; color: var(--ink-1); letter-spacing: -.01em; }
+  .price-lead .val { font-family: var(--display); font-size: 32px; font-weight: 600; color: var(--ink-1); letter-spacing: 0; line-height: 1; }
   .price-lead .note { font-size: 12.5px; color: var(--ink-2); }
   .tiers { display: flex; gap: 2px; margin-top: 13px; }
   .tiers .seg { flex: 1; height: 8px; background: var(--track); }
@@ -451,7 +481,7 @@
   /* ratings / awards */
   .rate-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .rate { background: var(--card-2); border: 1px solid var(--line); border-radius: 13px; padding: 12px 13px; text-align: center; }
-  .rate-score { display: block; font-size: 20px; font-weight: 800; color: var(--gold-soft); letter-spacing: -.01em; }
+  .rate-score { display: block; font-family: var(--display); font-size: 25px; font-weight: 600; color: var(--gold-soft); letter-spacing: 0; line-height: 1.05; }
   .rate-src { display: block; margin-top: 3px; font-size: 11px; font-weight: 600; color: var(--ink-3); }
   /* trivia callout */
   .trivia { margin-top: 12px; padding: 11px 13px; border-radius: 12px; background: var(--accent-wash); border: 1px solid var(--hairline); font-size: 13px; color: var(--ink-1); line-height: 1.55; }
@@ -523,8 +553,9 @@
   .fab:active { transform: scale(.92); }
 
   @media (max-width: 400px) {
-    .plate h2 { font-size: 23px; }
-    .plate .vintage { font-size: 40px; }
+    .hero h1 { font-size: 27px; }
+    .plate h2 { font-size: 24px; }
+    .plate .vintage { font-size: 50px; }
     .kpi .k-value { font-size: 15px; }
     .pair-grid { grid-template-columns: 1fr; }
   }
@@ -540,7 +571,7 @@
   }
   .drawer.show { transform: none; }
   .drawer .dh { display: flex; align-items: center; gap: 10px; padding: calc(16px + env(safe-area-inset-top)) 16px 14px; border-bottom: 1px solid var(--line); }
-  .drawer .dh h3 { font-size: 17px; font-weight: 800; }
+  .drawer .dh h3 { font-family: var(--serif); font-size: 18px; font-weight: 600; }
   .drawer .dh .spacer { flex: 1; }
   .hist-filter { display: flex; gap: 7px; overflow-x: auto; padding: 12px 12px 4px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
   .hist-filter::-webkit-scrollbar { display: none; }
@@ -573,7 +604,7 @@
     background: var(--bg2); border: 1px solid var(--line); border-radius: 20px; padding: 22px; box-shadow: var(--shadow);
   }
   .modal-card.show { opacity: 1; pointer-events: auto; transform: translate(-50%,-50%) scale(1); }
-  .modal-card h3 { font-size: 19px; font-weight: 800; margin-bottom: 4px; }
+  .modal-card h3 { font-family: var(--serif); font-size: 20px; font-weight: 600; margin-bottom: 4px; }
   .modal-card .sub { color: var(--ink-2); font-size: 13px; margin-bottom: 18px; }
   .field { display: block; margin-bottom: 16px; }
   .field .lbl { font-size: 13px; font-weight: 700; color: var(--gold-soft); margin-bottom: 7px; display: block; }
@@ -627,7 +658,7 @@
     <div class="logo"><img src="assets/icon.svg" alt="보틀 렌즈 로고" width="40" height="40"></div>
     <div>
       <b>보틀 렌즈</b>
-      <small>와인부터 소주까지 · 12가지 주종 라벨 스캔</small>
+      <small>Bottle Lens · Label Scanner</small>
     </div>
   </div>
   <div class="spacer"></div>
@@ -640,7 +671,9 @@
   <!-- ========== CAPTURE SCREEN ========== -->
   <section class="screen active" id="screen-capture">
     <div class="hero">
+      <div class="kicker">The Label Reader</div>
       <h1>술 라벨을 찍으면<br><span class="accent">한 잔의 이야기</span>가 펼쳐집니다</h1>
+      <div class="orn-rule"><i></i></div>
       <p>🍷 와인 · 🍶 사케 · 🥃 위스키 · 🏺 전통주 · 🍺 맥주 · 🍇 브랜디<br>🏮 백주 · 🌵 데킬라 · 🏴‍☠️ 럼 · 🌿 진 · 🍾 소주까지 자동 판별해<br>연식 · 가격대 · 히스토리 · 테이스팅 · 페어링을 인포그래픽으로.</p>
     </div>
 
