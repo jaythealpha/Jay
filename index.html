@@ -7,88 +7,131 @@
 <meta name="description" content="스캔되는 예술. 색상·그라디언트·모듈 형태·로고·애니메이션까지 커스터마이즈하는 미적 QR 코드 생성기." />
 <style>
   :root{
-    --bg:#0b0d12; --bg2:#11141c; --card:#161a24; --card2:#1c2130;
-    --line:#262c3b; --line2:#333b4f;
-    --txt:#eef1f7; --mut:#95a0b6; --mut2:#6b7488;
+    --bg:#08090e; --bg2:#0e1017; --card:#141824; --card2:#1b2130;
+    --line:#242a3a; --line2:#333c52;
+    --txt:#f2f4fa; --mut:#9aa6be; --mut2:#6a7488;
     --acc:#7c5cff; --acc2:#22d3ee; --acc3:#ff5c8a;
     --ok:#3ddc97; --warn:#ffcc4d;
-    --r:16px; --rs:10px;
-    --shadow:0 10px 40px rgba(0,0,0,.45);
+    --r:18px; --rs:11px;
+    --glass:rgba(19,23,34,.66);
+    --glass2:rgba(24,29,43,.72);
+    --glass-line:rgba(255,255,255,.08);
+    --shadow:0 18px 50px rgba(0,0,0,.5);
+    --shadow-sm:0 6px 20px rgba(0,0,0,.35);
+    --glow-acc:0 10px 40px rgba(124,92,255,.28);
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0}
   body{
-    background:
-      radial-gradient(1200px 700px at 12% -10%, rgba(124,92,255,.18), transparent 60%),
-      radial-gradient(1000px 600px at 100% 0%, rgba(34,211,238,.12), transparent 55%),
-      var(--bg);
+    background:var(--bg);
     color:var(--txt);
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Apple SD Gothic Neo","Noto Sans KR",Pretendard,sans-serif;
     -webkit-font-smoothing:antialiased;
-    min-height:100vh;
+    text-rendering:optimizeLegibility;
+    min-height:100vh;position:relative;
   }
+  /* ambient aurora + film-grain atmosphere (pure CSS, self-contained) */
+  body::before{content:"";position:fixed;inset:-10%;z-index:-2;pointer-events:none;
+    background:
+      radial-gradient(1100px 760px at 6% -10%, rgba(124,92,255,.26), transparent 60%),
+      radial-gradient(1000px 680px at 104% 2%, rgba(34,211,238,.17), transparent 56%),
+      radial-gradient(900px 760px at 50% 128%, rgba(255,92,138,.14), transparent 60%),
+      radial-gradient(700px 560px at 88% 92%, rgba(124,92,255,.10), transparent 60%);
+    animation:auroraDrift 26s ease-in-out infinite alternate;will-change:transform}
+  body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.42;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+  @keyframes auroraDrift{0%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(1.5%,1%,0) scale(1.05)}100%{transform:translate3d(-1.5%,-1%,0) scale(1.02)}}
+  @media(prefers-reduced-motion:reduce){body::before{animation:none}}
   a{color:var(--acc2);text-decoration:none}
-  .wrap{max-width:1180px;margin:0 auto;padding:22px 18px 80px}
+  .wrap{max-width:1200px;margin:0 auto;padding:20px 20px 90px}
+  ::selection{background:rgba(124,92,255,.35);color:#fff}
 
   /* header */
-  header.top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px;flex-wrap:wrap}
+  header.top{position:sticky;top:12px;z-index:40;display:flex;align-items:center;justify-content:space-between;gap:16px;
+    margin-bottom:22px;flex-wrap:wrap;padding:10px 14px;border-radius:16px;
+    background:var(--glass);backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);
+    border:1px solid var(--glass-line);box-shadow:0 8px 30px rgba(0,0,0,.35)}
   .brand{display:flex;align-items:center;gap:12px}
-  .logo{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;
+  .logo{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;position:relative;
     background:conic-gradient(from 210deg,var(--acc),var(--acc2),var(--acc3),var(--acc));
-    box-shadow:0 6px 20px rgba(124,92,255,.4)}
-  .logo svg{width:24px;height:24px}
-  .brand h1{font-size:19px;margin:0;letter-spacing:-.3px}
-  .brand p{margin:0;font-size:12px;color:var(--mut)}
-  .tabs{display:flex;gap:6px;background:var(--card);padding:5px;border-radius:12px;border:1px solid var(--line)}
-  .lang-switch{display:flex;justify-content:center;gap:2px;margin:18px auto 0;padding:4px;background:var(--card);border:1px solid var(--line2);border-radius:12px;width:max-content}
+    box-shadow:0 8px 24px rgba(124,92,255,.45)}
+  .logo::after{content:"";position:absolute;inset:0;border-radius:13px;box-shadow:inset 0 1px 1px rgba(255,255,255,.4)}
+  .logo svg{width:24px;height:24px;position:relative;z-index:1}
+  .brand h1{font-size:19px;margin:0;letter-spacing:-.4px;font-weight:750}
+  .brand p{margin:1px 0 0;font-size:12px;color:var(--mut)}
+  .tabs{display:flex;gap:4px;background:rgba(8,9,14,.5);padding:5px;border-radius:13px;border:1px solid var(--glass-line)}
+  .lang-switch{display:flex;justify-content:center;gap:2px;margin:20px auto 0;padding:4px;background:var(--glass);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--glass-line);border-radius:13px;width:max-content}
   .lang-switch button{background:transparent;border:0;color:var(--mut);font-family:inherit;font-weight:700;font-size:13px;letter-spacing:.5px;padding:7px 16px;border-radius:9px;cursor:pointer;transition:.15s}
-  .lang-switch button:hover{color:var(--fg)}
-  .lang-switch button.on{background:linear-gradient(135deg,var(--acc),#22d3ee);color:#fff}
-  .tabs button{border:0;background:transparent;color:var(--mut);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;transition:.15s}
-  .tabs button.active{background:linear-gradient(135deg,var(--acc),#5a3fd6);color:#fff;box-shadow:0 4px 14px rgba(124,92,255,.35)}
+  .lang-switch button:hover{color:var(--txt)}
+  .lang-switch button.on{background:linear-gradient(135deg,var(--acc),#22d3ee);color:#fff;box-shadow:0 4px 14px rgba(124,92,255,.4)}
+  .tabs button{border:0;background:transparent;color:var(--mut);padding:8px 17px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:650;transition:.15s}
+  .tabs button:hover{color:var(--txt)}
+  .tabs button.active{background:linear-gradient(135deg,var(--acc),#5a3fd6);color:#fff;box-shadow:0 4px 14px rgba(124,92,255,.4)}
 
   /* hero */
-  .hero{text-align:center;padding:14px 0 26px}
-  .hero h2{font-size:clamp(26px,5vw,44px);margin:0 0 10px;letter-spacing:-1px;line-height:1.08}
+  .hero{text-align:center;padding:26px 0 30px;position:relative}
+  .hero .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:650;letter-spacing:.3px;
+    color:var(--acc2);background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.22);
+    padding:6px 14px;border-radius:30px;margin-bottom:16px}
+  .hero .eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--acc2);box-shadow:0 0 10px var(--acc2)}
+  .hero h2{font-size:clamp(30px,5.4vw,52px);margin:0 0 14px;letter-spacing:-1.4px;line-height:1.05;font-weight:800}
   .hero h2 .g{background:linear-gradient(120deg,var(--acc2),var(--acc),var(--acc3));-webkit-background-clip:text;background-clip:text;color:transparent}
-  .hero p{color:var(--mut);font-size:15px;max-width:640px;margin:0 auto}
+  .hero p{color:var(--mut);font-size:16px;line-height:1.6;max-width:640px;margin:0 auto}
 
   /* view switching */
   .view{display:none}
   .view.active{display:block}
 
   /* studio layout */
-  .studio{display:grid;grid-template-columns:1fr 380px;gap:20px;align-items:start}
+  .studio{display:grid;grid-template-columns:1fr 390px;gap:22px;align-items:start}
   @media(max-width:900px){.studio{grid-template-columns:1fr}}
 
-  .stage{position:sticky;top:16px;background:linear-gradient(180deg,var(--card),var(--bg2));border:1px solid var(--line);border-radius:var(--r);padding:22px;box-shadow:var(--shadow)}
-  .canvas-hold{position:relative;display:grid;place-items:center;min-height:340px;
+  .stage{position:sticky;top:88px;background:var(--glass);backdrop-filter:blur(16px) saturate(1.3);-webkit-backdrop-filter:blur(16px) saturate(1.3);
+    border:1px solid var(--glass-line);border-radius:var(--r);padding:24px;box-shadow:var(--shadow)}
+  .canvas-hold{position:relative;display:grid;place-items:center;min-height:420px;overflow:hidden;
     background:
-      linear-gradient(45deg,#0e1119 25%,transparent 25%,transparent 75%,#0e1119 75%) 0 0/22px 22px,
-      linear-gradient(45deg,#0e1119 25%,#141824 25%,#141824 75%,#0e1119 75%) 11px 11px/22px 22px,
-      #141824;
-    border-radius:12px;padding:18px}
-  #preview{width:min(360px,72vw);height:auto;border-radius:8px;image-rendering:-webkit-optimize-contrast}
-  .stage .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
-  .stage .meta{margin-top:12px;font-size:11.5px;color:var(--mut2);display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}
+      radial-gradient(420px 420px at 50% 42%, rgba(124,92,255,.20), transparent 70%),
+      linear-gradient(45deg,#0c0f17 25%,transparent 25%,transparent 75%,#0c0f17 75%) 0 0/22px 22px,
+      linear-gradient(45deg,#0c0f17 25%,#12151f 25%,#12151f 75%,#0c0f17 75%) 11px 11px/22px 22px,
+      #12151f;
+    border-radius:14px;padding:26px;border:1px solid rgba(255,255,255,.04)}
+  #preview{width:min(380px,72vw);height:auto;border-radius:10px;image-rendering:-webkit-optimize-contrast;
+    box-shadow:0 20px 60px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.05);position:relative;z-index:1}
+  .stage .actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:18px}
+  .stage .meta{margin-top:14px;font-size:11.5px;color:var(--mut2);display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;
+    padding-top:14px;border-top:1px solid var(--line)}
 
-  button.btn{border:0;cursor:pointer;font-weight:600;font-size:13px;border-radius:10px;padding:11px 15px;color:#fff;
-    background:linear-gradient(135deg,var(--acc),#5a3fd6);box-shadow:0 6px 18px rgba(124,92,255,.3);transition:.15s;flex:1;min-width:120px}
-  button.btn:hover{transform:translateY(-1px);filter:brightness(1.08)}
+  .stage-tips{margin-top:18px;padding:16px 18px;border-radius:14px;background:rgba(255,255,255,.03);border:1px solid var(--glass-line)}
+  .stage-tips h4{margin:0 0 13px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:9px;letter-spacing:-.2px;color:var(--txt)}
+  .stage-tips h4 .sp{width:6px;height:6px;border-radius:50%;background:var(--acc2);box-shadow:0 0 8px var(--acc2)}
+  .stage-tips ul{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+  .stage-tips li{display:flex;gap:11px;align-items:flex-start;font-size:12.5px;color:var(--mut);line-height:1.55}
+  .stage-tips li .ti{flex:none;width:28px;height:28px;border-radius:9px;display:grid;place-items:center;font-size:14px;
+    background:rgba(124,92,255,.12);border:1px solid rgba(124,92,255,.25)}
+  .stage-tips li b{color:var(--txt);font-weight:650}
+
+  button.btn{border:0;cursor:pointer;font-weight:650;font-size:13px;border-radius:11px;padding:12px 15px;color:#fff;
+    background:linear-gradient(135deg,var(--acc),#5a3fd6);box-shadow:0 8px 22px rgba(124,92,255,.34);transition:.16s;flex:1;min-width:120px}
+  button.btn:hover{transform:translateY(-2px);filter:brightness(1.08);box-shadow:0 12px 28px rgba(124,92,255,.44)}
+  button.btn:active{transform:translateY(0)}
   button.btn.sec{background:var(--card2);border:1px solid var(--line2);box-shadow:none;color:var(--txt)}
-  button.btn.sec:hover{border-color:var(--acc)}
-  button.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+  button.btn.sec:hover{border-color:var(--acc);box-shadow:0 8px 20px rgba(0,0,0,.3)}
+  button.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none;filter:none}
 
   /* controls panel */
-  .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+  .panel{background:var(--glass);backdrop-filter:blur(16px) saturate(1.3);-webkit-backdrop-filter:blur(16px) saturate(1.3);
+    border:1px solid var(--glass-line);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow-sm)}
   .grp{border-bottom:1px solid var(--line)}
   .grp:last-child{border-bottom:0}
-  .grp>summary{list-style:none;cursor:pointer;padding:14px 16px;font-weight:600;font-size:13.5px;display:flex;align-items:center;gap:9px;user-select:none}
+  .grp>summary{list-style:none;cursor:pointer;padding:15px 17px;font-weight:650;font-size:13.5px;display:flex;align-items:center;gap:10px;user-select:none;transition:background .15s}
+  .grp>summary:hover{background:rgba(255,255,255,.025)}
   .grp>summary::-webkit-details-marker{display:none}
   .grp>summary .chev{margin-left:auto;color:var(--mut2);transition:.2s}
-  .grp[open]>summary .chev{transform:rotate(180deg)}
-  .grp .body{padding:4px 16px 18px}
-  .ic{width:18px;height:18px;color:var(--acc2);flex:none}
+  .grp[open]>summary{background:rgba(124,92,255,.06)}
+  .grp[open]>summary .chev{transform:rotate(180deg);color:var(--acc)}
+  .grp .body{padding:4px 17px 19px}
+  .ic{width:19px;height:19px;color:var(--acc2);flex:none}
 
   label.fld{display:block;margin:14px 0 0}
   label.fld:first-child{margin-top:6px}
@@ -133,24 +176,28 @@
   input[type=file]{display:none}
 
   /* gallery */
-  .cat-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 18px}
-  .cat-tabs button{border:1px solid var(--line2);background:var(--card);color:var(--mut);border-radius:24px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s}
-  .cat-tabs button:hover{border-color:var(--acc);color:#fff}
-  .cat-tabs button.on{background:linear-gradient(135deg,var(--acc),#5a3fd6);border-color:transparent;color:#fff;box-shadow:0 4px 14px rgba(124,92,255,.35)}
+  .cat-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 20px}
+  .cat-tabs button{border:1px solid var(--glass-line);background:var(--glass);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:var(--mut);border-radius:24px;padding:9px 18px;font-size:13px;font-weight:650;cursor:pointer;font-family:inherit;transition:.15s}
+  .cat-tabs button:hover{border-color:var(--acc);color:#fff;transform:translateY(-1px)}
+  .cat-tabs button.on{background:linear-gradient(135deg,var(--acc),#5a3fd6);border-color:transparent;color:#fff;box-shadow:0 6px 18px rgba(124,92,255,.4)}
   .gal-card .del{position:absolute;top:12px;left:12px;background:rgba(11,13,18,.7);backdrop-filter:blur(6px);border:1px solid var(--line2);color:#ff8095;font-size:11px;font-weight:700;padding:5px 9px;border-radius:20px;opacity:0;transition:.15s;z-index:2}
   .gal-card:hover .del{opacity:1}
-  .gal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px}
-  .gal-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;cursor:pointer;transition:.18s;position:relative;overflow:hidden}
-  .gal-card:hover{transform:translateY(-3px);border-color:var(--acc);box-shadow:0 12px 30px rgba(0,0,0,.4)}
-  .gal-card canvas{width:100%;height:auto;border-radius:8px;background:#fff;display:block}
-  .gal-card .name{font-size:13px;font-weight:600;margin-top:11px}
-  .gal-card .tag{font-size:11px;color:var(--mut);margin-top:2px}
+  .gal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(184px,1fr));gap:18px}
+  .gal-card{background:var(--glass);backdrop-filter:blur(12px) saturate(1.2);-webkit-backdrop-filter:blur(12px) saturate(1.2);
+    border:1px solid var(--glass-line);border-radius:16px;padding:16px;cursor:pointer;transition:.2s cubic-bezier(.2,.7,.3,1);position:relative;overflow:hidden;box-shadow:var(--shadow-sm)}
+  .gal-card::before{content:"";position:absolute;inset:0;border-radius:16px;padding:1px;pointer-events:none;opacity:0;transition:.2s;
+    background:linear-gradient(135deg,var(--acc),var(--acc2),var(--acc3));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+  .gal-card:hover{transform:translateY(-5px);box-shadow:0 18px 40px rgba(0,0,0,.5),var(--glow-acc)}
+  .gal-card:hover::before{opacity:1}
+  .gal-card canvas{width:100%;height:auto;border-radius:10px;background:#fff;display:block;box-shadow:0 6px 16px rgba(0,0,0,.3)}
+  .gal-card .name{font-size:13.5px;font-weight:700;margin-top:12px;letter-spacing:-.2px}
+  .gal-card .tag{font-size:11px;color:var(--mut);margin-top:3px}
   .gal-card .use{position:absolute;top:12px;right:12px;background:rgba(11,13,18,.7);backdrop-filter:blur(6px);border:1px solid var(--line2);
     color:#fff;font-size:11px;font-weight:600;padding:5px 10px;border-radius:20px;opacity:0;transition:.15s}
   .gal-card:hover .use{opacity:1}
-  .gal-intro{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:16px;flex-wrap:wrap;gap:10px}
-  .gal-intro h3{margin:0;font-size:20px}
-  .gal-intro p{margin:4px 0 0;color:var(--mut);font-size:13px}
+  .gal-intro{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:18px;flex-wrap:wrap;gap:10px}
+  .gal-intro h3{margin:0;font-size:22px;font-weight:750;letter-spacing:-.5px}
+  .gal-intro p{margin:5px 0 0;color:var(--mut);font-size:13px}
   .chips{display:flex;gap:8px;flex-wrap:wrap}
   .chip{background:var(--card2);border:1px solid var(--line2);border-radius:20px;padding:8px 14px;font-size:12px;color:var(--mut);cursor:pointer;font-family:inherit;font-weight:600;transition:.15s}
   button.chip:hover{border-color:var(--acc);color:#fff;background:linear-gradient(135deg,rgba(124,92,255,.28),rgba(34,211,238,.2));transform:translateY(-1px)}
@@ -249,6 +296,7 @@
   <!-- ============ GALLERY ============ -->
   <section class="view active" id="view-gallery">
     <div class="hero">
+      <div class="eyebrow"><span class="dot"></span><span data-i18n="hero.eyebrow">스캔되는 브랜드 아트 · 100% 무료 · 브라우저에서 처리</span></div>
       <h2 data-i18n-html="hero.h">평범한 QR을 <span class="g">브랜드가 되는 아트</span>로</h2>
       <p data-i18n="hero.p">흑백 사각형은 이제 그만. 색상·그라디언트·모듈 형태·로고·애니메이션으로 스캔되는 디자인을 만드세요. 아래 프리셋을 눌러 스튜디오에서 바로 편집할 수 있습니다.</p>
       <div class="lang-switch" id="langSwitch" role="group" aria-label="Language">
@@ -304,6 +352,14 @@
           <span id="metaVer">—</span>
           <span id="metaEcc">—</span>
           <span id="metaScan">—</span>
+        </div>
+        <div class="stage-tips">
+          <h4><span class="sp"></span><span data-i18n="tips.title">스캔이 잘 되는 QR 팁</span></h4>
+          <ul>
+            <li><span class="ti">🎯</span><span data-i18n-html="tips.1"><b>대비</b>를 충분히: 밝은 배경 + 어두운 모듈이 가장 잘 스캔됩니다.</span></li>
+            <li><span class="ti">🛡️</span><span data-i18n-html="tips.2">로고·아트를 넣을 땐 오류정정 <b>H</b>로 두면 안정적이에요.</span></li>
+            <li><span class="ti">📱</span><span data-i18n-html="tips.3">완성 후 실제 <b>휴대폰 카메라</b>로 한 번 스캔해 확인하세요.</span></li>
+          </ul>
         </div>
       </div>
 
@@ -849,7 +905,7 @@
   <footer>
     <div>Aesthetic QR Studio · 아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.06-p</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.12-a</b></div>
   </footer>
 </div>
 
@@ -5628,6 +5684,11 @@ var I18N = {
   "nav.ar":{ko:"AR",en:"AR",zh:"AR",ja:"AR"},
   "nav.guide":{ko:"사용법",en:"Guide",zh:"使用指南",ja:"使い方"},
   "hdr.sub":{ko:"아름답고 스캔되는 QR을 만드는 스튜디오",en:"A studio for beautiful, scannable QR codes",zh:"打造美观且可扫描的二维码工作室",ja:"美しくスキャン可能なQRを作るスタジオ"},
+  "hero.eyebrow":{ko:'스캔되는 브랜드 아트 · 100% 무료 · 브라우저에서 처리',en:'Scannable brand art · 100% free · runs in your browser',zh:'可扫描的品牌艺术 · 100%免费 · 浏览器内处理',ja:'スキャンできるブランドアート · 100%無料 · ブラウザで処理'},
+  "tips.title":{ko:'스캔이 잘 되는 QR 팁',en:'Tips for a scannable QR',zh:'易于扫描的二维码技巧',ja:'スキャンしやすいQRのコツ'},
+  "tips.1":{ko:'<b>대비</b>를 충분히: 밝은 배경 + 어두운 모듈이 가장 잘 스캔됩니다.',en:'Keep strong <b>contrast</b>: a light background with dark modules scans best.',zh:'保持足够<b>对比度</b>：浅色背景配深色模块最易扫描。',ja:'<b>コントラスト</b>を十分に：明るい背景＋暗いモジュールが最も読み取りやすい。'},
+  "tips.2":{ko:'로고·아트를 넣을 땐 오류정정 <b>H</b>로 두면 안정적이에요.',en:'Using a logo or art? Keep error correction at <b>H</b> for reliability.',zh:'加入徽标或图案时，将纠错等级设为 <b>H</b> 更稳定。',ja:'ロゴやアートを入れるなら誤り訂正を <b>H</b> にすると安定します。'},
+  "tips.3":{ko:'완성 후 실제 <b>휴대폰 카메라</b>로 한 번 스캔해 확인하세요.',en:'When done, test-scan once with a real <b>phone camera</b>.',zh:'完成后用真实<b>手机相机</b>实扫一次确认。',ja:'完成したら実際の<b>スマホカメラ</b>で一度スキャン確認を。'},
   "hero.h":{ko:'평범한 QR을 <span class="g">브랜드가 되는 아트</span>로',en:'Turn a plain QR into <span class="g">brand-worthy art</span>',zh:'把普通二维码变成<span class="g">品牌级艺术</span>',ja:'ありふれたQRを<span class="g">ブランドになるアート</span>へ'},
   "hero.p":{ko:"흑백 사각형은 이제 그만. 색상·그라디언트·모듈 형태·로고·애니메이션으로 스캔되는 디자인을 만드세요. 아래 프리셋을 눌러 스튜디오에서 바로 편집할 수 있습니다.",en:"No more black-and-white squares. Design scannable codes with colors, gradients, module shapes, logos and animation. Click a preset below to edit it in the studio.",zh:"告别黑白方块。用颜色、渐变、模块形状、Logo 和动画设计可扫描的二维码。点击下方预设即可在工作室中编辑。",ja:"白黒の四角はもう卒業。色・グラデーション・モジュール形状・ロゴ・アニメーションでスキャン可能なデザインを。下のプリセットを押せばスタジオで編集できます。"},
   "gal.title":{ko:"디자인 갤러리",en:"Design Gallery",zh:"设计图库",ja:"デザインギャラリー"},
