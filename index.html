@@ -19,6 +19,10 @@
     --shadow:0 18px 50px rgba(0,0,0,.5);
     --shadow-sm:0 6px 20px rgba(0,0,0,.35);
     --glow-acc:0 10px 40px rgba(124,92,255,.28);
+    /* ▼ Higgsfield 히어로 아트 훅 — assets/hero-bg.webp 를 넣은 뒤 아래 한 줄의 주석을 해제하면
+       상단에 배경 아트가 자동으로 얹힙니다. 켜지 않으면 오로라 배경이 그대로 유지됩니다. */
+    /* --hero-bg:url("assets/hero-bg.webp"); */
+    --hero-opacity:.55;
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0}
@@ -30,6 +34,13 @@
     text-rendering:optimizeLegibility;
     min-height:100vh;position:relative;
   }
+  /* optional Higgsfield hero-art layer — sits behind the aurora; renders nothing (no 404) until
+     --hero-bg is set. Full-bleed, top-anchored, masked so it fades into the page. */
+  #heroArt{position:fixed;inset:0;z-index:-3;pointer-events:none;
+    background-image:var(--hero-bg,none);background-size:cover;background-position:center top;background-repeat:no-repeat;
+    opacity:var(--hero-opacity,.55);
+    -webkit-mask-image:linear-gradient(180deg,#000 0%,rgba(0,0,0,.6) 45%,transparent 78%);
+    mask-image:linear-gradient(180deg,#000 0%,rgba(0,0,0,.6) 45%,transparent 78%)}
   /* ambient aurora + film-grain atmosphere (pure CSS, self-contained) */
   body::before{content:"";position:fixed;inset:-10%;z-index:-2;pointer-events:none;
     background:
@@ -274,6 +285,9 @@
 </style>
 </head>
 <body>
+<!-- Higgsfield 히어로 아트 훅: assets/hero-bg.webp 를 넣고 :root 의 --hero-bg 한 줄만 켜면
+     이 레이어에 배경 아트가 자동 적용됩니다. 파일이 없으면 아래 오로라 배경이 그대로 유지됩니다. -->
+<div id="heroArt" aria-hidden="true"></div>
 <div class="wrap">
   <header class="top">
     <div class="brand">
@@ -905,7 +919,7 @@
   <footer>
     <div>Aesthetic QR Studio · 아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.12-a</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.12-b</b></div>
   </footer>
 </div>
 
