@@ -19,10 +19,11 @@
     --shadow:0 18px 50px rgba(0,0,0,.5);
     --shadow-sm:0 6px 20px rgba(0,0,0,.35);
     --glow-acc:0 10px 40px rgba(124,92,255,.28);
-    /* ▼ Higgsfield 히어로 아트 훅 — assets/hero-bg.webp 를 넣은 뒤 아래 한 줄의 주석을 해제하면
-       상단에 배경 아트가 자동으로 얹힙니다. 켜지 않으면 오로라 배경이 그대로 유지됩니다. */
-    /* --hero-bg:url("assets/hero-bg.webp"); */
-    --hero-opacity:.55;
+    /* ▼ 히어로 아트 훅 — assets/hero-bg.webp 를 상단 배경으로 사용. 오로라 위/아래로 블렌딩됩니다.
+       끄려면 아래 --hero-bg 줄을 주석 처리하면 순수 CSS 오로라만 남습니다.
+       Higgsfield 등으로 만든 새 아트로 교체하려면 같은 파일명(assets/hero-bg.webp)으로 덮어쓰면 됩니다. */
+    --hero-bg:url("assets/hero-bg.webp");
+    --hero-opacity:.5;
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0}
