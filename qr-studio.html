@@ -926,7 +926,7 @@
   <footer>
     <div>Aesthetic QR Studio · 아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.12-d</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.12-e</b></div>
   </footer>
 </div>
 
@@ -5341,6 +5341,11 @@ var GAL_TR = {
   '로스트 커피':{en:'Roast Coffee',zh:'烘焙咖啡',ja:'ロースト コーヒー'},
   '님버스 클라우드':{en:'Nimbus Cloud',zh:'Nimbus 云',ja:'ニンバス クラウド'},
   '볼트 에너지':{en:'Volt Energy',zh:'Volt 能量饮料',ja:'ボルト エナジー'},
+  '골드크레스트 필스너':{en:'Goldcrest Pilsner',zh:'金冠比尔森',ja:'ゴールドクレスト ピルスナー'},
+  '블랙앵커 스타우트':{en:'Black Anchor Stout',zh:'黑锚世涛',ja:'ブラックアンカー スタウト'},
+  '와일드홉 IPA':{en:'Wildhop IPA',zh:'野啤花 IPA',ja:'ワイルドホップ IPA'},
+  '에이펙스 스포츠':{en:'Apex Sport',zh:'Apex 运动',ja:'エイペックス スポーツ'},
+  '클라우드네스트':{en:'Cloudnest',zh:'云巢',ja:'クラウドネスト'},
   '로고 중앙 배치·아트':{en:'Centered logo · art',zh:'居中 Logo·艺术',ja:'中央ロゴ・アート'},
   '서클아트 그린':{en:'Circle Art Green',zh:'环形艺术·绿',ja:'サークルアート グリーン'},
   '서클아트 바이올렛':{en:'Circle Art Violet',zh:'环形艺术·紫',ja:'サークルアート バイオレット'},
@@ -5510,18 +5515,11 @@ var CATS = {
     {name:"로스트 커피",tag:"로고 중앙 배치·아트",s:{artUrl:"assets/logo-coffee-bg.webp",centerLogoUrl:"assets/logo-coffee-obj.png",anim:true,animKind:"shine",fg1:"#4a2c17",dot:"dots",eye:"square",artVisibility:56,logoSize:26,logoPad:true,labelOn:true,labelText:"ROAST & CO. · SPECIALTY COFFEE"}},
     {name:"님버스 클라우드",tag:"로고 중앙 배치·아트",s:{artUrl:"assets/logo-tech-bg.webp",centerLogoUrl:"assets/logo-tech-obj.png",anim:true,animKind:"shine",fg1:"#3730a3",dot:"dots",eye:"square",artVisibility:56,logoSize:26,logoPad:true,labelOn:true,labelText:"NIMBUS · CLOUD PLATFORM"}},
     {name:"볼트 에너지",tag:"로고 중앙 배치·아트",s:{artUrl:"assets/logo-volt-bg.webp",centerLogoUrl:"assets/logo-volt-obj.png",anim:true,animKind:"shine",fg1:"#075985",dot:"dots",eye:"square",artVisibility:56,logoSize:26,logoPad:true,labelOn:true,labelText:"VOLT ENERGY · 355 mL"}},
-    {name:"ACME",tag:"텍스트 로고",s:{fill:"solid",fg1:"#e11d48",bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"text",centerText:"ACME",centerColor:"#e11d48",centerScale:30}},
-    {name:"NOVA",tag:"텍스트 로고",s:{fill:"linear",fg1:"#2563eb",fg2:"#4f46e5",angle:120,dot:"dots",eye:"circle",bg:"#ffffff",centerMode:"text",centerText:"NOVA",centerColor:"#1d4ed8",centerScale:30}},
-    {name:"PIXEL",tag:"텍스트 로고",s:{fill:"linear",fg1:"#7c3aed",fg2:"#db2777",angle:135,dot:"rounded",eye:"rounded",bg:"#ffffff",centerMode:"text",centerText:"PIXEL",centerColor:"#7c3aed",centerScale:28}},
-    {name:"ORBIT",tag:"텍스트 로고",s:{fill:"linear",fg1:"#0d9488",fg2:"#0e7490",angle:90,dot:"dots",eye:"circle",bg:"#ffffff",centerMode:"text",centerText:"ORBIT",centerColor:"#0d9488",centerScale:28}},
-    {name:"LUMEN",tag:"다크 로고",s:{fill:"solid",fg1:"#f59e0b",bg:"#111111",dot:"rounded",eye:"rounded",centerMode:"text",centerText:"LUMEN",centerColor:"#f59e0b",centerScale:22}},
-    {name:"AERO",tag:"텍스트 로고",s:{fill:"linear",fg1:"#38bdf8",fg2:"#2563eb",angle:100,dot:"rounded",eye:"rounded",bg:"#ffffff",centerMode:"text",centerText:"AERO",centerColor:"#0284c7",centerScale:30}},
-    {name:"KODE",tag:"텍스트 로고",s:{fill:"solid",fg1:"#16a34a",bg:"#ffffff",dot:"square",eye:"square",centerMode:"text",centerText:"KODE",centerColor:"#15803d",centerScale:30}},
-    {name:"BLOOM",tag:"텍스트 로고",s:{fill:"linear",fg1:"#ec4899",fg2:"#f43f5e",angle:120,dot:"rounded",eye:"rounded",bg:"#ffffff",centerMode:"text",centerText:"BLOOM",centerColor:"#db2777",centerScale:26}},
-    {name:"SONIC",tag:"텍스트 로고",s:{fill:"linear",fg1:"#6366f1",fg2:"#8b5cf6",angle:135,dot:"dots",eye:"circle",bg:"#ffffff",centerMode:"text",centerText:"SONIC",centerColor:"#4f46e5",centerScale:28}},
-    {name:"ZEN",tag:"모노 로고",s:{fill:"solid",fg1:"#111111",bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"text",centerText:"ZEN",centerColor:"#111111",centerScale:30}},
-    {name:"VERTEX",tag:"다크 로고",s:{fill:"solid",fg1:"#a78bfa",bg:"#0b0d12",dot:"rounded",eye:"rounded",centerMode:"text",centerText:"VERTEX",centerColor:"#c4b5fd",centerScale:22}},
-    {name:"WAVE",tag:"텍스트 로고",s:{fill:"linear",fg1:"#06b6d4",fg2:"#0369a1",angle:120,dot:"dots",eye:"circle",bg:"#ffffff",centerMode:"text",centerText:"WAVE",centerColor:"#0e7490",centerScale:30}}
+    {name:"골드크레스트 필스너",tag:"로고 중앙 배치·아트",s:{artUrl:"assets/logo-pils-bg.webp",centerLogoUrl:"assets/logo-pils-obj.png",anim:true,animKind:"shine",fg1:"#8a6a1e",dot:"dots",eye:"square",artVisibility:54,logoSize:26,logoPad:true,labelOn:true,labelText:"GOLDCREST · PILSNER · 500 mL"}},
+    {name:"블랙앵커 스타우트",tag:"로고 중앙 배치·아트",s:{artUrl:"assets/logo-stout-bg.webp",centerLogoUrl:"assets/logo-stout-obj.png",anim:true,animKind:"shine",fg1:"#1c1410",dot:"dots",eye:"square",artVisibility:52,logoSize:26,logoPad:true,labelOn:true,labelText:"BLACK ANCHOR · STOUT · 500 mL"}},
+    {name:"와일드홉 IPA",tag:"로고 중앙 배치·아트",s:{artUrl:"assets/logo-ipa-bg.webp",centerLogoUrl:"assets/logo-ipa-obj.png",anim:true,animKind:"shine",fg1:"#9a4a12",dot:"dots",eye:"square",artVisibility:56,logoSize:26,logoPad:true,labelOn:true,labelText:"WILDHOP · IPA · 355 mL"}},
+    {name:"에이펙스 스포츠",tag:"로고 중앙 배치·아트",s:{artUrl:"assets/logo-apex-bg.webp",centerLogoUrl:"assets/logo-apex-obj.png",anim:true,animKind:"shine",fg1:"#b91c1c",dot:"dots",eye:"square",artVisibility:56,logoSize:26,logoPad:true,labelOn:true,labelText:"APEX SPORT · PERFORMANCE"}},
+    {name:"클라우드네스트",tag:"로고 중앙 배치·아트",s:{artUrl:"assets/logo-nest-bg.webp",centerLogoUrl:"assets/logo-nest-obj.png",anim:true,animKind:"shine",fg1:"#6d5a9e",dot:"dots",eye:"square",artVisibility:56,logoSize:26,logoPad:true,labelOn:true,labelText:"CLOUDNEST · COMFORT LIVING"}}
   ],
   pictogram:[
     {name:"소화기",tag:"소방 안전",s:{fill:"solid",fg1:"#dc2626",bg:"#ffffff",dot:"dots",eye:"square",centerMode:"emoji",centerText:"🧯",centerScale:32,frameOn:true,frameMode:"solid",frameBg1:"#b91c1c"}},
