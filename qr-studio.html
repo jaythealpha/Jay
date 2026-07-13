@@ -926,7 +926,7 @@
   <footer>
     <div>Aesthetic QR Studio · 아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.12-c</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.12-d</b></div>
   </footer>
 </div>
 
@@ -3894,17 +3894,26 @@ function render(g2, exportSize){
     g.restore();
   }
 
-  // label
+  // label — drawn as its OWN pass, after any Ken-Burns/animated art layer above. Even when the
+  // background behind it is breathing/zooming, this band + text are repainted at the same fixed
+  // pixel position every frame (nothing here is put through the art's zoom/pan transform), so the
+  // caption always reads as a crisp, static plate rather than wobbling with the artwork.
   if (S.labelOn && S.labelText){
-    if (S.artImg){ g.save(); g.shadowColor="rgba(0,0,0,0.8)"; g.shadowBlur=Math.max(2,labelFont*0.45); }
-    g.fillStyle = S.artImg ? "#ffffff" : (S.transparent ? "#111111" : (luminance(S.bg)>140 ? "#111111" : "#ffffff"));
+    var bandY = (S.labelPos==="top") ? frameInset : (frameInset + avail);
+    if (S.artImg){
+      // solid backing plate keeps the caption legible over a busy/moving image
+      g.fillStyle = "#ffffff";
+      g.fillRect(0, bandY, size, labelSpace);
+      g.fillStyle = S.fg1 || "#111111";
+    } else {
+      g.fillStyle = S.transparent ? "#111111" : (luminance(S.bg)>140 ? "#111111" : "#ffffff");
+    }
     g.font = "700 "+labelFont+"px -apple-system,'Noto Sans KR',sans-serif";
     g.textAlign="center"; g.textBaseline="middle";
     var baseY = frameInset + ((S.labelPos==="top") ? (labelSpace*0.5) : (avail + labelSpace*0.5));
     var offPx = (S.labelOffset/100) * (size*0.14);   // fine up/down nudge (negative=up)
     var ly = Math.max(frameInset+labelFont*0.65, Math.min(size - frameInset - labelFont*0.65, baseY + offPx));
     g.fillText(S.labelText, size/2, ly);
-    if (S.artImg) g.restore();
   }
 }
 
@@ -5329,6 +5338,9 @@ function makeScene(kind){
 var GAL_TR = {
   '프리미엄 라거':{en:'Premium Lager',zh:'优质拉格',ja:'プレミアムラガー'},
   '골든 에일':{en:'Golden Ale',zh:'金色艾尔',ja:'ゴールデンエール'},
+  '로스트 커피':{en:'Roast Coffee',zh:'烘焙咖啡',ja:'ロースト コーヒー'},
+  '님버스 클라우드':{en:'Nimbus Cloud',zh:'Nimbus 云',ja:'ニンバス クラウド'},
+  '볼트 에너지':{en:'Volt Energy',zh:'Volt 能量饮料',ja:'ボルト エナジー'},
   '로고 중앙 배치·아트':{en:'Centered logo · art',zh:'居中 Logo·艺术',ja:'中央ロゴ・アート'},
   '서클아트 그린':{en:'Circle Art Green',zh:'环形艺术·绿',ja:'サークルアート グリーン'},
   '서클아트 바이올렛':{en:'Circle Art Violet',zh:'环形艺术·紫',ja:'サークルアート バイオレット'},
@@ -5493,8 +5505,11 @@ var CATS = {
     {name:"크리스탈",tag:"유리 판타지·펄스",s:{artUrl:"assets/anim-17.webp",anim:true,animKind:"pulse",fg1:"#2a3a6b",dot:"dots",eye:"square",artVisibility:56}}
   ],
   logo:[
-    {name:"프리미엄 라거",tag:"로고 중앙 배치·아트",s:{artUrl:"assets/logo-beer-bg-1.webp",centerLogoUrl:"assets/logo-beer-obj-1.png",anim:true,animKind:"shine",fg1:"#063d1c",dot:"dots",eye:"square",artVisibility:56,logoSize:26,logoPad:true}},
-    {name:"골든 에일",tag:"로고 중앙 배치·아트",s:{artUrl:"assets/logo-beer-bg-2.webp",centerLogoUrl:"assets/logo-beer-obj-2.png",anim:true,animKind:"shine",fg1:"#3a2410",dot:"dots",eye:"square",artVisibility:54,logoSize:26,logoPad:true}},
+    {name:"프리미엄 라거",tag:"로고 중앙 배치·아트",s:{artUrl:"assets/logo-beer-bg-1.webp",centerLogoUrl:"assets/logo-beer-obj-1.png",anim:true,animKind:"shine",fg1:"#063d1c",dot:"dots",eye:"square",artVisibility:56,logoSize:26,logoPad:true,labelOn:true,labelText:"BIÈRE / BEER · 330 mL · 5% alc./vol"}},
+    {name:"골든 에일",tag:"로고 중앙 배치·아트",s:{artUrl:"assets/logo-beer-bg-2.webp",centerLogoUrl:"assets/logo-beer-obj-2.png",anim:true,animKind:"shine",fg1:"#3a2410",dot:"dots",eye:"square",artVisibility:54,logoSize:26,logoPad:true,labelOn:true,labelText:"BIÈRE / BEER · 330 mL · 5% alc./vol"}},
+    {name:"로스트 커피",tag:"로고 중앙 배치·아트",s:{artUrl:"assets/logo-coffee-bg.webp",centerLogoUrl:"assets/logo-coffee-obj.png",anim:true,animKind:"shine",fg1:"#4a2c17",dot:"dots",eye:"square",artVisibility:56,logoSize:26,logoPad:true,labelOn:true,labelText:"ROAST & CO. · SPECIALTY COFFEE"}},
+    {name:"님버스 클라우드",tag:"로고 중앙 배치·아트",s:{artUrl:"assets/logo-tech-bg.webp",centerLogoUrl:"assets/logo-tech-obj.png",anim:true,animKind:"shine",fg1:"#3730a3",dot:"dots",eye:"square",artVisibility:56,logoSize:26,logoPad:true,labelOn:true,labelText:"NIMBUS · CLOUD PLATFORM"}},
+    {name:"볼트 에너지",tag:"로고 중앙 배치·아트",s:{artUrl:"assets/logo-volt-bg.webp",centerLogoUrl:"assets/logo-volt-obj.png",anim:true,animKind:"shine",fg1:"#075985",dot:"dots",eye:"square",artVisibility:56,logoSize:26,logoPad:true,labelOn:true,labelText:"VOLT ENERGY · 355 mL"}},
     {name:"ACME",tag:"텍스트 로고",s:{fill:"solid",fg1:"#e11d48",bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"text",centerText:"ACME",centerColor:"#e11d48",centerScale:30}},
     {name:"NOVA",tag:"텍스트 로고",s:{fill:"linear",fg1:"#2563eb",fg2:"#4f46e5",angle:120,dot:"dots",eye:"circle",bg:"#ffffff",centerMode:"text",centerText:"NOVA",centerColor:"#1d4ed8",centerScale:30}},
     {name:"PIXEL",tag:"텍스트 로고",s:{fill:"linear",fg1:"#7c3aed",fg2:"#db2777",angle:135,dot:"rounded",eye:"rounded",bg:"#ffffff",centerMode:"text",centerText:"PIXEL",centerColor:"#7c3aed",centerScale:28}},
