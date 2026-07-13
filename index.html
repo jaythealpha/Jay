@@ -133,7 +133,10 @@
 
   /* controls panel */
   .panel{background:var(--glass);backdrop-filter:blur(16px) saturate(1.3);-webkit-backdrop-filter:blur(16px) saturate(1.3);
-    border:1px solid var(--glass-line);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow-sm)}
+    border:1px solid var(--glass-line);border-radius:var(--r);overflow:visible;box-shadow:var(--shadow-sm)}
+  /* corners kept clean without overflow:hidden (which would clip tooltips) */
+  .grp:first-child>summary{border-top-left-radius:var(--r);border-top-right-radius:var(--r)}
+  .grp:last-child>summary{border-bottom-left-radius:var(--r);border-bottom-right-radius:var(--r)}
   .grp{border-bottom:1px solid var(--line)}
   .grp:last-child{border-bottom:0}
   .grp>summary{list-style:none;cursor:pointer;padding:15px 17px;font-weight:650;font-size:13.5px;display:flex;align-items:center;gap:10px;user-select:none;transition:background .15s}
@@ -243,14 +246,17 @@
 
   /* ---- hover/focus tooltips (data-tip) ---- */
   [data-tip]{position:relative}
+  /* lift the hovered control above its siblings/cards so the tooltip is never painted behind them
+     (glass surfaces create stacking contexts, so an explicit z-index is required) */
+  [data-tip]:hover{z-index:120}
   [data-tip]:hover::after{
     content:attr(data-tip);position:absolute;left:50%;top:calc(100% + 8px);transform:translateX(-50%);
     background:#0b0d14;color:#e8ecf5;border:1px solid var(--acc);border-radius:9px;padding:8px 11px;
     font-size:11.5px;font-weight:500;line-height:1.5;white-space:normal;width:max-content;max-width:230px;
-    text-align:left;z-index:80;box-shadow:0 8px 24px rgba(0,0,0,.45);pointer-events:none}
+    text-align:left;z-index:121;box-shadow:0 8px 24px rgba(0,0,0,.45);pointer-events:none}
   [data-tip]:hover::before{
     content:"";position:absolute;left:50%;top:calc(100% + 2px);transform:translateX(-50%);
-    border:6px solid transparent;border-bottom-color:var(--acc);z-index:80;pointer-events:none}
+    border:6px solid transparent;border-bottom-color:var(--acc);z-index:121;pointer-events:none}
   .seg [data-tip]:hover::after{max-width:210px}
   .help-dot{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;margin-left:6px;
     border-radius:50%;background:var(--bg2);border:1px solid var(--line2);color:var(--mut);font-size:10px;
@@ -920,7 +926,7 @@
   <footer>
     <div>Aesthetic QR Studio · 아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.12-b</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.12-c</b></div>
   </footer>
 </div>
 
