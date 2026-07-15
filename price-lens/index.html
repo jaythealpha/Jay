@@ -130,6 +130,8 @@
   .cam-placeholder { text-align: center; color: var(--ink-3); padding: 24px; }
   .cam-placeholder .big { font-size: 54px; filter: grayscale(.2); }
   .cam-placeholder p { margin-top: 10px; font-size: 13.5px; }
+  .cam-placeholder .drop-hint { margin-top: 6px; font-size: 11.5px; color: var(--ink-3); opacity: .8; }
+  .cam-stage.drag-over { outline: 2px dashed var(--mint); outline-offset: -8px; background: rgba(53,208,165,.1); }
   .frame-guide {
     position: absolute; inset: 12% 18%; border: 2px dashed rgba(53,208,165,.55);
     border-radius: 16px; pointer-events: none;
@@ -464,7 +466,8 @@
       <div class="cam-stage" id="camStage">
         <div class="cam-placeholder" id="camPlaceholder">
           <div class="big">📷</div>
-          <p>아래 셔터를 누르면 카메라가 켜집니다<br>또는 갤러리에서 사진을 불러오세요</p>
+          <p>아래 셔터를 누르면 카메라가 켜집니다<br>또는 🖼️ 갤러리에서 사진을 불러오세요</p>
+          <p class="drop-hint">PC에서는 사진을 여기로 끌어놓거나 Ctrl+V로 붙여넣어도 돼요</p>
         </div>
         <video id="video" playsinline autoplay muted class="hidden"></video>
         <img id="preview" class="preview hidden" alt="촬영한 라벨">
@@ -573,7 +576,7 @@
   </div>
 </div>
 
-<input type="file" id="fileInput" accept="image/*" capture="environment" class="hidden">
+<input type="file" id="fileInput" accept="image/*" class="hidden">
 <canvas id="canvas" class="hidden"></canvas>
 <div class="toast" id="toast"></div>
 
@@ -1431,6 +1434,38 @@ $('#btnShutter').addEventListener('click', () => {
 $('#btnFlip').addEventListener('click', () => { facing = facing === 'environment' ? 'user' : 'environment'; startCamera(); });
 $('#btnGallery').addEventListener('click', () => $('#fileInput').click());
 $('#fileInput').addEventListener('change', (e) => handleFile(e.target.files[0]));
+
+/* PC 테스트 편의: 사진을 캡처 영역에 끌어놓기 */
+const camStage = $('#camStage');
+['dragenter', 'dragover'].forEach(ev => camStage.addEventListener(ev, (e) => {
+  e.preventDefault(); e.stopPropagation();
+  camStage.classList.add('drag-over');
+}));
+['dragleave', 'dragend'].forEach(ev => camStage.addEventListener(ev, (e) => {
+  e.preventDefault(); e.stopPropagation();
+  camStage.classList.remove('drag-over');
+}));
+camStage.addEventListener('drop', (e) => {
+  e.preventDefault(); e.stopPropagation();
+  camStage.classList.remove('drag-over');
+  const file = e.dataTransfer.files && e.dataTransfer.files[0];
+  if (file) handleFile(file);
+  else toast('이미지 파일을 끌어놓아 주세요.', true);
+});
+
+/* PC 테스트 편의: 스크린샷/이미지 클립보드 붙여넣기 (Ctrl+V) */
+document.addEventListener('paste', (e) => {
+  if (!$('#screen-capture').classList.contains('active')) return;
+  const items = e.clipboardData && e.clipboardData.items;
+  if (!items) return;
+  for (const item of items) {
+    if (item.type && item.type.startsWith('image/')) {
+      const file = item.getAsFile();
+      if (file) handleFile(file);
+      break;
+    }
+  }
+});
 $('#btnRetake').addEventListener('click', () => { resetCapture(); startCamera(); });
 $('#btnAnalyze').addEventListener('click', analyze);
 $('#btnTextSearch').addEventListener('click', () => analyzeQuery($('#queryInput').value));
