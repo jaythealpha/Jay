@@ -838,6 +838,18 @@
             </div>
           </div>
         </details>
+        <details class="grp" id="grpBulk">
+          <summary><svg class="ic" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/></svg><span data-i18n="grp.bulk">일괄 생성</span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
+          <div class="body">
+            <div class="hint" data-i18n="bulk.hint">여러 개의 QR을 한 번에 만들어 인쇄용 시트(PNG)로 저장합니다. 테이블 번호·티켓·상품 라벨·쿠폰 등에 유용해요.</div>
+            <label class="fld">
+              <div class="lbl"><span data-i18n="bulk.lbl">한 줄에 하나씩 (URL 또는 텍스트)</span> <b id="bulkCount">0</b></div>
+              <textarea id="bulkInput" rows="6" placeholder="https://example.com/1&#10;https://example.com/2&#10;table-01&#10;..."></textarea>
+            </label>
+            <div class="hint" data-i18n="bulk.style">현재 색상·모듈·눈 디자인이 모든 QR에 적용됩니다. (프레임·라벨·중앙 로고는 스캔 안정성을 위해 시트에서는 생략)</div>
+            <button class="btn" id="bulkGen" style="width:100%;margin-top:10px" data-i18n="bulk.gen">시트로 생성 · PNG 저장</button>
+          </div>
+        </details>
       </div>
     </div>
   </section>
@@ -986,7 +998,7 @@
   <footer>
     <div>Aesthetic QR Studio · 아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.16-c</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.16-d</b></div>
   </footer>
 </div>
 
@@ -4843,6 +4855,47 @@ Array.prototype.forEach.call($("exportFmtSeg").children,function(b){
   });
 });
 
+// ---------- bulk (batch) QR → printable contact sheet (client-side, no backend) ----------
+function bulkLines(){ return $("bulkInput").value.split(/\r?\n/).map(function(s){return s.trim();}).filter(Boolean); }
+$("bulkInput").addEventListener("input",function(){ $("bulkCount").textContent=bulkLines().length; });
+function generateBulkSheet(){
+  var lines=bulkLines();
+  if(!lines.length){ toast(t("bulk.empty")); return; }
+  var MAX=50, capped=false; if(lines.length>MAX){ lines=lines.slice(0,MAX); capped=true; }
+  var n=lines.length;
+  var cols = n<=2?n : n<=4?2 : n<=9?3 : n<=16?4 : n<=30?5 : 6;
+  var rows=Math.ceil(n/cols);
+  var cell=480, pad=Math.round(cell*0.07), label=Math.round(cell*0.15);
+  var cellH=cell+label;
+  var sheetW=pad + cols*(cell+pad);
+  var sheetH=pad + rows*(cellH+pad);
+  var sheet=document.createElement("canvas"); sheet.width=sheetW; sheet.height=sheetH;
+  var sg=sheet.getContext("2d"); sg.fillStyle="#ffffff"; sg.fillRect(0,0,sheetW,sheetH);
+  // temporarily force a clean, print-scannable design (keep colours/module/eye; drop frame/label/centre/art)
+  var save={content:S.content,frameOn:S.frameOn,labelOn:S.labelOn,centerMode:S.centerMode,aiArt:S.aiArt,artImg:S.artImg,anim:S.anim,transparent:S.transparent};
+  S.frameOn=false; S.labelOn=false; S.centerMode="none"; S.aiArt=null; S.artImg=null; S.anim=false; S.transparent=false;
+  var tmp=document.createElement("canvas"); tmp.width=tmp.height=cell;
+  var tg=tmp.getContext("2d");
+  try{
+    for(var i=0;i<n;i++){
+      S.content=lines[i];
+      try{ render(tg, cell); }catch(e){}
+      var c=i%cols, r=(i/cols)|0;
+      var x=pad + c*(cell+pad), y=pad + r*(cellH+pad);
+      sg.drawImage(tmp, x, y);
+      sg.fillStyle="#111111"; sg.textAlign="center"; sg.textBaseline="middle";
+      sg.font="600 "+Math.round(label*0.40)+"px -apple-system,'Noto Sans KR',sans-serif";
+      var txt=lines[i]; if(txt.length>30) txt=txt.slice(0,28)+"…";
+      sg.fillText(txt, x+cell/2, y+cell+label*0.52);
+    }
+  } finally {
+    for(var k in save) S[k]=save[k];
+    try{ rerender(); }catch(e){}
+  }
+  sheet.toBlob(function(b){ download(URL.createObjectURL(b), "aesthetic-qr-bulk-"+n+".png"); toast(t("bulk.done").replace("{n}",n)+(capped?" · "+t("bulk.capped"):"")); },"image/png");
+}
+$("bulkGen").addEventListener("click",generateBulkSheet);
+
 // ---------- tabs ----------
 $("tabs").addEventListener("click",function(e){
   var b=e.target.closest("button"); if(!b) return;
@@ -5973,6 +6026,14 @@ var I18N = {
   "grp.anim":{ko:"애니메이션",en:"Animation",zh:"动画",ja:"アニメーション"},
   "grp.label":{ko:"라벨 & 프레임",en:"Label & Frame",zh:"标签与边框",ja:"ラベル＆フレーム"},
   "grp.frame":{ko:"프레임 & 픽토그램",en:"Frame & Pictogram",zh:"边框与图标",ja:"フレーム＆ピクトグラム"},
+  "grp.bulk":{ko:"일괄 생성",en:"Bulk generate",zh:"批量生成",ja:"一括生成"},
+  "bulk.hint":{ko:"여러 개의 QR을 한 번에 만들어 인쇄용 시트(PNG)로 저장합니다. 테이블 번호·티켓·상품 라벨·쿠폰 등에 유용해요.",en:"Generate many QR codes at once as a printable sheet (PNG). Great for table numbers, tickets, product labels & coupons.",zh:"一次生成多个二维码并保存为可打印的拼版（PNG）。适用于桌号、门票、商品标签和优惠券。",ja:"複数のQRを一度に作成し、印刷用シート(PNG)として保存します。テーブル番号・チケット・商品ラベル・クーポンに便利。"},
+  "bulk.lbl":{ko:"한 줄에 하나씩 (URL 또는 텍스트)",en:"One per line (URL or text)",zh:"每行一个（网址或文本）",ja:"1行に1つ（URLまたはテキスト）"},
+  "bulk.style":{ko:"현재 색상·모듈·눈 디자인이 모든 QR에 적용됩니다. (프레임·라벨·중앙 로고는 스캔 안정성을 위해 시트에서는 생략)",en:"Your current colors, module & eye style apply to every code. (Frame, label & center logo are omitted on the sheet for scan reliability.)",zh:"当前的颜色、模块和眼形将应用于每个二维码。（为保证扫描可靠性，拼版中省略边框、标签和中心徽标。）",ja:"現在の色・モジュール・目のデザインが全QRに適用されます。（スキャンの確実性のため、フレーム・ラベル・中央ロゴはシートでは省略）"},
+  "bulk.gen":{ko:"시트로 생성 · PNG 저장",en:"Generate sheet · Save PNG",zh:"生成拼版 · 保存 PNG",ja:"シート生成 · PNG保存"},
+  "bulk.empty":{ko:"내용을 한 줄에 하나씩 입력하세요",en:"Enter one item per line",zh:"请每行输入一个内容",ja:"1行に1つ入力してください"},
+  "bulk.done":{ko:"{n}개 QR 시트 저장됨",en:"{n} QR sheet saved",zh:"已保存 {n} 个二维码拼版",ja:"{n}個のQRシートを保存しました"},
+  "bulk.capped":{ko:"최대 50개까지",en:"max 50",zh:"最多50个",ja:"最大50件"},
   "ob.title":{ko:"QR 스튜디오에 오신 걸 환영합니다 👋",en:"Welcome to QR Studio 👋",zh:"欢迎来到 QR 工作室 👋",ja:"QRスタジオへようこそ 👋"},
   "ob.sub":{ko:"아름답고 실제로 스캔되는 QR 코드를 몇 분 만에 만들어 보세요.",en:"Create beautiful, genuinely scannable QR codes in minutes.",zh:"几分钟即可创建美观且真正可扫描的二维码。",ja:"美しく、実際にスキャンできるQRコードを数分で作成。"},
   "ob.s1h":{ko:"연결 유형 고르기",en:"Pick an action type",zh:"选择类型",ja:"動作タイプを選ぶ"},
