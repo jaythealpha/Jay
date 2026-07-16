@@ -131,6 +131,34 @@
   .seg.mini button{flex:none;min-width:0;background:transparent;border:0;color:var(--mut);border-radius:7px;padding:5px 11px;font-size:12px;font-weight:650;cursor:pointer;transition:.12s;font-family:inherit}
   .seg.mini button:hover{color:var(--txt)}
   .seg.mini button.on{background:linear-gradient(135deg,var(--acc),#5a3fd6);color:#fff;box-shadow:0 3px 10px rgba(124,92,255,.35)}
+  /* lock badge on Pro-gated resolutions (shown while not unlocked) */
+  .export-opts.free #exportResSeg button[data-res="2048"]::after,
+  .export-opts.free #exportResSeg button[data-res="4096"]::after{content:"🔒";margin-left:4px;font-size:9px;opacity:.85}
+  .pro-btn{border:1px solid rgba(255,204,77,.4);background:linear-gradient(135deg,rgba(255,204,77,.14),rgba(124,92,255,.14));
+    color:#ffcc4d;font-family:inherit;font-weight:700;font-size:12px;padding:6px 13px;border-radius:9px;cursor:pointer;transition:.15s;white-space:nowrap}
+  .pro-btn:hover{border-color:#ffcc4d;transform:translateY(-1px);box-shadow:0 4px 14px rgba(255,204,77,.22)}
+  .pro-btn.on{color:var(--ok);border-color:rgba(61,220,151,.45);background:rgba(61,220,151,.12)}
+
+  /* Pro modal */
+  .pro-card{position:relative;max-width:480px}
+  .pro-close{position:absolute;top:16px;right:16px;background:transparent;border:0;color:var(--mut2);font-size:18px;cursor:pointer;line-height:1;padding:4px}
+  .pro-close:hover{color:var(--txt)}
+  .pro-feats{list-style:none;margin:20px 0;padding:0;display:grid;gap:14px}
+  .pro-feats li{display:flex;gap:13px;align-items:flex-start}
+  .pro-feats .pf-ic{flex:none;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:17px;background:rgba(124,92,255,.12);border:1px solid rgba(124,92,255,.25)}
+  .pro-feats li div{display:flex;flex-direction:column;gap:2px}
+  .pro-feats li b{font-size:14px;font-weight:700}
+  .pro-feats li span{font-size:12px;color:var(--mut2);line-height:1.5}
+  .pro-feats li em{color:var(--mut);font-style:normal;font-size:11px}
+  .pro-price{display:flex;align-items:baseline;gap:9px;margin:4px 0 14px}
+  .pro-price b{font-size:26px;font-weight:800;letter-spacing:-.5px}
+  .pro-price span{font-size:12.5px;color:var(--mut)}
+  .pro-key{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+  .pro-key .lbl{font-size:12px;color:var(--mut);margin-bottom:9px}
+  .pro-key-row{display:flex;gap:8px}
+  .pro-key-row input{flex:1;text-transform:uppercase}
+  .pro-msg{font-size:12px;margin-top:9px;min-height:16px}
+  .pro-msg.ok{color:var(--ok)} .pro-msg.err{color:var(--acc3)}
 
   button.btn{border:0;cursor:pointer;font-weight:650;font-size:13px;border-radius:11px;padding:12px 15px;color:#fff;
     background:linear-gradient(135deg,var(--acc),#5a3fd6);box-shadow:0 8px 22px rgba(124,92,255,.34);transition:.16s;flex:1;min-width:120px}
@@ -388,6 +416,7 @@
               <button data-fmt="jpg" data-tip="작은 용량 · 일부 인쇄소 요구 형식">JPG</button>
             </div>
           </div>
+          <button class="pro-btn" id="proBtn" style="margin-left:auto"><span data-i18n="pro.badge">✨ Pro</span></button>
         </div>
         <div class="actions">
           <button class="btn" id="dlPng" data-i18n="btn.png">PNG 저장</button>
@@ -952,7 +981,7 @@
   <footer>
     <div>Aesthetic QR Studio · 아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.16-a</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.16-b</b></div>
   </footer>
 </div>
 
@@ -967,6 +996,30 @@
     <div class="ob-actions">
       <button class="btn sec" id="obGuide" style="flex:none" data-i18n="ob.guide">자세한 사용법</button>
       <button class="btn" id="obStart" data-i18n="ob.start">시작하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Pro (one-time unlock) upgrade modal ===== -->
+<div class="ob-mask" id="proMask">
+  <div class="ob-card pro-card">
+    <button class="pro-close" id="proClose" aria-label="close">✕</button>
+    <h2 data-i18n="pro.title">✨ Pro로 업그레이드</h2>
+    <div class="sub" data-i18n="pro.sub">한 번 결제로 프리미엄 기능을 영구히 사용하세요. 계정·구독 없이 라이선스 키 하나로 잠금 해제됩니다.</div>
+    <ul class="pro-feats">
+      <li><span class="pf-ic">🖨️</span><div><b data-i18n="pro.f1h">고해상도 인쇄 내보내기</b><span data-i18n="pro.f1p">2048 · 4096px — 포스터·메뉴판·현수막 인쇄 품질</span></div></li>
+      <li><span class="pf-ic">🎬</span><div><b data-i18n="pro.f2h">워터마크 없는 애니메이션</b><span data-i18n="pro.f2p">움직이는 QR(WebM)을 워터마크 없이 저장 · 예정</span></div></li>
+      <li><span class="pf-ic">🎨</span><div><b data-i18n="pro.f3h">AI 아트 QR·프리미엄 팩</b><span data-i18n="pro.f3p">AI 생성 아트 QR과 프리미엄 로고·템플릿 팩 · 예정</span></div></li>
+    </ul>
+    <div class="pro-price"><b id="proPrice">₩12,900</b> <span data-i18n="pro.once">1회 결제 · 영구 사용</span></div>
+    <button class="btn" id="proBuy" data-i18n="pro.buy">구매하기</button>
+    <div class="pro-key">
+      <div class="lbl" data-i18n="pro.have">이미 구매하셨나요? 라이선스 키를 입력하세요</div>
+      <div class="pro-key-row">
+        <input type="text" id="proKey" placeholder="QRPRO-XXXX-XXXX" autocomplete="off" spellcheck="false" />
+        <button class="btn sec" id="proApply" style="flex:none" data-i18n="pro.apply">적용</button>
+      </div>
+      <div class="pro-msg" id="proMsg"></div>
     </div>
   </div>
 </div>
@@ -4276,6 +4329,7 @@ function download(url, name){
 function exportPNG(){
   var was=isAnimating() && !S.artIsVideo; if(was){ stopAnim(); }
   var res=S.exportRes||EXPORT, jpg=(S.exportFmt==="jpg");
+  if(res>1024 && proGated("hiresExport")){ res=1024; openPro("hiresExport"); return; }  // Pro backstop
   var off=document.createElement("canvas"); off.width=res; off.height=res;
   var g=off.getContext("2d");
   render(g, res);
@@ -4768,7 +4822,11 @@ $("dlWebm").addEventListener("click",exportWebM);
 $("copyBtn").addEventListener("click",copyPNG);
 // export resolution / format pickers (client-side only; higher res = print quality)
 Array.prototype.forEach.call($("exportResSeg").children,function(b){
-  b.addEventListener("click",function(){ S.exportRes=+b.dataset.res; Array.prototype.forEach.call($("exportResSeg").children,function(x){x.classList.toggle("on",x===b);}); });
+  b.addEventListener("click",function(){
+    var res=+b.dataset.res;
+    if(res>1024 && proGated("hiresExport")){ openPro("hiresExport"); return; }   // Pro gate
+    S.exportRes=res; Array.prototype.forEach.call($("exportResSeg").children,function(x){x.classList.toggle("on",x===b);});
+  });
 });
 Array.prototype.forEach.call($("exportFmtSeg").children,function(b){
   b.addEventListener("click",function(){
@@ -4808,6 +4866,69 @@ $("obGuide").addEventListener("click",function(){ hideOnboard(); gotoView("about
 $("obMask").addEventListener("click",function(e){ if(e.target===this) hideOnboard(); });
 if($("replayOnboard")) $("replayOnboard").addEventListener("click",showOnboard);
 try{ if(!localStorage.getItem(OBKEY)) setTimeout(showOnboard, 600); }catch(e){}
+
+// ---------- Pro (one-time unlock) ----------
+// OWNER SETUP (to actually charge money — no custom backend or business registration needed):
+//   1) Create a one-time product on a Merchant-of-Record: Lemon Squeezy / Gumroad / Paddle.
+//      The MoR handles the card payment, Korean 부가세(VAT)/global tax, refunds, AND issues a
+//      license key to the buyer — so you don't run a store or a tax filing yourself to start.
+//   2) Fill PRO.checkoutUrl with the product's checkout link.
+//   3) Fill PRO.validateUrl with the MoR's license-validation API endpoint (e.g. Lemon Squeezy
+//      /v1/licenses/validate). Until it's set, a DEV offline key-format check is used so the flow
+//      is testable. NOTE: client-side validation is not tamper-proof (this is a static page) — for
+//      a low-price tool that's the accepted industry norm; the one genuinely costly feature (AI art)
+//      already runs server-side and can require a valid license there for real enforcement.
+var PRO = {
+  active:false,
+  price:"₩12,900",     // one-time — set to match your MoR product price
+  checkoutUrl:"",      // MoR checkout link (empty → "구매 준비 중" toast)
+  validateUrl:"",      // MoR license-validate API (empty → DEV offline format check)
+  gate:{ hiresExport:true }   // features requiring Pro. Add more later, e.g. aiArt:true, cleanAnim:true
+};
+var PROKEY="aqr_pro_license_v1";
+function isPro(){ return !!PRO.active; }
+function proGated(f){ return !!PRO.gate[f] && !PRO.active; }
+function refreshProUI(){
+  var eo=document.querySelector(".export-opts"); if(eo) eo.classList.toggle("free", !PRO.active);
+  var pb=$("proBtn"); if(pb){ pb.classList.toggle("on", PRO.active); pb.querySelector("span").textContent = PRO.active ? t("pro.badgeOn") : t("pro.badge"); }
+  var pp=$("proPrice"); if(pp) pp.textContent=PRO.price;
+}
+function validateLicense(key, cb){
+  key=(key||"").trim().toUpperCase();
+  if(!key){ cb(false, t("pro.errEmpty")); return; }
+  if(PRO.validateUrl){
+    // production: verify against the Merchant-of-Record license API
+    fetch(PRO.validateUrl,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({license_key:key})})
+      .then(function(r){ return r.json(); })
+      .then(function(d){ var ok=!!(d && (d.valid===true || d.activated===true || (d.license_key && d.license_key.status==="active"))); cb(ok, ok?null:t("pro.errInvalid")); })
+      .catch(function(){ cb(false, t("pro.errNet")); });
+    return;
+  }
+  // DEV fallback (no server configured yet) — accept a fixed format so the unlock flow is testable.
+  var ok=/^QRPRO-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(key);
+  cb(ok, ok?null:t("pro.errFormat"));
+}
+function activatePro(key){ PRO.active=true; try{ localStorage.setItem(PROKEY,(key||"").trim().toUpperCase()); }catch(e){} refreshProUI(); }
+function loadPro(){
+  var k=null; try{ k=localStorage.getItem(PROKEY); }catch(e){}
+  if(!k) return;
+  validateLicense(k, function(ok){ if(ok){ PRO.active=true; refreshProUI(); } else { try{ localStorage.removeItem(PROKEY); }catch(e){} } });
+}
+function openPro(feature){ var m=$("proMsg"); if(m){ m.textContent=""; m.className="pro-msg"; } $("proMask").classList.add("show"); }
+function closePro(){ $("proMask").classList.remove("show"); }
+$("proBtn").addEventListener("click",function(){ if(PRO.active){ toast(t("pro.thanks")); } else openPro(); });
+$("proClose").addEventListener("click",closePro);
+$("proMask").addEventListener("click",function(e){ if(e.target===this) closePro(); });
+$("proBuy").addEventListener("click",function(){ if(PRO.checkoutUrl){ window.open(PRO.checkoutUrl,"_blank","noopener"); } else { toast(t("pro.buySoon")); } });
+$("proApply").addEventListener("click",function(){
+  var m=$("proMsg"); m.textContent=t("pro.checking"); m.className="pro-msg";
+  validateLicense($("proKey").value, function(ok, err){
+    if(ok){ activatePro($("proKey").value); m.textContent=t("pro.ok"); m.className="pro-msg ok"; setTimeout(closePro, 1200); toast(t("pro.unlocked")); }
+    else { m.textContent=err||t("pro.errInvalid"); m.className="pro-msg err"; }
+  });
+});
+$("proKey").addEventListener("keydown",function(e){ if(e.key==="Enter") $("proApply").click(); });
+// initial license check + UI sync run after i18n is ready (see applyLang / init tail below)
 
 // ---------- AR (marker-based: detect a QR in the camera, overlay 3D content) ----------
 var AR = (function(){
@@ -5790,6 +5911,29 @@ var I18N = {
   "btn.jpg":{ko:"JPG 저장",en:"Save JPG",zh:"保存 JPG",ja:"JPG保存"},
   "exp.res":{ko:"해상도",en:"Resolution",zh:"分辨率",ja:"解像度"},
   "exp.fmt":{ko:"형식",en:"Format",zh:"格式",ja:"形式"},
+  "pro.badge":{ko:"✨ Pro",en:"✨ Pro",zh:"✨ Pro",ja:"✨ Pro"},
+  "pro.badgeOn":{ko:"✨ Pro ✓",en:"✨ Pro ✓",zh:"✨ Pro ✓",ja:"✨ Pro ✓"},
+  "pro.title":{ko:"✨ Pro로 업그레이드",en:"✨ Upgrade to Pro",zh:"✨ 升级到 Pro",ja:"✨ Proにアップグレード"},
+  "pro.sub":{ko:"한 번 결제로 프리미엄 기능을 영구히 사용하세요. 계정·구독 없이 라이선스 키 하나로 잠금 해제됩니다.",en:"One payment, premium features forever. No account or subscription — unlock with a single license key.",zh:"一次付款，永久使用高级功能。无需账户或订阅，用一个许可密钥即可解锁。",ja:"一度の支払いでプレミアム機能を永久に。アカウントや定期購入は不要、ライセンスキー1つで解除。"},
+  "pro.f1h":{ko:"고해상도 인쇄 내보내기",en:"High-resolution print export",zh:"高分辨率打印导出",ja:"高解像度の印刷用書き出し"},
+  "pro.f1p":{ko:"2048 · 4096px — 포스터·메뉴판·현수막 인쇄 품질",en:"2048 · 4096px — poster, menu & banner print quality",zh:"2048 · 4096px — 海报、菜单、横幅打印质量",ja:"2048・4096px — ポスター・メニュー・バナーの印刷品質"},
+  "pro.f2h":{ko:"워터마크 없는 애니메이션",en:"Watermark-free animation",zh:"无水印动画",ja:"透かしなしアニメーション"},
+  "pro.f2p":{ko:"움직이는 QR(WebM)을 워터마크 없이 저장 · 예정",en:"Save animated QR (WebM) without a watermark · coming soon",zh:"无水印保存动态二维码（WebM）· 即将推出",ja:"動くQR(WebM)を透かしなしで保存 · 近日"},
+  "pro.f3h":{ko:"AI 아트 QR·프리미엄 팩",en:"AI art QR & premium packs",zh:"AI 艺术二维码和高级包",ja:"AIアートQR・プレミアムパック"},
+  "pro.f3p":{ko:"AI 생성 아트 QR과 프리미엄 로고·템플릿 팩 · 예정",en:"AI-generated art QR and premium logo/template packs · coming soon",zh:"AI 生成的艺术二维码和高级徽标/模板包 · 即将推出",ja:"AI生成アートQRとプレミアムロゴ・テンプレートパック · 近日"},
+  "pro.once":{ko:"1회 결제 · 영구 사용",en:"one-time · lifetime",zh:"一次性 · 永久",ja:"一度きり · 永久"},
+  "pro.buy":{ko:"구매하기",en:"Get Pro",zh:"购买",ja:"購入する"},
+  "pro.buySoon":{ko:"결제 링크 준비 중입니다",en:"Checkout link coming soon",zh:"结账链接即将上线",ja:"決済リンクは準備中です"},
+  "pro.have":{ko:"이미 구매하셨나요? 라이선스 키를 입력하세요",en:"Already purchased? Enter your license key",zh:"已购买？输入您的许可密钥",ja:"購入済みですか？ライセンスキーを入力"},
+  "pro.apply":{ko:"적용",en:"Apply",zh:"应用",ja:"適用"},
+  "pro.checking":{ko:"확인 중…",en:"Checking…",zh:"验证中…",ja:"確認中…"},
+  "pro.ok":{ko:"✓ 정품 인증됨 — 잠금 해제!",en:"✓ Verified — unlocked!",zh:"✓ 已验证 — 已解锁！",ja:"✓ 認証完了 — 解除しました！"},
+  "pro.unlocked":{ko:"Pro 잠금 해제됨 ✨",en:"Pro unlocked ✨",zh:"Pro 已解锁 ✨",ja:"Pro解除 ✨"},
+  "pro.thanks":{ko:"이미 Pro 사용 중입니다 — 감사합니다! ✨",en:"You're already on Pro — thank you! ✨",zh:"您已是 Pro 用户 — 谢谢！✨",ja:"すでにProをご利用中です — ありがとうございます！✨"},
+  "pro.errEmpty":{ko:"키를 입력하세요",en:"Enter a key",zh:"请输入密钥",ja:"キーを入力してください"},
+  "pro.errInvalid":{ko:"유효하지 않은 라이선스 키입니다",en:"Invalid license key",zh:"许可密钥无效",ja:"無効なライセンスキーです"},
+  "pro.errFormat":{ko:"키 형식이 올바르지 않습니다 (예: QRPRO-XXXX-XXXX)",en:"Wrong key format (e.g. QRPRO-XXXX-XXXX)",zh:"密钥格式错误（例：QRPRO-XXXX-XXXX）",ja:"キー形式が正しくありません（例：QRPRO-XXXX-XXXX）"},
+  "pro.errNet":{ko:"인증 서버에 연결할 수 없습니다",en:"Can't reach the license server",zh:"无法连接许可服务器",ja:"ライセンスサーバーに接続できません"},
   "btn.svg":{ko:"SVG 저장",en:"Save SVG",zh:"保存 SVG",ja:"SVG保存"},
   "btn.webm":{ko:"애니메이션 저장",en:"Save animation",zh:"保存动画",ja:"アニメ保存"},
   "btn.copy":{ko:"클립보드 복사",en:"Copy to clipboard",zh:"复制到剪贴板",ja:"クリップボードにコピー"},
@@ -6136,6 +6280,7 @@ function applyLang(lang){
   try{ if($("galGrid") && $("galGrid").children.length) buildGallery(); }catch(e){}
   try{ updateMeta(); }catch(e){}
   try{ centerUIvis(); }catch(e){}
+  try{ if(typeof refreshProUI==="function") refreshProUI(); }catch(e){}
   try{ localStorage.setItem("aqr_lang", lang); }catch(e){}
   document.querySelectorAll(".lang-switch").forEach(function(sw){ Array.prototype.forEach.call(sw.children,function(x){ x.classList.toggle("on", x.dataset.lang===lang); }); });
 }
@@ -6146,6 +6291,7 @@ function applyLang(lang){
   applyLang(saved||auto);
   document.addEventListener("click",function(e){ var b=e.target.closest(".lang-switch button[data-lang]"); if(b) applyLang(b.dataset.lang); });
 })();
+try{ loadPro(); }catch(e){}   // restore a saved Pro license after i18n is ready
 
 // ---------- AR share-link QR (scan -> land directly in the right AR mode) ----------
 function buildArLinkUrl(mode,opts){
