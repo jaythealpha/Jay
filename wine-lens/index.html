@@ -51,6 +51,7 @@
     --hairline: rgba(220,165,77,.32);
     --shadow: 0 18px 50px rgba(0,0,0,.45);
     --focus: #f0c674;                /* keyboard focus ring — gold, ≥3:1 on every surface */
+    --ease: cubic-bezier(.2,.7,.3,1); /* shared motion easing */
     /* themeable surfaces (swapped wholesale by the alternate template) */
     --page-bg:
       radial-gradient(1200px 700px at 15% -10%, #3a0e1d 0%, transparent 55%),
@@ -107,6 +108,16 @@
   /* Accessibility: visible keyboard focus everywhere (mouse taps stay clean) */
   :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
   .shutter:focus-visible { outline-offset: 4px; }
+  /* programmatic focus moves (screen transitions) shouldn't show a stray ring on non-interactive landmarks */
+  #main:focus, .hero h1:focus, .loading h2:focus, .plate h2:focus { outline: none; }
+
+  /* Accessibility: skip link, hidden until keyboard-focused */
+  .skip-link {
+    position: fixed; top: -60px; left: 12px; z-index: 100;
+    background: var(--wine); color: #fff; padding: 10px 16px; border-radius: 10px;
+    font-weight: 700; font-size: 13px; text-decoration: none; transition: top .2s var(--ease);
+  }
+  .skip-link:focus { top: 12px; outline: 2px solid var(--focus); outline-offset: 2px; }
 
   /* Respect reduced-motion: keep transitions instant, drop looping/entrance animation */
   @media (prefers-reduced-motion: reduce) {
@@ -193,9 +204,12 @@
   .btn:disabled { opacity: .5; cursor: not-allowed; }
 
   /* ---------- Screens ---------- */
-  .screen { display: none; animation: fade .35s ease both; }
-  .screen.active { display: block; }
-  @keyframes fade { from { opacity: 0; transform: translateY(8px);} to { opacity: 1; transform: none; } }
+  .screen { display: none; }
+  .screen.active { display: block; animation: screen-in .42s var(--ease) both; }
+  @keyframes screen-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  /* loading feels calmer — a settle-in rather than a rise */
+  #screen-loading.active { animation: screen-settle .5s var(--ease) both; }
+  @keyframes screen-settle { from { opacity: 0; transform: scale(.97); } to { opacity: 1; transform: none; } }
 
   /* ---------- Hero / Capture ---------- */
   .hero { text-align: center; padding: 30px 6px 12px; }
@@ -229,14 +243,37 @@
   .cam-placeholder { text-align: center; color: var(--ink-3); padding: 24px; }
   .cam-placeholder .big { font-size: 54px; filter: grayscale(.2); }
   .cam-placeholder p { margin-top: 10px; font-size: 13.5px; }
-  .frame-guide {
-    position: absolute; inset: 12% 22%; border: 2px dashed rgba(220,165,77,.55);
-    border-radius: 16px; pointer-events: none;
+  /* scanner-style corner brackets replace the old dashed rectangle — reads as "actively scanning" */
+  .frame-guide { position: absolute; inset: 12% 22%; pointer-events: none; overflow: visible; }
+  .fg-corner {
+    position: absolute; width: 26px; height: 26px;
+    border: 3px solid var(--gold-soft); opacity: .9;
+    filter: drop-shadow(0 1px 3px rgba(0,0,0,.4));
   }
-  .frame-guide::after {
-    content: "라벨을 이 안에 맞춰주세요"; position: absolute; left: 50%; bottom: -30px; transform: translateX(-50%);
+  .fg-corner.tl { top: -2px; left: -2px; border-right: none; border-bottom: none; border-radius: 8px 0 0 0; }
+  .fg-corner.tr { top: -2px; right: -2px; border-left: none; border-bottom: none; border-radius: 0 8px 0 0; }
+  .fg-corner.bl { bottom: -2px; left: -2px; border-right: none; border-top: none; border-radius: 0 0 0 8px; }
+  .fg-corner.br { bottom: -2px; right: -2px; border-left: none; border-top: none; border-radius: 0 0 8px 0; }
+  .fg-sweep {
+    position: absolute; left: 3%; right: 3%; height: 2px; top: 2%;
+    background: linear-gradient(90deg, transparent, var(--gold-soft) 20%, var(--gold-soft) 80%, transparent);
+    box-shadow: 0 0 10px 1px rgba(220,165,77,.55);
+    animation: fg-sweep 2.6s ease-in-out infinite;
+  }
+  @keyframes fg-sweep {
+    0%, 100% { top: 2%; opacity: 0; }
+    8% { opacity: 1; }
+    50% { top: 95%; opacity: 1; }
+    92% { opacity: 1; }
+  }
+  .fg-hint {
+    position: absolute; left: 50%; bottom: -30px; transform: translateX(-50%);
     white-space: nowrap; font-size: 11.5px; color: rgba(237,217,174,.75); font-weight: 700;
   }
+  /* brief white pulse on capture — camera-app "photo taken" cue */
+  .cam-flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 5; }
+  .cam-flash.pulse { animation: cam-flash-pulse .32s var(--ease); }
+  @keyframes cam-flash-pulse { 0% { opacity: 0; } 14% { opacity: .85; } 100% { opacity: 0; } }
   .cam-tools {
     display: flex; align-items: center; justify-content: center; gap: 22px;
     padding: 16px; background: linear-gradient(180deg, var(--card), var(--card-2));
@@ -244,8 +281,11 @@
   .shutter {
     width: 74px; height: 74px; border-radius: 50%; cursor: pointer; flex: none;
     border: 4px solid var(--gold-soft); background: radial-gradient(circle at 50% 40%, #fff 0 30%, var(--wine-light) 32% 100%);
-    box-shadow: 0 6px 18px rgba(0,0,0,.5); transition: transform .1s;
+    box-shadow: 0 6px 18px rgba(0,0,0,.5);
+    transition: transform .1s, box-shadow .25s var(--ease);
   }
+  /* camera live and ready to capture — subtle glow distinguishes from "tap to turn on" */
+  .shutter.armed { box-shadow: 0 0 0 5px rgba(220,165,77,.28), 0 6px 18px rgba(0,0,0,.5); }
   .shutter:active { transform: scale(.92); }
   .round-tool {
     width: 50px; height: 50px; border-radius: 50%; border: 1px solid var(--line);
@@ -272,10 +312,13 @@
   .glass::before { content: "🍷"; font-size: 84px; position: absolute; inset: 0; display: grid; place-items: center; filter: drop-shadow(0 6px 10px rgba(0,0,0,.4)); }
   @keyframes swirl { 0%,100%{ transform: translateX(-50%) rotate(-6deg);} 50%{ transform: translateX(-50%) rotate(6deg);} }
   .loading h2 { font-family: var(--serif); font-weight: 600; font-size: 21px; margin-bottom: 8px; }
-  .loading .step { color: var(--ink-2); font-size: 14px; min-height: 22px; transition: .3s; }
+  .loading .step {
+    color: var(--ink-2); font-size: 14px; min-height: 22px;
+    transition: opacity .2s var(--ease), transform .2s var(--ease);
+  }
+  .loading .step.swap { opacity: 0; transform: translateY(4px); }
   .bar { width: 220px; height: 6px; margin: 20px auto 0; border-radius: 999px; background: var(--card-2); overflow: hidden; }
-  .bar > i { display: block; height: 100%; width: 40%; border-radius: 999px; background: linear-gradient(90deg, var(--gold), var(--wine-light)); animation: slide 1.3s ease-in-out infinite; }
-  @keyframes slide { 0%{ margin-left: -40%; } 100%{ margin-left: 100%; } }
+  .bar > i { display: block; height: 100%; width: 0%; border-radius: 999px; background: linear-gradient(90deg, var(--gold), var(--wine-light)); transition: width .6s var(--ease); }
 
   /* =====================================================
      RESULT — infographic design system
@@ -653,6 +696,8 @@
 </head>
 <body>
 
+<a class="skip-link" href="#main">본문 바로가기</a>
+
 <header class="topbar">
   <div class="brand">
     <div class="logo"><img src="assets/icon.svg" alt="보틀 렌즈 로고" width="40" height="40"></div>
@@ -666,7 +711,7 @@
   <button class="icon-btn" id="btnSettings" title="설정" aria-label="설정 열기" aria-haspopup="dialog"><span aria-hidden="true">⚙️</span></button>
 </header>
 
-<div class="app">
+<div class="app" id="main" tabindex="-1">
 
   <!-- ========== CAPTURE SCREEN ========== -->
   <section class="screen active" id="screen-capture">
@@ -685,7 +730,15 @@
         </div>
         <video id="video" playsinline autoplay muted class="hidden"></video>
         <img id="preview" class="preview hidden" alt="촬영한 라벨">
-        <div class="frame-guide hidden" id="frameGuide"></div>
+        <div class="frame-guide hidden" id="frameGuide">
+          <span class="fg-corner tl" aria-hidden="true"></span>
+          <span class="fg-corner tr" aria-hidden="true"></span>
+          <span class="fg-corner bl" aria-hidden="true"></span>
+          <span class="fg-corner br" aria-hidden="true"></span>
+          <span class="fg-sweep" aria-hidden="true"></span>
+          <span class="fg-hint">라벨을 이 안에 맞춰주세요</span>
+        </div>
+        <div class="cam-flash" id="camFlash" aria-hidden="true"></div>
       </div>
 
       <div class="cam-tools" id="camTools">
@@ -714,11 +767,11 @@
 
   <!-- ========== LOADING SCREEN ========== -->
   <section class="screen" id="screen-loading">
-    <div class="loading">
-      <div class="glass"><div class="fill"></div></div>
+    <div class="loading" role="status" aria-live="polite" aria-atomic="true">
+      <div class="glass" aria-hidden="true"><div class="fill"></div></div>
       <h2>라벨을 읽는 중…</h2>
       <div class="step" id="loadStep">사진을 정리하고 있어요</div>
-      <div class="bar"><i></i></div>
+      <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="loadBar"><i id="loadBarFill"></i></div>
     </div>
   </section>
 
@@ -792,7 +845,7 @@
 <button class="fab" id="fabTop" title="맨 위로" aria-label="맨 위로 이동"><span aria-hidden="true">↑</span></button>
 <input type="file" id="fileInput" accept="image/*" capture="environment" class="hidden">
 <canvas id="canvas" class="hidden"></canvas>
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="assertive" aria-atomic="true"></div>
 
 <script>
 "use strict";
@@ -836,10 +889,18 @@ let capturedForApi = null;   // downsized base64 (no prefix)
 /* ---------- Screen switching ---------- */
 function show(id) {
   $$('.screen').forEach(s => s.classList.remove('active'));
-  $('#screen-' + id).classList.add('active');
+  const target = $('#screen-' + id);
+  target.classList.add('active');
   window.scrollTo({ top: 0, behavior: 'smooth' });
   const fab = document.getElementById('fabTop');
   if (fab) fab.classList.remove('show');
+  // move focus to the new screen's heading — keeps keyboard/screen-reader users
+  // oriented instead of stranding focus on a now-hidden element
+  const heading = target.querySelector('h1, h2');
+  if (heading) {
+    if (!heading.hasAttribute('tabindex')) heading.setAttribute('tabindex', '-1');
+    heading.focus({ preventScroll: true });
+  }
 }
 
 /* ---------- Toast ---------- */
@@ -854,6 +915,12 @@ function toast(msg, isErr) {
 }
 
 /* ================= CAMERA ================= */
+function updateShutterLabel() {
+  const btn = $('#btnShutter');
+  btn.classList.toggle('armed', !!stream);
+  if (stream) { btn.setAttribute('aria-label', '촬영하기'); btn.title = '촬영'; }
+  else { btn.setAttribute('aria-label', '카메라 켜기'); btn.title = '카메라 켜기'; }
+}
 async function startCamera() {
   stopCamera();
   try {
@@ -868,6 +935,7 @@ async function startCamera() {
     $('#camPlaceholder').classList.add('hidden');
     $('#frameGuide').classList.remove('hidden');
     await v.play().catch(() => {});
+    updateShutterLabel();
   } catch (e) {
     toast('카메라를 열 수 없어요. 갤러리에서 사진을 선택해 주세요.', true);
     $('#fileInput').click();
@@ -877,6 +945,15 @@ function stopCamera() {
   if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
   const v = $('#video');
   if (v) { v.srcObject = null; }
+  updateShutterLabel();
+}
+
+/* Brief white pulse on the camera stage — visual "photo taken" cue to pair with the haptic */
+function flashCamera() {
+  const f = $('#camFlash');
+  f.classList.remove('pulse');
+  void f.offsetWidth; // restart animation
+  f.classList.add('pulse');
 }
 
 /* Capture current video frame */
@@ -887,6 +964,7 @@ function captureFrame() {
   canvas.width = v.videoWidth;
   canvas.height = v.videoHeight;
   canvas.getContext('2d').drawImage(v, 0, 0);
+  flashCamera();
   setCaptured(canvas.toDataURL('image/jpeg', 0.92));
   stopCamera();
 }
@@ -938,13 +1016,28 @@ const LOAD_STEPS = [
   '인포그래픽을 그리는 중',
 ];
 let loadTimer;
+let loadSwapT;
+function setLoadStep(idx) {
+  const stepEl = $('#loadStep'), fillEl = $('#loadBarFill'), barEl = $('#loadBar');
+  const pct = Math.round((idx / (LOAD_STEPS.length - 1)) * 100);
+  fillEl.style.width = pct + '%';
+  barEl.setAttribute('aria-valuenow', String(pct));
+  stepEl.classList.add('swap');
+  clearTimeout(loadSwapT);
+  loadSwapT = setTimeout(() => {
+    stepEl.textContent = LOAD_STEPS[idx];
+    stepEl.classList.remove('swap');
+  }, 160);
+}
 function runLoadSteps() {
   let i = 0;
   $('#loadStep').textContent = LOAD_STEPS[0];
+  $('#loadBarFill').style.width = '0%';
+  $('#loadBar').setAttribute('aria-valuenow', '0');
   clearInterval(loadTimer);
   loadTimer = setInterval(() => {
     i = Math.min(i + 1, LOAD_STEPS.length - 1);
-    $('#loadStep').textContent = LOAD_STEPS[i];
+    setLoadStep(i);
   }, 1600);
 }
 
@@ -1701,23 +1794,64 @@ function renderHistory() {
     </div>`;
   }).join('');
 }
+/* ---------- Dialog helpers: focus trap, focus return, body-scroll lock ---------- */
+let lastFocusedEl = null;
+let openDialogEl = null;
+function focusablesIn(el) {
+  return Array.from(el.querySelectorAll(
+    'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  )).filter(e => e.offsetParent !== null);
+}
+function trapDialogFocus(e) {
+  if (!openDialogEl || e.key !== 'Tab') return;
+  const items = focusablesIn(openDialogEl);
+  if (!items.length) return;
+  const first = items[0], last = items[items.length - 1];
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+}
+function anyDialogOpen() { return $('#drawer').classList.contains('show') || $('#settingsModal').classList.contains('show'); }
+function lockBodyScroll() { document.body.style.overflow = 'hidden'; }
+function unlockBodyScrollIfNoneOpen() { if (!anyDialogOpen()) document.body.style.overflow = ''; }
+function returnFocus() { if (lastFocusedEl) { lastFocusedEl.focus(); lastFocusedEl = null; } }
+
 function openDrawer() {
+  lastFocusedEl = document.activeElement;
   histFilter = 'all'; renderHistory();
   $('#overlay').classList.add('show'); $('#drawer').classList.add('show');
+  openDialogEl = $('#drawer');
+  lockBodyScroll();
   setTimeout(() => $('#btnCloseDrawer').focus(), 60);
 }
-function closeDrawer() { $('#drawer').classList.remove('show'); if (!$('#settingsModal').classList.contains('show')) $('#overlay').classList.remove('show'); }
+function closeDrawer() {
+  if (!$('#drawer').classList.contains('show')) return;
+  $('#drawer').classList.remove('show');
+  openDialogEl = $('#settingsModal').classList.contains('show') ? $('#settingsModal') : null;
+  if (!openDialogEl) $('#overlay').classList.remove('show');
+  unlockBodyScrollIfNoneOpen();
+  returnFocus();
+}
 
 /* ================= SETTINGS UI ================= */
 function openSettings() {
+  lastFocusedEl = document.activeElement;
   $('#apiKeyInput').value = store.key();
   $('#modelSelect').value = store.model();
   refreshKeyStat();
   $('#overlay').classList.add('show');
   $('#settingsModal').classList.add('show');
+  openDialogEl = $('#settingsModal');
+  lockBodyScroll();
   setTimeout(() => $('#apiKeyInput').focus(), 60);
 }
-function closeSettings() { $('#settingsModal').classList.remove('show'); if (!$('#drawer').classList.contains('show')) $('#overlay').classList.remove('show'); }
+function closeSettings() {
+  if (!$('#settingsModal').classList.contains('show')) return;
+  $('#settingsModal').classList.remove('show');
+  openDialogEl = $('#drawer').classList.contains('show') ? $('#drawer') : null;
+  if (!openDialogEl) $('#overlay').classList.remove('show');
+  unlockBodyScrollIfNoneOpen();
+  returnFocus();
+}
 function refreshKeyStat() {
   const el = $('#keyStat');
   if (store.key()) { el.className = 'keystat ok'; el.textContent = '✅ API 키가 설정되어 실제 인식이 작동합니다'; }
@@ -2362,6 +2496,20 @@ $('#themeSeg').addEventListener('click', (e) => {
   store.setTheme(choice);
   applyTheme(choice);
 });
+// ARIA radiogroup keyboard pattern: Left/Right (and Up/Down) move + select
+$('#themeSeg').addEventListener('keydown', (e) => {
+  if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
+  e.preventDefault();
+  const btns = Array.from($('#themeSeg').querySelectorAll('.seg-btn'));
+  const idx = Math.max(0, btns.findIndex(b => b.getAttribute('aria-checked') === 'true'));
+  const dir = (e.key === 'ArrowRight' || e.key === 'ArrowDown') ? 1 : -1;
+  const next = btns[(idx + dir + btns.length) % btns.length];
+  const choice = next.getAttribute('data-theme-choice');
+  haptic(8);
+  store.setTheme(choice);
+  applyTheme(choice);
+  next.focus();
+});
 
 $('#btnSettings').addEventListener('click', openSettings);
 $('#btnSettingsCancel').addEventListener('click', closeSettings);
@@ -2375,6 +2523,34 @@ $('#btnSaveKey').addEventListener('click', () => {
 
 $('#overlay').addEventListener('click', () => { closeDrawer(); closeSettings(); });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeDrawer(); closeSettings(); } });
+document.addEventListener('keydown', trapDialogFocus);
+
+// Swipe-right-to-close on the history drawer (mobile gesture)
+(function initDrawerSwipe() {
+  const drawer = $('#drawer');
+  let startX = 0, currentX = 0, dragging = false;
+  drawer.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 1) return;
+    startX = currentX = e.touches[0].clientX;
+    dragging = true;
+    drawer.style.transition = 'none';
+  }, { passive: true });
+  drawer.addEventListener('touchmove', (e) => {
+    if (!dragging) return;
+    currentX = e.touches[0].clientX;
+    const dx = Math.max(0, currentX - startX); // only allow dragging toward closed (rightward)
+    drawer.style.transform = `translateX(${dx}px)`;
+  }, { passive: true });
+  drawer.addEventListener('touchend', () => {
+    if (!dragging) return;
+    dragging = false;
+    drawer.style.transition = '';
+    drawer.style.transform = '';
+    const dx = Math.max(0, currentX - startX);
+    if (dx > 90) closeDrawer();
+    startX = currentX = 0;
+  });
+})();
 
 // Scroll-to-top FAB: visible only while reading a long result page
 const fabTop = $('#fabTop');
