@@ -123,6 +123,15 @@
     background:rgba(124,92,255,.12);border:1px solid rgba(124,92,255,.25)}
   .stage-tips li b{color:var(--txt);font-weight:650}
 
+  /* export options (resolution / format) */
+  .export-opts{display:flex;gap:18px;flex-wrap:wrap;margin-top:16px}
+  .eo-group{display:flex;align-items:center;gap:9px}
+  .eo-lbl{font-size:11.5px;color:var(--mut);font-weight:600;white-space:nowrap}
+  .seg.mini{display:inline-flex;gap:4px;background:rgba(8,9,14,.4);padding:3px;border-radius:9px;border:1px solid var(--glass-line)}
+  .seg.mini button{flex:none;min-width:0;background:transparent;border:0;color:var(--mut);border-radius:7px;padding:5px 11px;font-size:12px;font-weight:650;cursor:pointer;transition:.12s;font-family:inherit}
+  .seg.mini button:hover{color:var(--txt)}
+  .seg.mini button.on{background:linear-gradient(135deg,var(--acc),#5a3fd6);color:#fff;box-shadow:0 3px 10px rgba(124,92,255,.35)}
+
   button.btn{border:0;cursor:pointer;font-weight:650;font-size:13px;border-radius:11px;padding:12px 15px;color:#fff;
     background:linear-gradient(135deg,var(--acc),#5a3fd6);box-shadow:0 8px 22px rgba(124,92,255,.34);transition:.16s;flex:1;min-width:120px}
   button.btn:hover{transform:translateY(-2px);filter:brightness(1.08);box-shadow:0 12px 28px rgba(124,92,255,.44)}
@@ -362,6 +371,23 @@
       <div class="stage">
         <div class="canvas-hold">
           <canvas id="preview" width="1024" height="1024"></canvas>
+        </div>
+        <div class="export-opts">
+          <div class="eo-group">
+            <span class="eo-lbl" data-i18n="exp.res">해상도</span>
+            <div class="seg mini" id="exportResSeg">
+              <button data-res="1024" class="on" data-tip="화면·SNS용 (기본)">1024</button>
+              <button data-res="2048" data-tip="고해상도 · 인쇄용 (포스터·메뉴판)">2048</button>
+              <button data-res="4096" data-tip="초고해상도 · 대형 인쇄용">4K</button>
+            </div>
+          </div>
+          <div class="eo-group">
+            <span class="eo-lbl" data-i18n="exp.fmt">형식</span>
+            <div class="seg mini" id="exportFmtSeg">
+              <button data-fmt="png" class="on" data-tip="투명 배경 지원 · 무손실 (권장)">PNG</button>
+              <button data-fmt="jpg" data-tip="작은 용량 · 일부 인쇄소 요구 형식">JPG</button>
+            </div>
+          </div>
         </div>
         <div class="actions">
           <button class="btn" id="dlPng" data-i18n="btn.png">PNG 저장</button>
@@ -926,7 +952,7 @@
   <footer>
     <div>Aesthetic QR Studio · 아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.12-e</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.16-a</b></div>
   </footer>
 </div>
 
@@ -3304,7 +3330,10 @@ var S = {
   centerColor: "#111111",
   centerScale: 24,     // % of QR width
   centerBadge: "pill", // pill|rounded|circle|hexagon|shield|ribbon|none
-  centerMark: "monogram"
+  centerMark: "monogram",
+  // ---- export options ----
+  exportRes: 1024,     // PNG/JPG export resolution in px (1024 screen / 2048 print / 4096 large print)
+  exportFmt: "png"     // png | jpg
 };
 
 var $ = function(id){ return document.getElementById(id); };
@@ -4246,9 +4275,15 @@ function download(url, name){
 }
 function exportPNG(){
   var was=isAnimating() && !S.artIsVideo; if(was){ stopAnim(); }
-  var off=document.createElement("canvas"); off.width=EXPORT; off.height=EXPORT;
-  render(off.getContext("2d"), EXPORT);
-  off.toBlob(function(b){ download(URL.createObjectURL(b), "aesthetic-qr.png"); toast("PNG 저장됨"); if(was) startAnim(); }, "image/png");
+  var res=S.exportRes||EXPORT, jpg=(S.exportFmt==="jpg");
+  var off=document.createElement("canvas"); off.width=res; off.height=res;
+  var g=off.getContext("2d");
+  render(g, res);
+  // JPG has no alpha — paint white BEHIND the rendered QR (render() clears first, so a pre-fill
+  // would be wiped; destination-over fills only the transparent pixels) so it never flattens to black
+  if(jpg){ g.globalCompositeOperation="destination-over"; g.fillStyle="#ffffff"; g.fillRect(0,0,res,res); g.globalCompositeOperation="source-over"; }
+  var mime=jpg?"image/jpeg":"image/png", ext=jpg?"jpg":"png", q=jpg?0.95:undefined;
+  off.toBlob(function(b){ download(URL.createObjectURL(b), "aesthetic-qr-"+res+"."+ext); toast(ext.toUpperCase()+" 저장됨 · "+res+"px"); if(was) startAnim(); }, mime, q);
 }
 function exportSVG(){
   if(S.aiArt){ toast("AI 아트 QR은 PNG로 저장하세요 (SVG는 벡터 전용)"); return; }
@@ -4257,9 +4292,10 @@ function exportSVG(){
   download(URL.createObjectURL(blob), "aesthetic-qr.svg"); toast("SVG 저장됨");
 }
 function copyPNG(){
-  var off=document.createElement("canvas"); off.width=EXPORT; off.height=EXPORT;
+  var res=S.exportRes||EXPORT;
+  var off=document.createElement("canvas"); off.width=res; off.height=res;
   var was=S.anim; if(was) stopAnim();
-  render(off.getContext("2d"), EXPORT);
+  render(off.getContext("2d"), res);
   off.toBlob(function(b){
     if(navigator.clipboard && window.ClipboardItem){
       navigator.clipboard.write([new ClipboardItem({"image/png":b})]).then(function(){toast("클립보드에 복사됨");},function(){toast("복사 실패");});
@@ -4730,6 +4766,19 @@ $("dlPng").addEventListener("click",exportPNG);
 $("dlSvg").addEventListener("click",exportSVG);
 $("dlWebm").addEventListener("click",exportWebM);
 $("copyBtn").addEventListener("click",copyPNG);
+// export resolution / format pickers (client-side only; higher res = print quality)
+Array.prototype.forEach.call($("exportResSeg").children,function(b){
+  b.addEventListener("click",function(){ S.exportRes=+b.dataset.res; Array.prototype.forEach.call($("exportResSeg").children,function(x){x.classList.toggle("on",x===b);}); });
+});
+Array.prototype.forEach.call($("exportFmtSeg").children,function(b){
+  b.addEventListener("click",function(){
+    S.exportFmt=b.dataset.fmt;
+    Array.prototype.forEach.call($("exportFmtSeg").children,function(x){x.classList.toggle("on",x===b);});
+    // swap the save-button label (via data-i18n so it stays correct across language switches)
+    var key=(b.dataset.fmt==="jpg")?"btn.jpg":"btn.png";
+    $("dlPng").setAttribute("data-i18n",key); $("dlPng").textContent=t(key);
+  });
+});
 
 // ---------- tabs ----------
 $("tabs").addEventListener("click",function(e){
@@ -5738,6 +5787,9 @@ var I18N = {
   "cat.tip.myqr":{ko:"내가 저장한 QR 보관함. 스튜디오에서 ‘현재 디자인 저장’을 누르면 여기 쌓입니다.",en:"Your saved QR library. Press “Save current design” in the studio to add here.",zh:"你保存的二维码库。在工作室点击“保存当前设计”即可加入。",ja:"保存したQRの保管庫。スタジオで「現在のデザインを保存」を押すとここに貯まります。"},
   "btn.saveMyQr":{ko:"＋ 현재 디자인 저장",en:"＋ Save current design",zh:"＋ 保存当前设计",ja:"＋ 現在のデザインを保存"},
   "btn.png":{ko:"PNG 저장",en:"Save PNG",zh:"保存 PNG",ja:"PNG保存"},
+  "btn.jpg":{ko:"JPG 저장",en:"Save JPG",zh:"保存 JPG",ja:"JPG保存"},
+  "exp.res":{ko:"해상도",en:"Resolution",zh:"分辨率",ja:"解像度"},
+  "exp.fmt":{ko:"형식",en:"Format",zh:"格式",ja:"形式"},
   "btn.svg":{ko:"SVG 저장",en:"Save SVG",zh:"保存 SVG",ja:"SVG保存"},
   "btn.webm":{ko:"애니메이션 저장",en:"Save animation",zh:"保存动画",ja:"アニメ保存"},
   "btn.copy":{ko:"클립보드 복사",en:"Copy to clipboard",zh:"复制到剪贴板",ja:"クリップボードにコピー"},
