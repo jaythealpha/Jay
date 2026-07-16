@@ -80,6 +80,11 @@
   .tabs button{border:0;background:transparent;color:var(--mut);padding:8px 17px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:650;transition:.15s}
   .tabs button:hover{color:var(--txt)}
   .tabs button.active{background:linear-gradient(135deg,var(--acc),#5a3fd6);color:#fff;box-shadow:0 4px 14px rgba(124,92,255,.4)}
+  /* AR is experimental until fully tested across devices — flag it */
+  .tabs button[data-view="ar"]{position:relative;overflow:visible}
+  .tabs button[data-view="ar"]::after{content:"BETA";position:absolute;top:-7px;right:-4px;font-size:7.5px;font-weight:800;
+    letter-spacing:.4px;color:#ffcc4d;background:rgba(255,204,77,.16);border:1px solid rgba(255,204,77,.45);
+    border-radius:6px;padding:1px 3px;line-height:1.25;pointer-events:none}
 
   /* hero */
   .hero{text-align:center;padding:26px 0 30px;position:relative}
@@ -354,7 +359,7 @@
   <!-- ============ GALLERY ============ -->
   <section class="view active" id="view-gallery">
     <div class="hero">
-      <div class="eyebrow"><span class="dot"></span><span data-i18n="hero.eyebrow">스캔되는 브랜드 아트 · 100% 무료 · 브라우저에서 처리</span></div>
+      <div class="eyebrow"><span class="dot"></span><span data-i18n="hero.eyebrow">스캔되는 브랜드 아트 · 움직이는 QR · 서버 없이 브라우저에서</span></div>
       <h2 data-i18n-html="hero.h">평범한 QR을 <span class="g">브랜드가 되는 아트</span>로</h2>
       <p data-i18n="hero.p">흑백 사각형은 이제 그만. 색상·그라디언트·모듈 형태·로고·애니메이션으로 스캔되는 디자인을 만드세요. 아래 프리셋을 눌러 스튜디오에서 바로 편집할 수 있습니다.</p>
       <div class="lang-switch" id="langSwitch" role="group" aria-label="Language">
@@ -404,16 +409,16 @@
           <div class="eo-group">
             <span class="eo-lbl" data-i18n="exp.res">해상도</span>
             <div class="seg mini" id="exportResSeg">
-              <button data-res="1024" class="on" data-tip="화면·SNS용 (기본)">1024</button>
-              <button data-res="2048" data-tip="고해상도 · 인쇄용 (포스터·메뉴판)">2048</button>
-              <button data-res="4096" data-tip="초고해상도 · 대형 인쇄용">4K</button>
+              <button data-res="1024" class="on" data-i18n-tip="exp.res1" data-tip="화면·SNS용 · 약 8cm 인쇄(300DPI)">1024</button>
+              <button data-res="2048" data-i18n-tip="exp.res2" data-tip="고해상도 인쇄 · 약 17cm(300DPI) — 포스터·메뉴판">2048</button>
+              <button data-res="4096" data-i18n-tip="exp.res3" data-tip="초고해상도 · 약 35cm(300DPI) — 현수막·대형 인쇄">4K</button>
             </div>
           </div>
           <div class="eo-group">
             <span class="eo-lbl" data-i18n="exp.fmt">형식</span>
             <div class="seg mini" id="exportFmtSeg">
-              <button data-fmt="png" class="on" data-tip="투명 배경 지원 · 무손실 (권장)">PNG</button>
-              <button data-fmt="jpg" data-tip="작은 용량 · 일부 인쇄소 요구 형식">JPG</button>
+              <button data-fmt="png" class="on" data-i18n-tip="exp.fmtPng" data-tip="투명 배경 지원 · 무손실 (권장)">PNG</button>
+              <button data-fmt="jpg" data-i18n-tip="exp.fmtJpg" data-tip="작은 용량 · 일부 인쇄소 요구 형식">JPG</button>
             </div>
           </div>
           <button class="pro-btn" id="proBtn" style="margin-left:auto"><span data-i18n="pro.badge">✨ Pro</span></button>
@@ -981,7 +986,7 @@
   <footer>
     <div>Aesthetic QR Studio · 아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.16-b</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.16-c</b></div>
   </footer>
 </div>
 
@@ -5888,7 +5893,7 @@ var I18N = {
   "nav.ar":{ko:"AR",en:"AR",zh:"AR",ja:"AR"},
   "nav.guide":{ko:"사용법",en:"Guide",zh:"使用指南",ja:"使い方"},
   "hdr.sub":{ko:"아름답고 스캔되는 QR을 만드는 스튜디오",en:"A studio for beautiful, scannable QR codes",zh:"打造美观且可扫描的二维码工作室",ja:"美しくスキャン可能なQRを作るスタジオ"},
-  "hero.eyebrow":{ko:'스캔되는 브랜드 아트 · 100% 무료 · 브라우저에서 처리',en:'Scannable brand art · 100% free · runs in your browser',zh:'可扫描的品牌艺术 · 100%免费 · 浏览器内处理',ja:'スキャンできるブランドアート · 100%無料 · ブラウザで処理'},
+  "hero.eyebrow":{ko:'스캔되는 브랜드 아트 · 움직이는 QR · 서버 없이 브라우저에서',en:'Scannable brand art · animated QR · runs in your browser',zh:'可扫描的品牌艺术 · 动态二维码 · 浏览器内处理',ja:'スキャンできるブランドアート · 動くQR · ブラウザで処理'},
   "tips.title":{ko:'스캔이 잘 되는 QR 팁',en:'Tips for a scannable QR',zh:'易于扫描的二维码技巧',ja:'スキャンしやすいQRのコツ'},
   "tips.1":{ko:'<b>대비</b>를 충분히: 밝은 배경 + 어두운 모듈이 가장 잘 스캔됩니다.',en:'Keep strong <b>contrast</b>: a light background with dark modules scans best.',zh:'保持足够<b>对比度</b>：浅色背景配深色模块最易扫描。',ja:'<b>コントラスト</b>を十分に：明るい背景＋暗いモジュールが最も読み取りやすい。'},
   "tips.2":{ko:'로고·아트를 넣을 땐 오류정정 <b>H</b>로 두면 안정적이에요.',en:'Using a logo or art? Keep error correction at <b>H</b> for reliability.',zh:'加入徽标或图案时，将纠错等级设为 <b>H</b> 更稳定。',ja:'ロゴやアートを入れるなら誤り訂正を <b>H</b> にすると安定します。'},
@@ -5911,6 +5916,11 @@ var I18N = {
   "btn.jpg":{ko:"JPG 저장",en:"Save JPG",zh:"保存 JPG",ja:"JPG保存"},
   "exp.res":{ko:"해상도",en:"Resolution",zh:"分辨率",ja:"解像度"},
   "exp.fmt":{ko:"형식",en:"Format",zh:"格式",ja:"形式"},
+  "exp.res1":{ko:"화면·SNS용 · 약 8cm 인쇄(300DPI)",en:"Screen/social · ~8cm print @300DPI",zh:"屏幕/社交 · 约8cm打印(300DPI)",ja:"画面・SNS用 · 約8cm印刷(300DPI)"},
+  "exp.res2":{ko:"고해상도 인쇄 · 약 17cm(300DPI) — 포스터·메뉴판",en:"High-res print · ~17cm @300DPI — posters, menus",zh:"高清打印 · 约17cm(300DPI) — 海报、菜单",ja:"高解像度印刷 · 約17cm(300DPI) — ポスター・メニュー"},
+  "exp.res3":{ko:"초고해상도 · 약 35cm(300DPI) — 현수막·대형 인쇄",en:"Ultra-res · ~35cm @300DPI — banners, large print",zh:"超高清 · 约35cm(300DPI) — 横幅、大幅打印",ja:"超高解像度 · 約35cm(300DPI) — バナー・大判印刷"},
+  "exp.fmtPng":{ko:"투명 배경 지원 · 무손실 (권장)",en:"Transparent bg · lossless (recommended)",zh:"支持透明背景 · 无损（推荐）",ja:"透明背景対応 · 可逆圧縮（推奨）"},
+  "exp.fmtJpg":{ko:"작은 용량 · 일부 인쇄소 요구 형식",en:"Smaller file · some print shops require it",zh:"文件更小 · 部分印刷店要求",ja:"小さい容量 · 一部の印刷所が要求"},
   "pro.badge":{ko:"✨ Pro",en:"✨ Pro",zh:"✨ Pro",ja:"✨ Pro"},
   "pro.badgeOn":{ko:"✨ Pro ✓",en:"✨ Pro ✓",zh:"✨ Pro ✓",ja:"✨ Pro ✓"},
   "pro.title":{ko:"✨ Pro로 업그레이드",en:"✨ Upgrade to Pro",zh:"✨ 升级到 Pro",ja:"✨ Proにアップグレード"},
