@@ -1001,7 +1001,7 @@
   <footer>
     <div>Aesthetic QR Studio · 아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.16-e</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.16-f</b></div>
   </footer>
 </div>
 
@@ -3502,12 +3502,12 @@ function drawFrameBackground(g, size, fi, rg){
     mold(fi*0.40,"#a5713a",fi*0.28);                  // raised rail
     mold(fi*0.40,"rgba(255,240,215,.16)",fi*0.28);    // rail top highlight
     mold(fi*0.18,"rgba(38,21,6,.5)",fi*0.2);          // inner groove
-    g.strokeStyle="rgba(38,21,6,.38)"; g.lineWidth=Math.max(1,size*0.0018);   // mitred corner joints
+    g.strokeStyle="rgba(38,21,6,.42)"; g.lineWidth=Math.max(1,size*0.003);   // mitred corner joints across the full band
     g.beginPath();
-    g.moveTo(x-fi*0.85,y-fi*0.85); g.lineTo(x,y);
-    g.moveTo(x+w+fi*0.85,y-fi*0.85); g.lineTo(x+w,y);
-    g.moveTo(x-fi*0.85,y+h+fi*0.85); g.lineTo(x,y+h);
-    g.moveTo(x+w+fi*0.85,y+h+fi*0.85); g.lineTo(x+w,y+h);
+    g.moveTo(size*0.03,size*0.03); g.lineTo(x,y);
+    g.moveTo(size*0.97,size*0.03); g.lineTo(x+w,y);
+    g.moveTo(size*0.03,size*0.97); g.lineTo(x,y+h);
+    g.moveTo(size*0.97,size*0.97); g.lineTo(x+w,y+h);
     g.stroke();
     fillRoundCard(rg*0.02);
     g.save(); g.strokeStyle="rgba(38,21,6,.22)"; g.lineWidth=size*0.004; roundRect(g,x,y,w,h,rg*0.02); g.stroke(); g.restore();
@@ -3534,6 +3534,11 @@ function drawFrameBackground(g, size, fi, rg){
     g.globalAlpha=.55; g.fillStyle=S.frameBg1||"#9ec6d8"; g.fillRect(-size*0.095,-size*0.019,size*0.19,size*0.038);
     g.globalAlpha=.22; g.fillStyle="#fff"; g.fillRect(-size*0.095,-size*0.019,size*0.19,size*0.013); g.restore();
     fillRoundCard(size*0.004);
+    // caption line + heart in the deep bottom margin (the polaroid signature)
+    g.save(); g.strokeStyle="rgba(120,120,120,.3)"; g.lineWidth=size*0.0035; g.lineCap="round";
+    g.beginPath(); g.moveTo(x+w*0.20, y+h*0.905); g.lineTo(x+w*0.72, y+h*0.905); g.stroke();
+    g.fillStyle=S.frameBg1||"#e8899b"; g.font=Math.round(size*0.032)+"px -apple-system,sans-serif"; g.textAlign="left"; g.textBaseline="middle";
+    g.fillText("♥", x+w*0.755, y+h*0.9); g.restore();
   } else if (style==="stamp"){
     // postage stamp: perforated edges, inner keyline, denomination text & a postmark cancellation
     var mat="#dbe4ec"; g.fillStyle=mat; g.fillRect(0,0,size,size);
@@ -3542,22 +3547,26 @@ function drawFrameBackground(g, size, fi, rg){
     var sm=size*0.045, sx0=sm, sy0=sm, sw=size-2*sm, sh=size-2*sm;
     g.save(); g.shadowColor="rgba(0,0,0,.22)"; g.shadowBlur=size*0.02; g.shadowOffsetY=size*0.004;
     g.fillStyle="#fdfcf7"; g.fillRect(sx0,sy0,sw,sh); g.restore();
-    var pr=size*0.0135, np=Math.round(sw/(size*0.037)); g.fillStyle=mat;
+    var pr=size*0.019, np=Math.round(sw/(size*0.052)); g.fillStyle=mat;   // big perforation notches
     for(var pi=0;pi<=np;pi++){ var pt=pi/np;
       g.beginPath(); g.arc(sx0+sw*pt, sy0, pr,0,6.2832); g.fill();
       g.beginPath(); g.arc(sx0+sw*pt, sy0+sh, pr,0,6.2832); g.fill();
       g.beginPath(); g.arc(sx0, sy0+sh*pt, pr,0,6.2832); g.fill();
       g.beginPath(); g.arc(sx0+sw, sy0+sh*pt, pr,0,6.2832); g.fill(); }
-    var accS=S.frameBg1||"#b23a48", il=size*0.022;
-    g.strokeStyle=accS; g.lineWidth=Math.max(1,size*0.0035); g.strokeRect(sx0+il, sy0+il, sw-2*il, sh-2*il);
+    var accS=S.frameBg1||"#b23a48", il=size*0.03;
+    // AIR MAIL red/blue dashed border just inside the perforations
+    var alen=size*0.028, ay=sy0+size*0.02;
+    for(var ad=0; ad<sw-size*0.02; ad+=alen*2){ g.fillStyle=(Math.floor(ad/(alen*2))%2)?"#2b52a4":"#c62d3c";
+      g.save(); g.beginPath(); g.moveTo(sx0+size*0.02+ad,ay); g.lineTo(sx0+size*0.02+ad+alen,ay); g.lineTo(sx0+size*0.02+ad+alen-size*0.008,ay+size*0.012); g.lineTo(sx0+size*0.02+ad-size*0.008,ay+size*0.012); g.closePath(); g.fill(); g.restore(); }
+    g.strokeStyle=accS; g.lineWidth=Math.max(2,size*0.005); g.strokeRect(sx0+il, sy0+il, sw-2*il, sh-2*il);
     g.fillStyle=accS; g.textBaseline="middle";
-    g.font="800 "+Math.round(size*0.026)+"px -apple-system,'Noto Sans KR',sans-serif";
-    g.textAlign="left"; g.fillText("QR · POST", sx0+il*2, sy0+il*2.3);
-    g.textAlign="right"; g.font="800 "+Math.round(size*0.03)+"px -apple-system,sans-serif"; g.fillText("₩", sx0+sw-il*2, sy0+il*2.3);
-    g.save(); g.globalAlpha=.5; g.strokeStyle="#2b3a4a"; g.lineWidth=size*0.0035;   // postmark
-    var pmx=sx0+sw-size*0.055, pmy=sy0+size*0.055;
-    for(var rc=0;rc<2;rc++){ g.beginPath(); g.arc(pmx,pmy,size*0.05-rc*size*0.011,0,6.2832); g.stroke(); }
-    for(var wv=0;wv<5;wv++){ g.beginPath(); var wy=pmy-size*0.024+wv*size*0.012; for(var wx=pmx-size*0.058;wx<pmx+size*0.058;wx+=size*0.009){ g.lineTo(wx, wy+Math.sin(wx*0.35)*size*0.004); } g.stroke(); }
+    g.font="800 "+Math.round(size*0.036)+"px -apple-system,'Noto Sans KR',sans-serif";
+    g.textAlign="left"; g.fillText("QR · POST", sx0+il*1.6, sy0+il*1.9);
+    g.textAlign="right"; g.font="800 "+Math.round(size*0.05)+"px -apple-system,sans-serif"; g.fillText("₩", sx0+sw-il*1.6, sy0+il*1.9);
+    g.save(); g.globalAlpha=.55; g.strokeStyle="#2b3a4a"; g.lineWidth=size*0.005;   // bold postmark
+    var pmx=sx0+sw-size*0.085, pmy=sy0+size*0.09;
+    for(var rc=0;rc<2;rc++){ g.beginPath(); g.arc(pmx,pmy,size*0.075-rc*size*0.016,0,6.2832); g.stroke(); }
+    for(var wv=0;wv<6;wv++){ g.beginPath(); var wy=pmy-size*0.036+wv*size*0.014; for(var wx=pmx-size*0.085;wx<pmx+size*0.085;wx+=size*0.009){ g.lineTo(wx, wy+Math.sin(wx*0.32)*size*0.005); } g.stroke(); }
     g.restore();
     fillRoundCard(rg*0.008);
   } else if (style==="shell"){
@@ -3565,7 +3574,7 @@ function drawFrameBackground(g, size, fi, rg){
     var sgrad=g.createLinearGradient(0,0,size,size); sgrad.addColorStop(0,"#fbeef2"); sgrad.addColorStop(.5,"#fdf6ee"); sgrad.addColorStop(1,"#eef4f1");
     g.fillStyle=sgrad; g.fillRect(0,0,size,size);
     var accH=S.frameBg1||"#e6a4b4", accG="#f0cf92";
-    var hp=fi*0.5, hx0=x-hp, hy0=y-hp, hw=w+2*hp, hh=h+2*hp, scr=fi*0.44;
+    var hp=fi*0.52, hx0=x-hp, hy0=y-hp, hw=w+2*hp, hh=h+2*hp, scr=fi*0.5;
     g.fillStyle=accG;
     var sc=Math.max(4,Math.round(hw/(scr*1.35)));
     for(var si=0;si<=sc;si++){ var tx=hx0+hw*si/sc; g.beginPath(); g.arc(tx,hy0,scr,0,6.2832); g.fill(); g.beginPath(); g.arc(tx,hy0+hh,scr,0,6.2832); g.fill(); }
@@ -3590,6 +3599,11 @@ function drawFrameBackground(g, size, fi, rg){
     g.strokeStyle="#ffffff"; g.lineWidth=Math.max(2,size*0.014); roundRect(g,size*0.03,size*0.03,size*0.94,size*0.94,size*0.02); g.stroke();
     g.strokeStyle=pc2; g.lineWidth=Math.max(1,size*0.005); roundRect(g,size*0.056,size*0.056,size*0.888,size*0.888,size*0.015); g.stroke();
     g.save(); g.shadowColor="rgba(0,0,0,.33)"; g.shadowBlur=size*0.028; g.shadowOffsetY=size*0.01; fillRoundCard(rg*0.04); g.restore();
+    // big poster headline in the top band + a rule in the bottom band
+    g.save(); g.textAlign="center"; g.textBaseline="middle"; g.shadowColor="rgba(0,0,0,.35)"; g.shadowBlur=size*0.01;
+    g.fillStyle="#ffffff"; g.font="900 "+Math.round(size*0.082)+"px -apple-system,'Noto Sans KR',sans-serif";
+    g.fillText(t("frame.scanme")||"SCAN ME", cx, fi*0.5);
+    g.shadowBlur=0; g.globalAlpha=.9; g.lineWidth=size*0.006; g.strokeStyle="#fff"; g.beginPath(); g.moveTo(cx-size*0.15,size-fi*0.5); g.lineTo(cx+size*0.15,size-fi*0.5); g.stroke(); g.restore();
   } else if (style==="shadow"){
     // passe-partout: coloured outer frame, cream mat, inner bevel line, QR card
     g.fillStyle = frameFill(g, size); g.fillRect(0,0,size,size);
@@ -3605,14 +3619,14 @@ function drawFrameBackground(g, size, fi, rg){
     g.save(); g.strokeStyle="rgba(255,255,255,.028)"; g.lineWidth=1; var bh=size*0.05, boff=0;   // faint brick
     for(var nby=0; nby<size; nby+=bh){ g.beginPath(); g.moveTo(0,nby); g.lineTo(size,nby); g.stroke(); for(var nbx=boff; nbx<size; nbx+=size*0.1){ g.beginPath(); g.moveTo(nbx,nby); g.lineTo(nbx,nby+bh); g.stroke(); } boff=boff?0:size*0.05; }
     g.restore();
-    var nx=x-fi*0.32, ny=y-fi*0.32, nw=w+fi*0.64, nh=h+fi*0.64, nrad=fi*0.66;
+    var nx=x-fi*0.45, ny=y-fi*0.45, nw=w+fi*0.9, nh=h+fi*0.9, nrad=fi*0.55;
     g.save(); g.lineCap="round"; g.lineJoin="round";
-    [[size*0.09,0.16],[size*0.05,0.30],[size*0.025,0.6]].forEach(function(p){ g.shadowColor=neon; g.shadowBlur=p[0]; g.globalAlpha=p[1]; g.strokeStyle=neon; g.lineWidth=Math.max(3,size*0.02); roundRect(g,nx,ny,nw,nh,nrad); g.stroke(); });
-    g.globalAlpha=1; g.shadowBlur=size*0.02; g.strokeStyle=neon; g.lineWidth=Math.max(2,size*0.011); roundRect(g,nx,ny,nw,nh,nrad); g.stroke();
-    g.shadowBlur=size*0.006; g.strokeStyle="rgba(255,255,255,.92)"; g.lineWidth=Math.max(1,size*0.004); roundRect(g,nx,ny,nw,nh,nrad); g.stroke();
-    g.shadowBlur=size*0.018; g.strokeStyle=neon; g.lineWidth=Math.max(1,size*0.005); roundRect(g,x-fi*0.1,y-fi*0.1,w+fi*0.2,h+fi*0.2,fi*0.42); g.stroke();
+    [[size*0.15,0.13],[size*0.09,0.24],[size*0.045,0.45]].forEach(function(p){ g.shadowColor=neon; g.shadowBlur=p[0]; g.globalAlpha=p[1]; g.strokeStyle=neon; g.lineWidth=Math.max(4,size*0.034); roundRect(g,nx,ny,nw,nh,nrad); g.stroke(); });
+    g.globalAlpha=1; g.shadowBlur=size*0.03; g.strokeStyle=neon; g.lineWidth=Math.max(3,size*0.021); roundRect(g,nx,ny,nw,nh,nrad); g.stroke();   // tube body
+    g.shadowBlur=size*0.012; g.strokeStyle="rgba(255,255,255,.95)"; g.lineWidth=Math.max(1,size*0.008); roundRect(g,nx,ny,nw,nh,nrad); g.stroke();   // hot white core
+    g.shadowBlur=size*0.028; g.strokeStyle=neon; g.lineWidth=Math.max(2,size*0.01); roundRect(g,x-fi*0.14,y-fi*0.14,w+fi*0.28,h+fi*0.28,fi*0.4); g.stroke();   // inner tube
     g.restore();
-    g.fillStyle="rgba(0,0,0,.45)"; [[nx,ny],[nx+nw,ny],[nx,ny+nh],[nx+nw,ny+nh]].forEach(function(c){ g.beginPath(); g.arc(c[0],c[1],size*0.006,0,6.2832); g.fill(); });
+    g.fillStyle="rgba(0,0,0,.5)"; [[nx,ny],[nx+nw,ny],[nx,ny+nh],[nx+nw,ny+nh]].forEach(function(c){ g.beginPath(); g.arc(c[0],c[1],size*0.009,0,6.2832); g.fill(); });
     fillRoundCard(rg*0.05);
   } else if (style==="circle"){
     // circle-art: soft neutral backdrop, concentric decorative dot rings kept well clear of the
@@ -3890,10 +3904,13 @@ function render(g2, exportSize){
   var labelFont = S.labelOn ? Math.max(8, Math.round(size*(S.labelSize/100)*0.050)) : 0;
   var labelSpace = S.labelOn ? Math.round(labelFont*1.7) : 0;
   // framed background (backdrop + white card) reserves an outer inset
-  var FRAME_INSET={circle:0.20,shell:0.13,stamp:0.115,wood:0.09,poster:0.085,gold:0.08,shadow:0.08,neon:0.078};
+  // decorative frames get a MUCH wider band so the design reads at a glance (not a thin ring)
+  var FRAME_INSET={circle:0.20,poster:0.20,shell:0.185,neon:0.15,wood:0.15,stamp:0.15,gold:0.145,polaroid:0.11,shadow:0.11};
   var frameInset = S.frameOn ? Math.round(size*(FRAME_INSET[S.frameStyle]||0.07)) : 0;
   var region = size - frameInset*2;               // area the QR block lives in
-  var avail = region - labelSpace;                // square QR block size
+  // polaroid reserves a big white bottom margin (the caption) → QR sits high like a real instant photo
+  var polaBottom = (S.frameOn && S.frameStyle==="polaroid") ? Math.round(region*0.18) : 0;
+  var avail = region - labelSpace - polaBottom;   // square QR block size
   var total = n + quiet*2;
   var unit = avail/total;
   var topPad = frameInset + ((S.labelOn && S.labelPos==="top") ? labelSpace : 0);
@@ -6296,6 +6313,7 @@ var I18N = {
   "seg.fstyle.stamp":{ko:'우표',en:'Postage stamp',zh:'邮票',ja:'切手'},
   "seg.fstyle.shell":{ko:'조개 장식',en:'Scallop',zh:'贝壳花边',ja:'スカラップ'},
   "seg.fstyle.poster":{ko:'포스터',en:'Poster',zh:'海报',ja:'ポスター'},
+  "frame.scanme":{ko:'스캔하세요',en:'SCAN ME',zh:'扫一扫',ja:'スキャン'},
   "seg.cmode.none":{ko:'없음',en:'None',zh:'无',ja:'なし'},
   "seg.cmode.text":{ko:'텍스트 로고',en:'Text logo',zh:'文字 Logo',ja:'テキストロゴ'},
   "seg.cmode.emoji":{ko:'픽토그램',en:'Pictogram',zh:'图标',ja:'ピクトグラム'},
