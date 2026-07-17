@@ -225,6 +225,26 @@
   .dexcell .dt{font-size:9px; opacity:.7;}
   .dexcell.locked{opacity:.45;}
   .dexcell.locked .de{filter:grayscale(1) brightness(.4);}
+
+  /* Leaderboard */
+  .lbmode{font-size:11px; opacity:.6; margin:-6px 0 10px;}
+  .lbmode b{color:#4dffb8;}
+  .lblist{display:flex; flex-direction:column; gap:5px; margin:12px 0; text-align:left;}
+  .lbrow{display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:11px;
+    background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.06); font-size:14px;}
+  .lbrow .rk{width:24px; font-weight:800; text-align:center; opacity:.8;}
+  .lbrow .nm{flex:1; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .lbrow .sc{font-weight:800; color:var(--gold);}
+  .lbrow.me{background:linear-gradient(90deg,rgba(124,92,255,.35),rgba(255,46,99,.25)); border-color:var(--accent);}
+  .lbrow.top1 .rk{color:#ffd23f}.lbrow.top2 .rk{color:#cfd6e6}.lbrow.top3 .rk{color:#e0a56b}
+  .lbempty{opacity:.55; font-size:13px; padding:16px 0;}
+  .nameEntry{margin:12px 0 2px; display:flex; gap:8px;}
+  .nameEntry input{flex:1; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15);
+    border-radius:12px; padding:12px; color:#fff; font-size:15px; font-weight:700; text-align:center; min-width:0;}
+  .nameEntry input:focus{outline:none; border-color:var(--accent);}
+  .nameEntry button{flex:0 0 auto; padding:0 16px; border:none; border-radius:12px; cursor:pointer;
+    font-weight:800; color:#fff; background:linear-gradient(90deg,#7c5cff,#ff2e63);}
+  .myrank{font-size:14px; margin-top:8px; color:#4dffb8; font-weight:800;}
 </style>
 </head>
 <body>
@@ -279,10 +299,12 @@
       🧊 <b>얼음 블록</b>은 줄을 채워야 사라져요.<br>
       ✨ 가끔 <b>골든 몬스터</b>가 등장 — 클리어 시 대박 점수!<br>
       👑 15줄 클리어마다 <b>보스 몬스터</b> 등장, 클리어하면 전체 폭발!<br>
-      🎯 <b>오늘의 미션</b>을 깨면 보너스 코인 · 💰 코인으로 파워업 · 📅 매일 접속 보너스.
+      🎯 <b>오늘의 미션</b>을 깨면 보너스 코인 · 💰 코인으로 파워업 · 📅 매일 접속 보너스.<br>
+      🏆 게임 오버 시 <b>랭킹 등록</b> — 전 세계(또는 이 기기) 최고 점수에 도전!
     </div>
     <div class="bestline">🏆 최고 기록: <span id="bestStart">0</span></div>
     <button class="btn" id="startBtn">게임 시작</button>
+    <button class="btn ghost" id="lbBtnStart">🏆 랭킹 보기</button>
     <button class="btn ghost" id="dexBtnStart">📖 몬스터 도감 보기</button>
   </div>
 </div>
@@ -295,8 +317,25 @@
     <div id="recLine" class="newrec" style="display:none">🎉 새로운 신기록! 🎉</div>
     <p id="overMsg">더 이상 놓을 곳이 없어요…</p>
     <div class="bestline">🏆 최고 <span id="bestOver">0</span> · 🪙 <span id="coinOver">0</span> · 📖 <span id="dexOver">0</span>/<span class="totalCount">15</span></div>
+    <div class="nameEntry" id="nameEntry">
+      <input id="nameInput" maxlength="10" placeholder="이름 입력" autocomplete="off">
+      <button id="submitScoreBtn">랭킹 등록</button>
+    </div>
+    <div class="myrank" id="myRankLine" style="display:none"></div>
     <button class="btn" id="againBtn">다시 하기</button>
+    <button class="btn ghost" id="lbBtnOver">🏆 랭킹 보기</button>
     <button class="btn ghost" id="shareBtn">📤 결과 공유하기</button>
+  </div>
+</div>
+
+<!-- Leaderboard overlay -->
+<div class="overlay hide" id="lbOverlay">
+  <div class="card">
+    <h2>🏆 랭킹</h2>
+    <div class="lbmode" id="lbMode"></div>
+    <div class="lblist" id="lbList"></div>
+    <button class="btn ghost" id="lbRefresh">🔄 새로고침</button>
+    <button class="btn ghost" id="lbClose">닫기</button>
   </div>
 </div>
 
@@ -316,6 +355,16 @@
 /* ============ Config ============ */
 const N=8;
 const COST={bomb:15,hammer:8,refresh:10};
+
+/* ---- Global leaderboard backend (Supabase REST) ----
+   To enable worldwide ranking, create a free Supabase project and paste its
+   URL + anon (public) key below. See LEADERBOARD_SETUP.md for the 5-min setup.
+   Left blank → the game uses an on-device local Top-10 leaderboard instead. */
+const LB_CONFIG={
+  url:   "",            // e.g. "https://abcd1234.supabase.co"
+  key:   "",            // Supabase anon public key (safe to expose)
+  table: "leaderboard",
+};
 
 // Types → color + weapon skill label
 const TYPES={
@@ -569,6 +618,96 @@ function load(){
 function saveMeta(){
   localStorage.setItem("bb_coins",coins);
   if(score>best){best=score;localStorage.setItem("bb_best",best);}
+}
+
+/* ============ Leaderboard (global via Supabase REST, local fallback) ============ */
+const LB_ONLINE = !!(LB_CONFIG.url && LB_CONFIG.key);
+const LB={
+  online:LB_ONLINE,
+  headers(){ return {apikey:LB_CONFIG.key, Authorization:"Bearer "+LB_CONFIG.key, "Content-Type":"application/json"}; },
+  async top(n){
+    if(LB_ONLINE){
+      try{
+        const u=`${LB_CONFIG.url}/rest/v1/${LB_CONFIG.table}?select=name,score,dex,created_at&order=score.desc&limit=${n||20}`;
+        const r=await fetch(u,{headers:this.headers()});
+        if(!r.ok) throw new Error("http "+r.status);
+        return await r.json();
+      }catch(e){ this.online=false; return this.localTop(n); }
+    }
+    return this.localTop(n);
+  },
+  async submit(entry){
+    if(LB_ONLINE){
+      try{
+        const r=await fetch(`${LB_CONFIG.url}/rest/v1/${LB_CONFIG.table}`,{
+          method:"POST", headers:Object.assign(this.headers(),{Prefer:"return=minimal"}),
+          body:JSON.stringify({name:entry.name, score:entry.score, dex:entry.dex})
+        });
+        if(!r.ok) throw new Error("http "+r.status);
+        return true;
+      }catch(e){ this.online=false; this.localAdd(entry); return false; }
+    }
+    this.localAdd(entry); return true;
+  },
+  localTop(n){
+    const a=JSON.parse(localStorage.getItem("bb_lb")||"[]");
+    a.sort((x,y)=>y.score-x.score);
+    return a.slice(0,n||20);
+  },
+  localAdd(entry){
+    const a=JSON.parse(localStorage.getItem("bb_lb")||"[]");
+    a.push({name:entry.name, score:entry.score, dex:entry.dex, created_at:""+placementsCount});
+    a.sort((x,y)=>y.score-x.score);
+    localStorage.setItem("bb_lb",JSON.stringify(a.slice(0,50)));
+  },
+  async rankOf(sc){
+    if(this.online){
+      try{
+        const u=`${LB_CONFIG.url}/rest/v1/${LB_CONFIG.table}?select=score&score=gt.${sc}`;
+        const r=await fetch(u,{headers:Object.assign(this.headers(),{Prefer:"count=exact",Range:"0-0"})});
+        const cr=r.headers.get("content-range"); // "0-0/123"
+        if(cr && cr.includes("/")) return parseInt(cr.split("/")[1],10)+1;
+      }catch(e){}
+    }
+    const a=this.localTop(9999);
+    return a.filter(e=>e.score>sc).length+1;
+  }
+};
+let lastSubmitted=false, myScoreForLB=0, myDexForLB=0;
+function esc(s){return String(s).replace(/[<>&"]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;","\"":"&quot;"}[c]));}
+async function openLeaderboard(highlightName){
+  const ov=document.getElementById("lbOverlay");
+  document.getElementById("lbMode").innerHTML = LB.online
+    ? "🌍 <b>글로벌</b> 랭킹" : "📱 <b>이 기기</b> 랭킹 (글로벌은 설정 후 활성화)";
+  const list=document.getElementById("lbList");
+  list.innerHTML="<div class='lbempty'>불러오는 중…</div>";
+  ov.classList.remove("hide");
+  const rows=await LB.top(20);
+  if(!rows.length){ list.innerHTML="<div class='lbempty'>아직 기록이 없어요. 첫 주인공이 되어보세요! 🏆</div>"; return; }
+  let mineDone=false;
+  list.innerHTML=rows.map((e,i)=>{
+    const me = !mineDone && highlightName && e.name===highlightName && e.score===myScoreForLB;
+    if(me) mineDone=true;
+    const medal = i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1);
+    return `<div class="lbrow ${me?'me':''} ${i<3?'top'+(i+1):''}">
+      <span class="rk">${medal}</span>
+      <span class="nm">${esc(e.name||"익명")}</span>
+      <span class="sc">${(+e.score).toLocaleString()}</span>
+    </div>`;
+  }).join("");
+}
+async function submitScore(){
+  const inp=document.getElementById("nameInput");
+  let nm=(inp.value||"").trim().slice(0,10) || "익명";
+  localStorage.setItem("bb_name",nm);
+  document.getElementById("nameEntry").style.display="none";
+  const line=document.getElementById("myRankLine");
+  line.style.display="block"; line.textContent="랭킹 등록 중…";
+  myScoreForLB=score; myDexForLB=DEX.size; lastSubmitted=true;
+  await LB.submit({name:nm, score:score, dex:DEX.size});
+  const rank=await LB.rankOf(score);
+  line.textContent = `🏆 ${LB.online?"글로벌":"내 기기"} ${rank}위 등록 완료!`;
+  setTimeout(()=>openLeaderboard(nm),600);
 }
 
 /* ============ Dex / Achievements ============ */
@@ -1030,6 +1169,14 @@ document.getElementById("dexChip").onclick=openDex;
 document.getElementById("dexBtnStart").onclick=openDex;
 document.getElementById("dexClose").onclick=()=>document.getElementById("dexOverlay").classList.add("hide");
 
+/* ============ Leaderboard wiring ============ */
+document.getElementById("submitScoreBtn").onclick=submitScore;
+document.getElementById("nameInput").addEventListener("keydown",e=>{ if(e.key==="Enter") submitScore(); });
+document.getElementById("lbBtnStart").onclick=()=>openLeaderboard();
+document.getElementById("lbBtnOver").onclick=()=>openLeaderboard(lastSubmitted?(localStorage.getItem("bb_name")||""):"");
+document.getElementById("lbRefresh").onclick=()=>openLeaderboard(lastSubmitted?(localStorage.getItem("bb_name")||""):"");
+document.getElementById("lbClose").onclick=()=>document.getElementById("lbOverlay").classList.add("hide");
+
 /* ============ Game flow ============ */
 function startGame(){
   grid=Array.from({length:N},()=>Array(N).fill(0));
@@ -1038,6 +1185,7 @@ function startGame(){
   document.getElementById("startOverlay").classList.add("hide");
   document.getElementById("overOverlay").classList.add("hide");
   document.getElementById("dexOverlay").classList.add("hide");
+  document.getElementById("lbOverlay").classList.add("hide");
   buildBoard(); paint(); newTray(); renderScore(); hideCombo(); renderMission();
   bgmPlay();
 }
@@ -1053,6 +1201,11 @@ function endGame(){
   const msgs=["더 이상 놓을 곳이 없어요…","꽉 막혔네요! 다시 도전!","아깝다! 한 판 더?"];
   document.getElementById("overMsg").textContent=msgs[Math.floor(score)%msgs.length];
   saveMeta();
+  // reset leaderboard entry UI
+  lastSubmitted=false;
+  document.getElementById("nameEntry").style.display = score>0 ? "flex" : "none";
+  document.getElementById("myRankLine").style.display="none";
+  document.getElementById("nameInput").value = localStorage.getItem("bb_name")||"";
   setTimeout(()=>document.getElementById("overOverlay").classList.remove("hide"),500);
 }
 
