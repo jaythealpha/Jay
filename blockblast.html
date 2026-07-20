@@ -512,11 +512,28 @@ const dexCountEl=document.getElementById("dexCount");
 let cells=[];
 
 /* ============ Audio ============ */
-let actx=null;
+let actx=null, audioUnlocked=false;
+function ensureCtx(){
+  if(!actx){ try{ actx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ return null; } }
+  if(actx && actx.state==="suspended"){ actx.resume().catch(()=>{}); }
+  return actx;
+}
+/* Browsers block audio until a user gesture. Unlock on the first interaction. */
+function unlockAudio(){
+  ensureCtx();
+  if(actx && !audioUnlocked){
+    try{ const b=actx.createBuffer(1,1,22050); const s=actx.createBufferSource(); s.buffer=b; s.connect(actx.destination); s.start(0); }catch(e){}
+    audioUnlocked=true;
+  }
+  if(!muted && typeof grid!=="undefined" && grid && !gameOver) bgmPlay();
+}
+["pointerdown","touchstart","mousedown","keydown"].forEach(ev=>
+  window.addEventListener(ev, unlockAudio, {passive:true}));
+
 function beep(freq,dur,type,vol){
   if(muted) return;
   try{
-    if(!actx) actx=new (window.AudioContext||window.webkitAudioContext)();
+    if(!ensureCtx()) return;
     const o=actx.createOscillator(), g=actx.createGain();
     o.type=type||"square"; o.frequency.value=freq;
     g.gain.setValueAtTime(vol||0.06, actx.currentTime);
@@ -530,16 +547,17 @@ const SFX={};
 ["place","clear","combo","coin","over"].forEach(k=>{
   const a=new Audio(ASSET_DIR+"sfx_"+k+".mp3");
   a.preload="auto"; a.volume = k==="place"?0.5:0.6;
-  a.addEventListener("canplaythrough",()=>{SFX[k]=a;},{once:true});
+  const mark=()=>{SFX[k]=a;};
+  a.addEventListener("canplaythrough",mark);
+  a.addEventListener("loadeddata",mark);   // fires earlier / more reliably on mobile
 });
 let bgm=new Audio(ASSET_DIR+"bgm.mp3"); bgm.loop=true; bgm.volume=0.22; bgm.preload="auto";
-let bgmOk=false; bgm.addEventListener("canplaythrough",()=>{bgmOk=true;},{once:true});
-function bgmPlay(){ if(bgmOk&&!muted){ bgm.play().catch(()=>{}); } }
+function bgmPlay(){ if(muted) return; try{ const p=bgm.play(); if(p&&p.catch) p.catch(()=>{}); }catch(e){} }
 function bgmStop(){ try{bgm.pause();}catch(e){} }
 function playSFX(k){
   if(muted) return true;
   const a=SFX[k]; if(!a) return false;
-  try{ a.currentTime=0; a.play().catch(()=>{}); return true; }catch(e){ return false; }
+  try{ a.currentTime=0; const p=a.play(); if(p&&p.catch) p.catch(()=>{}); return true; }catch(e){ return false; }
 }
 function sndPlace(){ if(!playSFX("place")) beep(330,0.08,"square",0.05); }
 function sndClear(n){ if(!playSFX("clear")) for(let i=0;i<n;i++) setTimeout(()=>beep(520+i*140,0.13,"square",0.07), i*70); }
@@ -552,7 +570,7 @@ function sndOver(){ bgmStop(); if(!playSFX("over")) [440,330,262,196].forEach((f
 function thump(power){
   if(muted)return;
   try{
-    if(!actx) actx=new (window.AudioContext||window.webkitAudioContext)();
+    if(!ensureCtx()) return;
     const o=actx.createOscillator(), g=actx.createGain(); const t=actx.currentTime;
     o.type="sine"; o.frequency.setValueAtTime(180,t); o.frequency.exponentialRampToValueAtTime(45,t+0.18);
     g.gain.setValueAtTime(Math.min(0.28,0.12+power*0.04),t); g.gain.exponentialRampToValueAtTime(0.001,t+0.28);
@@ -563,7 +581,7 @@ function thump(power){
 function noiseBurst(power){
   if(muted)return;
   try{
-    if(!actx) actx=new (window.AudioContext||window.webkitAudioContext)();
+    if(!ensureCtx()) return;
     const dur=0.14, buf=actx.createBuffer(1,Math.floor(actx.sampleRate*dur),actx.sampleRate);
     const d=buf.getChannelData(0);
     for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*(1-i/d.length);
@@ -1046,7 +1064,7 @@ function attachDrag(el,idx){
     if(gameOver||activeTool||tray[idx].used)return;
     e.preventDefault();
     const p=tray[idx];
-    if(!actx){try{actx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}
+    ensureCtx();
     const gps=(boardEl.clientWidth-16-4*7)/8;
     ghostEl.style.setProperty("--gps",gps+"px");
     const rows=Math.max(...p.shape.map(s=>s[0]))+1, cols=Math.max(...p.shape.map(s=>s[1]))+1;
