@@ -157,8 +157,17 @@
   .pcname{font-size:9px; opacity:.7; white-space:nowrap;}
 
   /* dragging ghost */
-  #ghost{position:fixed; left:0; top:0; pointer-events:none; z-index:50; display:grid; gap:4px; opacity:.92; transform:translate(-9999px,-9999px);}
-  #ghost .pc{width:var(--gps); height:var(--gps); border-radius:7px; font-size:calc(var(--gps)*.62);}
+  #ghost{position:fixed; left:0; top:0; pointer-events:none; z-index:50; display:grid; gap:4px;
+    transform:translate(-9999px,-9999px); transition:transform .045s linear, filter .12s, opacity .12s;
+    filter:drop-shadow(0 8px 14px rgba(0,0,0,.55));}
+  #ghost.snap{transition:transform .07s cubic-bezier(.2,1,.3,1);}
+  #ghost.invalid{opacity:.55; filter:saturate(.35) brightness(.85) drop-shadow(0 4px 8px rgba(0,0,0,.5));}
+  #ghost .pc{width:var(--gps); height:var(--gps); border-radius:7px; font-size:calc(var(--gps)*.62);
+    box-shadow:inset 0 2px 4px rgba(255,255,255,.45), inset 0 -3px 6px rgba(0,0,0,.4), 0 2px 6px rgba(0,0,0,.35);}
+  #ghost.snap .pc{box-shadow:inset 0 2px 4px rgba(255,255,255,.5), 0 0 0 2px rgba(255,255,255,.55), 0 6px 14px rgba(0,0,0,.45);}
+  .cell.hint{background:rgba(124,92,255,.32)!important; box-shadow:inset 0 0 0 2px rgba(255,255,255,.6)!important; animation:hintPulse .5s ease-in-out infinite alternate;}
+  @keyframes hintPulse{from{box-shadow:inset 0 0 0 2px rgba(255,255,255,.45)}to{box-shadow:inset 0 0 0 2px rgba(255,255,255,.85), 0 0 8px rgba(124,92,255,.5)}}
+  .piece.grabbing{opacity:.2; transform:scale(.9);}
 
   /* ===== Powerups ===== */
   #tools{display:flex; gap:8px;}
@@ -542,30 +551,19 @@ function beep(freq,dur,type,vol){
     o.start(); o.stop(actx.currentTime+(dur||0.12));
   }catch(e){}
 }
-/* generated audio files (with beep fallback while loading / if missing) */
-const SFX={};
-["place","clear","combo","coin","over"].forEach(k=>{
-  const a=new Audio(ASSET_DIR+"sfx_"+k+".mp3");
-  a.preload="auto"; a.volume = k==="place"?0.5:0.6;
-  const mark=()=>{SFX[k]=a;};
-  a.addEventListener("canplaythrough",mark);
-  a.addEventListener("loadeddata",mark);   // fires earlier / more reliably on mobile
-});
-let bgm=new Audio(ASSET_DIR+"bgm.mp3"); bgm.loop=true; bgm.volume=0.22; bgm.preload="auto";
+/* Background music stays as an mp3 (with graceful failure). All SFX are
+   synthesized via WebAudio so they are guaranteed audible on every browser
+   once the context is unlocked — no dependency on mp3 decode/playback. */
+let bgm=new Audio(ASSET_DIR+"bgm.mp3"); bgm.loop=true; bgm.volume=0.30; bgm.preload="auto";
 function bgmPlay(){ if(muted) return; try{ const p=bgm.play(); if(p&&p.catch) p.catch(()=>{}); }catch(e){} }
 function bgmStop(){ try{bgm.pause();}catch(e){} }
-function playSFX(k){
-  if(muted) return true;
-  const a=SFX[k]; if(!a) return false;
-  try{ a.currentTime=0; const p=a.play(); if(p&&p.catch) p.catch(()=>{}); return true; }catch(e){ return false; }
-}
-function sndPlace(){ if(!playSFX("place")) beep(330,0.08,"square",0.05); }
-function sndClear(n){ if(!playSFX("clear")) for(let i=0;i<n;i++) setTimeout(()=>beep(520+i*140,0.13,"square",0.07), i*70); }
-function sndCombo(c){ if(!playSFX("combo")) beep(400+c*80,0.18,"sawtooth",0.08); }
-function sndBad(){beep(120,0.18,"sawtooth",0.06);}
-function sndCoin(){ if(!playSFX("coin")){ beep(880,0.06,"sine",0.05); setTimeout(()=>beep(1180,0.08,"sine",0.05),50);} }
-function sndSkill(){beep(700,0.06,"sawtooth",0.07); setTimeout(()=>beep(1050,0.14,"square",0.07),60);}
-function sndOver(){ bgmStop(); if(!playSFX("over")) [440,330,262,196].forEach((f,i)=>setTimeout(()=>beep(f,0.22,"triangle",0.08),i*160)); }
+function sndPlace(){ beep(300,0.07,"square",0.16); setTimeout(()=>beep(440,0.07,"square",0.12),40); }
+function sndClear(n){ n=Math.max(1,n); for(let i=0;i<n;i++) setTimeout(()=>{beep(523+i*170,0.15,"square",0.18); beep(262+i*85,0.15,"triangle",0.10);}, i*65); }
+function sndCombo(c){ beep(440+c*90,0.2,"sawtooth",0.16); setTimeout(()=>beep(660+c*90,0.2,"square",0.13),85); }
+function sndBad(){ beep(150,0.16,"sawtooth",0.13); }
+function sndCoin(){ beep(988,0.06,"sine",0.16); setTimeout(()=>beep(1319,0.13,"sine",0.14),55); }
+function sndSkill(){ beep(700,0.06,"sawtooth",0.16); setTimeout(()=>beep(1050,0.16,"square",0.14),55); }
+function sndOver(){ bgmStop(); [523,392,330,262].forEach((f,i)=>setTimeout(()=>beep(f,0.3,"triangle",0.18),i*175)); }
 // deep bass thump — the "punch"
 function thump(power){
   if(muted)return;
@@ -1080,11 +1078,15 @@ function attachDrag(el,idx){
       else cell.style.visibility="hidden";
       ghostEl.appendChild(cell);
     }
-    drag={idx,p,gps,cols,rows,offX:cols*gps/2,offY:rows*gps+18};
-    el.classList.add("dragging");
+    // finger offset: lift the piece a bit above the finger so it stays visible
+    drag={idx,p,gps,cols,rows,offX:cols*gps/2,offY:rows*gps*0.5+gps+14,lastKey:null,valid:false};
+    el.classList.add("dragging","grabbing");
+    ghostEl.classList.remove("snap","invalid");
     moveGhost(e.clientX,e.clientY);
-    window.addEventListener("pointermove",onMove);
+    buzz(14);   // pickup tick
+    window.addEventListener("pointermove",onMove,{passive:false});
     window.addEventListener("pointerup",onUp);
+    window.addEventListener("pointercancel",onUp);
   });
 }
 function moveGhost(x,y){ ghostEl.style.transform=`translate(${x-drag.offX}px,${y-drag.offY}px)`; }
@@ -1099,25 +1101,40 @@ function hoveredCell(x,y){
 function clearHints(){document.querySelectorAll(".cell.hint,.cell.badhint").forEach(c=>c.classList.remove("hint","badhint"));}
 function onMove(e){
   if(!drag)return; e.preventDefault();
-  moveGhost(e.clientX,e.clientY);
   clearHints();
   const {r,c}=hoveredCell(e.clientX,e.clientY);
-  if(canPlace(drag.p.shape,r,c)){
+  const valid=canPlace(drag.p.shape,r,c);
+  if(valid){
+    // magnetic snap: lock the ghost onto the exact grid cells it will occupy
+    const rect=boardEl.getBoundingClientRect(), pad=8, gap=4;
+    const gx=rect.left+pad + c*(drag.gps+gap);
+    const gy=rect.top+pad + r*(drag.gps+gap);
+    ghostEl.style.transform=`translate(${gx}px,${gy}px)`;
+    ghostEl.classList.add("snap"); ghostEl.classList.remove("invalid");
     for(const[dr,dc]of drag.p.shape) cells[r+dr][c+dc].classList.add("hint");
+    const key=r+","+c;
+    if(drag.lastKey!==key){ drag.lastKey=key; buzz(7); }   // soft tick when target changes
+  } else {
+    moveGhost(e.clientX,e.clientY);
+    ghostEl.classList.remove("snap"); ghostEl.classList.add("invalid");
+    drag.lastKey=null;
   }
+  drag.valid=valid;
 }
 function onUp(e){
   if(!drag)return;
   window.removeEventListener("pointermove",onMove);
   window.removeEventListener("pointerup",onUp);
+  window.removeEventListener("pointercancel",onUp);
   ghostEl.style.transform="translate(-9999px,-9999px)";
+  ghostEl.classList.remove("snap","invalid");
   clearHints();
   const {r,c}=hoveredCell(e.clientX,e.clientY);
   const idx=drag.idx, shape=drag.p.shape;
   drag=null;
-  document.querySelectorAll(".piece.dragging").forEach(el=>el.classList.remove("dragging"));
+  document.querySelectorAll(".piece.dragging").forEach(el=>el.classList.remove("dragging","grabbing"));
   if(canPlace(shape,r,c)) place(idx,r,c);
-  else { sndBad(); renderTray(); }
+  else { sndBad(); buzz([0,20,40,20]); renderTray(); }
 }
 
 /* ============ Power-ups ============ */
