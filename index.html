@@ -287,19 +287,21 @@
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
   /* ---- hover/focus tooltips (data-tip) ---- */
+  /* A single shared tooltip element (#tipBubble) is positioned by JS so that only ONE
+     tooltip is ever on screen — pure-CSS :hover could leave two visible during fast
+     mouse movement (both elements briefly retaining :hover). */
   [data-tip]{position:relative}
-  /* lift the hovered control above its siblings/cards so the tooltip is never painted behind them
-     (glass surfaces create stacking contexts, so an explicit z-index is required) */
-  [data-tip]:hover{z-index:120}
-  [data-tip]:hover::after{
-    content:attr(data-tip);position:absolute;left:50%;top:calc(100% + 8px);transform:translateX(-50%);
+  #tipBubble{
+    position:fixed;top:0;left:0;z-index:2000;pointer-events:none;
     background:#0b0d14;color:#e8ecf5;border:1px solid var(--acc);border-radius:9px;padding:8px 11px;
     font-size:11.5px;font-weight:500;line-height:1.5;white-space:normal;width:max-content;max-width:230px;
-    text-align:left;z-index:121;box-shadow:0 8px 24px rgba(0,0,0,.45);pointer-events:none}
-  [data-tip]:hover::before{
-    content:"";position:absolute;left:50%;top:calc(100% + 2px);transform:translateX(-50%);
-    border:6px solid transparent;border-bottom-color:var(--acc);z-index:121;pointer-events:none}
-  .seg [data-tip]:hover::after{max-width:210px}
+    text-align:left;box-shadow:0 8px 24px rgba(0,0,0,.45);
+    opacity:0;transform:translateY(-3px);transition:opacity .12s ease,transform .12s ease}
+  #tipBubble.show{opacity:1;transform:translateY(0)}
+  #tipBubble::after{
+    content:"";position:absolute;left:var(--tip-ax,50%);top:-6px;transform:translateX(-50%);
+    border:6px solid transparent;border-bottom-color:var(--acc)}
+  #tipBubble.below::after{top:auto;bottom:-6px;border-bottom-color:transparent;border-top-color:var(--acc)}
   .help-dot{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;margin-left:6px;
     border-radius:50%;background:var(--bg2);border:1px solid var(--line2);color:var(--mut);font-size:10px;
     font-weight:700;cursor:help;vertical-align:middle}
@@ -1001,7 +1003,7 @@
   <footer>
     <div>Aesthetic QR Studio · 아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.16-f</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.07.23-a</b></div>
   </footer>
 </div>
 
@@ -4501,6 +4503,64 @@ function exportWebM(){
 // ---------- toast ----------
 var _tt=null;
 function toast(msg){ var t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(_tt); _tt=setTimeout(function(){t.classList.remove("show");},1900); }
+
+// ---------- shared tooltip (single element, never overlaps) ----------
+// One #tipBubble is reused for every [data-tip]. Because a single node is moved/shown,
+// two tooltips can never appear at once — fixing the "descriptions stack while the mouse
+// moves" issue that pure-CSS :hover pseudo-elements produced.
+var _tipEl=null, _tipTarget=null, _tipHideT=0;
+function _tipBubble(){
+  if(!_tipEl){ _tipEl=document.createElement("div"); _tipEl.id="tipBubble"; _tipEl.setAttribute("role","tooltip"); document.body.appendChild(_tipEl); }
+  return _tipEl;
+}
+function _tipPlace(el){
+  var b=_tipBubble(); var r=el.getBoundingClientRect();
+  // measure at full width first
+  b.style.left="0px"; b.style.top="0px"; b.classList.remove("below");
+  var bw=b.offsetWidth, bh=b.offsetHeight, gap=8, vw=window.innerWidth, vh=window.innerHeight;
+  var cx=r.left+r.width/2;
+  var left=cx-bw/2;
+  left=Math.max(8, Math.min(left, vw-bw-8));
+  var top=r.bottom+gap, below=false;              // default: bubble below the control
+  if(top+bh>vh-8 && r.top-gap-bh>8){ top=r.top-gap-bh; below=true; }  // flip above if no room
+  b.classList.toggle("below", below);
+  // arrow x relative to bubble, pointing at the control centre
+  var ax=Math.max(12, Math.min(cx-left, bw-12));
+  b.style.setProperty("--tip-ax", ax+"px");
+  b.style.left=Math.round(left)+"px";
+  b.style.top=Math.round(top)+"px";
+}
+function _tipShow(el){
+  var txt=el.getAttribute("data-tip"); if(!txt) return;
+  clearTimeout(_tipHideT);
+  _tipTarget=el;
+  var b=_tipBubble(); b.textContent=txt;
+  _tipPlace(el);
+  // force reflow then fade in
+  void b.offsetWidth; b.classList.add("show");
+}
+function _tipHide(){
+  _tipTarget=null;
+  if(_tipEl) _tipEl.classList.remove("show");
+}
+function _tipFrom(t){ return t && t.closest ? t.closest("[data-tip]") : null; }
+document.addEventListener("pointerover", function(e){
+  if(e.pointerType==="touch") return;            // touch devices: no hover tooltip
+  var el=_tipFrom(e.target); if(!el || el===_tipTarget) return;
+  _tipShow(el);
+}, true);
+document.addEventListener("pointerout", function(e){
+  var el=_tipFrom(e.target); if(!el) return;
+  var to=_tipFrom(e.relatedTarget);
+  if(to===el) return;                            // moved within the same control
+  clearTimeout(_tipHideT); _tipHideT=setTimeout(_tipHide, 40);
+}, true);
+document.addEventListener("focusin", function(e){ var el=_tipFrom(e.target); if(el) _tipShow(el); });
+document.addEventListener("focusout", function(e){ if(_tipFrom(e.target)) _tipHide(); });
+// Any scroll or focus change invalidates the anchored position → hide immediately.
+window.addEventListener("scroll", _tipHide, true);
+window.addEventListener("blur", _tipHide);
+document.addEventListener("pointerdown", _tipHide, true);
 
 // ---------- bind UI ----------
 // While an AI art QR is applied, the generated image IS the QR — vector design options
