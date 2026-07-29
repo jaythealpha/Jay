@@ -1,7 +1,7 @@
 # Aesthetic QR Studio — 개발 인계 문서 (Handoff)
 
 > 목적: 지금까지의 진행 상황을 개발자와 공유해 이어서 작업할 수 있도록 정리한 문서입니다.
-> 최종 정리: 2026-07-17 · 현재 빌드 `2026.07.16-f`
+> 최종 정리: 2026-07-24 · 현재 빌드 `2026.07.23-a` · HEAD `b258c25`
 
 ---
 
@@ -27,6 +27,7 @@
   <button data-fstyle="poster"> 포스터
   ```
 - headless(Chromium) + jsQR로 10종 프레임 전부 렌더·디코드 검증 통과.
+- 관련 커밋: `203b765`(프레임 스타일 개편+3종 신규), `a829dd1`(한눈에 알아보게 대담화).
 - 원격에 **`main`/`master`/production 브랜치가 없음.** origin 브랜치는 2개뿐:
   - `claude/website-analysis-implementation-8rolis` → **이 QR 스튜디오**
   - `claude/expand-korean-market-strategy-dPuXy` → **전혀 다른 프로젝트(itch.io 게임)**. QR 스튜디오 아님.
@@ -37,7 +38,7 @@
 **개발자 확인 액션 (우선순위 순)**
 1. **Vercel 프로젝트의 "Production Branch" 설정**이 `claude/website-analysis-implementation-8rolis`를 가리키는지 확인. 아니라면 → 이 브랜치를 프로덕션 브랜치로 지정하거나, 프로덕션 브랜치로 머지.
 2. Vercel Deployments에서 **가장 최근 커밋(`a829dd1` "Make frames boldly recognizable at a glance")이 빌드·배포됐는지** 확인. 빌드 실패/대기 상태면 재배포(Redeploy).
-3. 라이브에서 `verTag`가 `2026.07.16-f`인지 확인. 낮으면 배포 미반영. (푸터 "빌드" 옆 표시)
+3. 라이브에서 `verTag`가 `2026.07.23-a`인지 확인. 낮으면 배포 미반영. (푸터 "빌드" 옆 표시)
 4. 위가 모두 정상인데도 안 보이면 CDN/edge 캐시 무효화(Redeploy 시 자동) + 사용자 강력 새로고침(Ctrl/Cmd+Shift+R).
 
 > 참고: 리포가 여러 프로젝트를 섞어 담고 있음(`v2.html`, `en.html`, `LAUNCH.md`, `yogibo-korea-10x-strategy.md`, `tools/` 등은 QR 스튜디오와 무관해 보임). QR 스튜디오의 실제 파일은 **`qr-studio.html`(원본) + `index.html`(배포 미러)** 두 개.
@@ -102,11 +103,12 @@ AI 아트 QR(`/api/art-qr`)은 Vercel 서버리스 함수라 로컬 정적 서�
 - **대량(Bulk) 생성**: 여러 항목 → 인쇄용 PNG 시트(테이블번호·티켓·라벨). 백엔드 불필요.
 - **수익화(Pro) 시스템**: 원타임 언락 스캐폴딩(아래 6장).
 - **문구 재포지셔닝**: "100% 무료" 제거 → 애니메이션·프라이버시 강조.
-- **프레임 대개편**(현재 작업): 6종 대담화/신규(아래 5장).
+- **프레임 대개편**(완료): 데코 프레임 전면 교체 + 3종 신규(아래 5장). 10종 전부 디코드 검증.
+- **툴팁 중첩 버그 근본 수정**(완료): 순수 CSS `:hover`가 마우스 이동 중 설명을 2개 동시에 띄우던 문제를, 화면에 단 하나만 존재하는 **공유 툴팁(JS 제어, `#tipBubble`)** 으로 재작성(아래 9장). 커밋 `b258c25`.
 
 ---
 
-## 5. 프레임 시스템 상세 (현재 활성 작업)
+## 5. 프레임 시스템 상세 (완료)
 
 `drawFrameBackground`가 QR **뒤에** 배경+액자를 그림. 스캔 유지를 위해 **장식은 바깥 밴드에만**, 그리고 각 스타일 끝에서 흰 카드(`fillRoundCard`)를 마지막에 칠해 QR 영역을 항상 깨끗하게 덮음.
 
@@ -148,6 +150,17 @@ AI 아트 QR(`/api/art-qr`)은 Vercel 서버리스 함수라 로컬 정적 서�
 - **사운드**: 앱에 오디오 기능 없음(버튼음/스캔음 없음). 영상 아트 QR은 음소거 재생이 기본, WebM 저장물은 오디오 트랙 없음(캔버스만 녹화).
 - **트레이드마크/저작권**: 실제 브랜드 로고·제품 이미지는 미사용 원칙. 오리지널 그래픽만.
 - **커밋 규칙**: 커밋 메시지/PR/코드에 모델 식별자 넣지 않음. 트레일러 유지(Co-Authored-By / Claude-Session).
+
+---
+
+## 9. 툴팁 시스템 (data-tip) — CSS `:hover`로 되돌리지 말 것
+
+과거엔 `[data-tip]:hover::after`/`::before` 순수 CSS 툴팁이었는데, **마우스를 빠르게 움직이면 두 컨트롤이 잠깐씩 동시에 `:hover` 상태로 남아 설명이 2개 겹쳐 뜨는** 버그가 반복됐음. 근본 해결로 **화면 전체에서 단 하나만 존재하는 공유 툴팁 요소**로 재작성함.
+
+- **CSS**: `#tipBubble`(`position:fixed`, `pointer-events:none`, fade transition) + 화살표 `::after`(`.below` 클래스로 위/아래 반전). 기존 `[data-tip]:hover::after/before` 규칙은 삭제됨 — 되살리면 중첩 버그 재발.
+- **JS**(함수 `toast` 바로 뒤): `_tipBubble()`(싱글턴 생성), `_tipPlace(el)`(컨트롤 기준 배치 + 뷰포트 클램프 + 끝에서 위로 반전 + 화살표 x `--tip-ax`), `_tipShow/_tipHide`. 이벤트는 `document`에 위임(`pointerover`/`pointerout`, capture) + `focusin`/`focusout`(키보드) + `scroll`/`blur`/`pointerdown` 시 숨김. 터치(`pointerType==="touch"`)는 스킵.
+- **툴팁 문구 추가/수정**: 요소에 `data-tip`(고정 문자열) 또는 `data-i18n-tip`(i18n 키) 부여하면 자동으로 잡힘 — 별도 바인딩 코드 불필요.
+- **검증**: URL→PayPal 버튼으로 이동 시 화면에 보이는 `#tipBubble.show`는 항상 1개, 이동 후 0개, 페이지 에러 없음(headless 확인).
 
 ---
 
