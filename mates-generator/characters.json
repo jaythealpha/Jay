@@ -1,0 +1,826 @@
+{
+  "_meta": {
+    "updated": "2026-07-31",
+    "roster_source": "yogibo.jp 공식 제품 페이지(검색 결과 요약) + 사내 제품 레지스트리(yogibo-products 스킬)",
+    "count": 33,
+    "palette_note": "제품 실물 색상은 확인하지 못했습니다. 이전 데이터의 색상값은 근거 없이 만들어진 값이라 전부 비웠고(palette=null), 한국 판매 제품은 reference_360 의 실제 제품컷을 색 기준으로 쓰도록 프롬프트에 지시합니다. 실물을 확인해 palette 를 채우고 palette_status 를 'verified' 로 바꾸세요.",
+    "limitations": "yogibo.jp 직접 접근이 차단된 환경에서 작성해, 로스터는 공식 페이지 제목·설명의 검색 결과 요약에 근거합니다. 성격 설명은 공식 소개 문구를 옮긴 것이고, 실루엣·특징은 종과 메이트 공통 디자인에서 도출한 일반 서술입니다.",
+    "prompt_language_note": "silhouette·features·personality·signature_pose 는 프롬프트에 그대로 들어가므로 영문으로 작성한다. 이미지 생성 도구가 영문 프롬프트에 맞춰져 있어 한국어로 쓰면 반영이 불안정하다. UI에 보이는 이름(name_ko·name_ja)만 현지어를 유지한다."
+  },
+  "characters": [
+    {
+      "id": "dog",
+      "name_en": "Giogo",
+      "name_ja": "ジオゴ",
+      "name_ko": "방울이",
+      "species": "dog",
+      "line": "mate",
+      "markets": [
+        "JP",
+        "KR"
+      ],
+      "product_url": "https://yogibo.jp/products/mnd",
+      "product_name_ko": "메이트 도그",
+      "personality": "loves watching movies",
+      "silhouette": "round chubby plush body, oversized head, floppy ears hanging down the sides, short stubby legs, soft plush Yogibo Mate body, oversized rounded head, stubby limbs, embroidered facial features",
+      "features": "floppy ears, embroidered eyes, gentle smile",
+      "signature_pose": "sitting upright with head tilted slightly",
+      "palette": null,
+      "palette_status": "unverified",
+      "reference_360": "https://yogibo.openhost.cafe24.com/web/img/360/mate/방울이_28.jpeg",
+      "tags": [
+        "dog",
+        "classic",
+        "best-seller"
+      ]
+    },
+    {
+      "id": "dippoo",
+      "name_en": "Dippoo",
+      "name_ja": "ディッポー",
+      "name_ko": "옥자",
+      "species": "dog-hippo mix",
+      "line": "mate",
+      "markets": [
+        "JP",
+        "KR"
+      ],
+      "product_url": "https://yogibo.jp/products/mdg",
+      "product_name_ko": "메이트 디포",
+      "personality": "a mix between a dog and a hippo",
+      "silhouette": "wide flat muzzle, low heavy plush body, small rounded ears, soft plush Yogibo Mate body, oversized rounded head, stubby limbs, embroidered facial features",
+      "features": "blunt hippo-like snout paired with a dog-like expression",
+      "signature_pose": "lying on all fours facing forward",
+      "palette": null,
+      "palette_status": "unverified",
+      "reference_360": "https://yogibo.openhost.cafe24.com/web/img/360/mate/메이트_디포_옥자_28_02.jpg",
+      "tags": [
+        "dog",
+        "hippo",
+        "mix"
+      ]
+    },
+    {
+      "id": "cat-calista",
+      "name_en": "Calista",
+      "name_ja": "キャリスタ",
+      "name_ko": "Calista",
+      "species": "cat",
+      "line": "mate",
+      "markets": [
+        "JP"
+      ],
+      "product_url": null,
+      "product_name_ko": null,
+      "personality": "a little clumsy and awkward",
+      "silhouette": "egg-shaped plush body, triangular pointed ears, long curling tail, soft plush Yogibo Mate body, oversized rounded head, stubby limbs, embroidered facial features",
+      "features": "thin whiskers, small triangular nose, slightly bashful expression",
+      "signature_pose": "loaf position with paws tucked in",
+      "palette": null,
+      "palette_status": "unverified",
+      "reference_360": null,
+      "tags": [
+        "cat",
+        "clumsy"
+      ]
+    },
+    {
+      "id": "cat-cosmo",
+      "name_en": "Cosmo",
+      "name_ja": "コスモ",
+      "name_ko": "Cosmo",
+      "species": "cat",
+      "line": "mate",
+      "markets": [
+        "JP"
+      ],
+      "product_url": null,
+      "product_name_ko": null,
+      "personality": "an avid reader",
+      "silhouette": "egg-shaped plush body, triangular pointed ears, long curling tail, soft plush Yogibo Mate body, oversized rounded head, stubby limbs, embroidered facial features",
+      "features": "calm half-lidded eyes, thin whiskers",
+      "signature_pose": "sitting and gazing thoughtfully at something",
+      "palette": null,
+      "palette_status": "unverified",
+      "reference_360": null,
+      "tags": [
+        "cat",
+        "bookish"
+      ]
+    },
+    {
+      "id": "bear",
+      "name_en": "Bertrand",
+      "name_ja": "バートランド",
+      "name_ko": "Bertrand",
+      "species": "bear",
+      "line": "mate",
+      "markets": [
+        "JP"
+      ],
+      "product_url": null,
+      "product_name_ko": null,
+      "personality": "has a strong personality",
+      "silhouette": "barrel-shaped plush body, big round head, small round ears on top, soft plush Yogibo Mate body, oversized rounded head, stubby limbs, embroidered facial features",
+      "features": "round muzzle, plush rounded paws, no visible tail",
+      "signature_pose": "sitting with belly forward and arms relaxed at the sides",
+      "palette": null,
+      "palette_status": "unverified",
+      "reference_360": null,
+      "tags": [
+        "bear",
+        "teddy",
+        "huggable"
+      ]
+    },
+    {
+      "id": "moose",
+      "name_en": "Marvin",
+      "name_ja": "マーヴィン",
+      "name_ko": "Marvin",
+      "species": "moose",
+      "line": "mate",
+      "markets": [
+        "JP"
+      ],
+      "product_url": null,
+      "product_name_ko": null,
+      "personality": "has an artistic streak",
+      "silhouette": "long muzzle, broad flat antlers spreading above the head, slender neck, soft plush Yogibo Mate body, oversized rounded head, stubby limbs, embroidered facial features",
+      "features": "wide palmate antlers, long face",
+      "signature_pose": "standing upright with head raised",
+      "palette": null,
+      "palette_status": "unverified",
+      "reference_360": null,
+      "tags": [
+        "moose",
+        "artsy"
+      ]
+    },
+    {
+      "id": "monkey",
+      "name_en": "Morrison",
+      "name_ja": "モリソン",
+      "name_ko": "Morrison",
+      "species": "monkey",
+      "line": "mate",
+      "markets": [
+        "JP"
+      ],
+      "product_url": null,
+      "product_name_ko": null,
+      "personality": "hangs around taking it easy",
+      "silhouette": "long slender arms and legs, round head, large ears on the sides, soft plush Yogibo Mate body, oversized rounded head, stubby limbs, embroidered facial features",
+      "features": "long arms built for hanging, lighter face patch",
+      "signature_pose": "hanging with long arms dangling",
+      "palette": null,
+      "palette_status": "unverified",
+      "reference_360": null,
+      "tags": [
+        "monkey",
+        "relaxed"
+      ]
+    },
+    {
+      "id": "fox",
+      "name_en": "Festus",
+      "name_ja": "フェストゥス",
+      "name_ko": "미호",
+      "species": "fox",
+      "line": "mate",
+      "markets": [
+        "JP",
+        "KR"
+      ],
+      "product_url": null,
+      "product_name_ko": "메이트 팍스",
+      "personality": "gives off a mysterious air",
+      "silhouette": "pointed muzzle and triangular ears, large full bushy tail, soft plush Yogibo Mate body, oversized rounded head, stubby limbs, embroidered facial features",
+      "features": "fluffy tail, sharp alert eyes",
+      "signature_pose": "sitting with the tail curled around the body",
+      "palette": null,
+      "palette_status": "unverified",
+      "reference_360": "https://yogibo.openhost.cafe24.com/web/img/360/mate/미호_28.jpeg",
+      "tags": [
+        "fox",
+        "mysterious"
+      ]
+    },
+    {
+      "id": "raccoon",
+      "name_en": "Romy",
+      "name_ja": "ロミー",
+      "name_ko": "Romy",
+      "species": "raccoon",
+      "line": "mate",
+      "markets": [
+        "JP"
+      ],
+      "product_url": "https://yogibo.jp/products/mrc-lg",
+      "product_name_ko": null,
+      "personality": "an easygoing sort",
+      "silhouette": "plump plush body, round ears, thick ringed tail, soft plush Yogibo Mate body, oversized rounded head, stubby limbs, embroidered facial features",
+      "features": "mask marking across the eyes, ringed tail",
+      "signature_pose": "sitting with the tail brought around to the front",
+      "palette": null,
+      "palette_status": "unverified",
+      "reference_360": null,
+      "tags": [
+        "raccoon",
+        "laid-back"
+      ]
+    },
+    {
+      "id": "koala",
+      "name_en": "Kevin",
+      "name_ja": "ケビン",
+      "name_ko": "코리",
+      "species": "koala",
+      "line": "mate",
+      "markets": [
+        "JP",
+        "KR"
+      ],
+      "product_url": null,
+      "product_name_ko": "메이트 코알라",
+      "personality": "always takes things slowly",
+      "silhouette": "round plush body, large fluffy ears, short limbs, soft plush Yogibo Mate body, oversized rounded head, stubby limbs, embroidered facial features",
+      "features": "big round ears, broad flat nose",
+      "signature_pose": "arms drawn together as if hugging something",
+      "palette": null,
+      "palette_status": "unverified",
+      "reference_360": "https://yogibo.openhost.cafe24.com/web/img/360/mate/코리_28(수정).jpg",
+      "tags": [
+        "koala",
+        "slow",
+        "cozy"
+      ]
+    },
+    {
+      "id": "sloth",
+      "name_en": "Saul",
+      "name_ja": "サウル",
+      "name_ko": "Saul",
+      "species": "sloth",
+      "line": "mate",
+      "markets": [
+        "JP"
+      ],
+      "product_url": null,
+      "product_name_ko": null,
+      "personality": "surprisingly impatient",
+      "silhouette": "long dangling arms, small head, drooping body, soft plush Yogibo Mate body, oversized rounded head, stubby limbs, embroidered facial features",
+      "features": "long forelimbs, drowsy eyes",
+      "signature_pose": "hanging limply by the arms",
+      "palette": null,
+      "palette_status": "unverified",
+      "reference_360": null,
+      "tags": [
+        "sloth",
+        "hasty"
+      ]
+    },
+    {
+      "id": "hedgehog",
+      "name_en": "Hugo",
+      "name_ja": "ヒューゴ",
+      "name_ko": "Hugo",
+      "species": "hedgehog",
+      "line": "mate",
+      "markets": [
+        "JP"
+      ],
+      "product_url": "https://yogibo.jp/products/mhd",
+      "product_name_ko": null,
+      "personality": "always extremely busy",
+      "silhouette": "round plush body, spiky quill texture covering the back, small pointed snout, soft plush Yogibo Mate body, oversized rounded head, stubby limbs, embroidered facial features",
+      "features": "quill texture on the back, small dark nose",
+      "signature_pose": "slightly hunched, looking straight ahead",
+      "palette": null,
+      "palette_status": "unverified",
+      "reference_360": null,
+      "tags": [
+        "hedgehog",
+        "busy"
+      ]
+    },
+    {
+      "id": "pig",
+      "name_en": "Paddy",
+      "name_ja": "パディ",
+      "name_ko": "Paddy",
+      "species": "pig",
+      "line": "mate",
+      "markets": [
+        "JP"
+      ],
+      "product_url": null,
+      "product_name_ko": null,
+      "personality": "loves to cook (full name Patrick Paul Pimpton)",
+      "silhouette": "round chubby plush body, broad flat snout, small triangular ears, soft plush Yogibo Mate body, oversized rounded head, stubby limbs, embroidered facial features",
+      "features": "round disc-shaped snout, curly tail",
+      "signature_pose": "sitting with belly pushed forward",
+      "palette": null,
+      "palette_status": "unverified",
+      "reference_360": null,
+      "tags": [
+        "pig",
+        "cooking"
+      ]
+    },
+    {
+      "id": "lion",
+      "name_en": "Leonardo",
+      "name_ja": "レオナルド",
+      "name_ko": "Leonardo",
+      "species": "lion",
+      "line": "mate",
+      "markets": [
+        "JP"
+      ],
+      "product_url": null,
+      "product_name_ko": null,
+      "personality": "absolutely loves to draw",
+      "silhouette": "full mane framing a round head, plump plush body, tufted tail, soft plush Yogibo Mate body, oversized rounded head, stubby limbs, embroidered facial features",
+      "features": "mane encircling the face, tufted tail tip",
+      "signature_pose": "sitting front-on with the mane fanned out",
+      "palette": null,
+      "palette_status": "unverified",
+      "reference_360": null,
+      "tags": [
+        "lion",
+        "art"
+      ]
+    },
+    {
+      "id": "llama",
+      "name_en": "Laura",
+      "name_ja": "ローラ",
+      "name_ko": "Laura",
+      "species": "llama",
+      "line": "mate",
+      "markets": [
+        "JP"
+      ],
+      "product_url": null,
+      "product_name_ko": null,
+      "personality": "dreams of becoming an adventurer",
+      "silhouette": "long neck, fluffy plush body, upright pointed ears, soft plush Yogibo Mate body, oversized rounded head, stubby limbs, embroidered facial features",
+      "features": "curly fleece texture, long eyelashes",
+      "signature_pose": "standing with the neck held straight up",
+      "palette": null,
+      "palette_status": "unverified",
+      "reference_360": null,
+      "tags": [
+        "llama",
+        "adventure"
+      ]
+    },
+    {
+      "id": "giraffe",
+      "name_en": "Georgette",
+      "name_ja": "ジョーゼット",
+      "name_ko": "릴리",
+      "species": "giraffe",
+      "line": "mate",
+      "markets": [
+        "JP",
+        "KR"
+      ],
+      "product_url": "https://yogibo.jp/products/mgf",
+      "product_name_ko": "메이트 지라프",
+      "personality": "a former band member",
+      "silhouette": "very long neck, small head with short ossicones, long legs, soft plush Yogibo Mate body, oversized rounded head, stubby limbs, embroidered facial features",
+      "features": "spot pattern across the body, two short horns on top of the head",
+      "signature_pose": "sitting with the long neck upright",
+      "palette": null,
+      "palette_status": "unverified",
+      "reference_360": "https://yogibo.openhost.cafe24.com/web/img/360/mate/릴리_28.jpg",
+      "tags": [
+        "giraffe",
+        "music"
+      ]
+    },
+    {
+      "id": "elephant",
+      "name_en": "Ernest",
+      "name_ja": "アーネスト",
+      "name_ko": "옐리",
+      "species": "elephant",
+      "line": "mate",
+      "markets": [
+        "JP",
+        "KR"
+      ],
+      "product_url": null,
+      "product_name_ko": "메이트 옐리펀트",
+      "personality": "gets lost easily",
+      "silhouette": "heavy rounded plush body, large wide ears, trunk hanging forward, soft plush Yogibo Mate body, oversized rounded head, stubby limbs, embroidered facial features",
+      "features": "big flapping ears, long curlable trunk",
+      "signature_pose": "sitting with the trunk raised slightly",
+      "palette": null,
+      "palette_status": "unverified",
+      "reference_360": "https://yogibo.openhost.cafe24.com/web/img/360/mate/%EC%98%90%EB%A6%AC_28.jpg",
+      "tags": [
+        "elephant",
+        "lost"
+      ]
+    },
+    {
+      "id": "panda",
+      "name_en": "Shelby",
+      "name_ja": "シェルビー",
+      "name_ko": "Shelby",
+      "species": "panda",
+      "line": "roll-mate",
+      "markets": [
+        "JP",
+        "KR"
+      ],
+      "product_url": "https://yogibo.jp/products/mpd",
+      "product_name_ko": "롤 메이트 판다",
+      "personality": "likes things simple",
+      "silhouette": "large round plush body, round ears on top of the head, short limbs, soft plush Yogibo Mate body, oversized rounded head, stubby limbs, embroidered facial features",
+      "features": "contrasting colour blocking around the eyes, ears and limbs",
+      "signature_pose": "sitting with both legs stretched out",
+      "palette": null,
+      "palette_status": "unverified",
+      "reference_360": "https://yogibo.openhost.cafe24.com/web/img/360/mate/롤메이트_판다_28_v1.jpg",
+      "tags": [
+        "panda",
+        "simple"
+      ]
+    },
+    {
+      "id": "owl",
+      "name_en": "Opah",
+      "name_ja": "オーパ",
+      "name_ko": "Opah",
+      "species": "owl",
+      "line": "mate",
+      "markets": [
+        "JP"
+      ],
+      "product_url": "https://yogibo.jp/products/mow",
+      "product_name_ko": null,
+      "personality": "always short on sleep",
+      "silhouette": "vertically rounded plush body, short wings tucked against the body, large eyes, soft plush Yogibo Mate body, oversized rounded head, stubby limbs, embroidered facial features",
+      "features": "big round eyes, fan-shaped tail feathers",
+      "signature_pose": "sitting upright with wings held against the body",
+      "palette": null,
+      "palette_status": "unverified",
+      "reference_360": null,
+      "tags": [
+        "owl",
+        "sleepy"
+      ]
+    },
+    {
+      "id": "penguin",
+      "name_en": "Pearl",
+      "name_ja": "パール",
+      "name_ko": "이레",
+      "species": "penguin",
+      "line": "mate",
+      "markets": [
+        "JP",
+        "KR"
+      ],
+      "product_url": "https://yogibo.jp/products/mpe",
+      "product_name_ko": "메이트 펭귄",
+      "personality": "loves pancakes",
+      "silhouette": "teardrop-shaped plush body, short flippers, broad flat feet, soft plush Yogibo Mate body, oversized rounded head, stubby limbs, embroidered facial features",
+      "features": "two-tone belly and back, flat beak",
+      "signature_pose": "standing upright on both feet",
+      "palette": null,
+      "palette_status": "unverified",
+      "reference_360": "https://yogibo.openhost.cafe24.com/web/img/360/mate/이레_28.jpg",
+      "tags": [
+        "penguin",
+        "pancake"
+      ]
+    },
+    {
+      "id": "turtle",
+      "name_en": "Tiberius",
+      "name_ja": "ティベリウス",
+      "name_ko": "Tiberius",
+      "species": "turtle",
+      "line": "mate",
+      "markets": [
+        "JP"
+      ],
+      "product_url": null,
+      "product_name_ko": null,
+      "personality": "is afraid of water",
+      "silhouette": "flat rounded shell, four short legs, small head poking out, soft plush Yogibo Mate body, oversized rounded head, stubby limbs, embroidered facial features",
+      "features": "hexagonal pattern on the shell",
+      "signature_pose": "lying flat with all four legs spread",
+      "palette": null,
+      "palette_status": "unverified",
+      "reference_360": null,
+      "tags": [
+        "turtle",
+        "water-shy"
+      ]
+    },
+    {
+      "id": "frog-francis",
+      "name_en": "Francis",
+      "name_ja": "フランシス",
+      "name_ko": "Francis",
+      "species": "frog",
+      "line": "mate",
+      "markets": [
+        "JP"
+      ],
+      "product_url": null,
+      "product_name_ko": null,
+      "personality": "not good with water",
+      "silhouette": "flat wide plush body, bulging eyes, folded hind legs, soft plush Yogibo Mate body, oversized rounded head, stubby limbs, embroidered facial features",
+      "features": "eyes rising above the head, wide mouth line",
+      "signature_pose": "crouching with hind legs folded",
+      "palette": null,
+      "palette_status": "unverified",
+      "reference_360": null,
+      "tags": [
+        "frog",
+        "water-shy"
+      ]
+    },
+    {
+      "id": "frog-ferdinand",
+      "name_en": "Ferdinand",
+      "name_ja": "フェルディナンド",
+      "name_ko": "Ferdinand",
+      "species": "frog",
+      "line": "mate",
+      "markets": [
+        "JP"
+      ],
+      "product_url": null,
+      "product_name_ko": null,
+      "personality": "creative",
+      "silhouette": "flat wide plush body, bulging eyes, folded hind legs, soft plush Yogibo Mate body, oversized rounded head, stubby limbs, embroidered facial features",
+      "features": "eyes rising above the head, wide mouth line",
+      "signature_pose": "sitting with one leg stretched out",
+      "palette": null,
+      "palette_status": "unverified",
+      "reference_360": null,
+      "tags": [
+        "frog",
+        "creative"
+      ]
+    },
+    {
+      "id": "octopus",
+      "name_en": "Oswald",
+      "name_ja": "オズワルド",
+      "name_ko": "오스왈스",
+      "species": "octopus",
+      "line": "mate",
+      "markets": [
+        "JP",
+        "KR"
+      ],
+      "product_url": null,
+      "product_name_ko": "메이트 옥토푸스",
+      "personality": "a champion",
+      "silhouette": "round head with eight arms spreading below it, soft plush Yogibo Mate body, oversized rounded head, stubby limbs, embroidered facial features",
+      "features": "suckers suggested on the underside of the arms, oversized head",
+      "signature_pose": "sitting with the arms fanned out in all directions",
+      "palette": null,
+      "palette_status": "unverified",
+      "reference_360": "https://yogibo.openhost.cafe24.com/web/img/360/mate/오스왈스_28_03.jpg",
+      "tags": [
+        "octopus",
+        "champion"
+      ]
+    },
+    {
+      "id": "shark",
+      "name_en": "Siegfried",
+      "name_ja": "ジークフリート",
+      "name_ko": "Siegfried",
+      "species": "shark",
+      "line": "mate",
+      "markets": [
+        "JP",
+        "KR"
+      ],
+      "product_url": null,
+      "product_name_ko": "메이트 샤크",
+      "personality": "great at surfing",
+      "silhouette": "streamlined plush body, dorsal fin, crescent tail fin, soft plush Yogibo Mate body, oversized rounded head, stubby limbs, embroidered facial features",
+      "features": "dorsal and side fins, wide mouth line",
+      "signature_pose": "lying on its side with the fin standing up",
+      "palette": null,
+      "palette_status": "unverified",
+      "reference_360": "https://yogibo.openhost.cafe24.com/web/img/360/mate/샤크_28.jpg",
+      "tags": [
+        "shark",
+        "surf"
+      ]
+    },
+    {
+      "id": "dolphin",
+      "name_en": "Delila",
+      "name_ja": "デリラ",
+      "name_ko": "동해(딜라일라)",
+      "species": "dolphin",
+      "line": "mate",
+      "markets": [
+        "JP",
+        "KR"
+      ],
+      "product_url": null,
+      "product_name_ko": "메이트 돌고래",
+      "personality": "a dolphin that looks like a whale",
+      "silhouette": "sleek streamlined plush body, long rostrum, broad tail fluke, soft plush Yogibo Mate body, oversized rounded head, stubby limbs, embroidered facial features",
+      "features": "long snout with a smiling mouth line",
+      "signature_pose": "body curved slightly as if swimming",
+      "palette": null,
+      "palette_status": "unverified",
+      "reference_360": "https://yogibo.openhost.cafe24.com/web/img/360/mate/메이트_딜라일라_동해_28.jpg",
+      "tags": [
+        "dolphin",
+        "whale"
+      ]
+    },
+    {
+      "id": "yeti",
+      "name_en": "Yarmouth",
+      "name_ja": "ヤーマス",
+      "name_ko": "Yarmouth",
+      "species": "yeti",
+      "line": "mate",
+      "markets": [
+        "JP"
+      ],
+      "product_url": "https://yogibo.jp/products/myt",
+      "product_name_ko": null,
+      "personality": "absolutely loves sushi",
+      "silhouette": "big shaggy plush body, broad shoulders, large hands and feet, soft plush Yogibo Mate body, oversized rounded head, stubby limbs, embroidered facial features",
+      "features": "long fur texture, bare face patch",
+      "signature_pose": "standing with both arms spread wide",
+      "palette": null,
+      "palette_status": "unverified",
+      "reference_360": null,
+      "tags": [
+        "yeti",
+        "sushi"
+      ]
+    },
+    {
+      "id": "dragon",
+      "name_en": "Daniel",
+      "name_ja": "ダニエル",
+      "name_ko": "용용이(다니엘)",
+      "species": "dragon",
+      "line": "mate",
+      "markets": [
+        "JP",
+        "KR"
+      ],
+      "product_url": "https://yogibo.jp/products/mdr-gr",
+      "product_name_ko": "메이트 드래곤",
+      "personality": "one of the bravest dragons around",
+      "silhouette": "plump plush body with a ridge of spines, folded wings, thick tail, soft plush Yogibo Mate body, oversized rounded head, stubby limbs, embroidered facial features",
+      "features": "spines running along the back, small wings",
+      "signature_pose": "sitting with wings folded, facing forward",
+      "palette": null,
+      "palette_status": "unverified",
+      "reference_360": "https://yogibo.openhost.cafe24.com/web/img/360/mate/메이트_다니엘_용용이_28.jpg",
+      "tags": [
+        "dragon",
+        "brave"
+      ]
+    },
+    {
+      "id": "trex",
+      "name_en": "Teddy",
+      "name_ja": "テディ",
+      "name_ko": "크앙이",
+      "species": "t-rex",
+      "line": "mate",
+      "markets": [
+        "JP",
+        "KR"
+      ],
+      "product_url": null,
+      "product_name_ko": "메이트 티렉스",
+      "personality": "loves the gym and video games (full name Theodore Tyrannosaurus Theropod)",
+      "silhouette": "large head and thick hind legs, very short forearms, heavy tail, soft plush Yogibo Mate body, oversized rounded head, stubby limbs, embroidered facial features",
+      "features": "tiny forearms, ridge along the back",
+      "signature_pose": "standing balanced by the tail",
+      "palette": null,
+      "palette_status": "unverified",
+      "reference_360": "https://yogibo.openhost.cafe24.com/web/img/360/mate/크앙이_27.jpg",
+      "tags": [
+        "t-rex",
+        "gym",
+        "games"
+      ]
+    },
+    {
+      "id": "dino",
+      "name_en": "Derek",
+      "name_ja": "デレク",
+      "name_ko": "딘딘(데릭)",
+      "species": "dinosaur",
+      "line": "mate",
+      "markets": [
+        "JP",
+        "KR"
+      ],
+      "product_url": null,
+      "product_name_ko": "메이트 디노",
+      "personality": "a vegan",
+      "silhouette": "rounded plush body with a long neck, short chubby legs, soft plush Yogibo Mate body, oversized rounded head, stubby limbs, embroidered facial features",
+      "features": "soft ridge running along the back",
+      "signature_pose": "standing on all fours with the head raised",
+      "palette": null,
+      "palette_status": "unverified",
+      "reference_360": "https://yogibo.openhost.cafe24.com/web/img/360/mate/메이트_데릭_딘딘_28.jpg",
+      "tags": [
+        "dinosaur",
+        "vegan"
+      ]
+    },
+    {
+      "id": "unicorn",
+      "name_en": "Unique",
+      "name_ja": "ユニーク",
+      "name_ko": "윤희(유니크)",
+      "species": "unicorn",
+      "line": "mate",
+      "markets": [
+        "JP",
+        "KR"
+      ],
+      "product_url": null,
+      "product_name_ko": "메이트 유니콘",
+      "personality": "",
+      "silhouette": "plump horse-shaped plush body, horn on the forehead, full mane and tail, soft plush Yogibo Mate body, oversized rounded head, stubby limbs, embroidered facial features",
+      "features": "spiral horn on the forehead, flowing mane",
+      "signature_pose": "standing with the head held high",
+      "palette": null,
+      "palette_status": "unverified",
+      "reference_360": "https://yogibo.openhost.cafe24.com/web/img/360/mate/유니크윤희_28..jpg",
+      "tags": [
+        "unicorn",
+        "fantasy"
+      ]
+    },
+    {
+      "id": "alligator",
+      "name_en": "Ari",
+      "name_ja": "アリー",
+      "name_ko": "Ari",
+      "species": "alligator",
+      "line": "roll-mate",
+      "markets": [
+        "JP",
+        "KR"
+      ],
+      "product_url": null,
+      "product_name_ko": "롤 메이트 엘리게이터",
+      "personality": "",
+      "silhouette": "long low plush body, broad snout, ridge of scutes along the back, soft plush Yogibo Mate body, oversized rounded head, stubby limbs, embroidered facial features",
+      "features": "long snout and a row of ridges down the back",
+      "signature_pose": "lying stretched out on all fours",
+      "palette": null,
+      "palette_status": "unverified",
+      "reference_360": "https://yogibo.openhost.cafe24.com/web/img/360/mate/롤메이트_엘리게이터_28.jpg",
+      "tags": [
+        "alligator",
+        "roll-mate"
+      ]
+    },
+    {
+      "id": "succulent",
+      "name_en": "Sunny",
+      "name_ja": "サニー",
+      "name_ko": "Sunny",
+      "species": "succulent plant",
+      "line": "plant-mate",
+      "markets": [
+        "JP"
+      ],
+      "product_url": "https://yogibo.jp/products/plm-ss",
+      "product_name_ko": null,
+      "personality": "a healing friend who delivers happiness and smiles",
+      "silhouette": "layered succulent plant shape, rounded silhouette made only of overlapping leaves, soft plush Yogibo Mate body, oversized rounded head, stubby limbs, embroidered facial features",
+      "features": "thick overlapping leaves with rounded tips",
+      "signature_pose": "front-on with the leaves fully spread",
+      "palette": null,
+      "palette_status": "unverified",
+      "reference_360": null,
+      "tags": [
+        "plant",
+        "succulent",
+        "healing"
+      ]
+    }
+  ]
+}
