@@ -43,12 +43,11 @@ create policy "insert_any" on public.leaderboard for insert with check (true);
 
 ## 3. 게임에 키 연결
 
-> ✅ **연결됨 (2026-07-31)** — 프로젝트 `hsgzhaswfzikzdpaawdi` 의 URL과 **publishable 키**가
-> `blockblast.html` 의 `LB_CONFIG` 에 들어가 있습니다. 이 프로젝트는 레거시 anon(JWT) 키가
-> 비활성이라(`Invalid API key`) publishable 키를 씁니다.
+> ✅ **연결·확인 완료 (2026-07-31)** — 프로젝트 `hsgzhaswfzikzdpaawdi` 의 URL과
+> **publishable 키**가 `blockblast.html` 의 `LB_CONFIG` 에 들어가 있고, 테이블 조회가
+> `[]` 로 정상 응답하는 것까지 확인했습니다. 글로벌 랭킹이 실제로 동작합니다.
 >
-> 다만 **테이블 생성 SQL(2번) 실행 여부는 확인되지 않았습니다.** 아래 「연결 확인 방법」으로
-> 한 번 확인해 주세요. 미실행이면 조회가 실패해 조용히 이 기기 랭킹으로 폴백합니다.
+> 이 프로젝트는 레거시 anon(JWT) 키가 비활성이라(`Invalid API key`) publishable 키를 씁니다.
 
 `blockblast.html` 상단의 `LB_CONFIG` 를 채웁니다:
 

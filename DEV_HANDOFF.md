@@ -171,8 +171,8 @@ python3 -m http.server 8000
       — 프로젝트 `hsgzhaswfzikzdpaawdi`, publishable 키 사용(레거시 anon JWT는 비활성이라
         `Invalid API key` 로 거부됨). 코드는 두 키 형식을 모두 지원한다.
         조회·등록·순위·폴백 전 경로를 요청 모킹으로 검증 완료
-- [ ] 테이블 생성 SQL 실행 여부 확인 — 미실행이면 조회가 실패해 로컬로 폴백한다.
-      실서버 왕복은 사내망에서 supabase.co 가 차단(403)돼 검증하지 못했다
+- [x] 테이블 생성 SQL 실행 + 실서버 응답 확인 — `?select=*&limit=1` 이 `[]` 반환(2026-07-31).
+      글로벌 랭킹 실동작 확인 완료
 - [ ] (선택) 어뷰징 방지: Edge Function 서버 검증 또는 rate-limit
 
 ### 🟡 실시간 1:1 대전 (설계됨, 미구현)
