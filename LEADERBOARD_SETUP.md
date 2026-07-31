@@ -43,17 +43,19 @@ create policy "insert_any" on public.leaderboard for insert with check (true);
 
 ## 3. 게임에 키 연결
 
-> 🟡 **진행 중 (2026-07-31)** — 프로젝트 `hsgzhaswfzikzdpaawdi` 의 URL과 레거시 anon(JWT)
-> 키가 들어가 있으나, 이 프로젝트는 **레거시 키가 비활성이라 서버가 `Invalid API key` 로
-> 거부**합니다. Publishable 키(`sb_publishable_...`)로 교체해야 실제 글로벌 랭킹이 붙습니다.
-> 그 전까지는 조회 실패 시 폴백이 동작해 **이 기기 랭킹으로 정상 플레이**됩니다.
+> ✅ **연결됨 (2026-07-31)** — 프로젝트 `hsgzhaswfzikzdpaawdi` 의 URL과 **publishable 키**가
+> `blockblast.html` 의 `LB_CONFIG` 에 들어가 있습니다. 이 프로젝트는 레거시 anon(JWT) 키가
+> 비활성이라(`Invalid API key`) publishable 키를 씁니다.
+>
+> 다만 **테이블 생성 SQL(2번) 실행 여부는 확인되지 않았습니다.** 아래 「연결 확인 방법」으로
+> 한 번 확인해 주세요. 미실행이면 조회가 실패해 조용히 이 기기 랭킹으로 폴백합니다.
 
 `blockblast.html` 상단의 `LB_CONFIG` 를 채웁니다:
 
 ```js
 const LB_CONFIG={
   url:   "https://abcd1234.supabase.co",   // ← Project URL
-  key:   "eyJhbGciOi...",                    // ← anon public key
+  key:   "sb_publishable_...",              // ← publishable 키 (또는 레거시 anon JWT)
   table: "leaderboard",
 };
 ```

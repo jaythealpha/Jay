@@ -373,9 +373,10 @@ const COST={bomb:15,hammer:8,refresh:10};
    Left blank → the game uses an on-device local Top-10 leaderboard instead. */
 const LB_CONFIG={
   url:   "https://hsgzhaswfzikzdpaawdi.supabase.co",
-  // anon(public) key — 브라우저에 노출되도록 설계된 키다. 실제 권한은 RLS 정책이
-  // 정하며 읽기와 점수 등록만 허용된다. service_role 키는 절대 여기에 넣지 말 것.
-  key:   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhzZ3poYXN3Znppa3pkcGFhd2RpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0NzU5NDMsImV4cCI6MjEwMTA1MTk0M30.3fv4zC_wn-T2iTc4QcHPlfh7TnBlI5wmeE8zzUSNkKU",
+  // publishable key — 브라우저에 노출되도록 설계된 공개 키다. 실제 권한은 RLS 정책이
+  // 정하며 읽기와 점수 등록만 허용된다. secret(service_role) 키는 절대 넣지 말 것.
+  // 이 프로젝트는 레거시 anon(JWT) 키가 비활성이라 publishable 키를 쓴다.
+  key:   "sb_publishable_9u0cSbKLFa_A6562uO8XuA_bGzflWr_",
   table: "leaderboard",
 };
 
