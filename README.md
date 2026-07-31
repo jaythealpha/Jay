@@ -15,6 +15,20 @@
 
 - **v1 (텍스트 어드벤처)** 👉 [https://jaythealpha.github.io/Jay/](https://jaythealpha.github.io/Jay/)
 - **v2 (16비트 아케이드 러너)** 👉 [https://jaythealpha.github.io/Jay/v2.html](https://jaythealpha.github.io/Jay/v2.html)
+- **🧩 블록 블라스트: 몬스터 배틀** 👉 [https://jaythealpha.github.io/Jay/blockblast.html](https://jaythealpha.github.io/Jay/blockblast.html)
+
+### 🧩 블록 블라스트 — 몬스터 배틀
+
+8×8 블록 퍼즐에 몬스터 수집과 속성 무기 스킬을 얹은 게임입니다 (외부 라이브러리 없는 단일 파일).
+
+- 조각 3개를 드래그해 가로/세로 줄을 채우면 클리어 — 🔥콤보 배율과 ⚡멀티라인 보너스가 붙습니다
+- 🐾 **오리지널 몬스터 24종** + 📖도감 수집, ⚔️속성별 무기 스킬(전기·불·물·풀·에스퍼·고스트·페어리 등)
+- 🧊얼음 블록 장애물, ✨골든 몬스터(점수 3배), 👑15줄마다 보스 웨이브
+- 💰코인으로 사는 파워업(폭탄·망치·새 조각), 📅연속출석, 🎯일일미션, 🏆업적
+- 🏅 랭킹 — 기본은 브라우저 로컬 Top-10, Supabase를 연결하면 글로벌 랭킹으로 전환 ([설정 가이드](LEADERBOARD_SETUP.md))
+- 개발자용 인수인계 문서: [DEV_HANDOFF.md](DEV_HANDOFF.md)
+
+> 몬스터는 전부 오리지널 디자인이라 공개 배포에 문제가 없습니다.
 
 ### 🕹️ v2: 직장인 러너 — 출근 대작전
 

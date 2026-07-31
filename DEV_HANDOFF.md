@@ -145,8 +145,15 @@ python3 -m http.server 8000
 - 배경 `bg.png`, 썸네일 `thumbnail.png`, 파비콘 `favicon.png`, BGM `bgm.mp3`
 - 효과음 mp3 5종(현재 코드는 합성음 사용, mp3는 미사용 상태로 남아있음)
 
-### ⏳ 생성 대기 (파일 없으면 이모지/기본 배경으로 자동 폴백 — 게임은 정상 동작)
-아래 파일들을 `assets/blockblast/`에 넣으면 코드가 자동 인식(별도 수정 불필요):
+### ⏳ 생성 대기 (없으면 이모지/기본 배경으로 폴백 — 게임은 정상 동작)
+
+> **변경됨(배포 정리):** 예전에는 없는 파일도 일단 요청해서 매 접속마다 404가 14건 발생했습니다.
+> 지금은 `blockblast.html` 상단의 **`ASSETS`** 집합에 적힌 파일만 요청합니다.
+> 따라서 아래 아트를 추가할 때는 **파일을 `assets/blockblast/`에 넣고 `ASSETS`에 파일명 한 줄을 추가**하면 됩니다.
+> 배경 테마(`bg_ice`/`bg_volcano`)도 같은 방식이며, 아트가 없는 테마는 목록에서 자동으로 숨겨집니다
+> (예전에는 연속출석 3일차에 테마가 열려도 배경이 빈 화면이 됐습니다).
+
+추가 대상:
 - 신규 몬스터 스프라이트 9종: `mon_seorigom, mon_nunsongi, mon_binghapeng, mon_bawidori, mon_moraeyeou, mon_sujeong, mon_beongaetokki, mon_hwasanagi, mon_hwanggeummong`(보스)
 - UI 아이콘: `ui_bomb.png, ui_hammer.png, ui_refresh.png`
 - 보드 프레임 `ui_frame.png`(가운데 빈 액자), 타이틀 로고 `ui_logo.png`(16:9)
@@ -175,7 +182,8 @@ Supabase Realtime 채널 기반 듀얼 모드. **주의: 코어 루프를 건드
 - [ ] 신규 스프라이트/UI/배경 12종 생성·후처리·커밋 (7장 참고)
 
 ### ⚪ 배포
-- [ ] 기본 브랜치 병합 → GitHub Pages 활성화 (`.github/workflows/pages.yml` 참고, 현재 기본 브랜치는 `claude/expand-korean-market-strategy-dPuXy`)
+- [x] 배포 정리 — 404 14건 제거(`ASSETS` 매니페스트), 빈 배경 테마 숨김, 공유 카드 메타 절대 URL 전환, 루트 랜딩·README 진입 링크 추가
+- [ ] 기본 브랜치 병합 → GitHub Pages 자동 발행 (`.github/workflows/pages.yml`, 기본 브랜치 `claude/expand-korean-market-strategy-dPuXy`)
 
 ---
 

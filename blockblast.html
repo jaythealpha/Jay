@@ -10,9 +10,11 @@
 <meta property="og:title" content="블록 블라스트 — 몬스터 배틀">
 <meta property="og:description" content="24종 오리지널 몬스터와 함께하는 블록 퍼즐 게임">
 <meta property="og:type" content="website">
-<meta property="og:image" content="assets/blockblast/thumbnail.png">
+<!-- 공유 카드 크롤러는 상대경로를 읽지 못하므로 절대 URL로 둔다 -->
+<meta property="og:url" content="https://jaythealpha.github.io/Jay/blockblast.html">
+<meta property="og:image" content="https://jaythealpha.github.io/Jay/assets/blockblast/thumbnail.png">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="assets/blockblast/thumbnail.png">
+<meta name="twitter:image" content="https://jaythealpha.github.io/Jay/assets/blockblast/thumbnail.png">
 <style>
   :root{
     --bg1:#0f0c29; --bg2:#302b63; --bg3:#24243e;
@@ -419,13 +421,27 @@ const CHARS=[
 ];
 const NORMAL_CHARS=CHARS.filter(c=>!c.boss);
 const BOSS_CHAR=CHARS.find(c=>c.boss);
-/* sprite preload — falls back to emoji when a file is missing */
+/* art that actually ships in the repo — anything not listed is never requested,
+   so the page loads without broken requests. Drop a new file into
+   assets/blockblast/ and add its name here to light it up (DEV_HANDOFF §7). */
 const ASSET_DIR="assets/blockblast/";
+const ASSETS=new Set([
+  "bg.png","favicon.png","thumbnail.png","bgm.mp3",
+  "mon_bangul.png","mon_bulkkori.png","mon_hwaryong.png","mon_jiji.png",
+  "mon_kkotbong.png","mon_kkummong.png","mon_kulkul.png","mon_mironyang.png",
+  "mon_mongbul.png","mon_mulyong.png","mon_padowang.png","mon_pungseon.png",
+  "mon_saessak.png","mon_yeoubyeol.png","mon_yuryeong.png",
+]);
+const hasAsset=f=>ASSETS.has(f);
+
+/* sprite preload — falls back to emoji when the art isn't in ASSETS yet */
 const SPRITE={};
 CHARS.forEach(ch=>{
+  const file="mon_"+ch.id+".png";
+  if(!hasAsset(file))return;
   const im=new Image();
   im.onload=()=>{SPRITE[ch.id]=im; if(typeof paint==="function"&&grid)paint(); if(typeof renderTray==="function"&&tray)renderTray();};
-  im.src=ASSET_DIR+"mon_"+ch.id+".png";
+  im.src=ASSET_DIR+file;
 });
 function spriteCSS(el,ch){
   if(SPRITE[ch.id]){
@@ -446,7 +462,7 @@ const THEMES=[
   {id:"night",  file:"bg.png",         unlock:0, name:"별밤"},
   {id:"ice",    file:"bg_ice.png",     unlock:3, name:"빙하"},
   {id:"volcano",file:"bg_volcano.png", unlock:7, name:"화산"},
-];
+].filter(t=>hasAsset(t.file));   // 아트가 없는 테마는 빈 배경이 되므로 숨긴다
 const bgImgEl=document.getElementById("bgImg");
 function applyTheme(id){
   const t=THEMES.find(x=>x.id===id)||THEMES[0];
@@ -455,6 +471,7 @@ function applyTheme(id){
 }
 function cycleTheme(){
   const unlocked=THEMES.filter(t=>streak>=t.unlock);
+  if(unlocked.length<2){ toast("🎨","새 배경 테마는 준비 중이에요"); return; }
   const cur=localStorage.getItem("bb_theme")||"night";
   let idx=unlocked.findIndex(t=>t.id===cur);
   idx=(idx+1)%unlocked.length;
@@ -467,6 +484,7 @@ document.getElementById("themeBtn").onclick=cycleTheme;
 /* progressive UI assets — swap emoji/text for generated art the moment the file exists */
 const UI_ICONS={bomb:"ui_bomb.png",hammer:"ui_hammer.png",refresh:"ui_refresh.png"};
 Object.entries(UI_ICONS).forEach(([tool,file])=>{
+  if(!hasAsset(file))return;
   const im=new Image();
   im.onload=()=>{
     const el=document.querySelector(`.tool[data-tool="${tool}"] .ic`);
@@ -474,18 +492,22 @@ Object.entries(UI_ICONS).forEach(([tool,file])=>{
   };
   im.src=ASSET_DIR+file;
 });
-const frameIm=new Image();
-frameIm.onload=()=>{
-  const f=document.getElementById("boardFrame");
-  if(f){ f.style.backgroundImage=`url("${ASSET_DIR}ui_frame.png")`; f.style.opacity="1"; }
-};
-frameIm.src=ASSET_DIR+"ui_frame.png";
-const logoIm=new Image();
-logoIm.onload=()=>{
-  const h=document.getElementById("titleH1");
-  if(h){ h.innerHTML=""; h.style.background="none"; h.appendChild(logoIm); logoIm.style.width="100%"; logoIm.style.height="auto"; }
-};
-logoIm.src=ASSET_DIR+"ui_logo.png";
+if(hasAsset("ui_frame.png")){
+  const frameIm=new Image();
+  frameIm.onload=()=>{
+    const f=document.getElementById("boardFrame");
+    if(f){ f.style.backgroundImage=`url("${ASSET_DIR}ui_frame.png")`; f.style.opacity="1"; }
+  };
+  frameIm.src=ASSET_DIR+"ui_frame.png";
+}
+if(hasAsset("ui_logo.png")){
+  const logoIm=new Image();
+  logoIm.onload=()=>{
+    const h=document.getElementById("titleH1");
+    if(h){ h.innerHTML=""; h.style.background="none"; h.appendChild(logoIm); logoIm.style.width="100%"; logoIm.style.height="auto"; }
+  };
+  logoIm.src=ASSET_DIR+"ui_logo.png";
+}
 
 // piece shapes
 const SHAPES=[
