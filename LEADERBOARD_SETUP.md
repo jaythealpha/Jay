@@ -9,7 +9,15 @@
 2. 프로젝트가 준비되면 **Project Settings → API** 로 이동
 3. 다음 두 값을 복사:
    - **Project URL** (예: `https://abcd1234.supabase.co`)
-   - **anon public** key (공개용 키 — 클라이언트에 노출되어도 안전)
+   - **공개 키** — 프로젝트 생성 시점에 따라 형식이 다릅니다. 둘 다 지원합니다.
+     - 신형: **Publishable key** (`sb_publishable_...`) ← 최근 만든 프로젝트는 이쪽
+     - 레거시: **anon public** key (`eyJ...` JWT)
+
+> ⚠️ 최근 Supabase 프로젝트는 레거시 JWT `anon` 키가 **비활성 상태일 수 있습니다.**
+> 그 키로 호출하면 `{"message":"Invalid API key"}` 가 돌아옵니다. 이때는 Publishable
+> 키를 쓰세요. 게임 코드가 키 형식을 보고 헤더를 알아서 맞춥니다 — JWT면
+> `apikey` + `Authorization: Bearer`, publishable 키면 JWT가 아니라 Bearer 로 보내면
+> 401이 날 수 있으므로 `apikey` 만 보냅니다.
 
 ## 2. 랭킹 테이블 만들기
 Supabase 대시보드 → **SQL Editor** 에서 아래를 실행:
@@ -35,9 +43,10 @@ create policy "insert_any" on public.leaderboard for insert with check (true);
 
 ## 3. 게임에 키 연결
 
-> ✅ **연결 완료 (2026-07-31)** — 프로젝트 `hsgzhaswfzikzdpaawdi` 의 URL·anon 키가
-> `blockblast.html` 의 `LB_CONFIG` 에 들어가 있어 게임은 이미 **글로벌 모드**로 동작합니다.
-> 아래는 다른 프로젝트로 바꾸거나 새로 설정할 때 참고하세요.
+> 🟡 **진행 중 (2026-07-31)** — 프로젝트 `hsgzhaswfzikzdpaawdi` 의 URL과 레거시 anon(JWT)
+> 키가 들어가 있으나, 이 프로젝트는 **레거시 키가 비활성이라 서버가 `Invalid API key` 로
+> 거부**합니다. Publishable 키(`sb_publishable_...`)로 교체해야 실제 글로벌 랭킹이 붙습니다.
+> 그 전까지는 조회 실패 시 폴백이 동작해 **이 기기 랭킹으로 정상 플레이**됩니다.
 
 `blockblast.html` 상단의 `LB_CONFIG` 를 채웁니다:
 
@@ -66,13 +75,19 @@ const LB_CONFIG={
 다만 이 표시는 **키 존재 여부만** 보므로, 테이블이 없거나 SQL을 안 돌렸으면 조회가 실패해
 조용히 로컬 랭킹으로 떨어집니다. 서버까지 확실히 확인하려면:
 
-```bash
-curl -s -H "apikey: <anon key>" -H "Authorization: Bearer <anon key>" \
-  "https://hsgzhaswfzikzdpaawdi.supabase.co/rest/v1/leaderboard?select=*&limit=1"
+브라우저 주소창에 아래를 넣는 방법이 가장 간단합니다(셸 따옴표 문제가 없음).
+`YOUR_KEY` 자리에 **실제 키를 붙여넣어야** 합니다 — 자리표시자를 그대로 두면
+`Invalid API key` 가 나옵니다.
+
+```
+https://hsgzhaswfzikzdpaawdi.supabase.co/rest/v1/leaderboard?select=*&limit=1&apikey=YOUR_KEY
 ```
 
-`[]` 또는 기록 배열이 나오면 정상입니다. `relation ... does not exist` 가 나오면
-2번의 SQL을 아직 실행하지 않은 것입니다.
+| 응답 | 뜻 |
+|---|---|
+| `[]` 또는 기록 배열 | 정상 — 키·테이블 모두 OK |
+| `relation "public.leaderboard" does not exist` | 키는 OK, 2번 SQL 미실행 |
+| `Invalid API key` | 키가 거부됨 — 자리표시자를 안 바꿨거나, 레거시 JWT 키가 비활성 (위 1번 경고 참고) |
 
 ## 보안 참고
 - `anon` 키는 클라이언트 공개용으로 설계된 키라 노출되어도 됩니다.

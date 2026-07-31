@@ -664,7 +664,16 @@ function saveMeta(){
 const LB_ONLINE = !!(LB_CONFIG.url && LB_CONFIG.key);
 const LB={
   online:LB_ONLINE,
-  headers(){ return {apikey:LB_CONFIG.key, Authorization:"Bearer "+LB_CONFIG.key, "Content-Type":"application/json"}; },
+  // Supabase 키는 두 형식이 있다.
+  //  · 레거시 anon 키 — JWT(`eyJ...`). apikey + Authorization: Bearer 둘 다 보낸다.
+  //  · 신형 publishable 키 — `sb_publishable_...`. JWT가 아니라서 Bearer 로 보내면
+  //    토큰 파싱에 걸려 401이 날 수 있다. 이 경우 apikey 헤더만 보낸다
+  //    (익명 접근은 apikey 만으로 역할이 정해진다).
+  headers(){
+    const h={apikey:LB_CONFIG.key, "Content-Type":"application/json"};
+    if(/^eyJ/.test(LB_CONFIG.key)) h.Authorization="Bearer "+LB_CONFIG.key;
+    return h;
+  },
   async top(n){
     if(LB_ONLINE){
       try{

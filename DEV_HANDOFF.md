@@ -167,9 +167,11 @@ python3 -m http.server 8000
 ## 8. 남은 작업 (TODO)
 
 ### 🔴 우선 — 백엔드 연결 (랭킹 실사용 전제)
-- [x] Supabase 프로젝트 생성 + `LB_CONFIG` 연결 → 글로벌 랭킹 활성화 (`LEADERBOARD_SETUP.md`)
-      — 2026-07-31 연결 완료(프로젝트 `hsgzhaswfzikzdpaawdi`). 조회·등록·순위·폴백 경로는
-        요청 모킹으로 검증했고, 실서버 왕복은 사내망 차단으로 미검증
+- [ ] Supabase `LB_CONFIG` 키 교체 → 글로벌 랭킹 실동작 (`LEADERBOARD_SETUP.md`)
+      — 프로젝트 `hsgzhaswfzikzdpaawdi` 연결됨. 다만 넣어둔 레거시 anon(JWT) 키를 서버가
+        `Invalid API key` 로 거부한다(신규 프로젝트라 레거시 키 비활성). Publishable 키
+        (`sb_publishable_...`)로 바꾸면 붙는다. 코드는 두 형식을 모두 지원하도록 처리됨.
+        조회·등록·순위·폴백 경로는 요청 모킹으로 검증 완료, 실서버 왕복만 미검증
 - [ ] (선택) 어뷰징 방지: Edge Function 서버 검증 또는 rate-limit
 
 ### 🟡 실시간 1:1 대전 (설계됨, 미구현)
