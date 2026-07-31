@@ -34,6 +34,11 @@ create policy "insert_any" on public.leaderboard for insert with check (true);
 ```
 
 ## 3. 게임에 키 연결
+
+> ✅ **연결 완료 (2026-07-31)** — 프로젝트 `hsgzhaswfzikzdpaawdi` 의 URL·anon 키가
+> `blockblast.html` 의 `LB_CONFIG` 에 들어가 있어 게임은 이미 **글로벌 모드**로 동작합니다.
+> 아래는 다른 프로젝트로 바꾸거나 새로 설정할 때 참고하세요.
+
 `blockblast.html` 상단의 `LB_CONFIG` 를 채웁니다:
 
 ```js
@@ -49,8 +54,25 @@ const LB_CONFIG={
 ## 동작 방식
 - **점수 제출**: 게임 오버 시 이름 입력 후 `랭킹 등록` → `POST /rest/v1/leaderboard`
 - **랭킹 조회**: `GET .../leaderboard?order=score.desc&limit=20`
-- **내 순위**: `score=gt.<내점수>` 카운트 + 1
+- **내 순위**: `score=gt.<내점수>` 카운트 + 1 — 응답의 `Content-Range` 헤더에서 총건수를 읽습니다.
+  브라우저는 CORS 규칙상 `Content-Range` 를 기본으로 읽지 못하는데, Supabase(PostgREST)가
+  `Access-Control-Expose-Headers` 로 노출해 주기 때문에 동작합니다. 혹시 순위 숫자가
+  이상하면 이 헤더부터 확인하세요(읽지 못하면 로컬 계산으로 조용히 폴백합니다).
 - 네트워크 오류 시 자동으로 로컬 랭킹으로 폴백
+
+## 연결 확인 방법
+
+게임을 열어 **🏆 랭킹 보기** 를 눌렀을 때 상단이 `🌍 글로벌 랭킹` 이면 키가 인식된 것입니다.
+다만 이 표시는 **키 존재 여부만** 보므로, 테이블이 없거나 SQL을 안 돌렸으면 조회가 실패해
+조용히 로컬 랭킹으로 떨어집니다. 서버까지 확실히 확인하려면:
+
+```bash
+curl -s -H "apikey: <anon key>" -H "Authorization: Bearer <anon key>" \
+  "https://hsgzhaswfzikzdpaawdi.supabase.co/rest/v1/leaderboard?select=*&limit=1"
+```
+
+`[]` 또는 기록 배열이 나오면 정상입니다. `relation ... does not exist` 가 나오면
+2번의 SQL을 아직 실행하지 않은 것입니다.
 
 ## 보안 참고
 - `anon` 키는 클라이언트 공개용으로 설계된 키라 노출되어도 됩니다.

@@ -372,8 +372,10 @@ const COST={bomb:15,hammer:8,refresh:10};
    URL + anon (public) key below. See LEADERBOARD_SETUP.md for the 5-min setup.
    Left blank → the game uses an on-device local Top-10 leaderboard instead. */
 const LB_CONFIG={
-  url:   "",            // e.g. "https://abcd1234.supabase.co"
-  key:   "",            // Supabase anon public key (safe to expose)
+  url:   "https://hsgzhaswfzikzdpaawdi.supabase.co",
+  // anon(public) key — 브라우저에 노출되도록 설계된 키다. 실제 권한은 RLS 정책이
+  // 정하며 읽기와 점수 등록만 허용된다. service_role 키는 절대 여기에 넣지 말 것.
+  key:   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhzZ3poYXN3Znppa3pkcGFhd2RpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0NzU5NDMsImV4cCI6MjEwMTA1MTk0M30.3fv4zC_wn-T2iTc4QcHPlfh7TnBlI5wmeE8zzUSNkKU",
   table: "leaderboard",
 };
 

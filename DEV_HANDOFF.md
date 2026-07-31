@@ -167,7 +167,9 @@ python3 -m http.server 8000
 ## 8. 남은 작업 (TODO)
 
 ### 🔴 우선 — 백엔드 연결 (랭킹 실사용 전제)
-- [ ] Supabase 프로젝트 생성 + `LB_CONFIG` 연결 → 글로벌 랭킹 활성화 (`LEADERBOARD_SETUP.md`)
+- [x] Supabase 프로젝트 생성 + `LB_CONFIG` 연결 → 글로벌 랭킹 활성화 (`LEADERBOARD_SETUP.md`)
+      — 2026-07-31 연결 완료(프로젝트 `hsgzhaswfzikzdpaawdi`). 조회·등록·순위·폴백 경로는
+        요청 모킹으로 검증했고, 실서버 왕복은 사내망 차단으로 미검증
 - [ ] (선택) 어뷰징 방지: Edge Function 서버 검증 또는 rate-limit
 
 ### 🟡 실시간 1:1 대전 (설계됨, 미구현)
