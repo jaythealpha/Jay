@@ -17,6 +17,7 @@ import {
 } from '@amc/domain';
 import { BarcodeCryptoService } from '../crypto/barcode-crypto.service';
 import { CouponEventsService } from '../events/coupon-events.service';
+import { NotificationSchedulerService } from '../notifications/notification-scheduler.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RecognitionQueueService } from '../recognition/recognition.queue';
 import { StorageService } from '../storage/storage.service';
@@ -82,6 +83,7 @@ export class CouponsService {
     private readonly recognitionQueue: RecognitionQueueService,
     private readonly events: CouponEventsService,
     private readonly barcodeCrypto: BarcodeCryptoService,
+    private readonly notificationScheduler: NotificationSchedulerService,
   ) {}
 
   async list(userId: string, query: ListCouponsQuery): Promise<CouponListResponseDto> {
@@ -195,7 +197,7 @@ export class CouponsService {
         ? coupon.status
         : recomputeDateDrivenStatus(coupon.status, expiresAt, new Date());
 
-    await this.prisma.coupon.update({
+    const updated = await this.prisma.coupon.update({
       where: { id },
       data: {
         ...(input.brandName !== undefined ? { brandName: input.brandName } : {}),
@@ -217,6 +219,10 @@ export class CouponsService {
     if (nextStatus !== coupon.status) {
       await this.events.record(id, 'STATUS_CHANGED', { from: coupon.status, to: nextStatus });
     }
+    if (expiresAt !== undefined) {
+      // Expiry changed: cancel the old reminder plan and re-plan (spec §16).
+      await this.notificationScheduler.rescheduleFor(updated);
+    }
     return this.detail(userId, id);
   }
 
@@ -229,10 +235,11 @@ export class CouponsService {
     const confirmed = transition('NEEDS_REVIEW', 'ACTIVE', 'USER_CONFIRMED');
     const finalStatus = recomputeDateDrivenStatus(confirmed, coupon.expiresAt, new Date());
 
-    await this.prisma.coupon.update({
+    const confirmedCoupon = await this.prisma.coupon.update({
       where: { id },
       data: { status: finalStatus, requiresReview: false },
     });
+    await this.notificationScheduler.scheduleFor(confirmedCoupon);
     await this.events.record(id, 'USER_CONFIRMED');
     await this.events.record(id, 'STATUS_CHANGED', { from: coupon.status, to: finalStatus });
     return this.detail(userId, id);
@@ -246,8 +253,8 @@ export class CouponsService {
       where: { id },
       data: { status: 'REDEEMED', redeemedAt: new Date() },
     });
-    // Pending expiration reminders for redeemed coupons are cancelled by
-    // policy (@amc/notification-policy); actual scheduling arrives in M3.
+    // Redeemed coupons never fire expiration reminders (spec §16).
+    await this.notificationScheduler.cancelFor(id);
     await this.events.record(id, 'MARKED_REDEEMED');
     await this.events.record(id, 'STATUS_CHANGED', { from: coupon.status, to: 'REDEEMED' });
     return this.detail(userId, id);
@@ -260,10 +267,12 @@ export class CouponsService {
     // Explicit user restore; final status still honors the expiration date
     // (an expired coupon restores to EXPIRED, never silently back to ACTIVE).
     const finalStatus = statusAfterRestore(coupon.expiresAt, new Date());
-    await this.prisma.coupon.update({
+    const restored = await this.prisma.coupon.update({
       where: { id },
       data: { status: finalStatus, redeemedAt: null },
     });
+    // Live again → reminders come back (scheduleFor no-ops for EXPIRED).
+    await this.notificationScheduler.scheduleFor(restored);
     await this.events.record(id, 'RESTORED_TO_ACTIVE', { finalStatus });
     await this.events.record(id, 'STATUS_CHANGED', { from: coupon.status, to: finalStatus });
     return this.detail(userId, id);
@@ -277,6 +286,7 @@ export class CouponsService {
       where: { id },
       data: { status: 'ARCHIVED', archivedAt: new Date() },
     });
+    await this.notificationScheduler.cancelFor(id);
     await this.events.record(id, 'ARCHIVED');
     await this.events.record(id, 'STATUS_CHANGED', { from: coupon.status, to: 'ARCHIVED' });
     return this.detail(userId, id);
@@ -287,10 +297,11 @@ export class CouponsService {
     this.assertTransition(coupon.status, 'ACTIVE', 'USER_UNARCHIVED', '보관 해제');
 
     const finalStatus = recomputeDateDrivenStatus('ACTIVE', coupon.expiresAt, new Date());
-    await this.prisma.coupon.update({
+    const unarchived = await this.prisma.coupon.update({
       where: { id },
       data: { status: finalStatus, archivedAt: null },
     });
+    await this.notificationScheduler.scheduleFor(unarchived);
     await this.events.record(id, 'STATUS_CHANGED', { from: coupon.status, to: finalStatus });
     return this.detail(userId, id);
   }
@@ -302,6 +313,7 @@ export class CouponsService {
     // The DELETED event is recorded before the hard delete so the action is
     // at least visible in logs; rows (including events) are then removed.
     await this.events.record(id, 'DELETED', { status: coupon.status });
+    await this.prisma.scheduledNotification.deleteMany({ where: { couponId: id } });
     await this.prisma.couponEvent.deleteMany({ where: { couponId: id } });
     await this.prisma.couponAsset.deleteMany({ where: { couponId: id } });
     await this.prisma.coupon.delete({ where: { id } });

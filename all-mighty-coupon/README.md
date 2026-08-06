@@ -3,8 +3,8 @@
 > **Never Lose a Coupon Again.**
 
 쿠폰을 빠르게 등록하고, 정확히 인식하고, 쉽게 찾고, 유효기간 전에 실제로
-사용하게 돕는 개인 쿠폰 지갑입니다. 현재 **Milestone 0 (실행 가능한 기반)**
-단계이며, 거래소·결제·판매 기능은 범위에 없습니다.
+사용하게 돕는 개인 쿠폰 지갑입니다. **Milestone 0–3 완료** (기반 → 인식
+파이프라인 → 지갑 MVP → 만료 알림). 거래소·결제·판매 기능은 범위에 없습니다.
 
 ## 구성
 
@@ -50,8 +50,8 @@ npm run dev:admin     # http://localhost:3002
 
 ```bash
 npm run lint          # eslint + prettier check
-npm run test          # 패키지 빌드 → vitest(67) → API 단위(jest, 21)
-npm run test:api:e2e  # 실제 DB/Redis/MinIO 통합 테스트 9개 (compose 필요)
+npm run test          # 패키지 빌드 → vitest(67) → API 단위(jest, 24)
+npm run test:api:e2e  # 실제 DB/Redis/MinIO 통합 테스트 24개 (compose 필요)
 npm run build         # packages → api(tsc) → admin(next build)
 npm run accuracy      # 인식 파서 정확도 리포트 (16샘플 데이터셋)
 npm run format        # prettier --write
@@ -63,7 +63,7 @@ npm run format        # prettier --write
 cd apps/mobile
 flutter pub get
 flutter analyze
-flutter test          # 단위 + 위젯 테스트 17개
+flutter test          # 단위 + 위젯 테스트 56개
 
 # 실행 (기기/에뮬레이터 필요)
 flutter run                                                     # iOS 시뮬레이터/데스크톱
@@ -73,7 +73,7 @@ flutter run --dart-define=AMC_API_BASE_URL=http://10.0.2.2:3001 # Android 에뮬
 flutter test test/manual/api_smoke_test.dart --dart-define=API_SMOKE=true
 ```
 
-## API 엔드포인트 (Milestone 0–2)
+## API 엔드포인트 (Milestone 0–3)
 
 - `POST /v1/auth/register` · `login` — 이메일+비밀번호 → JWT (이후 전부 Bearer 필수)
 - `GET /health` — DB·Redis 연결 상태 (공개)
@@ -83,6 +83,8 @@ flutter test test/manual/api_smoke_test.dart --dart-define=API_SMOKE=true
 - `PATCH /v1/coupons/:id` · `POST /:id/confirm` — 인식 결과 수정·확정
 - `POST /v1/coupons/:id/redeem` · `restore` · `archive` · `unarchive`, `DELETE /:id`
 - `GET /v1/coupons/:id/barcode` — 바코드 열람 (감사 이벤트 기록)
+- `GET /v1/home` — 만료 우선 홈 (곧 만료/이번 주/최근/요약)
+- `GET /v1/notifications` · `POST /:id/snooze` — 만료 알림 인앱 피드·연기
 - `GET /docs` — Swagger UI
 
 개발용 데모 계정(시드): `demo@allmightycoupon.local` / `demo-password-1234`
@@ -90,7 +92,7 @@ flutter test test/manual/api_smoke_test.dart --dart-define=API_SMOKE=true
 오류는 공통 envelope로 반환됩니다:
 `{ "error": { "code", "message", "requestId" } }`
 
-## 알려진 제한 (Milestone 2 기준)
+## 알려진 제한 (Milestone 3 기준)
 
 - 인증은 JWT 액세스 토큰 단일(7d) — refresh token·비밀번호 재설정·rate
   limiting 미구현. 프로덕션 배포 전 필수
@@ -98,7 +100,7 @@ flutter test test/manual/api_smoke_test.dart --dart-define=API_SMOKE=true
   (mock 결과에는 `[MOCK OCR SAMPLE]` 표시). 기기 내 OCR(ML Kit)·서버 OCR
   폴백은 이후 마일스톤. 바코드/QR 판독(ZXing)은 실제 동작
 - 정확도 수치는 합성 OCR 텍스트 기준 파서 정확도 (실이미지 종단 정확도 아님)
-- 푸시 발송 미구현 — 알림 _정책_ 로직만 (`packages/notification-policy`, M3)
+- **실제 푸시(FCM/APNs) 미발송** — 알림은 예약·발송·연기까지 전부 동작하지만 채널이 인앱 피드다. 푸시 토큰 등록·발송 연동은 다음 단계
 - 오프라인 동기화는 redeem 재생 큐까지 — 필드 수정의 오프라인 큐잉·충돌
   해소는 미구현
 - 공유 시트(SHARE_EXTENSION) 등록 경로는 enum만 존재, 네이티브 연동 미구현

@@ -13,6 +13,9 @@
 - **CouponAsset**: ORIGINAL / NORMALIZED / THUMBNAIL / BARCODE_CROP —
   원본과 파생 이미지를 분리 보관 (Original Image Is Ground Truth)
 - **CouponEvent**: 도메인 이벤트 append-only 기록 (감사·분석 기반)
+- **ScheduledNotification** (M3): 만료 알림 인스턴스 — offsetDays(30/7/3/0),
+  fireAt(UTC), status(PENDING/SENT/CANCELLED), message(발송 시 렌더).
+  인앱 피드가 1차 채널이며 푸시 연동 시 동일 행을 재사용한다.
 
 인덱스: userId, expiresAt, status, barcodeHash, (couponId, createdAt).
 

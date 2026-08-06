@@ -36,6 +36,7 @@ describe('Wallet (e2e)', () => {
   });
 
   afterAll(async () => {
+    await prisma.scheduledNotification.deleteMany({ where: { couponId: { in: created } } });
     await prisma.couponEvent.deleteMany({ where: { couponId: { in: created } } });
     await prisma.couponAsset.deleteMany({ where: { couponId: { in: created } } });
     await prisma.coupon.deleteMany({ where: { id: { in: created } } });

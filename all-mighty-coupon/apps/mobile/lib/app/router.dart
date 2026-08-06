@@ -9,6 +9,7 @@ import '../features/coupon_detail/presentation/barcode_screen.dart';
 import '../features/coupon_detail/presentation/coupon_detail_screen.dart';
 import '../features/coupon_review/presentation/review_screen.dart';
 import '../features/coupon_wallet/presentation/wallet_screen.dart';
+import '../features/expiration_alerts/presentation/notifications_screen.dart';
 import '../features/home/presentation/home_screen.dart';
 
 /// Auth-aware router: unauthenticated users land on /login, everything else
@@ -42,6 +43,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(path: 'wallet', builder: (context, state) => const WalletScreen()),
           GoRoute(path: 'capture', builder: (context, state) => const CaptureScreen()),
+          GoRoute(
+            path: 'notifications',
+            builder: (context, state) => const NotificationsScreen(),
+          ),
           GoRoute(
             path: 'review/:id',
             builder: (context, state) =>

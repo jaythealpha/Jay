@@ -7,6 +7,7 @@ import type { StorageService } from '../storage/storage.service';
 import type { RecognitionQueueService } from '../recognition/recognition.queue';
 import type { CouponEventsService } from '../events/coupon-events.service';
 import type { BarcodeCryptoService } from '../crypto/barcode-crypto.service';
+import type { NotificationSchedulerService } from '../notifications/notification-scheduler.service';
 
 function sampleCoupon(overrides: Partial<Coupon> = {}): Coupon {
   return {
@@ -89,10 +90,21 @@ function serviceWith(rows: Coupon[]): Stubs {
   } as unknown as CouponEventsService;
 
   return {
-    service: new CouponsService(prismaStub, storageStub, queueStub, eventsStub, {
-      encrypt: (v: string) => `enc(${v})`,
-      decrypt: (v: string) => v,
-    } as unknown as BarcodeCryptoService),
+    service: new CouponsService(
+      prismaStub,
+      storageStub,
+      queueStub,
+      eventsStub,
+      {
+        encrypt: (v: string) => `enc(${v})`,
+        decrypt: (v: string) => v,
+      } as unknown as BarcodeCryptoService,
+      {
+        scheduleFor: () => Promise.resolve(0),
+        cancelFor: () => Promise.resolve(),
+        rescheduleFor: () => Promise.resolve(0),
+      } as unknown as NotificationSchedulerService,
+    ),
     findManyCalls,
     putCalls,
     enqueued,

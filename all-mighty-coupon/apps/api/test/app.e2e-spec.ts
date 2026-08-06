@@ -64,6 +64,9 @@ describe('API integration', () => {
   });
 
   afterAll(async () => {
+    await prisma.scheduledNotification.deleteMany({
+      where: { couponId: { in: createdCouponIds } },
+    });
     await prisma.couponEvent.deleteMany({ where: { couponId: { in: createdCouponIds } } });
     await prisma.coupon.deleteMany({ where: { id: { in: createdCouponIds } } });
     await app.close();

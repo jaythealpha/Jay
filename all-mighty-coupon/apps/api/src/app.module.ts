@@ -8,6 +8,9 @@ import { loadEnv } from './config/env';
 import { CouponEventsModule } from './events/coupon-events.module';
 import { CouponsModule } from './coupons/coupons.module';
 import { HealthModule } from './health/health.module';
+import { HomeModule } from './home/home.module';
+import { MaintenanceModule } from './maintenance/maintenance.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './redis/redis.module';
 import { StorageModule } from './storage/storage.module';
@@ -25,7 +28,10 @@ function redisConnection(): { host: string; port: number } {
     RedisModule,
     StorageModule,
     CouponEventsModule,
+    NotificationsModule,
+    MaintenanceModule,
     HealthModule,
+    HomeModule,
     CouponsModule,
   ],
   providers: [

@@ -73,6 +73,19 @@ NEEDS_REVIEW → ACTIVE(날짜 기준 재계산). requiresReview=false.
   BARCODE_VIEWED 감사 이벤트 기록(메타데이터는 마스킹 값만). 저장된 바코드가
   없으면 404.
 
+### GET /v1/home (M3)
+
+행동 우선 홈 데이터: `expiringSoon`(3일 이내, 만료 임박순 5개),
+`useThisWeek`(7일 이내 ∪ 2만원+ 고가치, 5개), `recent`(최근 등록 5개),
+`counts`(active/expiringSoon/redeemed/needsReview/total),
+`totalValueMinor`(활성 쿠폰 총 가치, KRW 정수).
+
+### GET /v1/notifications · POST /v1/notifications/:id/snooze (M3)
+
+발송된 만료 알림 피드(최신 50개): `{ id, couponId(딥링크용), message,
+offsetDays, sentAt }`. snooze는 24시간 뒤 재알림을 예약하고 `{ fireAt }`
+반환.
+
 ### 오류 형식 (전 엔드포인트 공통)
 
 ```json

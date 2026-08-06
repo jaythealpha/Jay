@@ -12,6 +12,7 @@ import { recomputeDateDrivenStatus, transition } from '@amc/domain';
 import type { CouponRecognitionResult } from '@amc/shared-types';
 import { BarcodeCryptoService } from '../crypto/barcode-crypto.service';
 import { CouponEventsService } from '../events/coupon-events.service';
+import { NotificationSchedulerService } from '../notifications/notification-scheduler.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { BarcodeDetectorService } from './barcode/barcode-detector';
@@ -37,6 +38,7 @@ export class RecognitionService {
     private readonly ocrProvider: OcrProvider,
     private readonly barcodeCrypto: BarcodeCryptoService,
     private readonly events: CouponEventsService,
+    private readonly notificationScheduler: NotificationSchedulerService,
   ) {}
 
   async process(couponId: string): Promise<void> {
@@ -138,7 +140,7 @@ export class RecognitionService {
       duplicateSuspects,
     };
 
-    await this.prisma.coupon.update({
+    const updatedCoupon = await this.prisma.coupon.update({
       where: { id: coupon.id },
       data: {
         brandName: brand?.value ?? coupon.brandName,
@@ -171,6 +173,9 @@ export class RecognitionService {
       from: 'PROCESSING',
       to: finalStatus,
     });
+    // Live coupons with a recognized expiry get their reminder plan now;
+    // NEEDS_REVIEW coupons are scheduled after user confirmation instead.
+    await this.notificationScheduler.scheduleFor(updatedCoupon);
   }
 
   private async saveDerivedAssets(
