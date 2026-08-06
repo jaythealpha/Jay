@@ -8,12 +8,12 @@
 
 ## 구성
 
-| 앱/패키지     | 스택                                                            | 상태                                                              |
-| ------------- | --------------------------------------------------------------- | ----------------------------------------------------------------- |
-| `apps/api`    | NestJS 11 · Prisma 6 · PostgreSQL 16 · Redis 7 · BullMQ · MinIO | Health, 쿠폰 목록/업로드/상세/수정/확정, 비동기 인식 파이프라인   |
-| `apps/admin`  | Next.js 15 (App Router)                                         | API 상태 표시 최소 화면                                           |
-| `apps/mobile` | Flutter 3.44 · Riverpod · GoRouter · Dio · image_picker         | 등록(카메라/사진첩) → 인식 결과 확인·수정 → 쿠폰함, 오프라인 캐시 |
-| `packages/*`  | TypeScript strict                                               | 도메인 로직 + 파서 + 정확도 데이터셋 + 테스트                     |
+| 앱/패키지     | 스택                                                                  | 상태                                                                              |
+| ------------- | --------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `apps/api`    | NestJS 11 · Prisma 6 · PostgreSQL 16 · Redis 7 · BullMQ · MinIO · JWT | 인증 + 쿠폰 CRUD·검색·정렬 + 인식 파이프라인 + 사용 완료/복구 + 바코드 열람(감사) |
+| `apps/admin`  | Next.js 15 (App Router)                                               | API 상태 표시 최소 화면                                                           |
+| `apps/mobile` | Flutter 3.44 · Riverpod · GoRouter · Dio · secure storage             | 로그인 → 등록 → 검토 → 쿠폰함(필터·검색·정렬) → 상세 → 바코드, 오프라인 지원      |
+| `packages/*`  | TypeScript strict                                                     | 도메인 로직 + 파서 + 정확도 데이터셋 + 테스트                                     |
 
 ## 사전 요구사항
 
@@ -73,31 +73,38 @@ flutter run --dart-define=AMC_API_BASE_URL=http://10.0.2.2:3001 # Android 에뮬
 flutter test test/manual/api_smoke_test.dart --dart-define=API_SMOKE=true
 ```
 
-## API 엔드포인트 (Milestone 0–1)
+## API 엔드포인트 (Milestone 0–2)
 
-- `GET /health` — DB·Redis 연결 상태
-- `GET /v1/coupons?status=&limit=` — 쿠폰 목록, **유효기간 빠른 순** (무기한은 뒤로)
+- `POST /v1/auth/register` · `login` — 이메일+비밀번호 → JWT (이후 전부 Bearer 필수)
+- `GET /health` — DB·Redis 연결 상태 (공개)
+- `GET /v1/coupons?status=&q=&sort=&limit=` — 내 쿠폰 목록·검색·정렬 (**유효기간 빠른 순** 기본)
 - `POST /v1/coupons` — 이미지 업로드(multipart) → 비동기 인식 파이프라인
 - `GET /v1/coupons/:id` — 상세 + 필드별 신뢰도 + 중복 의심 + signed URL 에셋
-- `PATCH /v1/coupons/:id` — 인식 결과 수정 (Confirm, Do Not Type)
-- `POST /v1/coupons/:id/confirm` — 확인 완료 (NEEDS_REVIEW → ACTIVE)
+- `PATCH /v1/coupons/:id` · `POST /:id/confirm` — 인식 결과 수정·확정
+- `POST /v1/coupons/:id/redeem` · `restore` · `archive` · `unarchive`, `DELETE /:id`
+- `GET /v1/coupons/:id/barcode` — 바코드 열람 (감사 이벤트 기록)
 - `GET /docs` — Swagger UI
+
+개발용 데모 계정(시드): `demo@allmightycoupon.local` / `demo-password-1234`
 
 오류는 공통 envelope로 반환됩니다:
 `{ "error": { "code", "message", "requestId" } }`
 
-## 알려진 제한 (Milestone 1 기준)
+## 알려진 제한 (Milestone 2 기준)
 
-- 인증 없음 — 모든 작업이 로컬 데모 사용자 스코프. 이 상태로 배포 금지.
-  사용자 인증·스코프는 Milestone 2
+- 인증은 JWT 액세스 토큰 단일(7d) — refresh token·비밀번호 재설정·rate
+  limiting 미구현. 프로덕션 배포 전 필수
 - **실제 OCR 엔진 미연동** — `OcrProvider` 인터페이스 + 결정적 Mock만 존재
   (mock 결과에는 `[MOCK OCR SAMPLE]` 표시). 기기 내 OCR(ML Kit)·서버 OCR
   폴백은 이후 마일스톤. 바코드/QR 판독(ZXing)은 실제 동작
 - 정확도 수치는 합성 OCR 텍스트 기준 파서 정확도 (실이미지 종단 정확도 아님)
-- 푸시 발송 미구현 — 알림 _정책_ 로직만 (`packages/notification-policy`)
+- 푸시 발송 미구현 — 알림 _정책_ 로직만 (`packages/notification-policy`, M3)
+- 오프라인 동기화는 redeem 재생 큐까지 — 필드 수정의 오프라인 큐잉·충돌
+  해소는 미구현
 - 공유 시트(SHARE_EXTENSION) 등록 경로는 enum만 존재, 네이티브 연동 미구현
-- 모바일 실기기/에뮬레이터 UI 실행(카메라 포함)은 CI 환경 제약으로 미검증
-  (analyze/test + 라이브 API 스모크 테스트로 검증)
+- 바코드 화면의 기기 밝기 자동 상향은 미구현(고대비 UI만) — 실기기 검증 필요
+- 모바일 실기기/에뮬레이터 UI 실행(카메라·보안 저장소 포함)은 CI 환경 제약으로
+  미검증 (analyze/test + 라이브 API 스모크 테스트로 검증)
 
 자세한 내용: [docs/product/MVP_SCOPE.md](docs/product/MVP_SCOPE.md),
 [docs/architecture/SYSTEM_OVERVIEW.md](docs/architecture/SYSTEM_OVERVIEW.md)

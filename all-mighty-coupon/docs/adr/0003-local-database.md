@@ -8,8 +8,10 @@
 - **Milestone 0 (구현됨)**: `CouponCache` 인터페이스 + SharedPreferences JSON
   스냅샷. 마지막 성공 응답과 동기화 시각을 저장하고, 네트워크 실패 시
   `fromCache` 표시와 함께 제공한다.
-- **Milestone 2 (예정)**: Drift(SQLite)로 교체. 오프라인 검색·필터·부분 갱신·
-  사용 완료 임시 처리가 필요해지는 시점이며, 키-밸류 스냅샷으로는 불가능하다.
+- **Milestone 2 (갱신됨)**: 오프라인 검색·필터·정렬은 전체 스냅샷 + 로컬
+  쿼리 적용으로, 사용 완료 임시 처리는 PendingActionQueue로 해결되어 Drift
+  없이 M2 요구를 충족했다. Drift(SQLite) 도입 시점은 양방향 필드 동기화·부분
+  갱신이 필요한 M3+로 조정한다.
 
 ## 근거
 

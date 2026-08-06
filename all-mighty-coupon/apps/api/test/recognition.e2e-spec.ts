@@ -19,12 +19,27 @@ describe('Recognition pipeline (e2e)', () => {
   let prisma: PrismaService;
   const createdCouponIds: string[] = [];
 
+  let token: string;
+
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
     app = moduleRef.createNestApplication();
     await app.init();
     prisma = app.get(PrismaService);
     await app.get(StorageService).ensureReady();
+
+    const credentials = {
+      email: 'e2e-recognition@allmightycoupon.local',
+      password: 'e2e-password-1234',
+    };
+    const registered = await request(app.getHttpServer())
+      .post('/v1/auth/register')
+      .send(credentials);
+    const auth =
+      registered.status === 201
+        ? registered
+        : await request(app.getHttpServer()).post('/v1/auth/login').send(credentials).expect(200);
+    token = auth.body.accessToken as string;
   });
 
   afterAll(async () => {
@@ -63,7 +78,10 @@ describe('Recognition pipeline (e2e)', () => {
   async function waitForProcessed(id: string): Promise<Record<string, unknown>> {
     const deadline = Date.now() + 30_000;
     for (;;) {
-      const res = await request(app.getHttpServer()).get(`/v1/coupons/${id}`).expect(200);
+      const res = await request(app.getHttpServer())
+        .get(`/v1/coupons/${id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
       if (res.body.status !== 'PROCESSING') return res.body as Record<string, unknown>;
       if (Date.now() > deadline) throw new Error('recognition did not finish in time');
       await new Promise((resolve) => setTimeout(resolve, 500));
@@ -80,6 +98,7 @@ describe('Recognition pipeline (e2e)', () => {
   it('extracts fields, encrypts the barcode, and lands on ACTIVE', async () => {
     const upload = await request(app.getHttpServer())
       .post('/v1/coupons')
+      .set('Authorization', `Bearer ${token}`)
       .field('sourceType', 'PHOTO_LIBRARY')
       .attach('image', await makeCouponImage(happyText, 'E2E-BARCODE-9999'), 'coupon.png')
       .expect(201);
@@ -122,6 +141,7 @@ describe('Recognition pipeline (e2e)', () => {
   it('flags duplicate barcodes instead of auto-deleting', async () => {
     const upload = await request(app.getHttpServer())
       .post('/v1/coupons')
+      .set('Authorization', `Bearer ${token}`)
       .attach('image', await makeCouponImage(happyText, 'E2E-BARCODE-9999'), 'again.png')
       .expect(201);
     const couponId = upload.body.id as string;
@@ -140,6 +160,7 @@ describe('Recognition pipeline (e2e)', () => {
     const reviewText = '스타벅스\n부정확한 스캔 결과 상품명\n2027.06.30\n금액 4,500원';
     const upload = await request(app.getHttpServer())
       .post('/v1/coupons')
+      .set('Authorization', `Bearer ${token}`)
       .attach('image', await makeCouponImage(reviewText), 'review.png')
       .expect(201);
     const couponId = upload.body.id as string;
@@ -154,6 +175,7 @@ describe('Recognition pipeline (e2e)', () => {
     // User fixes the expiration (Confirm, Do Not Type: edit then confirm).
     const edited = await request(app.getHttpServer())
       .patch(`/v1/coupons/${couponId}`)
+      .set('Authorization', `Bearer ${token}`)
       .send({ expiresAt: '2027-07-31', productName: '아이스 카페 아메리카노 Tall' })
       .expect(200);
     expect(edited.body.expiresAt).toBe('2027-07-31T00:00:00.000Z');
@@ -161,6 +183,7 @@ describe('Recognition pipeline (e2e)', () => {
 
     const confirmed = await request(app.getHttpServer())
       .post(`/v1/coupons/${couponId}/confirm`)
+      .set('Authorization', `Bearer ${token}`)
       .expect(200);
     expect(confirmed.body.status).toBe('ACTIVE');
     expect(confirmed.body.requiresReview).toBe(false);
@@ -175,6 +198,7 @@ describe('Recognition pipeline (e2e)', () => {
     // No barcode, and mock OCR returns text with no extractable fields.
     const upload = await request(app.getHttpServer())
       .post('/v1/coupons')
+      .set('Authorization', `Bearer ${token}`)
       .attach('image', await makeCouponImage('그냥 풍경 사진입니다'), 'landscape.png')
       .expect(201);
     const couponId = upload.body.id as string;
@@ -187,6 +211,7 @@ describe('Recognition pipeline (e2e)', () => {
   it('rejects unsupported upload types with the common error envelope', async () => {
     const res = await request(app.getHttpServer())
       .post('/v1/coupons')
+      .set('Authorization', `Bearer ${token}`)
       .attach('image', Buffer.from('%PDF-1.4 fake'), {
         filename: 'doc.pdf',
         contentType: 'application/pdf',

@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { hashBarcode } from '@amc/barcode-utils';
+import { hashPassword } from '../src/auth/password';
 
 /**
  * Development seed: one demo user with a handful of sample coupons so the
@@ -13,10 +14,14 @@ const prisma = new PrismaClient();
 const DAY = 86_400_000;
 
 async function main(): Promise<void> {
+  // Dev-only demo credentials: demo@allmightycoupon.local / demo-password-1234
   const user = await prisma.user.upsert({
     where: { email: 'demo@allmightycoupon.local' },
-    update: {},
-    create: { email: 'demo@allmightycoupon.local' },
+    update: { passwordHash: hashPassword('demo-password-1234') },
+    create: {
+      email: 'demo@allmightycoupon.local',
+      passwordHash: hashPassword('demo-password-1234'),
+    },
   });
 
   const existing = await prisma.coupon.count({ where: { userId: user.id } });

@@ -1,6 +1,7 @@
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
+import { AuthModule } from './auth/auth.module';
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
 import { LoggingInterceptor } from './common/logging/logging.interceptor';
 import { loadEnv } from './config/env';
@@ -19,6 +20,7 @@ function redisConnection(): { host: string; port: number } {
 @Module({
   imports: [
     BullModule.forRoot({ connection: redisConnection() }),
+    AuthModule,
     PrismaModule,
     RedisModule,
     StorageModule,

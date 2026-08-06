@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_theme.dart';
+import '../../../core/auth/auth_controller.dart';
 import '../../../core/errors/app_exception.dart';
 import '../data/health_api.dart';
 
@@ -16,7 +17,16 @@ class HomeScreen extends ConsumerWidget {
     final health = ref.watch(healthProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('All Mighty Coupon')),
+      appBar: AppBar(
+        title: const Text('All Mighty Coupon'),
+        actions: [
+          IconButton(
+            tooltip: '로그아웃',
+            icon: const Icon(Icons.logout_outlined),
+            onPressed: () => ref.read(authControllerProvider.notifier).logout(),
+          ),
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

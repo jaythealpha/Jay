@@ -1,5 +1,5 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import type { Coupon, CouponSourceType } from '@prisma/client';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import type { Coupon, CouponSourceType, Prisma } from '@prisma/client';
 import {
   COUPON_SOURCE_TYPES,
   COUPON_STATUSES,
@@ -7,7 +7,15 @@ import {
   type CouponListResponseDto,
   type CouponStatus,
 } from '@amc/shared-types';
-import { recomputeDateDrivenStatus, transition } from '@amc/domain';
+import { maskBarcode } from '@amc/barcode-utils';
+import {
+  canTransition,
+  recomputeDateDrivenStatus,
+  statusAfterRestore,
+  transition,
+  type TransitionTrigger,
+} from '@amc/domain';
+import { BarcodeCryptoService } from '../crypto/barcode-crypto.service';
 import { CouponEventsService } from '../events/coupon-events.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RecognitionQueueService } from '../recognition/recognition.queue';
@@ -15,8 +23,13 @@ import { StorageService } from '../storage/storage.service';
 import { toCouponDetailDto } from './coupon-detail.mapper';
 import { toCouponSummaryDto } from './coupon.mapper';
 
+export const WALLET_SORTS = ['EXPIRATION_ASC', 'CREATED_DESC', 'VALUE_DESC', 'BRAND_ASC'] as const;
+export type WalletSort = (typeof WALLET_SORTS)[number];
+
 export interface ListCouponsQuery {
   status?: string;
+  q?: string;
+  sort?: string;
   limit?: number;
 }
 
@@ -36,6 +49,11 @@ export interface EditCouponInput {
   usageConditions?: string | null;
 }
 
+export interface BarcodeRevealDto {
+  value: string;
+  format: string | null;
+}
+
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 100;
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
@@ -45,32 +63,49 @@ const ALLOWED_MIME = new Map([
   ['image/webp', 'webp'],
 ]);
 
-/**
- * Milestone 1 scope: still no authentication — every operation is scoped to
- * the local demo user. AuthModule (Milestone 2) replaces resolveDemoUser with
- * the requesting user.
- */
+const SORT_ORDER: Record<WalletSort, Prisma.CouponOrderByWithRelationInput[]> = {
+  // Expiration First: soonest expiration on top, undated coupons last.
+  EXPIRATION_ASC: [{ expiresAt: { sort: 'asc', nulls: 'last' } }, { createdAt: 'desc' }],
+  CREATED_DESC: [{ createdAt: 'desc' }],
+  VALUE_DESC: [{ faceValueMinor: { sort: 'desc', nulls: 'last' } }, { createdAt: 'desc' }],
+  BRAND_ASC: [{ brandName: { sort: 'asc', nulls: 'last' } }, { createdAt: 'desc' }],
+};
+
+/** All operations are scoped to the authenticated user (Milestone 2). */
 @Injectable()
 export class CouponsService {
+  private readonly logger = new Logger(CouponsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly storage: StorageService,
     private readonly recognitionQueue: RecognitionQueueService,
     private readonly events: CouponEventsService,
+    private readonly barcodeCrypto: BarcodeCryptoService,
   ) {}
 
-  async list(query: ListCouponsQuery): Promise<CouponListResponseDto> {
+  async list(userId: string, query: ListCouponsQuery): Promise<CouponListResponseDto> {
     const status = this.parseStatus(query.status);
+    const sort = this.parseSort(query.sort);
     const limit = Math.min(query.limit ?? DEFAULT_LIMIT, MAX_LIMIT);
+    const q = query.q?.trim();
 
-    const where = status ? { status } : {};
+    const where: Prisma.CouponWhereInput = {
+      userId,
+      ...(status ? { status } : {}),
+      ...(q
+        ? {
+            OR: [
+              { brandName: { contains: q, mode: 'insensitive' } },
+              { productName: { contains: q, mode: 'insensitive' } },
+              { category: { contains: q, mode: 'insensitive' } },
+            ],
+          }
+        : {}),
+    };
+
     const [rows, total] = await Promise.all([
-      // Expiration First: soonest expiration on top, undated coupons last.
-      this.prisma.coupon.findMany({
-        where,
-        orderBy: [{ expiresAt: { sort: 'asc', nulls: 'last' } }, { createdAt: 'desc' }],
-        take: limit,
-      }),
+      this.prisma.coupon.findMany({ where, orderBy: SORT_ORDER[sort], take: limit }),
       this.prisma.coupon.count({ where }),
     ]);
 
@@ -78,6 +113,7 @@ export class CouponsService {
   }
 
   async createFromImage(
+    userId: string,
     image: UploadedImage,
     sourceTypeRaw?: string,
   ): Promise<{ id: string; status: CouponStatus }> {
@@ -92,9 +128,8 @@ export class CouponsService {
     }
     const sourceType = this.parseSourceType(sourceTypeRaw);
 
-    const user = await this.resolveDemoUser();
     const coupon = await this.prisma.coupon.create({
-      data: { userId: user.id, status: 'PROCESSING', sourceType, requiresReview: true },
+      data: { userId, status: 'PROCESSING', sourceType, requiresReview: true },
     });
 
     const storageKey = `coupons/${coupon.id}/original.${extension}`;
@@ -117,12 +152,14 @@ export class CouponsService {
     return { id: coupon.id, status: 'PROCESSING' };
   }
 
-  async detail(id: string): Promise<CouponDetailDto> {
+  async detail(userId: string, id: string): Promise<CouponDetailDto> {
     const coupon = await this.prisma.coupon.findUnique({
       where: { id },
       include: { assets: true },
     });
-    if (!coupon) throw new NotFoundException('쿠폰을 찾을 수 없습니다.');
+    if (!coupon || coupon.userId !== userId) {
+      throw new NotFoundException('쿠폰을 찾을 수 없습니다.');
+    }
 
     const assets = await Promise.all(
       coupon.assets.map(async (asset) => ({
@@ -133,8 +170,8 @@ export class CouponsService {
     return toCouponDetailDto(coupon, assets);
   }
 
-  async edit(id: string, input: EditCouponInput): Promise<CouponDetailDto> {
-    const coupon = await this.findOrThrow(id);
+  async edit(userId: string, id: string, input: EditCouponInput): Promise<CouponDetailDto> {
+    const coupon = await this.findOwnedOrThrow(userId, id);
 
     const changedFields = Object.keys(input).filter(
       (key) => input[key as keyof EditCouponInput] !== undefined,
@@ -158,7 +195,7 @@ export class CouponsService {
         ? coupon.status
         : recomputeDateDrivenStatus(coupon.status, expiresAt, new Date());
 
-    const updated = await this.prisma.coupon.update({
+    await this.prisma.coupon.update({
       where: { id },
       data: {
         ...(input.brandName !== undefined ? { brandName: input.brandName } : {}),
@@ -180,11 +217,11 @@ export class CouponsService {
     if (nextStatus !== coupon.status) {
       await this.events.record(id, 'STATUS_CHANGED', { from: coupon.status, to: nextStatus });
     }
-    return this.detailFrom(updated);
+    return this.detail(userId, id);
   }
 
-  async confirm(id: string): Promise<CouponDetailDto> {
-    const coupon = await this.findOrThrow(id);
+  async confirm(userId: string, id: string): Promise<CouponDetailDto> {
+    const coupon = await this.findOwnedOrThrow(userId, id);
     if (coupon.status !== 'NEEDS_REVIEW') {
       throw new BadRequestException('확인 대기 상태의 쿠폰만 확정할 수 있습니다.');
     }
@@ -192,32 +229,128 @@ export class CouponsService {
     const confirmed = transition('NEEDS_REVIEW', 'ACTIVE', 'USER_CONFIRMED');
     const finalStatus = recomputeDateDrivenStatus(confirmed, coupon.expiresAt, new Date());
 
-    const updated = await this.prisma.coupon.update({
+    await this.prisma.coupon.update({
       where: { id },
       data: { status: finalStatus, requiresReview: false },
     });
     await this.events.record(id, 'USER_CONFIRMED');
     await this.events.record(id, 'STATUS_CHANGED', { from: coupon.status, to: finalStatus });
-    return this.detailFrom(updated);
+    return this.detail(userId, id);
   }
 
-  private async detailFrom(coupon: Coupon): Promise<CouponDetailDto> {
-    return this.detail(coupon.id);
-  }
+  async redeem(userId: string, id: string): Promise<CouponDetailDto> {
+    const coupon = await this.findOwnedOrThrow(userId, id);
+    this.assertTransition(coupon.status, 'REDEEMED', 'USER_MARKED_REDEEMED', '사용 완료');
 
-  private async findOrThrow(id: string): Promise<Coupon> {
-    const coupon = await this.prisma.coupon.findUnique({ where: { id } });
-    if (!coupon) throw new NotFoundException('쿠폰을 찾을 수 없습니다.');
-    return coupon;
-  }
-
-  private async resolveDemoUser(): Promise<{ id: string }> {
-    return this.prisma.user.upsert({
-      where: { email: 'demo@allmightycoupon.local' },
-      update: {},
-      create: { email: 'demo@allmightycoupon.local' },
-      select: { id: true },
+    await this.prisma.coupon.update({
+      where: { id },
+      data: { status: 'REDEEMED', redeemedAt: new Date() },
     });
+    // Pending expiration reminders for redeemed coupons are cancelled by
+    // policy (@amc/notification-policy); actual scheduling arrives in M3.
+    await this.events.record(id, 'MARKED_REDEEMED');
+    await this.events.record(id, 'STATUS_CHANGED', { from: coupon.status, to: 'REDEEMED' });
+    return this.detail(userId, id);
+  }
+
+  async restore(userId: string, id: string): Promise<CouponDetailDto> {
+    const coupon = await this.findOwnedOrThrow(userId, id);
+    this.assertTransition(coupon.status, 'ACTIVE', 'USER_RESTORED', '사용 완료 취소');
+
+    // Explicit user restore; final status still honors the expiration date
+    // (an expired coupon restores to EXPIRED, never silently back to ACTIVE).
+    const finalStatus = statusAfterRestore(coupon.expiresAt, new Date());
+    await this.prisma.coupon.update({
+      where: { id },
+      data: { status: finalStatus, redeemedAt: null },
+    });
+    await this.events.record(id, 'RESTORED_TO_ACTIVE', { finalStatus });
+    await this.events.record(id, 'STATUS_CHANGED', { from: coupon.status, to: finalStatus });
+    return this.detail(userId, id);
+  }
+
+  async archive(userId: string, id: string): Promise<CouponDetailDto> {
+    const coupon = await this.findOwnedOrThrow(userId, id);
+    this.assertTransition(coupon.status, 'ARCHIVED', 'USER_ARCHIVED', '보관');
+
+    await this.prisma.coupon.update({
+      where: { id },
+      data: { status: 'ARCHIVED', archivedAt: new Date() },
+    });
+    await this.events.record(id, 'ARCHIVED');
+    await this.events.record(id, 'STATUS_CHANGED', { from: coupon.status, to: 'ARCHIVED' });
+    return this.detail(userId, id);
+  }
+
+  async unarchive(userId: string, id: string): Promise<CouponDetailDto> {
+    const coupon = await this.findOwnedOrThrow(userId, id);
+    this.assertTransition(coupon.status, 'ACTIVE', 'USER_UNARCHIVED', '보관 해제');
+
+    const finalStatus = recomputeDateDrivenStatus('ACTIVE', coupon.expiresAt, new Date());
+    await this.prisma.coupon.update({
+      where: { id },
+      data: { status: finalStatus, archivedAt: null },
+    });
+    await this.events.record(id, 'STATUS_CHANGED', { from: coupon.status, to: finalStatus });
+    return this.detail(userId, id);
+  }
+
+  async remove(userId: string, id: string): Promise<void> {
+    const coupon = await this.findOwnedOrThrow(userId, id);
+    const assets = await this.prisma.couponAsset.findMany({ where: { couponId: id } });
+
+    // The DELETED event is recorded before the hard delete so the action is
+    // at least visible in logs; rows (including events) are then removed.
+    await this.events.record(id, 'DELETED', { status: coupon.status });
+    await this.prisma.couponEvent.deleteMany({ where: { couponId: id } });
+    await this.prisma.couponAsset.deleteMany({ where: { couponId: id } });
+    await this.prisma.coupon.delete({ where: { id } });
+
+    for (const asset of assets) {
+      try {
+        await this.storage.deleteObject(asset.storageKey);
+      } catch (error) {
+        // Orphaned objects are preferable to a failed user-facing delete;
+        // they are cleaned up by a later storage sweep.
+        this.logger.warn(`Failed to delete storage object ${asset.storageKey}: ${String(error)}`);
+      }
+    }
+  }
+
+  /**
+   * Reveals the decrypted barcode for in-store display. Every reveal is
+   * audit-logged (BARCODE_VIEWED) with a masked value only (ADR-0005).
+   */
+  async revealBarcode(userId: string, id: string): Promise<BarcodeRevealDto> {
+    const coupon = await this.findOwnedOrThrow(userId, id);
+    if (!coupon.encryptedBarcode) {
+      throw new NotFoundException('이 쿠폰에는 저장된 바코드가 없습니다.');
+    }
+    const value = this.barcodeCrypto.decrypt(coupon.encryptedBarcode);
+    await this.events.record(id, 'BARCODE_VIEWED', { masked: maskBarcode(value) });
+    return { value, format: coupon.barcodeType };
+  }
+
+  private assertTransition(
+    from: Coupon['status'],
+    to: CouponStatus,
+    trigger: TransitionTrigger,
+    actionLabel: string,
+  ): void {
+    if (!canTransition(from, to, trigger)) {
+      throw new BadRequestException(
+        `현재 상태(${from})에서는 ${actionLabel} 처리를 할 수 없습니다.`,
+      );
+    }
+  }
+
+  private async findOwnedOrThrow(userId: string, id: string): Promise<Coupon> {
+    const coupon = await this.prisma.coupon.findUnique({ where: { id } });
+    // Same 404 for "missing" and "not yours" — no existence oracle.
+    if (!coupon || coupon.userId !== userId) {
+      throw new NotFoundException('쿠폰을 찾을 수 없습니다.');
+    }
+    return coupon;
   }
 
   private parseStatus(raw: string | undefined): CouponStatus | null {
@@ -226,6 +359,14 @@ export class CouponsService {
       return raw as CouponStatus;
     }
     throw new BadRequestException(`지원하지 않는 상태 값입니다: ${raw}`);
+  }
+
+  private parseSort(raw: string | undefined): WalletSort {
+    if (raw === undefined || raw === '') return 'EXPIRATION_ASC';
+    if ((WALLET_SORTS as readonly string[]).includes(raw)) {
+      return raw as WalletSort;
+    }
+    throw new BadRequestException(`지원하지 않는 정렬 값입니다: ${raw}`);
   }
 
   private parseSourceType(raw: string | undefined): CouponSourceType {

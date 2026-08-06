@@ -26,6 +26,8 @@ const envSchema = z
       .string()
       .regex(/^[0-9a-fA-F]{64}$/, 'must be 64 hex characters (32 bytes)')
       .optional(),
+    JWT_SECRET: z.string().min(32, 'use at least 32 characters (openssl rand -hex 32)'),
+    JWT_EXPIRES_IN: z.string().default('7d'),
   })
   .superRefine((env, ctx) => {
     if (env.STORAGE_DRIVER === 's3') {

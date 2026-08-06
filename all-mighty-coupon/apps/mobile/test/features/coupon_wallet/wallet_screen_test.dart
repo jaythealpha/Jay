@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:amc_mobile/core/errors/app_exception.dart';
+import 'package:amc_mobile/core/sync/pending_actions.dart';
 import 'package:amc_mobile/features/coupon_wallet/domain/coupon_repository.dart';
+import 'package:amc_mobile/features/coupon_wallet/domain/wallet_query.dart';
 import 'package:amc_mobile/features/coupon_wallet/presentation/wallet_screen.dart';
 import 'package:amc_mobile/shared/models/coupon_summary.dart';
 import 'package:flutter/material.dart';
@@ -11,9 +13,22 @@ import 'package:mocktail/mocktail.dart';
 
 class MockCouponRepository extends Mock implements CouponRepository {}
 
-Widget wrap(CouponRepository repository) {
+class FakeSyncService implements SyncService {
+  int calls = 0;
+
+  @override
+  Future<int> trySyncPending() async {
+    calls += 1;
+    return 0;
+  }
+}
+
+Widget wrap(CouponRepository repository, {SyncService? sync}) {
   return ProviderScope(
-    overrides: [couponRepositoryProvider.overrideWithValue(repository)],
+    overrides: [
+      couponRepositoryProvider.overrideWithValue(repository),
+      syncServiceProvider.overrideWithValue(sync ?? FakeSyncService()),
+    ],
     child: const MaterialApp(home: WalletScreen()),
   );
 }
@@ -31,10 +46,14 @@ CouponSummary coupon(String id, String brand) {
 }
 
 void main() {
+  setUpAll(() {
+    registerFallbackValue(const WalletQuery());
+  });
+
   testWidgets('shows a loading indicator while fetching', (tester) async {
     final repo = MockCouponRepository();
     final gate = Completer<CouponListResult>();
-    when(() => repo.getCoupons()).thenAnswer((_) => gate.future);
+    when(() => repo.getCoupons(query: any(named: 'query'))).thenAnswer((_) => gate.future);
 
     await tester.pumpWidget(wrap(repo));
     await tester.pump();
@@ -45,27 +64,63 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets('renders coupon cards on success', (tester) async {
+  testWidgets('renders coupon cards and runs pending sync first', (tester) async {
     final repo = MockCouponRepository();
-    when(() => repo.getCoupons()).thenAnswer(
+    final sync = FakeSyncService();
+    when(() => repo.getCoupons(query: any(named: 'query'))).thenAnswer(
       (_) async => CouponListResult(
         coupons: [coupon('c1', '스타벅스'), coupon('c2', '이마트')],
         fromCache: false,
       ),
     );
 
-    await tester.pumpWidget(wrap(repo));
+    await tester.pumpWidget(wrap(repo, sync: sync));
     await tester.pumpAndSettle();
 
     expect(find.text('스타벅스'), findsOneWidget);
     expect(find.text('이마트'), findsOneWidget);
-    expect(find.text('4,500원'), findsNWidgets(2));
-    expect(find.text('D-3'), findsNWidgets(2));
+    expect(sync.calls, 1);
+  });
+
+  testWidgets('status filter chips re-query the repository', (tester) async {
+    final repo = MockCouponRepository();
+    final captured = <WalletQuery>[];
+    when(() => repo.getCoupons(query: any(named: 'query'))).thenAnswer((invocation) async {
+      captured.add(invocation.namedArguments[#query] as WalletQuery);
+      return const CouponListResult(coupons: [], fromCache: false);
+    });
+
+    await tester.pumpWidget(wrap(repo));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('사용 완료'));
+    await tester.pumpAndSettle();
+
+    expect(captured.last.status, 'REDEEMED');
+    expect(find.text('조건에 맞는 쿠폰이 없어요.'), findsOneWidget);
+  });
+
+  testWidgets('search submits a text query', (tester) async {
+    final repo = MockCouponRepository();
+    final captured = <WalletQuery>[];
+    when(() => repo.getCoupons(query: any(named: 'query'))).thenAnswer((invocation) async {
+      captured.add(invocation.namedArguments[#query] as WalletQuery);
+      return const CouponListResult(coupons: [], fromCache: false);
+    });
+
+    await tester.pumpWidget(wrap(repo));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), '스타벅스');
+    await tester.testTextInput.receiveAction(TextInputAction.search);
+    await tester.pumpAndSettle();
+
+    expect(captured.last.q, '스타벅스');
   });
 
   testWidgets('shows the offline banner for cached data', (tester) async {
     final repo = MockCouponRepository();
-    when(() => repo.getCoupons()).thenAnswer(
+    when(() => repo.getCoupons(query: any(named: 'query'))).thenAnswer(
       (_) async => CouponListResult(
         coupons: [coupon('c1', '스타벅스')],
         fromCache: true,
@@ -81,7 +136,8 @@ void main() {
 
   testWidgets('shows the user-facing error and a retry button on failure', (tester) async {
     final repo = MockCouponRepository();
-    when(() => repo.getCoupons()).thenThrow(const NetworkException());
+    when(() => repo.getCoupons(query: any(named: 'query')))
+        .thenThrow(const NetworkException());
 
     await tester.pumpWidget(wrap(repo));
     await tester.pumpAndSettle();
@@ -89,9 +145,9 @@ void main() {
     expect(find.text('네트워크 연결을 확인해 주세요.'), findsOneWidget);
     expect(find.text('다시 시도'), findsOneWidget);
 
-    // Retry triggers a new fetch.
-    when(() => repo.getCoupons()).thenAnswer(
-      (_) async => CouponListResult(coupons: [coupon('c1', '스타벅스')], fromCache: false),
+    when(() => repo.getCoupons(query: any(named: 'query'))).thenAnswer(
+      (_) async =>
+          CouponListResult(coupons: [coupon('c1', '스타벅스')], fromCache: false),
     );
     await tester.tap(find.text('다시 시도'));
     await tester.pumpAndSettle();

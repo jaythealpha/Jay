@@ -1,6 +1,8 @@
 # Test Plan
 
-## 현재 테스트 현황 (Milestone 0–1 — 전부 실제 실행·통과 확인)
+## 현재 테스트 현황 (Milestone 0–2 — 전부 실제 실행·통과 확인)
+
+M2 추가분 요약: API 단위 24(비밀번호 해시 3), 통합 18(지갑 e2e 9: 인증 경계·스코프·검색/정렬·사용완료/복구·만료복구·보관·바코드 열람 감사·삭제), Flutter 49(인증 컨트롤러 5, 지갑 쿼리 4, 오프라인 큐/동기화 4, 바코드 컨트롤러 3, 상세 화면 4 포함).
 
 M1 추가분 요약: packages vitest 67개(상품명 추출 4, 정확도 회귀 4 포함),
 API 단위 21개(바코드 암호화 3, 이미지 프로세서 3, 업로드 검증 4 포함),
@@ -11,9 +13,9 @@ API 통합 9개(인식 파이프라인 5: 추출·암호화·중복·검토→�
 | 스위트                                       | 러너                                                                        | 개수 | 대상                                                                                                                                       |
 | -------------------------------------------- | --------------------------------------------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | packages (vitest)                            | `npm run test:packages`                                                     | 67   | 상태 전환, 만료/남은 일수 계산, EXPIRING_SOON 판정, 정렬, 날짜/금액/브랜드 추출, 신뢰도·검토 정책, 바코드 해시·마스킹, 알림 예약/취소 정책 |
-| API 단위 (jest)                              | `npm run test:api`                                                          | 21   | CouponsService(정렬·필터·limit), DTO 민감정보 차단, 로그 마스킹                                                                            |
-| API 통합 (jest+supertest, 실 DB/Redis/MinIO) | `npm run test:api:e2e`                                                      | 9    | health, 쿠폰 목록 정렬·바코드 미노출, status 필터+오류 envelope, 404 envelope                                                              |
-| Flutter (단위+위젯)                          | `flutter test`                                                              | 25   | 모델 파싱, D-day, 캐시 라운드트립, 오프라인 폴백, 로딩/성공/오류/재시도/오프라인 배너 UI                                                   |
+| API 단위 (jest)                              | `npm run test:api`                                                          | 24   | CouponsService(정렬·필터·limit), DTO 민감정보 차단, 로그 마스킹                                                                            |
+| API 통합 (jest+supertest, 실 DB/Redis/MinIO) | `npm run test:api:e2e`                                                      | 18   | health, 쿠폰 목록 정렬·바코드 미노출, status 필터+오류 envelope, 404 envelope                                                              |
+| Flutter (단위+위젯)                          | `flutter test`                                                              | 49   | 모델 파싱, D-day, 캐시 라운드트립, 오프라인 폴백, 로딩/성공/오류/재시도/오프라인 배너 UI                                                   |
 | Flutter 라이브 스모크                        | `flutter test test/manual/api_smoke_test.dart --dart-define=API_SMOKE=true` | 2    | 앱 네트워킹 코드로 실 API 조회·파싱 (기본 suite에서는 skip)                                                                                |
 
 ## 커버리지 목표

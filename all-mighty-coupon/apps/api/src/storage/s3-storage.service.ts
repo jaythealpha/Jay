@@ -1,5 +1,6 @@
 import {
   CreateBucketCommand,
+  DeleteObjectCommand,
   GetObjectCommand,
   HeadBucketCommand,
   PutObjectCommand,
@@ -54,6 +55,10 @@ export class S3StorageService extends StorageService {
       throw new Error(`Empty object body for key ${key}`);
     }
     return Buffer.from(bytes);
+  }
+
+  override async deleteObject(key: string): Promise<void> {
+    await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: key }));
   }
 
   override async getSignedUrl(key: string): Promise<string> {

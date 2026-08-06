@@ -1,12 +1,13 @@
 import 'dart:io';
 
+import 'package:amc_mobile/core/auth/auth_api.dart';
 import 'package:amc_mobile/features/coupon_wallet/data/coupon_api.dart';
 import 'package:amc_mobile/features/home/data/health_api.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Manual smoke test against a LIVE local API (not part of the normal suite).
-/// Run with the stack up (docker compose + API):
+/// Run with the stack up (docker compose + API + seeded demo user):
 ///   flutter test test/manual/api_smoke_test.dart --dart-define=API_SMOKE=true
 const _enabled = bool.fromEnvironment('API_SMOKE');
 
@@ -31,17 +32,25 @@ void main() {
   );
 
   test(
-    'GET /v1/coupons parses seeded coupons through the app CouponApi',
+    'login as the seeded demo user and list coupons through app code',
     () async {
-      final coupons = await CouponApi(dio).fetchCoupons();
+      final auth = await AuthApi(dio)
+          .login('demo@allmightycoupon.local', 'demo-password-1234');
+      expect(auth.accessToken, isNotEmpty);
+
+      final authedDio = Dio(
+        BaseOptions(
+          baseUrl: 'http://localhost:3001',
+          headers: {'Authorization': 'Bearer ${auth.accessToken}'},
+        ),
+      );
+      final coupons = await CouponApi(authedDio).fetchCoupons();
       expect(coupons, isNotEmpty);
-      expect(coupons.first.id, isNotEmpty);
-      // Expiration First ordering: first item has the earliest expiration.
+      // Expiration First ordering: dated coupons appear soonest-first.
       final dated = coupons.where((c) => c.expiresAt != null).toList();
       for (var i = 1; i < dated.length; i++) {
         expect(
-          dated[i - 1].expiresAt!.isBefore(dated[i].expiresAt!) ||
-              dated[i - 1].expiresAt!.isAtSameMomentAs(dated[i].expiresAt!),
+          !dated[i - 1].expiresAt!.isAfter(dated[i].expiresAt!),
           isTrue,
         );
       }

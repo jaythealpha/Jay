@@ -2,7 +2,17 @@
 
 OpenAPI 문서는 API 실행 중 Swagger UI로 제공된다: `http://localhost:3001/docs`
 
-## Milestone 0 엔드포인트
+인증: `POST /v1/auth/register`·`POST /v1/auth/login`(공개)이 반환하는
+`accessToken`을 `Authorization: Bearer <token>`으로 전달한다. health/auth 외
+모든 엔드포인트는 인증 필수이며 **요청 사용자의 쿠폰만** 다룬다.
+
+## 엔드포인트
+
+### POST /v1/auth/register · /v1/auth/login (M2)
+
+body: `{ "email", "password" }` (비밀번호 8자+). 응답:
+`{ "accessToken", "user": { "id", "email" } }`. 로그인 실패는 일반 메시지
+하나로 응답한다. `GET /v1/auth/me` — 현재 사용자.
 
 ### GET /health
 
@@ -12,11 +22,13 @@ OpenAPI 문서는 API 실행 중 Swagger UI로 제공된다: `http://localhost:3
 
 `status`는 모든 컴포넌트가 up일 때만 `ok`, 아니면 `degraded`.
 
-### GET /v1/coupons?status=&limit=
+### GET /v1/coupons?status=&q=&sort=&limit=
 
-유효기간 빠른 순(무기한은 뒤), 동률은 최근 등록 순. `status`는 CouponStatus
-enum 값, `limit` 기본 50·최대 100. 응답 아이템에는 바코드 관련 필드가
-포함되지 않는다.
+기본 정렬은 유효기간 빠른 순(무기한은 뒤), 동률은 최근 등록 순.
+`status`: CouponStatus enum · `q`: 브랜드/상품명/카테고리 검색 ·
+`sort`: EXPIRATION_ASC(기본)/CREATED_DESC/VALUE_DESC/BRAND_ASC ·
+`limit` 기본 50·최대 100. 응답 아이템에는 바코드 관련 필드가 포함되지
+않는다.
 
 ```json
 { "items": [ { "id", "brandName", "productName", "category", "faceValueMinor",
@@ -49,6 +61,18 @@ null로 비우기 가능. 유효기간 변경 시 날짜 기반 상태를 재계
 NEEDS_REVIEW → ACTIVE(날짜 기준 재계산). requiresReview=false.
 다른 상태에서 호출 시 400.
 
+### 지갑 액션 (M2)
+
+- `POST /v1/coupons/:id/redeem` — 사용 완료(REDEEMED). 이미 사용됨 등 잘못된
+  전환은 400.
+- `POST /v1/coupons/:id/restore` — 사용 완료 취소. 최종 상태는 유효기간 기준
+  재계산(만료된 쿠폰은 EXPIRED로 복구).
+- `POST /v1/coupons/:id/archive` · `/unarchive` — 보관/해제.
+- `DELETE /v1/coupons/:id` — 204, 저장 이미지 포함 완전 삭제.
+- `GET /v1/coupons/:id/barcode` — `{ value, format }`. 열람마다
+  BARCODE_VIEWED 감사 이벤트 기록(메타데이터는 마스킹 값만). 저장된 바코드가
+  없으면 404.
+
 ### 오류 형식 (전 엔드포인트 공통)
 
 ```json
@@ -63,4 +87,4 @@ NEEDS_REVIEW → ACTIVE(날짜 기준 재계산). requiresReview=false.
 
 모든 응답에 `x-request-id` 헤더가 포함된다.
 
-인증: 없음 (M0 한정, 로컬 개발 전용). 타입 계약: `packages/shared-types`.
+타입 계약: `packages/shared-types`.

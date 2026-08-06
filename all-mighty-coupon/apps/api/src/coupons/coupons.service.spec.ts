@@ -6,6 +6,7 @@ import type { PrismaService } from '../prisma/prisma.service';
 import type { StorageService } from '../storage/storage.service';
 import type { RecognitionQueueService } from '../recognition/recognition.queue';
 import type { CouponEventsService } from '../events/coupon-events.service';
+import type { BarcodeCryptoService } from '../crypto/barcode-crypto.service';
 
 function sampleCoupon(overrides: Partial<Coupon> = {}): Coupon {
   return {
@@ -88,7 +89,10 @@ function serviceWith(rows: Coupon[]): Stubs {
   } as unknown as CouponEventsService;
 
   return {
-    service: new CouponsService(prismaStub, storageStub, queueStub, eventsStub),
+    service: new CouponsService(prismaStub, storageStub, queueStub, eventsStub, {
+      encrypt: (v: string) => `enc(${v})`,
+      decrypt: (v: string) => v,
+    } as unknown as BarcodeCryptoService),
     findManyCalls,
     putCalls,
     enqueued,
@@ -99,7 +103,7 @@ function serviceWith(rows: Coupon[]): Stubs {
 describe('CouponsService.list', () => {
   it('orders by expiration ascending with nulls last', async () => {
     const { service, findManyCalls } = serviceWith([sampleCoupon()]);
-    await service.list({});
+    await service.list('u1', {});
     expect(findManyCalls[0]).toMatchObject({
       orderBy: [{ expiresAt: { sort: 'asc', nulls: 'last' } }, { createdAt: 'desc' }],
     });
@@ -107,13 +111,18 @@ describe('CouponsService.list', () => {
 
   it('rejects unknown status filters as a user error', async () => {
     const { service } = serviceWith([]);
-    await expect(service.list({ status: 'NOT_A_STATUS' })).rejects.toThrow(BadRequestException);
+    await expect(service.list('u1', { status: 'NOT_A_STATUS' })).rejects.toThrow(
+      BadRequestException,
+    );
   });
 
   it('passes valid status filters through and caps the limit', async () => {
     const { service, findManyCalls } = serviceWith([]);
-    await service.list({ status: 'ACTIVE', limit: 5000 });
-    expect(findManyCalls[0]).toMatchObject({ where: { status: 'ACTIVE' }, take: 100 });
+    await service.list('u1', { status: 'ACTIVE', limit: 5000 });
+    expect(findManyCalls[0]).toMatchObject({
+      where: { userId: 'u1', status: 'ACTIVE' },
+      take: 100,
+    });
   });
 });
 
@@ -122,7 +131,7 @@ describe('CouponsService.createFromImage', () => {
 
   it('stores the original, records events, and enqueues recognition', async () => {
     const { service, putCalls, enqueued, events } = serviceWith([]);
-    const result = await service.createFromImage(image, 'PHOTO_LIBRARY');
+    const result = await service.createFromImage('u1', image, 'PHOTO_LIBRARY');
 
     expect(result.status).toBe('PROCESSING');
     expect(putCalls).toHaveLength(1);
@@ -133,21 +142,21 @@ describe('CouponsService.createFromImage', () => {
   it('rejects unsupported mime types before any storage write', async () => {
     const { service, putCalls } = serviceWith([]);
     await expect(
-      service.createFromImage({ ...image, mimetype: 'application/pdf' }),
+      service.createFromImage('u1', { ...image, mimetype: 'application/pdf' }),
     ).rejects.toThrow(BadRequestException);
     expect(putCalls).toHaveLength(0);
   });
 
   it('rejects oversized uploads', async () => {
     const { service } = serviceWith([]);
-    await expect(service.createFromImage({ ...image, size: 11 * 1024 * 1024 })).rejects.toThrow(
-      BadRequestException,
-    );
+    await expect(
+      service.createFromImage('u1', { ...image, size: 11 * 1024 * 1024 }),
+    ).rejects.toThrow(BadRequestException);
   });
 
   it('rejects unknown source types', async () => {
     const { service } = serviceWith([]);
-    await expect(service.createFromImage(image, 'CARRIER_PIGEON')).rejects.toThrow(
+    await expect(service.createFromImage('u1', image, 'CARRIER_PIGEON')).rejects.toThrow(
       BadRequestException,
     );
   });

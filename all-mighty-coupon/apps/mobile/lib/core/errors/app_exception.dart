@@ -1,6 +1,6 @@
 /// User-facing failures carry a message safe to render as-is; internal
 /// details stay in [debugDetail] and never reach the UI (spec §18).
-sealed class AppException implements Exception {
+abstract class AppException implements Exception {
   const AppException(this.userMessage, {this.debugDetail});
 
   final String userMessage;
@@ -23,4 +23,8 @@ class ServerException extends AppException {
 class CacheMissException extends AppException {
   const CacheMissException()
       : super('저장된 쿠폰이 아직 없어요. 네트워크 연결 후 다시 시도해 주세요.');
+}
+
+class SessionExpiredException extends AppException {
+  const SessionExpiredException() : super('로그인이 만료되었어요. 다시 로그인해 주세요.');
 }

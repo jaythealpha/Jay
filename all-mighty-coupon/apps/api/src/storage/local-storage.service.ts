@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, normalize } from 'node:path';
 import { loadEnv } from '../config/env';
 import { PutObjectInput, StorageService } from './storage.service';
@@ -38,6 +38,10 @@ export class LocalStorageService extends StorageService {
 
   override async getObject(key: string): Promise<Buffer> {
     return readFile(this.resolve(key));
+  }
+
+  override async deleteObject(key: string): Promise<void> {
+    await rm(this.resolve(key), { force: true });
   }
 
   override async getSignedUrl(key: string): Promise<string> {

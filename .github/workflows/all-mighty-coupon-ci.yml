@@ -41,6 +41,7 @@ jobs:
       STORAGE_DRIVER: local
       LOCAL_STORAGE_DIR: .storage-ci
       BARCODE_ENCRYPTION_KEY: 0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f
+      JWT_SECRET: ci-only-jwt-secret-not-used-anywhere-real
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

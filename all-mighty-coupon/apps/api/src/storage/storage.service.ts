@@ -12,6 +12,7 @@ export interface PutObjectInput {
 export abstract class StorageService {
   abstract putObject(input: PutObjectInput): Promise<void>;
   abstract getObject(key: string): Promise<Buffer>;
+  abstract deleteObject(key: string): Promise<void>;
   /** Short-lived read URL; TTL comes from SIGNED_URL_TTL_SECONDS. */
   abstract getSignedUrl(key: string): Promise<string>;
   /** Idempotent bucket/directory bootstrap for dev environments. */

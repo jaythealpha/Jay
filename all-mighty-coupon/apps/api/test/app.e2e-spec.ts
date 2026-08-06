@@ -14,6 +14,7 @@ describe('API integration', () => {
   let prisma: PrismaService;
   const createdCouponIds: string[] = [];
   let testUserId: string;
+  let token: string;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
@@ -21,12 +22,17 @@ describe('API integration', () => {
     await app.init();
     prisma = app.get(PrismaService);
 
-    const user = await prisma.user.upsert({
-      where: { email: 'e2e@allmightycoupon.local' },
-      update: {},
-      create: { email: 'e2e@allmightycoupon.local' },
-    });
-    testUserId = user.id;
+    // Register (or re-login) the e2e user through the real auth API.
+    const credentials = { email: 'e2e@allmightycoupon.local', password: 'e2e-password-1234' };
+    const registered = await request(app.getHttpServer())
+      .post('/v1/auth/register')
+      .send(credentials);
+    const auth =
+      registered.status === 201
+        ? registered
+        : await request(app.getHttpServer()).post('/v1/auth/login').send(credentials).expect(200);
+    token = auth.body.accessToken as string;
+    testUserId = auth.body.user.id as string;
 
     const soon = await prisma.coupon.create({
       data: {
@@ -60,7 +66,6 @@ describe('API integration', () => {
   afterAll(async () => {
     await prisma.couponEvent.deleteMany({ where: { couponId: { in: createdCouponIds } } });
     await prisma.coupon.deleteMany({ where: { id: { in: createdCouponIds } } });
-    await prisma.user.delete({ where: { id: testUserId } });
     await app.close();
   });
 
@@ -72,7 +77,10 @@ describe('API integration', () => {
   });
 
   it('GET /v1/coupons lists coupons soonest-expiration-first without barcode material', async () => {
-    const res = await request(app.getHttpServer()).get('/v1/coupons').expect(200);
+    const res = await request(app.getHttpServer())
+      .get('/v1/coupons')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
     expect(res.body.total).toBeGreaterThanOrEqual(2);
 
     const ids = (res.body.items as Array<{ id: string }>).map((item) => item.id);
@@ -90,6 +98,7 @@ describe('API integration', () => {
   it('GET /v1/coupons?status= filters by status and rejects bad values', async () => {
     const ok = await request(app.getHttpServer())
       .get('/v1/coupons')
+      .set('Authorization', `Bearer ${token}`)
       .query({ status: 'EXPIRING_SOON' })
       .expect(200);
     expect(
@@ -98,6 +107,7 @@ describe('API integration', () => {
 
     const bad = await request(app.getHttpServer())
       .get('/v1/coupons')
+      .set('Authorization', `Bearer ${token}`)
       .query({ status: 'BANANA' })
       .expect(400);
     expect(bad.body.error.code).toBe('BAD_REQUEST');
