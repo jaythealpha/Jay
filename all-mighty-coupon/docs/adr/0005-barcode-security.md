@@ -1,12 +1,14 @@
 # ADR-0005: 바코드 보안 — 암호화 저장 + 해시 기반 중복 검사
 
-- 상태: 채택됨 (해시·마스킹 구현, 암호화 저장은 M1)
+- 상태: 채택됨 · **1–3항 구현됨 (M1)**, 4항(전용 열람 API)은 M2
 - 날짜: 2026-08-06
 
 ## 결정
 
 1. 바코드 **원문**은 서버에 AES-256-GCM으로 암호화해 `encryptedBarcode`에
-   저장한다 (키: `BARCODE_ENCRYPTION_KEY`, 64-hex env — 검증 로직 구현됨).
+   저장한다 (키: `BARCODE_ENCRYPTION_KEY`, 64-hex env) — 구현·테스트 완료
+   (`apps/api/src/crypto/barcode-crypto.service.ts`, 저장 포맷
+   base64(iv|authTag|ciphertext)).
 2. 중복 검사·조회는 원문이 아니라 **정규화 SHA-256 해시**(`barcodeHash`)로만
    한다 — 구현·테스트 완료 (`@amc/barcode-utils`).
 3. 원문은 일반 로그·분석 이벤트·목록 API 응답에 절대 포함하지 않는다 —

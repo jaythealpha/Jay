@@ -18,6 +18,17 @@ GraphQL Federation, 다중 DB는 도입하지 않는다.
                                           └───────────┘
 ```
 
+## Milestone 1에서 추가된 것
+
+- **StorageModule**: S3 호환 private 스토리지(MinIO dev, 파일시스템 폴백),
+  signed URL 발급
+- **RecognitionModule**: BullMQ 큐 + 워커(API 프로세스 코호스팅), ZXing 바코드
+  판독, OcrProvider(Mock), 필드 추출·신뢰도·중복 감지·상태 전환
+- **CryptoModule**: 바코드 AES-256-GCM 암호화
+- **CouponEventsModule**: 도메인 이벤트 기록 헬퍼
+- Coupons API 확장: 업로드(POST), 상세(GET :id), 수정(PATCH), 확정(confirm)
+- docker-compose에 MinIO 추가 (9000/9001)
+
 ## 실제 구현 상태 (Milestone 0)
 
 - **API**: `GET /health`(DB+Redis 체크), `GET /v1/coupons`(실 DB 조회, 유효기간

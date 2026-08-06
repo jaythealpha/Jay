@@ -22,6 +22,7 @@
     "test:packages": "vitest run",
     "test:api": "npm run test -w @amc/api",
     "test:api:e2e": "npm run test:e2e -w @amc/api",
+    "accuracy": "npm run build -w @amc/shared-types && npm run build -w @amc/coupon-parser && node packages/coupon-parser/dist/accuracy/report.js",
     "db:generate": "npm run db:generate -w @amc/api",
     "db:migrate": "npm run db:migrate -w @amc/api",
     "db:seed": "npm run db:seed -w @amc/api"

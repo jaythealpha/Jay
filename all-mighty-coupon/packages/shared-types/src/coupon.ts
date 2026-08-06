@@ -66,3 +66,35 @@ export interface CouponListResponseDto {
   items: CouponSummaryDto[];
   total: number;
 }
+
+export interface CouponAssetDto {
+  type: CouponAssetType;
+  /** Short-lived signed URL — do not persist. */
+  url: string;
+  mimeType: string;
+}
+
+export interface CouponRecognitionSummaryDto {
+  /** Per-field confidence in [0,1]; null when the field was not recognized. */
+  confidences: {
+    brand: number | null;
+    productName: number | null;
+    expiresAt: number | null;
+    amountMinor: number | null;
+    barcode: number | null;
+  };
+  /** IDs of same-user coupons sharing this barcode hash (never auto-deleted). */
+  duplicateSuspects: string[];
+  /** Present when the pipeline failed and the coupon needs manual entry. */
+  error: string | null;
+}
+
+export interface CouponDetailDto extends CouponSummaryDto {
+  usageLocationText: string | null;
+  usageConditions: string | null;
+  barcodeType: string | null;
+  /** True when an (encrypted) barcode payload exists for this coupon. */
+  hasBarcode: boolean;
+  recognition: CouponRecognitionSummaryDto | null;
+  assets: CouponAssetDto[];
+}

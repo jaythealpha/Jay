@@ -19,12 +19,25 @@
 
 미구현(의도적): 인증, OCR, 이미지 업로드, 푸시 발송, 쿠폰 CRUD 쓰기 API.
 
-## Milestone 1 — Coupon Capture Lab (다음)
+## Milestone 1 — Coupon Capture Lab ✅ (완료)
 
-이미지 업로드, 바코드 감지, OCR(기기 내 우선, 인터페이스 뒤 서버 폴백),
-필드 추출, 신뢰도 표시, 사용자 수정, 테스트 데이터셋, 인식 정확도 측정.
-비동기 파이프라인: 업로드 → Job 생성 → BullMQ Queue → Recognition Worker →
-결과 저장 → 상태 업데이트 → 앱 조회.
+구현됨:
+
+- 이미지 업로드 API (`POST /v1/coupons`, multipart, jpeg/png/webp, 10MB 제한)
+- S3 호환 private 스토리지 (MinIO dev + 로컬 파일시스템 폴백), 300초 signed URL
+- 비동기 파이프라인: 업로드 → BullMQ Queue → Recognition Worker(동일 프로세스)
+  → 결과 저장 → 상태 전환(PROCESSING → ACTIVE/NEEDS_REVIEW/INVALID) → 앱 조회
+- 바코드/QR 감지: ZXing(WASM) 실제 판독, AES-256-GCM 암호화 저장 + SHA-256 해시
+- OCR: `OcrProvider` 인터페이스 + 결정적 Mock Provider (실제 OCR 엔진은 미연동,
+  기기 내 OCR이 M2 이후 1차 경로)
+- 필드 추출: 브랜드/상품명/유효기간/금액 + 필드별 신뢰도, 중복 의심 감지
+- 검토 API: `GET /v1/coupons/:id`, `PATCH /v1/coupons/:id`, `POST /:id/confirm`
+- 모바일: 등록 화면(카메라/사진첩), 분석 대기 폴링, 인식 결과 확인 화면
+  (신뢰도 배지, 필드 수정, 저장·확정, 중복/바코드/실패 안내)
+- 테스트 데이터셋 16종 + 정확도 측정 (`npm run accuracy`) + 회귀 테스트
+
+미구현(의도적): 실제 OCR 엔진(테서랙트/클라우드), 기기 내 OCR(ML Kit),
+공유 시트 등록, perceptual hash 중복 감지.
 
 ## Milestone 2 — Coupon Wallet MVP
 

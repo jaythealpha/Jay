@@ -1,14 +1,20 @@
 # Test Plan
 
-## 현재 테스트 현황 (Milestone 0 — 전부 실제 실행·통과 확인)
+## 현재 테스트 현황 (Milestone 0–1 — 전부 실제 실행·통과 확인)
 
-| 스위트                                 | 러너                                                                        | 개수 | 대상                                                                                                                                       |
-| -------------------------------------- | --------------------------------------------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| packages (vitest)                      | `npm run test:packages`                                                     | 59   | 상태 전환, 만료/남은 일수 계산, EXPIRING_SOON 판정, 정렬, 날짜/금액/브랜드 추출, 신뢰도·검토 정책, 바코드 해시·마스킹, 알림 예약/취소 정책 |
-| API 단위 (jest)                        | `npm run test:api`                                                          | 11   | CouponsService(정렬·필터·limit), DTO 민감정보 차단, 로그 마스킹                                                                            |
-| API 통합 (jest+supertest, 실 DB/Redis) | `npm run test:api:e2e`                                                      | 4    | health, 쿠폰 목록 정렬·바코드 미노출, status 필터+오류 envelope, 404 envelope                                                              |
-| Flutter (단위+위젯)                    | `flutter test`                                                              | 17   | 모델 파싱, D-day, 캐시 라운드트립, 오프라인 폴백, 로딩/성공/오류/재시도/오프라인 배너 UI                                                   |
-| Flutter 라이브 스모크                  | `flutter test test/manual/api_smoke_test.dart --dart-define=API_SMOKE=true` | 2    | 앱 네트워킹 코드로 실 API 조회·파싱 (기본 suite에서는 skip)                                                                                |
+M1 추가분 요약: packages vitest 67개(상품명 추출 4, 정확도 회귀 4 포함),
+API 단위 21개(바코드 암호화 3, 이미지 프로세서 3, 업로드 검증 4 포함),
+API 통합 9개(인식 파이프라인 5: 추출·암호화·중복·검토→확정·INVALID·업로드
+거부), Flutter 25개(캡처 컨트롤러 3, 검토 화면 3, 상세 모델 2 포함).
+아래 표의 수치는 M1 기준으로 갱신됨.
+
+| 스위트                                       | 러너                                                                        | 개수 | 대상                                                                                                                                       |
+| -------------------------------------------- | --------------------------------------------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| packages (vitest)                            | `npm run test:packages`                                                     | 67   | 상태 전환, 만료/남은 일수 계산, EXPIRING_SOON 판정, 정렬, 날짜/금액/브랜드 추출, 신뢰도·검토 정책, 바코드 해시·마스킹, 알림 예약/취소 정책 |
+| API 단위 (jest)                              | `npm run test:api`                                                          | 21   | CouponsService(정렬·필터·limit), DTO 민감정보 차단, 로그 마스킹                                                                            |
+| API 통합 (jest+supertest, 실 DB/Redis/MinIO) | `npm run test:api:e2e`                                                      | 9    | health, 쿠폰 목록 정렬·바코드 미노출, status 필터+오류 envelope, 404 envelope                                                              |
+| Flutter (단위+위젯)                          | `flutter test`                                                              | 25   | 모델 파싱, D-day, 캐시 라운드트립, 오프라인 폴백, 로딩/성공/오류/재시도/오프라인 배너 UI                                                   |
+| Flutter 라이브 스모크                        | `flutter test test/manual/api_smoke_test.dart --dart-define=API_SMOKE=true` | 2    | 앱 네트워킹 코드로 실 API 조회·파싱 (기본 suite에서는 skip)                                                                                |
 
 ## 커버리지 목표
 

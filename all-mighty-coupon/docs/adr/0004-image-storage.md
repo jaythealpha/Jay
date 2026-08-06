@@ -1,6 +1,6 @@
 # ADR-0004: 이미지 스토리지 — S3 호환 Private Object Storage
 
-- 상태: 채택됨 (설계만 — Milestone 1에서 구현)
+- 상태: 채택됨 · **구현됨 (Milestone 1)**
 - 날짜: 2026-08-06
 
 ## 결정
@@ -16,8 +16,14 @@
   데이터 모델에 반영되어 있다(M0). 원본은 절대 덮어쓰지 않고 파생본을 만든다.
 - S3 API 호환을 유지하면 로컬(MinIO)→클라우드 전환이 설정 변경으로 끝난다.
 
-## 현재 상태 (M0)
+## 현재 상태 (M1 구현 완료)
 
-`CouponAsset` 모델과 storageKey 필드만 존재. 실제 버킷 연동·업로드·signed URL
-발급은 미구현이며, 외부 계정 없이 검증할 수 없으므로 M1에서 MinIO 기반으로
-구현·검증한다.
+`StorageService` 추상 뒤에 두 드라이버:
+
+- `S3StorageService` — MinIO(도커)로 실검증: private bucket 자동 생성,
+  업로드, 300초 signed URL 발급·다운로드 확인
+- `LocalStorageService` — 키 없는 환경(CI 등)용 파일시스템 폴백
+
+`STORAGE_DRIVER` env로 선택. ORIGINAL은 불변, NORMALIZED/THUMBNAIL은 파생
+에셋으로 별도 저장. 프로덕션 클라우드 버킷 전환은 env 변경만으로 가능하나
+실 클라우드 검증은 미실시.

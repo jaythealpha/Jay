@@ -24,6 +24,31 @@ enum 값, `limit` 기본 50·최대 100. 응답 아이템에는 바코드 관련
   "createdAt", "updatedAt" } ], "total": 5 }
 ```
 
+### POST /v1/coupons (M1)
+
+multipart/form-data: `image`(jpeg/png/webp, 최대 10MB), `sourceType`(선택,
+CouponSourceType). 201 응답: `{ "id", "status": "PROCESSING" }`.
+분석은 비동기(BullMQ) — 이후 상세를 폴링한다.
+
+### GET /v1/coupons/:id (M1)
+
+Summary 필드 + `usageLocationText`, `usageConditions`, `barcodeType`,
+`hasBarcode`, `recognition`(필드별 confidences · duplicateSuspects · error),
+`assets`(type/mimeType/**300초 signed URL**). 바코드 원문·해시는 노출하지
+않는다.
+
+### PATCH /v1/coupons/:id (M1)
+
+body(json): brandName, productName, category, faceValueMinor(정수 원),
+expiresAt(`YYYY-MM-DD`), usageLocationText, usageConditions — 전부 선택,
+null로 비우기 가능. 유효기간 변경 시 날짜 기반 상태를 재계산한다
+(EXPIRED 자동 부활 없음). USER_EDITED 이벤트 기록.
+
+### POST /v1/coupons/:id/confirm (M1)
+
+NEEDS_REVIEW → ACTIVE(날짜 기준 재계산). requiresReview=false.
+다른 상태에서 호출 시 400.
+
 ### 오류 형식 (전 엔드포인트 공통)
 
 ```json

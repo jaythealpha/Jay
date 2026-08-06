@@ -1,7 +1,8 @@
 # Recognition Pipeline
 
-상태: **정책·파서·해시 로직 + 테스트만 구현됨 (Milestone 0).**
-이미지 업로드, 바코드 스캔, OCR 실행, 워커는 Milestone 1에서 구현한다.
+상태: **Milestone 1 구현 완료.** 업로드 → BullMQ 큐 → 워커 → ZXing 바코드
+판독 → OCR(Mock Provider) → 필드 추출 → 신뢰도/중복/상태 결정까지 실제 동작
+(통합 테스트 5종으로 검증). 실제 OCR 엔진 연동만 미구현.
 
 ## 파이프라인 설계 (독립 단계)
 
@@ -10,9 +11,16 @@
 3. 사용처·조건 → 11. 중복 검사 → 12. 필드별 신뢰도 → 13. 검토 상태 결정 →
 4. 결과 저장
 
-비동기 실행: 업로드 → Job 생성 → BullMQ Queue → Recognition Worker →
-결과 저장 → 상태 업데이트(PROCESSING → ACTIVE/NEEDS_REVIEW/INVALID) →
-앱 조회. 원본 이미지는 수정·덮어쓰기 금지 (별도 NORMALIZED 에셋 생성).
+비동기 실행(구현됨): `POST /v1/coupons` → Job 생성 → BullMQ Queue(재시도 3회,
+지수 백오프) → RecognitionProcessor(현재 API 프로세스에 코호스팅) → 결과 저장
+→ 상태 업데이트(PROCESSING → ACTIVE/NEEDS_REVIEW/INVALID) → 앱 폴링 조회.
+원본 이미지는 수정·덮어쓰기 금지 — NORMALIZED/THUMBNAIL 에셋을 따로 생성한다.
+파이프라인 실패 시 쿠폰은 NEEDS_REVIEW로 전환되어 사용자가 직접 입력할 수
+있다(PROCESSING에 고착되지 않음).
+
+구현 위치: `apps/api/src/recognition/` (image/ barcode/ ocr/ + service,
+queue, processor). 바코드 감지는 ZXing WASM으로 실제 판독하며 감지 시
+AES-256-GCM 암호화 저장 + SHA-256 해시 기반 중복 의심 표시까지 수행한다.
 
 ## 구현된 빌딩 블록
 
@@ -41,13 +49,25 @@ interface OcrProvider {
 }
 ```
 
-기기 내 OCR 우선, 실패/저신뢰 시 서버 OCR 폴백. 특정 공급자의 응답 구조가
-도메인 모델에 직접 들어가지 않는다. 외부 키가 없는 동안은 Mock/Local
-Provider로 구조와 테스트를 먼저 완성하고 미검증으로 보고한다.
+인터페이스와 Mock Provider는 구현됨(`recognition/ocr/`). MockOcrProvider는
+업로드 파일 꼬리의 `AMC-MOCK-OCR:` 마커 텍스트를 읽거나(테스트·랩 용도),
+마커가 없으면 `[MOCK OCR SAMPLE]` 표시가 붙은 고정 텍스트를 반환한다 — mock
+결과가 실제 인식처럼 보이지 않게 하기 위함이다. **실제 OCR 엔진은 미연동·
+미검증.** 방향: 기기 내 OCR(ML Kit) 우선, 실패/저신뢰 시 서버 OCR 폴백.
+특정 공급자의 응답 구조는 도메인 모델에 직접 들어가지 않는다.
 
 ## 중복 감지 (설계 + 해시 구현)
 
-신호 조합: barcodeHash 일치(구현됨), 이미지 perceptual hash, 동일
-사용자+브랜드+상품+유효기간, OCR 고유번호, 단시간 재등록.
-자동 삭제 금지 — "이미 등록된 쿠폰과 비슷합니다" → 기존 보기 / 새로 등록 /
-취소.
+구현됨: 동일 사용자 + barcodeHash 일치 → `recognition.duplicateSuspects`로
+상세 응답에 노출, 모바일 검토 화면이 "이미 등록된 쿠폰과 비슷해요" 안내를
+표시. 자동 삭제는 하지 않는다 (통합 테스트로 검증).
+추가 신호(미구현): 이미지 perceptual hash, 브랜드+상품+유효기간 조합,
+OCR 고유번호, 단시간 재등록.
+
+## 정확도 측정 (구현됨)
+
+`packages/coupon-parser/src/accuracy/` — 한국어 기프티콘 OCR 텍스트 16종
+데이터셋 + 필드별 정확도 측정. `npm run accuracy`로 리포트 출력, vitest가
+90% 회귀 하한선을 강제한다. 현재 브랜드/유효기간/금액 각 16/16 (100%).
+**주의: 합성 텍스트 기준 파서 정확도이며, 실제 이미지 OCR 종단 정확도가
+아니다.** 실제 OCR 연동 시 익명화된 실측 샘플로 데이터셋을 확장한다.

@@ -22,11 +22,21 @@
   커밋. `BARCODE_ENCRYPTION_KEY`는 설정 시 64-hex 강제.
 - **시드 데이터**: 바코드 원문 미저장(해시만), `sampleData: true` 표시.
 
+## Milestone 1에서 추가 구현된 방어
+
+- **바코드 원문 AES-256-GCM 암호화 저장** (`crypto/barcode-crypto.service.ts`,
+  키는 `BARCODE_ENCRYPTION_KEY` 64-hex env, IV 랜덤, 변조 시 복호화 실패 —
+  단위 테스트 3종). 이벤트에는 마스킹된 값(`****1234`)만 기록.
+- **Private object storage + signed URL**: MinIO(S3 호환) private bucket,
+  300초 만료 signed URL. 키 없는 환경용 파일시스템 폴백 드라이버 포함.
+- 파이프라인 이벤트(BARCODE_DETECTED, OCR_COMPLETED 등)에 바코드 원문·OCR
+  전문 미포함 — 통합 테스트가 이벤트 직렬화에 원문 부재를 검증.
+- 상세 API도 `hasBarcode`/`barcodeType`만 노출, 원문·해시 미노출.
+
 ## 설계됨 · 미구현 (이후 마일스톤)
 
-- 바코드 원문 AES-256-GCM 암호화 저장 및 전용 열람 API (BARCODE_VIEWED 감사
-  이벤트 포함, 관리자도 기본 열람 불가)
-- Private object storage + 짧은 유효기간 signed URL (ADR-0004)
-- 인증/인가 (M2) — 현재 API는 인증 없음. **로컬 개발 전용이며 시드 데이터만
+- 바코드 원문 전용 열람 API (BARCODE_VIEWED 감사 이벤트, 관리자 기본 열람
+  불가) — 매장 제시 화면(M2)과 함께 구현
+- 인증/인가 (M2) — 현재 API는 인증 없음. **로컬 개발 전용이며 데모 데이터만
   다룬다. 이 상태로 외부에 배포해서는 안 된다.**
 - 오류 추적 서비스 연동 시 원본 이미지·OCR 전문 전송 금지 정책 적용

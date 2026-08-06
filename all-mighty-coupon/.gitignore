@@ -1,5 +1,7 @@
 node_modules/
 dist/
+.storage/
+.storage-ci/
 .next/
 coverage/
 *.tsbuildinfo

@@ -72,8 +72,10 @@ flutter run --dart-define=AMC_API_BASE_URL=http://10.0.2.2:3001  # Android 에�
 
 ## 현재 단계
 
-Milestone 0 (기반) 완료. 다음은 docs/product/MVP_SCOPE.md의 Milestone 1
-(Coupon Capture Lab). 거래·결제·에스크로 기능은 Milestone 4 이전에 구현하지 않는다.
+Milestone 0 (기반) · Milestone 1 (Coupon Capture Lab) 완료.
+다음은 Milestone 2 (Coupon Wallet MVP: 로그인, 상세/바코드 표시, 사용 완료,
+Drift 캐시, 동기화 — docs/product/MVP_SCOPE.md 참조).
+거래·결제·에스크로 기능은 Milestone 4 이전에 구현하지 않는다.
 
 ## 승인 없이 하지 말 것
 

@@ -3,6 +3,9 @@ import type { Coupon } from '@prisma/client';
 import { CouponsService } from './coupons.service';
 import { toCouponSummaryDto } from './coupon.mapper';
 import type { PrismaService } from '../prisma/prisma.service';
+import type { StorageService } from '../storage/storage.service';
+import type { RecognitionQueueService } from '../recognition/recognition.queue';
+import type { CouponEventsService } from '../events/coupon-events.service';
 
 function sampleCoupon(overrides: Partial<Coupon> = {}): Coupon {
   return {
@@ -32,25 +35,72 @@ function sampleCoupon(overrides: Partial<Coupon> = {}): Coupon {
   };
 }
 
-function serviceWith(rows: Coupon[]): { service: CouponsService; calls: unknown[] } {
-  const calls: unknown[] = [];
+interface Stubs {
+  service: CouponsService;
+  findManyCalls: unknown[];
+  putCalls: unknown[];
+  enqueued: string[];
+  events: string[];
+}
+
+function serviceWith(rows: Coupon[]): Stubs {
+  const findManyCalls: unknown[] = [];
+  const putCalls: unknown[] = [];
+  const enqueued: string[] = [];
+  const events: string[] = [];
+
   const prismaStub = {
     coupon: {
       findMany: (args: unknown) => {
-        calls.push(args);
+        findManyCalls.push(args);
         return Promise.resolve(rows);
       },
       count: () => Promise.resolve(rows.length),
+      create: (args: { data: Record<string, unknown> }) =>
+        Promise.resolve(sampleCoupon({ id: 'new-coupon', ...(args.data as Partial<Coupon>) })),
     },
+    couponAsset: { create: () => Promise.resolve({}) },
+    user: { upsert: () => Promise.resolve({ id: 'u1' }) },
   } as unknown as PrismaService;
-  return { service: new CouponsService(prismaStub), calls };
+
+  const storageStub = {
+    putObject: (input: unknown) => {
+      putCalls.push(input);
+      return Promise.resolve();
+    },
+    getSignedUrl: () => Promise.resolve('https://signed.example/url'),
+    getObject: () => Promise.resolve(Buffer.alloc(0)),
+    ensureReady: () => Promise.resolve(),
+  } as unknown as StorageService;
+
+  const queueStub = {
+    enqueue: (couponId: string) => {
+      enqueued.push(couponId);
+      return Promise.resolve();
+    },
+  } as unknown as RecognitionQueueService;
+
+  const eventsStub = {
+    record: (_couponId: string, type: string) => {
+      events.push(type);
+      return Promise.resolve();
+    },
+  } as unknown as CouponEventsService;
+
+  return {
+    service: new CouponsService(prismaStub, storageStub, queueStub, eventsStub),
+    findManyCalls,
+    putCalls,
+    enqueued,
+    events,
+  };
 }
 
 describe('CouponsService.list', () => {
   it('orders by expiration ascending with nulls last', async () => {
-    const { service, calls } = serviceWith([sampleCoupon()]);
+    const { service, findManyCalls } = serviceWith([sampleCoupon()]);
     await service.list({});
-    expect(calls[0]).toMatchObject({
+    expect(findManyCalls[0]).toMatchObject({
       orderBy: [{ expiresAt: { sort: 'asc', nulls: 'last' } }, { createdAt: 'desc' }],
     });
   });
@@ -61,9 +111,45 @@ describe('CouponsService.list', () => {
   });
 
   it('passes valid status filters through and caps the limit', async () => {
-    const { service, calls } = serviceWith([]);
+    const { service, findManyCalls } = serviceWith([]);
     await service.list({ status: 'ACTIVE', limit: 5000 });
-    expect(calls[0]).toMatchObject({ where: { status: 'ACTIVE' }, take: 100 });
+    expect(findManyCalls[0]).toMatchObject({ where: { status: 'ACTIVE' }, take: 100 });
+  });
+});
+
+describe('CouponsService.createFromImage', () => {
+  const image = { buffer: Buffer.from('fake'), mimetype: 'image/png', size: 4 };
+
+  it('stores the original, records events, and enqueues recognition', async () => {
+    const { service, putCalls, enqueued, events } = serviceWith([]);
+    const result = await service.createFromImage(image, 'PHOTO_LIBRARY');
+
+    expect(result.status).toBe('PROCESSING');
+    expect(putCalls).toHaveLength(1);
+    expect(enqueued).toEqual([result.id]);
+    expect(events).toEqual(['COUPON_CREATED', 'IMAGE_UPLOADED']);
+  });
+
+  it('rejects unsupported mime types before any storage write', async () => {
+    const { service, putCalls } = serviceWith([]);
+    await expect(
+      service.createFromImage({ ...image, mimetype: 'application/pdf' }),
+    ).rejects.toThrow(BadRequestException);
+    expect(putCalls).toHaveLength(0);
+  });
+
+  it('rejects oversized uploads', async () => {
+    const { service } = serviceWith([]);
+    await expect(service.createFromImage({ ...image, size: 11 * 1024 * 1024 })).rejects.toThrow(
+      BadRequestException,
+    );
+  });
+
+  it('rejects unknown source types', async () => {
+    const { service } = serviceWith([]);
+    await expect(service.createFromImage(image, 'CARRIER_PIGEON')).rejects.toThrow(
+      BadRequestException,
+    );
   });
 });
 

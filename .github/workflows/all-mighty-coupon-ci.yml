@@ -36,6 +36,11 @@ jobs:
       DATABASE_URL: postgresql://amc:amc_dev_password@localhost:5432/amc_dev?schema=public
       REDIS_URL: redis://localhost:6379
       NODE_ENV: test
+      # CI uses the filesystem storage driver (no MinIO service needed) and a
+      # throwaway encryption key — never a real secret.
+      STORAGE_DRIVER: local
+      LOCAL_STORAGE_DIR: .storage-ci
+      BARCODE_ENCRYPTION_KEY: 0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

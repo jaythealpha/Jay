@@ -116,6 +116,15 @@ class HomeScreen extends ConsumerWidget {
             SizedBox(
               height: 52,
               child: FilledButton.icon(
+                onPressed: () => context.go('/capture'),
+                icon: const Icon(Icons.add_a_photo_outlined),
+                label: const Text('쿠폰 등록'),
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 52,
+              child: OutlinedButton.icon(
                 onPressed: () => context.go('/wallet'),
                 icon: const Icon(Icons.wallet_outlined),
                 label: const Text('쿠폰함 열기'),
