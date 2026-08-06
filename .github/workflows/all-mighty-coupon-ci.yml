@@ -1,0 +1,73 @@
+name: all-mighty-coupon CI
+
+on:
+  push:
+    branches: ['**']
+    paths: ['all-mighty-coupon/**', '.github/workflows/all-mighty-coupon-ci.yml']
+  pull_request:
+    paths: ['all-mighty-coupon/**', '.github/workflows/all-mighty-coupon-ci.yml']
+
+defaults:
+  run:
+    working-directory: all-mighty-coupon
+
+jobs:
+  typescript:
+    name: API · packages · admin
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: amc
+          POSTGRES_PASSWORD: amc_dev_password
+          POSTGRES_DB: amc_dev
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U amc -d amc_dev"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://amc:amc_dev_password@localhost:5432/amc_dev?schema=public
+      REDIS_URL: redis://localhost:6379
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: all-mighty-coupon/package-lock.json
+      - run: npm ci
+      - run: npm run db:generate
+      - run: npm run build:packages
+      - run: npm run lint
+      - run: npm run test:packages
+      - run: npm run test:api
+      - name: Apply migrations
+        run: npm run db:migrate:deploy -w @amc/api
+      - run: npm run test:api:e2e
+      - run: npm run build:api
+      - run: npm run build:admin
+
+  flutter:
+    name: Flutter mobile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.44.8
+          channel: stable
+          cache: true
+      - run: flutter pub get
+        working-directory: all-mighty-coupon/apps/mobile
+      - run: flutter analyze
+        working-directory: all-mighty-coupon/apps/mobile
+      - run: flutter test
+        working-directory: all-mighty-coupon/apps/mobile

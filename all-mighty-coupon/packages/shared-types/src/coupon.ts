@@ -1,0 +1,68 @@
+export const COUPON_STATUSES = [
+  'PROCESSING',
+  'NEEDS_REVIEW',
+  'ACTIVE',
+  'EXPIRING_SOON',
+  'EXPIRED',
+  'REDEEMED',
+  'ARCHIVED',
+  'INVALID',
+] as const;
+export type CouponStatus = (typeof COUPON_STATUSES)[number];
+
+export const COUPON_SOURCE_TYPES = [
+  'CAMERA',
+  'PHOTO_LIBRARY',
+  'SHARE_EXTENSION',
+  'FILE_UPLOAD',
+  'MANUAL',
+] as const;
+export type CouponSourceType = (typeof COUPON_SOURCE_TYPES)[number];
+
+export const COUPON_ASSET_TYPES = ['ORIGINAL', 'NORMALIZED', 'THUMBNAIL', 'BARCODE_CROP'] as const;
+export type CouponAssetType = (typeof COUPON_ASSET_TYPES)[number];
+
+export const COUPON_EVENT_TYPES = [
+  'COUPON_CREATED',
+  'IMAGE_UPLOADED',
+  'BARCODE_DETECTED',
+  'OCR_COMPLETED',
+  'COUPON_PARSED',
+  'USER_CONFIRMED',
+  'USER_EDITED',
+  'STATUS_CHANGED',
+  'NOTIFICATION_SCHEDULED',
+  'NOTIFICATION_SENT',
+  'BARCODE_VIEWED',
+  'MARKED_REDEEMED',
+  'RESTORED_TO_ACTIVE',
+  'ARCHIVED',
+  'DELETED',
+] as const;
+export type CouponEventType = (typeof COUPON_EVENT_TYPES)[number];
+
+/**
+ * Wire representation of a coupon as returned by the API.
+ * Barcode payloads are intentionally absent: the raw value is sensitive and
+ * only exposed through a dedicated, audited endpoint (post-Milestone 0).
+ */
+export interface CouponSummaryDto {
+  id: string;
+  brandName: string | null;
+  productName: string | null;
+  category: string | null;
+  faceValueMinor: number | null;
+  currency: string | null;
+  status: CouponStatus;
+  /** ISO-8601 UTC timestamp; clients convert to the user's timezone. */
+  expiresAt: string | null;
+  requiresReview: boolean;
+  sourceType: CouponSourceType;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CouponListResponseDto {
+  items: CouponSummaryDto[];
+  total: number;
+}

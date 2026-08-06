@@ -1,0 +1,14 @@
+# Strict analyzer settings (spec §21): no implicit dynamic/casts.
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+
+linter:
+  rules:
+    - prefer_final_locals
+    - unawaited_futures
+    - avoid_dynamic_calls

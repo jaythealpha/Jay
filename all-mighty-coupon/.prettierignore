@@ -1,0 +1,7 @@
+node_modules
+dist
+.next
+coverage
+apps/mobile
+package-lock.json
+apps/api/src/generated

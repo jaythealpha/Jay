@@ -1,0 +1,41 @@
+{
+  "name": "all-mighty-coupon",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Never Lose a Coupon Again. Personal coupon wallet monorepo.",
+  "workspaces": [
+    "apps/api",
+    "apps/admin",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev:api",
+    "dev:api": "npm run dev -w @amc/api",
+    "dev:admin": "npm run dev -w @amc/admin",
+    "build": "npm run build:packages && npm run build:api && npm run build:admin",
+    "build:packages": "npm run build -w @amc/shared-types && npm run build -w @amc/domain && npm run build -w @amc/coupon-parser && npm run build -w @amc/barcode-utils && npm run build -w @amc/notification-policy && npm run build -w @amc/design-tokens",
+    "build:api": "npm run build -w @amc/api",
+    "build:admin": "npm run build -w @amc/admin",
+    "lint": "eslint . && prettier --check .",
+    "format": "prettier --write .",
+    "test": "npm run build:packages && npm run test:packages && npm run test:api",
+    "test:packages": "vitest run",
+    "test:api": "npm run test -w @amc/api",
+    "test:api:e2e": "npm run test:e2e -w @amc/api",
+    "db:generate": "npm run db:generate -w @amc/api",
+    "db:migrate": "npm run db:migrate -w @amc/api",
+    "db:seed": "npm run db:seed -w @amc/api"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "eslint": "^9.17.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.18.0",
+    "vitest": "^2.1.8"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

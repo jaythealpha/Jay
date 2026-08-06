@@ -1,0 +1,121 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  coupons   Coupon[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Coupon {
+  id                String           @id @default(cuid())
+  userId            String
+  brandName         String?
+  productName       String?
+  category          String?
+  faceValueMinor    Int?
+  currency          String?
+  status            CouponStatus     @default(PROCESSING)
+  issuedAt          DateTime?
+  expiresAt         DateTime?
+  usageLocationText String?
+  usageConditions   String?
+  barcodeType       String?
+  encryptedBarcode  String?
+  barcodeHash       String?
+  sourceType        CouponSourceType
+  requiresReview    Boolean          @default(true)
+  recognitionData   Json?
+  redeemedAt        DateTime?
+  archivedAt        DateTime?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  user   User          @relation(fields: [userId], references: [id])
+  assets CouponAsset[]
+  events CouponEvent[]
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@index([status])
+  @@index([barcodeHash])
+}
+
+model CouponAsset {
+  id         String          @id @default(cuid())
+  couponId   String
+  type       CouponAssetType
+  storageKey String
+  mimeType   String
+  width      Int?
+  height     Int?
+  createdAt  DateTime        @default(now())
+
+  coupon Coupon @relation(fields: [couponId], references: [id])
+
+  @@index([couponId])
+}
+
+model CouponEvent {
+  id        String          @id @default(cuid())
+  couponId  String
+  type      CouponEventType
+  metadata  Json?
+  createdAt DateTime        @default(now())
+
+  coupon Coupon @relation(fields: [couponId], references: [id])
+
+  @@index([couponId, createdAt])
+}
+
+enum CouponStatus {
+  PROCESSING
+  NEEDS_REVIEW
+  ACTIVE
+  EXPIRING_SOON
+  EXPIRED
+  REDEEMED
+  ARCHIVED
+  INVALID
+}
+
+enum CouponSourceType {
+  CAMERA
+  PHOTO_LIBRARY
+  SHARE_EXTENSION
+  FILE_UPLOAD
+  MANUAL
+}
+
+enum CouponAssetType {
+  ORIGINAL
+  NORMALIZED
+  THUMBNAIL
+  BARCODE_CROP
+}
+
+enum CouponEventType {
+  COUPON_CREATED
+  IMAGE_UPLOADED
+  BARCODE_DETECTED
+  OCR_COMPLETED
+  COUPON_PARSED
+  USER_CONFIRMED
+  USER_EDITED
+  STATUS_CHANGED
+  NOTIFICATION_SCHEDULED
+  NOTIFICATION_SENT
+  BARCODE_VIEWED
+  MARKED_REDEEMED
+  RESTORED_TO_ACTIVE
+  ARCHIVED
+  DELETED
+}
