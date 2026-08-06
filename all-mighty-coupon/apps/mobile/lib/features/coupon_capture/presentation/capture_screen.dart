@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_theme.dart';
 import '../application/capture_controller.dart';
@@ -10,12 +9,8 @@ class CaptureScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.listen<CaptureState>(captureControllerProvider, (previous, next) {
-      if (next is CaptureUploaded) {
-        ref.read(captureControllerProvider.notifier).reset();
-        context.go('/review/${next.couponId}');
-      }
-    });
+    // Navigation to the review screen on CaptureUploaded is handled at the
+    // app level (share-sheet uploads share the same hand-off).
     final state = ref.watch(captureControllerProvider);
 
     return Scaffold(

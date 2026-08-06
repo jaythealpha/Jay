@@ -197,6 +197,38 @@ describe('Recognition pipeline (e2e)', () => {
     expect(types).toContain('USER_CONFIRMED');
   });
 
+  it('prefers on-device OCR text over the server provider (device OCR first)', async () => {
+    // Plain image, NO mock marker — without deviceOcrText this would parse
+    // nothing; the provided device text must drive the extraction.
+    const plainPng = await sharp({
+      create: { width: 800, height: 600, channels: 3, background: '#ffffff' },
+    })
+      .png()
+      .toBuffer();
+
+    const upload = await request(app.getHttpServer())
+      .post('/v1/coupons')
+      .set('Authorization', `Bearer ${token}`)
+      .field('sourceType', 'CAMERA')
+      .field('deviceOcrText', '교촌치킨\n허니콤보 교환권\n유효기간 2027.05.31 까지\n금액 23,000원')
+      .attach('image', plainPng, 'device-ocr.png')
+      .expect(201);
+    const couponId = upload.body.id as string;
+    createdCouponIds.push(couponId);
+
+    const detail = await waitForProcessed(couponId);
+    expect(detail.status).toBe('ACTIVE');
+    expect(detail.brandName).toBe('교촌치킨');
+    expect(detail.faceValueMinor).toBe(23000);
+    expect(detail.expiresAt).toBe('2027-05-31T00:00:00.000Z');
+
+    // The device OCR raw text is consumed, not persisted.
+    const stored = await prisma.coupon.findUnique({ where: { id: couponId } });
+    const data = JSON.stringify(stored?.recognitionData);
+    expect(data).toContain('"provider":"device"');
+    expect(data).not.toContain('허니콤보 교환권');
+  });
+
   it('marks non-coupon images as INVALID', async () => {
     // No barcode, and mock OCR returns text with no extractable fields.
     const upload = await request(app.getHttpServer())

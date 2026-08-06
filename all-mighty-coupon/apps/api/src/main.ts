@@ -9,6 +9,12 @@ import { StorageService } from './storage/storage.service';
 async function bootstrap(): Promise<void> {
   const env = loadEnv();
   const app = await NestFactory.create(AppModule);
+  // Dev CORS for the operator console (localhost:3002). Production locks this
+  // down to the deployed admin origin.
+  app.enableCors({
+    origin: true,
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-token'],
+  });
   await app.get(StorageService).ensureReady();
 
   const openApiConfig = new DocumentBuilder()

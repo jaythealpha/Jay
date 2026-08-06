@@ -85,6 +85,8 @@ flutter test test/manual/api_smoke_test.dart --dart-define=API_SMOKE=true
 - `GET /v1/coupons/:id/barcode` — 바코드 열람 (감사 이벤트 기록)
 - `GET /v1/home` — 만료 우선 홈 (곧 만료/이번 주/최근/요약)
 - `GET /v1/notifications` · `POST /:id/snooze` — 만료 알림 인앱 피드·연기
+- `POST/DELETE /v1/devices` — 푸시 기기 토큰 등록/해제
+- `GET /v1/admin/stats` — 운영자 통계 (x-admin-token, 기본 비활성)
 - `GET /docs` — Swagger UI
 
 개발용 데모 계정(시드): `demo@allmightycoupon.local` / `demo-password-1234`
@@ -96,14 +98,17 @@ flutter test test/manual/api_smoke_test.dart --dart-define=API_SMOKE=true
 
 - 인증은 JWT 액세스 토큰 단일(7d) — refresh token·비밀번호 재설정·rate
   limiting 미구현. 프로덕션 배포 전 필수
-- **실제 OCR 엔진 미연동** — `OcrProvider` 인터페이스 + 결정적 Mock만 존재
-  (mock 결과에는 `[MOCK OCR SAMPLE]` 표시). 기기 내 OCR(ML Kit)·서버 OCR
-  폴백은 이후 마일스톤. 바코드/QR 판독(ZXing)은 실제 동작
+- **기기 내 OCR(ML Kit) 실기기 미검증** — 기기 OCR 우선→서버 폴백 구조와
+  서버 측 처리(provider='device')는 e2e 검증 완료, ML Kit 자체는 실기기
+  필요. 서버 OCR은 여전히 Mock(`[MOCK OCR SAMPLE]` 표시). 바코드/QR
+  판독(ZXing)은 실제 동작
 - 정확도 수치는 합성 OCR 텍스트 기준 파서 정확도 (실이미지 종단 정확도 아님)
-- **실제 푸시(FCM/APNs) 미발송** — 알림은 예약·발송·연기까지 전부 동작하지만 채널이 인앱 피드다. 푸시 토큰 등록·발송 연동은 다음 단계
+- **FCM 발송 미검증** — 발송 코드·토큰 등록·무효 토큰 정리까지 구현됐지만
+  실제 Firebase 프로젝트 자격증명 없이는 Noop(인앱 피드 전용)으로 동작.
+  모바일 firebase_messaging 연동(구글 설정 파일)도 미구현
 - 오프라인 동기화는 redeem 재생 큐까지 — 필드 수정의 오프라인 큐잉·충돌
   해소는 미구현
-- 공유 시트(SHARE_EXTENSION) 등록 경로는 enum만 존재, 네이티브 연동 미구현
+- 공유 시트: Android intent-filter + 수신·자동 업로드 구현(실기기 미검증), **iOS 공유 확장 미구현**
 - 바코드 화면의 기기 밝기 자동 상향은 미구현(고대비 UI만) — 실기기 검증 필요
 - 모바일 실기기/에뮬레이터 UI 실행(카메라·보안 저장소 포함)은 CI 환경 제약으로
   미검증 (analyze/test + 라이브 API 스모크 테스트로 검증)

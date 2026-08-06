@@ -8,13 +8,34 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
+  id           String       @id @default(cuid())
+  email        String       @unique
   /// scrypt hash ("scrypt:<salt>:<hash>"); null only for legacy seed rows.
   passwordHash String?
   coupons      Coupon[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  pushDevices  PushDevice[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+/// A device registered for expiration push notifications. The FCM token is a
+/// sensitive credential (spec §17) — it is never logged or exposed via APIs.
+model PushDevice {
+  id         String   @id @default(cuid())
+  userId     String
+  token      String   @unique
+  platform   PushPlatform
+  createdAt  DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+enum PushPlatform {
+  ANDROID
+  IOS
 }
 
 model Coupon {

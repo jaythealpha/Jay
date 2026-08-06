@@ -118,6 +118,7 @@ export class CouponsService {
     userId: string,
     image: UploadedImage,
     sourceTypeRaw?: string,
+    deviceOcrText?: string,
   ): Promise<{ id: string; status: CouponStatus }> {
     const extension = ALLOWED_MIME.get(image.mimetype);
     if (!extension) {
@@ -130,8 +131,19 @@ export class CouponsService {
     }
     const sourceType = this.parseSourceType(sourceTypeRaw);
 
+    // Device OCR first (spec §10): text recognized on-device rides along and
+    // takes precedence over the server-side OCR provider in the pipeline.
+    // It is dropped from recognitionData once parsing completes.
     const coupon = await this.prisma.coupon.create({
-      data: { userId, status: 'PROCESSING', sourceType, requiresReview: true },
+      data: {
+        userId,
+        status: 'PROCESSING',
+        sourceType,
+        requiresReview: true,
+        ...(deviceOcrText && deviceOcrText.trim().length > 0
+          ? { recognitionData: { deviceOcrText: deviceOcrText.slice(0, 20_000) } }
+          : {}),
+      },
     });
 
     const storageKey = `coupons/${coupon.id}/original.${extension}`;

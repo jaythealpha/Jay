@@ -49,7 +49,11 @@ interface OcrProvider {
 }
 ```
 
-인터페이스와 Mock Provider는 구현됨(`recognition/ocr/`). MockOcrProvider는
+**기기 내 OCR 우선 구조 구현됨**: 앱이 ML Kit(한국어)로 인식한 텍스트를
+`deviceOcrText`로 업로드에 실어 보내면 파이프라인이 이를 우선 사용하고
+(provider='device'), 없을 때만 서버 OcrProvider로 폴백한다. 원문 텍스트는
+파싱 후 recognitionData에서 폐기된다. 서버 측 인터페이스와 Mock Provider도
+구현됨(`recognition/ocr/`). MockOcrProvider는
 업로드 파일 꼬리의 `AMC-MOCK-OCR:` 마커 텍스트를 읽거나(테스트·랩 용도),
 마커가 없으면 `[MOCK OCR SAMPLE]` 표시가 붙은 고정 텍스트를 반환한다 — mock
 결과가 실제 인식처럼 보이지 않게 하기 위함이다. **실제 OCR 엔진은 미연동·

@@ -87,9 +87,15 @@ export class RecognitionService {
       });
     }
 
-    const ocr = await this.ocrProvider.recognize({ normalized: processed.normalized, original });
+    // Device OCR first (spec §10): use on-device text when the app supplied
+    // it; the server-side provider is the fallback.
+    const deviceOcrText = this.readDeviceOcrText(coupon);
+    const ocr = deviceOcrText
+      ? { text: deviceOcrText, confidence: 0.9 }
+      : await this.ocrProvider.recognize({ normalized: processed.normalized, original });
+    const ocrProviderName = deviceOcrText ? 'device' : this.ocrProvider.providerName;
     await this.events.record(coupon.id, 'OCR_COMPLETED', {
-      provider: this.ocrProvider.providerName,
+      provider: ocrProviderName,
       textLength: ocr.text.length,
     });
 
@@ -129,7 +135,7 @@ export class RecognitionService {
 
     const recognitionData: Prisma.InputJsonValue = {
       pipelineVersion: PIPELINE_VERSION,
-      ocr: { provider: this.ocrProvider.providerName, textLength: ocr.text.length },
+      ocr: { provider: ocrProviderName, textLength: ocr.text.length },
       confidences: {
         brand: brand?.confidence ?? null,
         productName: product?.confidence ?? null,
@@ -176,6 +182,13 @@ export class RecognitionService {
     // Live coupons with a recognized expiry get their reminder plan now;
     // NEEDS_REVIEW coupons are scheduled after user confirmation instead.
     await this.notificationScheduler.scheduleFor(updatedCoupon);
+  }
+
+  private readDeviceOcrText(coupon: Coupon): string | null {
+    const data = coupon.recognitionData;
+    if (data === null || typeof data !== 'object' || Array.isArray(data)) return null;
+    const text = (data as { deviceOcrText?: unknown }).deviceOcrText;
+    return typeof text === 'string' && text.trim().length > 0 ? text : null;
   }
 
   private async saveDerivedAssets(

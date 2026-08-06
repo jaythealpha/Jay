@@ -72,10 +72,10 @@ flutter run --dart-define=AMC_API_BASE_URL=http://10.0.2.2:3001  # Android 에�
 
 ## 현재 단계
 
-Milestone 0 (기반) · 1 (Capture Lab) · 2 (Wallet MVP) · 3 (Never Expire) 완료.
-남은 주요 갭: 실제 푸시 발송(FCM/APNs), 실제 OCR 엔진(기기 내 ML Kit 우선),
-공유 시트 등록, 운영자(Admin) 기능, refresh token. 거래·결제·에스크로 기능은
-사용자 승인 전 구현하지 않는다 (Milestone 4 이전 금지 원칙 유지).
+Milestone 0–3 + 확장 a–c(푸시 채널·기기 OCR 우선·공유 시트·운영자 콘솔) 완료.
+남은 주요 갭: Firebase 자격증명 연동(FCM 실발송·firebase_messaging), iOS 공유
+확장, ML Kit 실기기 검증, refresh token, rate limiting. 거래·결제·에스크로
+기능(M4)은 사용자 승인과 요구사항 정의 전 구현하지 않는다.
 
 개발용 데모 계정(시드): demo@allmightycoupon.local / demo-password-1234.
 쿠폰 API는 전부 JWT 필수 — 새 엔드포인트는 `@Public()` 없이는 기본 보호됨.

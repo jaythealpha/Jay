@@ -83,6 +83,40 @@
 행을 푸시 채널이 재사용하도록 설계됨. 기기 푸시 토큰 등록·발송 연동은 별도
 마일스톤.
 
-## Milestone 4+
+## 마일스톤 후 확장 (a–c) ✅ (완료)
 
-이전 마일스톤 완료 전 거래 기능을 구현하지 않는다.
+**(a) 푸시 발송 채널**
+
+- `PushDevice` 모델 + `POST/DELETE /v1/devices` (토큰 등록/해제, upsert 중복 방지)
+- `PushSender` 경계: `FcmPushSender`(firebase-admin, 무효 토큰 자동 정리) +
+  `NoopPushSender`(자격증명 없음 → 카운트만 로그, 토큰 값 미기록)
+- 디스패처가 인앱 피드 기록 후 사용자 기기 전체로 푸시(베스트에포트 — 푸시
+  실패가 발송 루프를 막지 않음), 딥링크 데이터(couponId) 포함
+- **미검증**: 실제 FCM 발송은 Firebase 프로젝트 자격증명
+  (`FIREBASE_SERVICE_ACCOUNT_JSON`) 필요 — 코드 구현·Noop 경로만 테스트 검증.
+  모바일 firebase_messaging 연동은 `PushTokenSource` 인터페이스만
+  (google-services.json 필요, 미구현으로 명시)
+
+**(b) 기기 내 OCR 우선 + 공유 시트**
+
+- 업로드에 `deviceOcrText` 필드 — 서버 파이프라인이 기기 OCR 텍스트를
+  우선 사용(provider='device'), 없으면 서버 OCR 폴백 (spec §10 구조 완성).
+  원문 텍스트는 파싱 후 폐기 (e2e 검증)
+- 모바일 `DeviceOcr` 경계 + ML Kit(한국어) 구현 — 실패 시 조용히 서버 폴백.
+  **실기기 동작 미검증** (CI에 에뮬레이터 없음)
+- 공유 시트: Android intent-filter(image/*) + receive_sharing_intent →
+  공유 이미지 자동 업로드(sourceType=SHARE_EXTENSION) → 검토 화면.
+  **iOS 공유 확장은 미구현** (Xcode 네이티브 타깃 필요)
+
+**(c) 운영자 콘솔**
+
+- `GET /v1/admin/stats`: 사용자/기기/쿠폰 상태 분포/알림 카운트/최근 이벤트
+  20건 — **카운트만**, 이메일·바코드·이벤트 페이로드 미노출
+- `AdminGuard`: 정적 운영 토큰(`ADMIN_API_TOKEN`, x-admin-token 헤더,
+  타이밍 안전 비교). 사용자 JWT로는 접근 불가, env 미설정 시 503(기본 비활성)
+- Next.js 대시보드: 토큰 입력(메모리만) → 요약/상태 분포/최근 이벤트 표시
+
+## Milestone 4+ (거래)
+
+거래·결제·에스크로는 별도 사용자 승인과 상세 요구사항 정의 전 구현하지
+않는다 — 제품 비전 문서상 현 단계 명시적 제외 범위.

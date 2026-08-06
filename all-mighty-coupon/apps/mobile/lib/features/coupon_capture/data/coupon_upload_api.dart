@@ -14,11 +14,13 @@ class CouponUploadApi {
     required List<int> bytes,
     required String filename,
     required String sourceType,
+    String? deviceOcrText,
   }) async {
     try {
       final form = FormData.fromMap(<String, dynamic>{
         'image': MultipartFile.fromBytes(bytes, filename: filename),
         'sourceType': sourceType,
+        if (deviceOcrText != null && deviceOcrText.isNotEmpty) 'deviceOcrText': deviceOcrText,
       });
       final response = await _dio.post<Map<String, dynamic>>('/v1/coupons', data: form);
       final id = response.data?['id'] as String?;

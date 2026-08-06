@@ -88,6 +88,10 @@ export class CouponsController {
           type: 'string',
           enum: ['CAMERA', 'PHOTO_LIBRARY', 'SHARE_EXTENSION', 'FILE_UPLOAD', 'MANUAL'],
         },
+        deviceOcrText: {
+          type: 'string',
+          description: 'On-device OCR text; takes precedence over server OCR',
+        },
       },
       required: ['image'],
     },
@@ -97,14 +101,19 @@ export class CouponsController {
     @CurrentUser() user: AuthenticatedUser,
     @UploadedFile() file: Express.Multer.File | undefined,
     @Body('sourceType') sourceType?: string,
+    @Body('deviceOcrText') deviceOcrText?: string,
   ): Promise<{ id: string; status: CouponStatus }> {
     if (!file) {
       throw new BadRequestException('image 파일이 필요합니다.');
+    }
+    if (deviceOcrText !== undefined && deviceOcrText.length > 20_000) {
+      throw new BadRequestException('deviceOcrText가 너무 깁니다 (최대 20000자).');
     }
     return this.couponsService.createFromImage(
       user.id,
       { buffer: file.buffer, mimetype: file.mimetype, size: file.size },
       sourceType,
+      deviceOcrText,
     );
   }
 

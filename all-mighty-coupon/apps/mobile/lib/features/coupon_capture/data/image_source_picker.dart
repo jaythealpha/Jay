@@ -4,10 +4,13 @@ import 'package:image_picker/image_picker.dart';
 /// Picked image payload, decoupled from the image_picker plugin types so the
 /// application layer (and tests) never touch platform channels.
 class PickedImage {
-  const PickedImage({required this.bytes, required this.filename});
+  const PickedImage({required this.bytes, required this.filename, this.path});
 
   final List<int> bytes;
   final String filename;
+
+  /// Local file path when available — used for on-device OCR.
+  final String? path;
 }
 
 abstract interface class ImageSourcePicker {
@@ -22,7 +25,7 @@ class ImagePickerSourcePicker implements ImageSourcePicker {
   Future<PickedImage?> _pick(ImageSource source) async {
     final file = await _picker.pickImage(source: source, maxWidth: 2400, imageQuality: 92);
     if (file == null) return null;
-    return PickedImage(bytes: await file.readAsBytes(), filename: file.name);
+    return PickedImage(bytes: await file.readAsBytes(), filename: file.name, path: file.path);
   }
 
   @override

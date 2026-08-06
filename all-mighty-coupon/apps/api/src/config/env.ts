@@ -28,6 +28,10 @@ const envSchema = z
       .optional(),
     JWT_SECRET: z.string().min(32, 'use at least 32 characters (openssl rand -hex 32)'),
     JWT_EXPIRES_IN: z.string().default('7d'),
+    /// Base64-encoded Firebase service account JSON; unset → in-app feed only.
+    FIREBASE_SERVICE_ACCOUNT_JSON: z.string().optional(),
+    /// Static bearer for the operator console; unset → admin API disabled.
+    ADMIN_API_TOKEN: z.string().min(24).optional(),
   })
   .superRefine((env, ctx) => {
     if (env.STORAGE_DRIVER === 's3') {

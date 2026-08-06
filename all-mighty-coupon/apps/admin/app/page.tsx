@@ -1,6 +1,9 @@
+import AdminDashboard from './admin-dashboard';
 import type { HealthResponseDto } from './types';
 
 const API_BASE_URL = process.env.ADMIN_API_BASE_URL ?? 'http://localhost:3001';
+// Browser-side base URL for the dashboard (client component fetches directly).
+const PUBLIC_API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3001';
 
 async function fetchHealth(): Promise<HealthResponseDto | null> {
   try {
@@ -45,6 +48,7 @@ export default async function AdminHomePage() {
           </ul>
         )}
       </section>
+      <AdminDashboard apiBaseUrl={PUBLIC_API_BASE_URL} />
     </main>
   );
 }

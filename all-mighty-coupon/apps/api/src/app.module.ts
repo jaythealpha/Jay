@@ -1,6 +1,7 @@
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
+import { AdminModule } from './admin/admin.module';
 import { AuthModule } from './auth/auth.module';
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
 import { LoggingInterceptor } from './common/logging/logging.interceptor';
@@ -12,6 +13,7 @@ import { HomeModule } from './home/home.module';
 import { MaintenanceModule } from './maintenance/maintenance.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { PushModule } from './push/push.module';
 import { RedisModule } from './redis/redis.module';
 import { StorageModule } from './storage/storage.module';
 
@@ -28,10 +30,12 @@ function redisConnection(): { host: string; port: number } {
     RedisModule,
     StorageModule,
     CouponEventsModule,
+    PushModule,
     NotificationsModule,
     MaintenanceModule,
     HealthModule,
     HomeModule,
+    AdminModule,
     CouponsModule,
   ],
   providers: [
