@@ -97,6 +97,15 @@ class HomeScreen extends ConsumerWidget {
                   label: const Text('쿠폰함 열기'),
                 ),
               ),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 52,
+                child: OutlinedButton.icon(
+                  onPressed: () => context.go('/market'),
+                  icon: const Icon(Icons.storefront_outlined),
+                  label: const Text('쿠폰 마켓 (테스트)'),
+                ),
+              ),
               const SizedBox(height: 24),
               if (data.counts.total == 0)
                 const Center(

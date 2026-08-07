@@ -11,6 +11,7 @@ import { CouponsModule } from './coupons/coupons.module';
 import { HealthModule } from './health/health.module';
 import { HomeModule } from './home/home.module';
 import { MaintenanceModule } from './maintenance/maintenance.module';
+import { MarketModule } from './market/market.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { PushModule } from './push/push.module';
@@ -36,6 +37,7 @@ function redisConnection(): { host: string; port: number } {
     HealthModule,
     HomeModule,
     AdminModule,
+    MarketModule,
     CouponsModule,
   ],
   providers: [

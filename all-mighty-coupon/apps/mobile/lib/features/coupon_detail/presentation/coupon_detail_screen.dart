@@ -6,6 +6,7 @@ import '../../../app/theme/app_theme.dart';
 import '../../../core/errors/app_exception.dart';
 import '../../../shared/models/coupon_detail.dart';
 import '../../../shared/utilities/d_day.dart';
+import '../../market/data/market_api.dart';
 import '../application/detail_controller.dart';
 
 class CouponDetailScreen extends ConsumerWidget {
@@ -143,6 +144,16 @@ class _DetailBody extends ConsumerWidget {
             },
           ),
         const SizedBox(height: 8),
+        if ((summary.status == 'ACTIVE' || summary.status == 'EXPIRING_SOON') &&
+            detail.hasBarcode)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: _ActionButton(
+              label: '마켓에 판매 등록',
+              icon: Icons.storefront_outlined,
+              onPressed: () => _listForSale(context, ref),
+            ),
+          ),
         if (summary.status == 'ARCHIVED')
           _ActionButton(
             label: '보관 해제',
@@ -186,6 +197,56 @@ class _DetailBody extends ConsumerWidget {
         ),
       ],
     );
+  }
+
+  /// 판매 등록 (M4): price prompt → listing. The dialog states clearly that
+  /// the market is mock-paid; server-side eligibility errors show verbatim.
+  Future<void> _listForSale(BuildContext context, WidgetRef ref) async {
+    final controller = TextEditingController();
+    final price = await showDialog<int>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('판매 가격 (원)'),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: '예: 4000',
+            helperText: '테스트 마켓 — 결제는 모의(MOCK) 처리돼요',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(null),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(int.tryParse(controller.text.trim())),
+            child: const Text('등록'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (price == null) return;
+    try {
+      await ref.read(marketApiProvider).createListing(couponId, price);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('마켓에 등록했어요. 판매 중에는 사용·삭제가 잠깁니다.')),
+        );
+      }
+    } on MarketException catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.userMessage)));
+      }
+    } on AppException catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.userMessage)));
+      }
+    }
   }
 
   static String _formatAmount(int amount) {

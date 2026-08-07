@@ -3,8 +3,9 @@
 > **Never Lose a Coupon Again.**
 
 쿠폰을 빠르게 등록하고, 정확히 인식하고, 쉽게 찾고, 유효기간 전에 실제로
-사용하게 돕는 개인 쿠폰 지갑입니다. **Milestone 0–3 완료** (기반 → 인식
-파이프라인 → 지갑 MVP → 만료 알림). 거래소·결제·판매 기능은 범위에 없습니다.
+사용하게 돕는 개인 쿠폰 지갑입니다. **Milestone 0–4 완료** (기반 → 인식 파이프라인 → 지갑
+MVP → 만료 알림 → 모의 결제 마켓). 마켓은 Mock 결제 기반 테스트 단계로,
+실제 결제·에스크로·정산은 미구현입니다.
 
 ## 구성
 
@@ -50,8 +51,8 @@ npm run dev:admin     # http://localhost:3002
 
 ```bash
 npm run lint          # eslint + prettier check
-npm run test          # 패키지 빌드 → vitest(67) → API 단위(jest, 24)
-npm run test:api:e2e  # 실제 DB/Redis/MinIO 통합 테스트 24개 (compose 필요)
+npm run test          # 패키지 빌드 → vitest(73) → API 단위(jest, 24)
+npm run test:api:e2e  # 실제 DB/Redis/MinIO 통합 테스트 33개 (compose 필요)
 npm run build         # packages → api(tsc) → admin(next build)
 npm run accuracy      # 인식 파서 정확도 리포트 (16샘플 데이터셋)
 npm run format        # prettier --write
@@ -63,7 +64,7 @@ npm run format        # prettier --write
 cd apps/mobile
 flutter pub get
 flutter analyze
-flutter test          # 단위 + 위젯 테스트 56개
+flutter test          # 단위 + 위젯 테스트 61개
 
 # 실행 (기기/에뮬레이터 필요)
 flutter run                                                     # iOS 시뮬레이터/데스크톱
@@ -73,7 +74,7 @@ flutter run --dart-define=AMC_API_BASE_URL=http://10.0.2.2:3001 # Android 에뮬
 flutter test test/manual/api_smoke_test.dart --dart-define=API_SMOKE=true
 ```
 
-## API 엔드포인트 (Milestone 0–3)
+## API 엔드포인트 (Milestone 0–4)
 
 - `POST /v1/auth/register` · `login` — 이메일+비밀번호 → JWT (이후 전부 Bearer 필수)
 - `GET /health` — DB·Redis 연결 상태 (공개)
@@ -87,6 +88,7 @@ flutter test test/manual/api_smoke_test.dart --dart-define=API_SMOKE=true
 - `GET /v1/notifications` · `POST /:id/snooze` — 만료 알림 인앱 피드·연기
 - `POST/DELETE /v1/devices` — 푸시 기기 토큰 등록/해제
 - `GET /v1/admin/stats` — 운영자 통계 (x-admin-token, 기본 비활성)
+- `GET/POST /v1/market/listings` · `DELETE /:id` · `POST /:id/purchase` · `GET /v1/market/orders` — 쿠폰 마켓 (**Mock 결제 — 실제 돈 없음**)
 - `GET /docs` — Swagger UI
 
 개발용 데모 계정(시드): `demo@allmightycoupon.local` / `demo-password-1234`
@@ -94,8 +96,10 @@ flutter test test/manual/api_smoke_test.dart --dart-define=API_SMOKE=true
 오류는 공통 envelope로 반환됩니다:
 `{ "error": { "code", "message", "requestId" } }`
 
-## 알려진 제한 (Milestone 3 기준)
+## 알려진 제한 (Milestone 4 기준)
 
+- **마켓 결제는 전부 모의(MOCK)** — 실제 PG/에스크로/정산/환불/분쟁 처리
+  미구현. 실 PG 연동은 외부 유료 서비스 가입이 필요해 별도 승인 사항
 - 인증은 JWT 액세스 토큰 단일(7d) — refresh token·비밀번호 재설정·rate
   limiting 미구현. 프로덕션 배포 전 필수
 - **기기 내 OCR(ML Kit) 실기기 미검증** — 기기 OCR 우선→서버 폴백 구조와

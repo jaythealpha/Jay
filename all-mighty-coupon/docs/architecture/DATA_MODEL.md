@@ -13,6 +13,10 @@
 - **CouponAsset**: ORIGINAL / NORMALIZED / THUMBNAIL / BARCODE_CROP —
   원본과 파생 이미지를 분리 보관 (Original Image Is Ground Truth)
 - **CouponEvent**: 도메인 이벤트 append-only 기록 (감사·분석 기반)
+- **Listing** (M4): 판매 글 — priceMinor/feeMinor(정수 KRW), 상태
+  LISTED/SOLD/CANCELLED. 쿠폰당 활성 1개, 판매 중 지갑 액션 잠금.
+- **Order** (M4): 구매 기록 — buyer/seller, 금액·수수료, paymentRef
+  (MOCK- 접두 = 모의 결제). 완료 시 Coupon.userId가 구매자로 이전.
 - **ScheduledNotification** (M3): 만료 알림 인스턴스 — offsetDays(30/7/3/0),
   fireAt(UTC), status(PENDING/SENT/CANCELLED), message(발송 시 렌더).
   인앱 피드가 1차 채널이며 푸시 연동 시 동일 행을 재사용한다.

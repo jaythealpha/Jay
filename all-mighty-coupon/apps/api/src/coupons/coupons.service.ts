@@ -186,6 +186,7 @@ export class CouponsService {
 
   async edit(userId: string, id: string, input: EditCouponInput): Promise<CouponDetailDto> {
     const coupon = await this.findOwnedOrThrow(userId, id);
+    await this.assertNotListed(id);
 
     const changedFields = Object.keys(input).filter(
       (key) => input[key as keyof EditCouponInput] !== undefined,
@@ -259,6 +260,7 @@ export class CouponsService {
 
   async redeem(userId: string, id: string): Promise<CouponDetailDto> {
     const coupon = await this.findOwnedOrThrow(userId, id);
+    await this.assertNotListed(id);
     this.assertTransition(coupon.status, 'REDEEMED', 'USER_MARKED_REDEEMED', '사용 완료');
 
     await this.prisma.coupon.update({
@@ -292,6 +294,7 @@ export class CouponsService {
 
   async archive(userId: string, id: string): Promise<CouponDetailDto> {
     const coupon = await this.findOwnedOrThrow(userId, id);
+    await this.assertNotListed(id);
     this.assertTransition(coupon.status, 'ARCHIVED', 'USER_ARCHIVED', '보관');
 
     await this.prisma.coupon.update({
@@ -320,11 +323,14 @@ export class CouponsService {
 
   async remove(userId: string, id: string): Promise<void> {
     const coupon = await this.findOwnedOrThrow(userId, id);
+    await this.assertNotListed(id);
     const assets = await this.prisma.couponAsset.findMany({ where: { couponId: id } });
 
     // The DELETED event is recorded before the hard delete so the action is
     // at least visible in logs; rows (including events) are then removed.
     await this.events.record(id, 'DELETED', { status: coupon.status });
+    await this.prisma.order.deleteMany({ where: { listing: { couponId: id } } });
+    await this.prisma.listing.deleteMany({ where: { couponId: id } });
     await this.prisma.scheduledNotification.deleteMany({ where: { couponId: id } });
     await this.prisma.couponEvent.deleteMany({ where: { couponId: id } });
     await this.prisma.couponAsset.deleteMany({ where: { couponId: id } });
@@ -365,6 +371,17 @@ export class CouponsService {
       throw new BadRequestException(
         `현재 상태(${from})에서는 ${actionLabel} 처리를 할 수 없습니다.`,
       );
+    }
+  }
+
+  /** Wallet mutations are locked while the coupon is up for sale (M4). */
+  private async assertNotListed(couponId: string): Promise<void> {
+    const listing = await this.prisma.listing.findFirst({
+      where: { couponId, status: 'LISTED' },
+      select: { id: true },
+    });
+    if (listing) {
+      throw new BadRequestException('판매 중인 쿠폰입니다. 판매를 취소한 뒤 다시 시도해 주세요.');
     }
   }
 

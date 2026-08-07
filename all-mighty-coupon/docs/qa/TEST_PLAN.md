@@ -1,6 +1,8 @@
 # Test Plan
 
-## 현재 테스트 현황 (Milestone 0–3 — 전부 실제 실행·통과 확인)
+## 현재 테스트 현황 (Milestone 0–4 — 전부 실제 실행·통과 확인)
+
+M4 추가분 요약: packages 73(마켓 규칙 6: 수수료·자격·가격 경계), 통합 33(마켓 e2e 4: 자격 거부·잠금/이중등록·익명 조회·구매 이전/알림 이동/동시성), Flutter 61(마켓 화면 4).
 
 확장(a–c) 추가분 요약: 통합 29(기기 OCR 우선 1, 푸시 기기 등록·Noop 발송·토큰 미노출 2, 관리자 토큰 경계·민감정보 미노출 2), Flutter 57(기기 OCR 전달 1).
 
@@ -16,10 +18,10 @@ API 통합 9개(인식 파이프라인 5: 추출·암호화·중복·검토→�
 
 | 스위트                                       | 러너                                                                        | 개수 | 대상                                                                                                                                       |
 | -------------------------------------------- | --------------------------------------------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| packages (vitest)                            | `npm run test:packages`                                                     | 67   | 상태 전환, 만료/남은 일수 계산, EXPIRING_SOON 판정, 정렬, 날짜/금액/브랜드 추출, 신뢰도·검토 정책, 바코드 해시·마스킹, 알림 예약/취소 정책 |
+| packages (vitest)                            | `npm run test:packages`                                                     | 73   | 상태 전환, 만료/남은 일수 계산, EXPIRING_SOON 판정, 정렬, 날짜/금액/브랜드 추출, 신뢰도·검토 정책, 바코드 해시·마스킹, 알림 예약/취소 정책 |
 | API 단위 (jest)                              | `npm run test:api`                                                          | 24   | CouponsService(정렬·필터·limit), DTO 민감정보 차단, 로그 마스킹                                                                            |
-| API 통합 (jest+supertest, 실 DB/Redis/MinIO) | `npm run test:api:e2e`                                                      | 29   | health, 쿠폰 목록 정렬·바코드 미노출, status 필터+오류 envelope, 404 envelope                                                              |
-| Flutter (단위+위젯)                          | `flutter test`                                                              | 57   | 모델 파싱, D-day, 캐시 라운드트립, 오프라인 폴백, 로딩/성공/오류/재시도/오프라인 배너 UI                                                   |
+| API 통합 (jest+supertest, 실 DB/Redis/MinIO) | `npm run test:api:e2e`                                                      | 33   | health, 쿠폰 목록 정렬·바코드 미노출, status 필터+오류 envelope, 404 envelope                                                              |
+| Flutter (단위+위젯)                          | `flutter test`                                                              | 61   | 모델 파싱, D-day, 캐시 라운드트립, 오프라인 폴백, 로딩/성공/오류/재시도/오프라인 배너 UI                                                   |
 | Flutter 라이브 스모크                        | `flutter test test/manual/api_smoke_test.dart --dart-define=API_SMOKE=true` | 2    | 앱 네트워킹 코드로 실 API 조회·파싱 (기본 suite에서는 skip)                                                                                |
 
 ## 커버리지 목표

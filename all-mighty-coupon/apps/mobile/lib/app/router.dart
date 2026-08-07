@@ -11,6 +11,7 @@ import '../features/coupon_review/presentation/review_screen.dart';
 import '../features/coupon_wallet/presentation/wallet_screen.dart';
 import '../features/expiration_alerts/presentation/notifications_screen.dart';
 import '../features/home/presentation/home_screen.dart';
+import '../features/market/presentation/market_screen.dart';
 
 /// Auth-aware router: unauthenticated users land on /login, everything else
 /// requires a session. Rebuilt through Riverpod when the auth state changes.
@@ -43,6 +44,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(path: 'wallet', builder: (context, state) => const WalletScreen()),
           GoRoute(path: 'capture', builder: (context, state) => const CaptureScreen()),
+          GoRoute(path: 'market', builder: (context, state) => const MarketScreen()),
           GoRoute(
             path: 'notifications',
             builder: (context, state) => const NotificationsScreen(),

@@ -66,6 +66,7 @@ model Coupon {
   assets        CouponAsset[]
   events        CouponEvent[]
   notifications ScheduledNotification[]
+  listings      Listing[]
 
   @@index([userId])
   @@index([expiresAt])
@@ -116,6 +117,60 @@ enum ScheduledNotificationStatus {
   PENDING
   SENT
   CANCELLED
+}
+
+/// A coupon offered for sale on the market (Milestone 4). One live listing
+/// per coupon; the coupon stays with the seller until an order completes,
+/// but wallet actions are locked while listed.
+model Listing {
+  id         String        @id @default(cuid())
+  couponId   String
+  sellerId   String
+  priceMinor Int
+  feeMinor   Int
+  status     ListingStatus @default(LISTED)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  coupon Coupon  @relation(fields: [couponId], references: [id])
+  orders Order[]
+
+  @@index([status, createdAt])
+  @@index([couponId, status])
+  @@index([sellerId])
+}
+
+enum ListingStatus {
+  LISTED
+  SOLD
+  CANCELLED
+}
+
+/// A purchase of a listing. Payment goes through the PaymentProvider
+/// boundary — currently the Mock provider (no real money moves).
+model Order {
+  id         String      @id @default(cuid())
+  listingId  String
+  buyerId    String
+  sellerId   String
+  priceMinor Int
+  feeMinor   Int
+  status     OrderStatus @default(CREATED)
+  /// Provider reference; MOCK- prefixed until a real PG is integrated.
+  paymentRef String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  listing Listing @relation(fields: [listingId], references: [id])
+
+  @@index([buyerId, createdAt])
+  @@index([sellerId, createdAt])
+}
+
+enum OrderStatus {
+  CREATED
+  COMPLETED
+  FAILED
 }
 
 model CouponEvent {
@@ -172,4 +227,7 @@ enum CouponEventType {
   RESTORED_TO_ACTIVE
   ARCHIVED
   DELETED
+  LISTED_FOR_SALE
+  LISTING_CANCELLED
+  OWNERSHIP_TRANSFERRED
 }

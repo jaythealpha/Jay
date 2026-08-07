@@ -86,6 +86,17 @@ NEEDS_REVIEW → ACTIVE(날짜 기준 재계산). requiresReview=false.
 offsetDays, sentAt }`. snooze는 24시간 뒤 재알림을 예약하고 `{ fireAt }`
 반환.
 
+### 마켓 (M4 — Mock 결제, 실제 돈 없음)
+
+- `GET /v1/market/listings?q=&limit=` — 판매 글 조회(판매자 익명, 만료
+  임박순, 만료 재고 제외). `mine` 플래그로 내 글 구분.
+- `POST /v1/market/listings` — `{ couponId, priceMinor }`. 자격 미달 시
+  도메인 사유 메시지로 400. 판매 중에는 지갑 액션 잠금.
+- `DELETE /v1/market/listings/:id` — 판매 취소(잠금 해제).
+- `POST /v1/market/listings/:id/purchase` — Mock 결제 → 소유권 이전.
+  본인 글 구매 400, 매진 404, 동시 구매 패자 409.
+- `GET /v1/market/orders` — 내 구매/판매 이력(role: BUYER/SELLER).
+
 ### 오류 형식 (전 엔드포인트 공통)
 
 ```json

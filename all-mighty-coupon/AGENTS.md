@@ -72,10 +72,12 @@ flutter run --dart-define=AMC_API_BASE_URL=http://10.0.2.2:3001  # Android 에�
 
 ## 현재 단계
 
-Milestone 0–3 + 확장 a–c(푸시 채널·기기 OCR 우선·공유 시트·운영자 콘솔) 완료.
-남은 주요 갭: Firebase 자격증명 연동(FCM 실발송·firebase_messaging), iOS 공유
-확장, ML Kit 실기기 검증, refresh token, rate limiting. 거래·결제·에스크로
-기능(M4)은 사용자 승인과 요구사항 정의 전 구현하지 않는다.
+Milestone 0–4 + 확장 a–c 완료 (M4 마켓은 사용자 승인 하에 Mock 결제로 구현
+— 실제 돈은 절대 오가지 않는다). 남은 주요 갭: 실제 PG/에스크로/정산(외부
+서비스 가입 필요 — 별도 승인), Firebase 자격증명(FCM 실발송), iOS 공유 확장,
+ML Kit 실기기 검증, refresh token, rate limiting.
+마켓 규칙 변경은 반드시 `@amc/domain`의 canListCoupon/calculateFeeMinor를
+거친다 — API에 인라인으로 넣지 않는다.
 
 개발용 데모 계정(시드): demo@allmightycoupon.local / demo-password-1234.
 쿠폰 API는 전부 JWT 필수 — 새 엔드포인트는 `@Public()` 없이는 기본 보호됨.

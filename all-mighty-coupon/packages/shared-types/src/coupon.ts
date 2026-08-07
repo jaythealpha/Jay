@@ -89,6 +89,45 @@ export interface CouponRecognitionSummaryDto {
   error: string | null;
 }
 
+/**
+ * Market wire types (Milestone 4). Seller identity never crosses the wire —
+ * buyers see the coupon, the price, and nothing about who is selling.
+ */
+export interface MarketCouponDto {
+  brandName: string | null;
+  productName: string | null;
+  category: string | null;
+  faceValueMinor: number | null;
+  /** ISO-8601 UTC. Always present — undated coupons cannot be listed. */
+  expiresAt: string | null;
+}
+
+export interface ListingDto {
+  id: string;
+  priceMinor: number;
+  feeMinor: number;
+  status: 'LISTED' | 'SOLD' | 'CANCELLED';
+  /** True when the requesting user is the seller. */
+  mine: boolean;
+  coupon: MarketCouponDto;
+  createdAt: string;
+}
+
+export interface MarketListResponseDto {
+  items: ListingDto[];
+  total: number;
+}
+
+export interface OrderDto {
+  id: string;
+  role: 'BUYER' | 'SELLER';
+  priceMinor: number;
+  feeMinor: number;
+  status: 'CREATED' | 'COMPLETED' | 'FAILED';
+  coupon: MarketCouponDto;
+  createdAt: string;
+}
+
 export interface CouponDetailDto extends CouponSummaryDto {
   usageLocationText: string | null;
   usageConditions: string | null;
