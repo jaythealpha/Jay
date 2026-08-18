@@ -11,6 +11,28 @@
 const IK_WEB = 'AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8';
 const IK_ANDROID = 'AIzaSyA8eiZmM1FaDVjRy-df2KTyQ_vz_yYM39w';
 
+// ---- 1순위: 외부 자막 API (Supadata) ----
+// YouTube가 데이터센터 IP의 자막 다운로드를 막기 때문에, 레지던셜 IP/PO 토큰을
+// 대신 처리해 주는 유지보수 서비스를 통해야 안정적입니다. 사용자 본인 키 필요.
+// 키 발급: https://supadata.ai (무료 티어 제공)
+async function supadata(id, key, prefer) {
+  const url = 'https://api.supadata.ai/v1/youtube/transcript'
+    + '?videoId=' + encodeURIComponent(id) + '&lang=' + encodeURIComponent(prefer) + '&text=true';
+  const r = await fetch(url, { headers: { 'x-api-key': key } });
+  if (!r.ok) {
+    let m = 'supadata ' + r.status;
+    try { const e = await r.json(); if (e && (e.message || e.error)) m += ': ' + (e.message || e.error); } catch {}
+    throw new Error(m);
+  }
+  const j = await r.json();
+  const text = typeof j.content === 'string'
+    ? j.content
+    : Array.isArray(j.content) ? j.content.map(c => c.text || '').join(' ') : '';
+  const clean = String(text).replace(/\s+/g, ' ').trim();
+  if (clean.length < 20) throw new Error('supadata 빈 응답');
+  return { text: clean, lang: j.lang || prefer };
+}
+
 function parseId(s) {
   s = String(s || '').trim();
   const m = s.match(/(?:youtu\.be\/|v=|\/embed\/|\/shorts\/|\/live\/)([A-Za-z0-9_-]{11})/) ||
@@ -107,6 +129,7 @@ async function fetchTrackText(baseUrl) {
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'x-transcript-key, content-type');
   res.setHeader('Cache-Control', 'public, max-age=86400');
   if (req.method === 'OPTIONS') { res.status(204).end(); return; }
 
@@ -114,9 +137,20 @@ module.exports = async (req, res) => {
   const id = parseId(q.id || q.url || '');
   const prefer = (q.lang || 'ko').toString().toLowerCase();
   const debug = q.debug ? [] : null;
+  const txKey = (q.key || req.headers['x-transcript-key'] || process.env.SUPADATA_API_KEY || '').toString().trim();
   if (!id) { res.status(400).json({ ok: false, error: '유효한 videoId/URL이 필요합니다.' }); return; }
 
-  // 여러 소스에서 track을 모은다 (WEB innertube → 스크레이프 → ANDROID)
+  // 0순위: 외부 자막 API (키가 있을 때) — 데이터센터 IP 차단을 우회하는 유일하게 안정적인 경로
+  if (txKey) {
+    try {
+      const s = await supadata(id, txKey, prefer);
+      const body = { ok: true, transcript: s.text, lang: s.lang, title: '', author: '', source: 'supadata' };
+      if (debug) body.debug = [{ src: 'supadata', chars: s.text.length }];
+      res.status(200).json(body); return;
+    } catch (e) { if (debug) debug.push({ src: 'supadata', error: String(e && e.message || e) }); /* 폴백 진행 */ }
+  }
+
+  // 여러 소스에서 track을 모은다 (WEB innertube → 스크레이프 → ANDROID) — 키 없을 때 best-effort
   const sources = [['web', innertube], ['scrape', scrape], ['android', innertube]];
   let title = '', author = '', durationSec = 0;
   const all = []; // { track, from }
@@ -130,7 +164,10 @@ module.exports = async (req, res) => {
   }
 
   if (!all.length) {
-    const body = { ok: false, error: '이 영상에는 자막(캡션)이 없거나 접근이 제한되어 있어요.', title, author };
+    const body = { ok: false, needKey: !txKey,
+      error: txKey ? '이 영상에는 자막(캡션)이 없거나 접근이 제한되어 있어요.'
+                   : '무료 추출이 차단됐어요. ⚙️ 설정에 자막 API 키(Supadata)를 넣거나 스크립트를 붙여넣어 주세요.',
+      title, author };
     if (debug) body.debug = debug;
     res.status(404).json(body); return;
   }
@@ -146,7 +183,10 @@ module.exports = async (req, res) => {
     }
   }
 
-  const body = { ok: false, error: '자막을 가져왔지만 내용이 비어 있어요. 붙여넣기로 진행해 주세요.', title, author };
+  const body = { ok: false, needKey: !txKey,
+    error: txKey ? '자막을 가져왔지만 내용이 비어 있어요. 붙여넣기로 진행해 주세요.'
+                 : '유튜브가 자막 다운로드를 차단했어요. ⚙️ 설정에 자막 API 키(Supadata)를 넣으면 안정적으로 됩니다.',
+    title, author };
   if (debug) body.debug = debug;
   res.status(422).json(body);
 };

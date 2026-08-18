@@ -459,7 +459,12 @@
     </select>
   </div>
   <div class="grp">
-    <label class="field-label" for="apiBaseIn">자막 API 엔드포인트 (권장 · 가장 안정적)</label>
+    <label class="field-label" for="txKeyIn">자막 API 키 · Supadata (권장 · 가장 안정적)</label>
+    <input type="password" id="txKeyIn" placeholder="자막 자동추출용 키" autocomplete="off">
+    <div class="hint">유튜브가 서버·프록시의 자막 다운로드를 막기 때문에, <a href="https://supadata.ai" target="_blank" rel="noopener">supadata.ai</a>에서 <b>무료 키</b>를 발급받아 넣으면 URL만으로 안정적으로 자동추출됩니다. (키는 이 브라우저에만 저장, 자막 API 엔드포인트를 통해 사용)</div>
+  </div>
+  <div class="grp">
+    <label class="field-label" for="apiBaseIn">자막 API 엔드포인트 (Vercel 함수)</label>
     <input type="text" id="apiBaseIn" placeholder="https://내프로젝트.vercel.app/api/transcript" autocomplete="off">
     <div class="hint">서버에서 자막을 가져오는 엔드포인트. Vercel 배포판을 쓰면 같은 도메인의 <code>/api/transcript</code>가 자동 사용되어 <b>비워둬도 됩니다</b>. GitHub Pages에서 쓸 땐 여기에 Vercel 함수 주소를 넣으면 프록시 없이 안정적으로 동작해요.</div>
   </div>
@@ -493,10 +498,12 @@ const store = {
   model:  () => localStorage.getItem('yl_model') || 'claude-sonnet-5',
   proxy:  () => localStorage.getItem('yl_proxy') || '',
   apiBase:() => localStorage.getItem('yl_apibase') || '',
+  txKey:  () => localStorage.getItem('yl_txkey') || '',
   setKey:   v => localStorage.setItem('yl_key', v),
   setModel: v => localStorage.setItem('yl_model', v),
   setProxy: v => localStorage.setItem('yl_proxy', v),
   setApiBase: v => localStorage.setItem('yl_apibase', v),
+  setTxKey: v => localStorage.setItem('yl_txkey', v),
   sessions:     () => { try { return JSON.parse(localStorage.getItem('yl_sessions') || '[]'); } catch { return []; } },
   saveSessions: s => localStorage.setItem('yl_sessions', JSON.stringify(s)),
 };
@@ -610,7 +617,9 @@ function parseTimedText(raw) {
 async function fetchViaApi(id) {
   const base = store.apiBase() || '/api/transcript';
   const url = base + (base.includes('?') ? '&' : '?') + 'id=' + encodeURIComponent(id) + '&lang=ko';
-  const r = await fetchWithTimeout(url, 20000);
+  const headers = {};
+  const tx = store.txKey(); if (tx) headers['x-transcript-key'] = tx;
+  const r = await fetchWithTimeout(url, 25000, { headers });
   if (!r.ok) {
     let msg = 'API ' + r.status;
     try { const j = await r.json(); if (j && j.error) msg = j.error; } catch {}
@@ -975,7 +984,7 @@ function openDrawer(id) {
   $('#overlay').classList.add('open');
   $('#' + id).classList.add('open');
   if (id === 'histDrawer') renderHistList();
-  if (id === 'setDrawer') { $('#keyIn').value = store.key(); $('#modelIn').value = store.model(); $('#proxyIn').value = store.proxy(); $('#apiBaseIn').value = store.apiBase(); }
+  if (id === 'setDrawer') { $('#keyIn').value = store.key(); $('#modelIn').value = store.model(); $('#proxyIn').value = store.proxy(); $('#apiBaseIn').value = store.apiBase(); $('#txKeyIn').value = store.txKey(); }
 }
 function closeDrawers() {
   $('#overlay').classList.remove('open');
@@ -1277,6 +1286,7 @@ $('#saveSet').addEventListener('click', () => {
   store.setModel($('#modelIn').value);
   store.setProxy($('#proxyIn').value.trim());
   store.setApiBase($('#apiBaseIn').value.trim());
+  store.setTxKey($('#txKeyIn').value.trim());
   toast('저장했어요'); closeDrawers();
 });
 $('#clearData').addEventListener('click', () => {
