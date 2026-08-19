@@ -304,9 +304,15 @@
   .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
   .tags .tg { font-size: 12px; font-weight: 700; color: var(--violet-soft); }
   .cta-box { font-size: 14px; font-weight: 700; color: var(--gold); background: rgba(255,192,72,.08); border: 1px solid rgba(255,192,72,.3); border-radius: 12px; padding: 11px 13px; }
-  .copy-btn { position: absolute; top: 14px; right: 14px; background: var(--card-2); border: 1px solid var(--line-solid); color: var(--violet-soft); font-size: 11.5px; font-weight: 800; padding: 6px 11px; border-radius: 9px; cursor: pointer; transition: .15s; }
+  .pc-actions { position: absolute; top: 14px; right: 14px; display: flex; gap: 6px; }
+  .copy-btn { background: var(--card-2); border: 1px solid var(--line-solid); color: var(--violet-soft); font-size: 11.5px; font-weight: 800; padding: 6px 11px; border-radius: 9px; cursor: pointer; transition: .15s; }
   .copy-btn:hover { border-color: var(--violet); }
   .copy-btn.done { color: var(--mint-soft); border-color: rgba(53,208,165,.4); }
+  .copy-btn.del-c { color: var(--red-soft); padding: 6px 9px; }
+  .copy-btn.del-c:hover { border-color: var(--red); }
+  .studio-count { font-size: 13px; font-weight: 700; color: var(--ink-2); background: rgba(157,124,255,.08); border: 1px solid rgba(157,124,255,.22); border-radius: 10px; padding: 9px 12px; margin: 16px 0 4px; }
+  .studio-count b { color: var(--violet-soft); }
+  .cbadge { font-size: 11px; font-weight: 800; color: var(--violet-soft); background: rgba(157,124,255,.14); border: 1px solid rgba(157,124,255,.3); padding: 2px 7px; border-radius: 999px; }
 
   @media (max-width: 560px) {
     .result-hero { flex-direction: column; }
@@ -482,7 +488,8 @@
 
 <!-- ============ HISTORY DRAWER ============ -->
 <aside class="drawer" id="histDrawer">
-  <h3>분석 기록 <button class="close" data-close>×</button></h3>
+  <h3>프로젝트 <button class="close" data-close>×</button></h3>
+  <p class="hint" style="margin:-2px 0 6px;">분석한 영상마다 프로젝트가 생기고, 만든 콘텐츠(✍️)가 그 안에 쌓입니다. 열어서 이어서 작업하세요.</p>
   <div id="histList"></div>
 </aside>
 
@@ -919,22 +926,51 @@ function sect(ic, title, inner) {
 function arr(x) { return Array.isArray(x) ? x : []; }
 let _lastData = null;
 
-/* ================= SESSIONS ================= */
+/* ================= PROJECTS (WORKSPACE) =================
+   하나의 분석 = 하나의 프로젝트. 프로젝트에 생성한 콘텐츠가 계속 쌓인다. */
+let currentSessionId = null;
+let _demoPieces = [];   // 데모/미저장 상태의 임시 콘텐츠
+function currentSession() { return store.sessions().find(s => s.id === currentSessionId) || null; }
 function saveSession(data) {
   const sessions = store.sessions();
-  sessions.unshift({
+  const session = {
     id: 's_' + (current.id || 'x') + '_' + performance.now().toString(36).replace('.', ''),
     at: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
     vid: current.id, title: (data.video && data.video.title) || current.title || '(제목 없음)',
     channel: current.channel || (data.video && data.video.creator) || '',
     data,
-  });
+    contents: [],   // 스튜디오에서 생성한 콘텐츠가 누적됨
+  };
+  sessions.unshift(session);
   if (sessions.length > 25) sessions.length = 25;
   try { store.saveSessions(sessions); } catch { /* full */ }
+  currentSessionId = session.id;
+  _demoPieces = [];
   refreshHistUI();
+  return session;
+}
+// 현재 프로젝트에 생성 콘텐츠 누적 저장
+function saveContentsToSession(newPieces) {
+  const sessions = store.sessions();
+  const s = sessions.find(x => x.id === currentSessionId);
+  if (!s) return false;
+  s.contents = (s.contents || []).concat(arr(newPieces).map(p => ({ ...p, savedAt: new Date().toISOString() })));
+  s.updatedAt = new Date().toISOString();
+  try { store.saveSessions(sessions); } catch { /* full */ }
+  return true;
+}
+function deleteContentFromSession(idx) {
+  const sessions = store.sessions();
+  const s = sessions.find(x => x.id === currentSessionId);
+  if (!s || !s.contents) return;
+  s.contents.splice(idx, 1);
+  s.updatedAt = new Date().toISOString();
+  try { store.saveSessions(sessions); } catch {}
 }
 function deleteSession(id) {
   store.saveSessions(store.sessions().filter(s => s.id !== id));
+  if (currentSessionId === id) currentSessionId = null;
   renderHistList(); refreshHistUI();
 }
 function refreshHistUI() {
@@ -955,15 +991,19 @@ function renderHistList() {
     : `<div class="empty">아직 분석 기록이 없어요.<br>영상을 분석하면 여기에 쌓입니다.</div>`;
 }
 function histCard(x, withDel) {
-  const d = new Date(x.at);
+  const d = new Date(x.updatedAt || x.at);
   const when = `${d.getMonth()+1}.${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  const nc = (x.contents || []).length;
+  const badge = nc ? `<span class="cbadge">✍️ ${nc}</span>` : '';
   return `<div class="hist-item" data-open="${x.id}"><b>${esc(x.title)}</b>` +
     `<div class="meta"><span>${esc(x.channel || '')} · ${when}</span>` +
-    (withDel ? `<span class="del" data-del="${x.id}">삭제</span>` : '') + `</div></div>`;
+    `<span>${badge}${withDel ? ` <span class="del" data-del="${x.id}">삭제</span>` : ''}</span></div></div>`;
 }
 function openSession(id) {
   const s = store.sessions().find(x => x.id === id);
   if (!s) return;
+  currentSessionId = s.id;
+  _demoPieces = [];
   current = { id: s.vid, title: s.title, channel: s.channel, transcript: '' };
   renderResult(s.data, false);
   closeDrawers(); show('result');
@@ -1015,6 +1055,8 @@ function resultToMarkdown() {
     L.push(`\n## 액션 플랜\n**오늘 당장**\n${arr(ap.day1).map(x => `- [ ] ${x}`).join('\n')}\n\n**첫 주**\n${arr(ap.week1).map(x => `- [ ] ${x}`).join('\n')}`);
   if (arr(d.risks).length) L.push(`\n## 리스크\n${arr(d.risks).map(x => `- ⚠️ ${x}`).join('\n')}`);
   if (arr(d.quotes).length) L.push(`\n## 인용\n${arr(d.quotes).map(q => `> “${q.text}”${q.at ? ` (${q.at})` : ''}`).join('\n\n')}`);
+  const cs = (currentSession() ? currentSession().contents : _demoPieces) || [];
+  if (cs.length) L.push(`\n---\n\n# ✍️ 생성한 콘텐츠 (${cs.length}개)\n\n${cs.map((p, i) => `## ${i + 1}. ${p.title || ''} \`${p.format || ''}\`\n${pieceToText(p)}`).join('\n\n---\n\n')}`);
   return L.join('\n');
 }
 function saveResult() {
@@ -1135,12 +1177,15 @@ let studioFmt = '릴스 대본';
 function openStudio() {
   if (!_lastData) { toast('먼저 영상을 분석하세요', true); return; }
   const v = _lastData.video || {};
-  $('#studioSrc').innerHTML = `<span class="ic">🧠</span><div>노하우 시드: <b>${esc(v.title || current.title || '분석 결과')}</b>의 인터뷰이 노하우 ${arr(_lastData.knowhow).length}개를 반영합니다.</div>`;
+  $('#studioSrc').innerHTML = `<span class="ic">🧠</span><div>노하우 시드: <b>${esc(v.title || current.title || '분석 결과')}</b>의 인터뷰이 노하우 ${arr(_lastData.knowhow).length}개 반영. 만든 콘텐츠는 <b>이 프로젝트에 자동 저장</b>되어 계속 쌓여요.</div>`;
   $('#cfTopic').value = '';
-  $('#studioOut').innerHTML = '';
   $('#studioErr').classList.add('hidden');
+  renderStudio();
   show('studio');
 }
+// 현재 프로젝트(또는 데모)의 누적 콘텐츠
+function studioPieces() { const s = currentSession(); return s ? (s.contents || []) : _demoPieces; }
+function renderStudio() { renderPieces(studioPieces()); }
 
 const CONTENT_SCHEMA = `{
   "pieces": [
@@ -1178,13 +1223,17 @@ async function generateContent() {
   $('#studioErr').classList.add('hidden');
   // demo fallback (no key) — show seeded content so the flow is visible
   if (!key) {
-    if (_renderState.isDemo) { renderContent(demoContent(opts)); toast('데모 콘텐츠예요. 실제 생성은 API 키가 필요해요'); return; }
+    if (_renderState.isDemo) { _demoPieces = _demoPieces.concat(arr(demoContent(opts).pieces)); renderStudio(); toast('데모 콘텐츠예요. 실제 생성은 API 키가 필요해요'); return; }
     toast('⚙️ 설정에서 API 키를 입력하거나 데모에서 사용해 보세요', true); openDrawer('setDrawer'); return;
   }
   const btn = $('#genBtn'); const orig = btn.textContent; btn.disabled = true; btn.textContent = '생성 중…';
   try {
     const data = await callClaudeContent(key, store.model(), contentPrompt(_lastData, opts));
-    renderContent(data);
+    const added = arr(data.pieces);
+    if (!added.length) { $('#studioOut').innerHTML = `<div class="empty">생성된 콘텐츠가 없어요. 다시 시도해 주세요.</div>`; return; }
+    if (saveContentsToSession(added)) { refreshHistUI(); } else { _demoPieces = _demoPieces.concat(added); }
+    renderStudio();
+    toast(`콘텐츠 ${added.length}개 생성 · 프로젝트에 저장됐어요`);
   } catch (e) {
     const b = $('#studioErr'); b.textContent = '⚠️ ' + (e.message || '생성 실패'); b.classList.remove('hidden');
   } finally { btn.disabled = false; btn.textContent = orig; }
@@ -1208,11 +1257,16 @@ async function callClaudeContent(key, model, prompt) {
   throw new Error('응답을 해석하지 못했어요. 다시 시도해 주세요.');
 }
 
-function renderContent(data) {
-  const pieces = arr(data.pieces);
-  if (!pieces.length) { $('#studioOut').innerHTML = `<div class="empty">생성된 콘텐츠가 없어요. 다시 시도해 주세요.</div>`; return; }
-  $('#studioOut').innerHTML = pieces.map((p, i) => {
-    let h = `<div class="content" id="pc${i}"><button class="copy-btn" data-copy="${i}">📋 전체 복사</button>`;
+function renderPieces(pieces) {
+  pieces = arr(pieces);
+  const out = $('#studioOut');
+  if (!pieces.length) {
+    out.innerHTML = `<div class="empty">아직 만든 콘텐츠가 없어요.<br>위에서 형식을 고르고 <b>콘텐츠 생성</b>을 누르면 여기에 쌓입니다.</div>`;
+    _contentPieces = []; return;
+  }
+  const head = `<div class="studio-count">🗂 이 프로젝트에 저장된 콘텐츠 <b>${pieces.length}개</b></div>`;
+  out.innerHTML = head + pieces.map((p, i) => {
+    let h = `<div class="content" id="pc${i}"><div class="pc-actions"><button class="copy-btn" data-copy="${i}">📋 복사</button><button class="copy-btn del-c" data-delc="${i}">🗑</button></div>`;
     h += `<span class="fmt">${esc(p.format || studioFmt)}</span>`;
     h += `<h4>${esc(p.title || `콘텐츠 ${i+1}`)}</h4>`;
     if (arr(p.hooks).length) h += `<div class="lbl">🎣 훅 후보</div><div class="hooklist">${arr(p.hooks).map((hk, n) =>
@@ -1317,11 +1371,19 @@ $$('#cfFormat .seg-b').forEach(b => b.addEventListener('click', () => {
   $$('#cfFormat .seg-b').forEach(x => x.classList.toggle('active', x === b));
 }));
 $('#studioOut').addEventListener('click', e => {
+  const del = e.target.closest('[data-delc]');
+  if (del) {
+    const i = Number(del.dataset.delc);
+    if (!confirm('이 콘텐츠를 삭제할까요?')) return;
+    if (currentSession()) deleteContentFromSession(i); else _demoPieces.splice(i, 1);
+    renderStudio(); refreshHistUI(); toast('삭제했어요');
+    return;
+  }
   const c = e.target.closest('[data-copy]'); if (!c) return;
   const p = _contentPieces[Number(c.dataset.copy)]; if (!p) return;
   navigator.clipboard.writeText(pieceToText(p)).then(() => {
     c.textContent = '✓ 복사됨'; c.classList.add('done');
-    setTimeout(() => { c.textContent = '📋 전체 복사'; c.classList.remove('done'); }, 1800);
+    setTimeout(() => { c.textContent = '📋 복사'; c.classList.remove('done'); }, 1800);
   }).catch(() => toast('복사에 실패했어요', true));
 });
 
