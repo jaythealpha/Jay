@@ -398,9 +398,10 @@
     <div id="resultBody"></div>
     <button class="btn btn-primary block" id="studioBtn" style="margin-top:26px;">✍️ 이 노하우로 콘텐츠 만들기</button>
     <div class="result-actions" style="margin-top:10px;">
-      <button class="btn btn-ghost block" id="againBtn">← 새 영상 분석</button>
+      <button class="btn btn-ghost block" id="saveBtn">💾 저장</button>
       <button class="btn btn-violet block" id="shareBtn">📤 공유</button>
     </div>
+    <button class="btn btn-ghost block" id="againBtn" style="margin-top:10px;">← 새 영상 분석</button>
   </section>
 
   <!-- ============ CONTENT STUDIO ============ -->
@@ -614,8 +615,16 @@ function parseTimedText(raw) {
 }
 // 1순위: 서버리스 자막 API (가장 안정적). 같은 도메인의 /api/transcript,
 //        또는 ⚙️ 설정에 지정한 엔드포인트(다른 도메인이면 CORS 허용 필요).
+// 자막 API 엔드포인트: 설정값 > (Vercel 배포면 같은 도메인) > 배포된 Vercel 함수
+const VERCEL_FN = 'https://youtube-lens-seven.vercel.app/api/transcript';
+function transcriptEndpoint() {
+  const b = store.apiBase();
+  if (b) return b;
+  if (/\.vercel\.app$/i.test(location.hostname)) return '/api/transcript';
+  return VERCEL_FN; // GitHub Pages·로컬에서도 배포된 함수를 호출
+}
 async function fetchViaApi(id) {
-  const base = store.apiBase() || '/api/transcript';
+  const base = transcriptEndpoint();
   const url = base + (base.includes('?') ? '&' : '?') + 'id=' + encodeURIComponent(id) + '&lang=ko';
   const headers = {};
   const tx = store.txKey(); if (tx) headers['x-transcript-key'] = tx;
@@ -793,7 +802,7 @@ async function callClaude(key, model, input) {
     },
     body: JSON.stringify({
       model,
-      max_tokens: 8000,
+      max_tokens: 16000,
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: [{ type: 'text', text: userText }] }],
     }),
@@ -979,6 +988,51 @@ async function share() {
   catch { toast('공유를 지원하지 않는 환경이에요', true); }
 }
 
+// 결과 전체를 마크다운으로 내보내기(다운로드) — 자동 저장(기록)과 별개로 파일 저장 제공
+function resultToMarkdown() {
+  const d = _lastData; if (!d) return '';
+  const v = d.video || {};
+  const L = [];
+  L.push(`# 🎬 ${v.title || current.title || '유튜브 렌즈 분석'}`);
+  if (v.creator || current.channel) L.push(`**채널/인터뷰이:** ${v.creator || current.channel}`);
+  if (current.id) L.push(`**영상:** https://youtu.be/${current.id}`);
+  if (v.oneLine) L.push(`\n> ${v.oneLine}`);
+  if (d.summary) L.push(`\n## 요약\n${d.summary}`);
+  if (arr(d.tldr).length) L.push(`\n## 핵심 요약\n${arr(d.tldr).map(x => `- ${x}`).join('\n')}`);
+  if (d.interviewee && (d.interviewee.who || d.interviewee.credibility))
+    L.push(`\n## 인터뷰이\n${d.interviewee.who || ''}${d.interviewee.credibility ? `\n\n_${d.interviewee.credibility}_` : ''}`);
+  if (arr(d.knowhow).length) L.push(`\n## 노하우\n${arr(d.knowhow).map(k => `### ${k.title} \`${k.category||''}\`\n${k.detail||''}${k.why ? `\n\n왜? ${k.why}` : ''}`).join('\n\n')}`);
+  if (arr(d.playbook).length) L.push(`\n## 자동화 플레이북\n${arr(d.playbook).map(p => `${p.step}. **${p.name}** (자동화: ${p.automatable})\n   - ${p.action||''}${p.howToAutomate ? `\n   - ⚙️ ${p.howToAutomate}` : ''}${arr(p.tools).length ? `\n   - 도구: ${p.tools.join(', ')}` : ''}`).join('\n')}`);
+  const bp = d.automationBlueprint;
+  if (bp && (bp.overview || arr(bp.stack).length)) {
+    L.push(`\n## 자동화 파이프라인`);
+    if (bp.overview) L.push(bp.overview);
+    if (arr(bp.stack).length) L.push(arr(bp.stack).map(s => `- **${s.layer}** — ${s.tool}: ${s.role||''}`).join('\n'));
+    if (arr(bp.cronIdeas).length) L.push(`\n정기 실행:\n${arr(bp.cronIdeas).map(c => `- ${c}`).join('\n')}`);
+  }
+  const ap = d.actionPlan;
+  if (ap && (arr(ap.day1).length || arr(ap.week1).length))
+    L.push(`\n## 액션 플랜\n**오늘 당장**\n${arr(ap.day1).map(x => `- [ ] ${x}`).join('\n')}\n\n**첫 주**\n${arr(ap.week1).map(x => `- [ ] ${x}`).join('\n')}`);
+  if (arr(d.risks).length) L.push(`\n## 리스크\n${arr(d.risks).map(x => `- ⚠️ ${x}`).join('\n')}`);
+  if (arr(d.quotes).length) L.push(`\n## 인용\n${arr(d.quotes).map(q => `> “${q.text}”${q.at ? ` (${q.at})` : ''}`).join('\n\n')}`);
+  return L.join('\n');
+}
+function saveResult() {
+  const md = resultToMarkdown();
+  if (!md) { toast('저장할 결과가 없어요', true); return; }
+  const name = ((_lastData?.video?.title) || current.title || 'youtube-lens').replace(/[\\/:*?"<>|]/g, '').slice(0, 60).trim() || 'youtube-lens';
+  try {
+    const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = name + '.md';
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    toast('마크다운으로 저장했어요 (기록에도 자동 저장됨)');
+  } catch {
+    navigator.clipboard.writeText(md).then(() => toast('저장 대신 클립보드에 복사했어요')).catch(() => toast('저장 실패', true));
+  }
+}
+
 /* ================= DRAWERS ================= */
 function openDrawer(id) {
   $('#overlay').classList.add('open');
@@ -1140,7 +1194,7 @@ async function callClaudeContent(key, model, prompt) {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-    body: JSON.stringify({ model, max_tokens: 8000, messages: [{ role: 'user', content: [{ type: 'text', text: prompt }] }] }),
+    body: JSON.stringify({ model, max_tokens: 16000, messages: [{ role: 'user', content: [{ type: 'text', text: prompt }] }] }),
   });
   if (!res.ok) {
     let msg = `API 오류 (${res.status})`;
@@ -1254,6 +1308,7 @@ $('#urlIn').addEventListener('keydown', e => { if (e.key === 'Enter') oneClickAn
 $('#analyzeBtn').addEventListener('click', manualAnalyze);
 $('#againBtn').addEventListener('click', () => { show('home'); });
 $('#shareBtn').addEventListener('click', share);
+$('#saveBtn').addEventListener('click', saveResult);
 $('#studioBtn').addEventListener('click', openStudio);
 $('#studioBack').addEventListener('click', () => show('result'));
 $('#genBtn').addEventListener('click', generateContent);
