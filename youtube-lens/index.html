@@ -1324,6 +1324,25 @@ const FORMATS = [
     schema: `{ "format":"영상 브리프","title":"제목","platform":"플랫폼","durationSec":60,"structure":"구성 요약","style":"비주얼 스타일 키워드","blocks":[{"n":1,"narration":"내레이션/자막 문장","visual":"장면/비주얼 지시"}],"notes":"제작 참고 한 줄" }` },
 ];
 const FMT_BY_ID = Object.fromEntries(FORMATS.map(f => [f.id, f]));
+
+// 포맷별 전문가 크래프트 지침 (품질 강화)
+const EXPERT = {
+  reels: '훅 공식으로 첫 1~2초 설계: ①궁금증 갭(결말·비밀 암시) ②강한 이득/손실 ③상식 반전 ④구체적 숫자. 3초 안에 스크롤을 멈추게 하고, 매 3~5초 새 정보(오픈루프)로 리텐션 유지. CTA는 저장·공유를 겨냥. 자막 친화적 짧은 문장. 금지: "안녕하세요 오늘은", 형용사 나열, 뻔한 도입.',
+  cards: '1번 표지=강한 훅(숫자·결과 약속). 각 카드=1아이디어(한 줄 헤드라인 + 짧은 부연). 카드 간 오픈루프로 스와이프 유지. 마지막=요약+저장 유도. 정보 밀도를 높여 "저장"을 유발.',
+  shorts: '훅 10개는 서로 다른 각도(궁금증·이득·충돌·숫자·공감·경고). 각 훅 첫 3초는 패턴 인터럽트. 상위 3개는 오프닝 3~4초 대사까지 구체화.',
+  summary: '원문의 주장→근거→예시 구조를 보존. tldr은 결론 먼저. keyPoints는 MECE(상호배타·전체포괄). glossary는 원문에 실제 등장한 용어만. takeaways는 행동 동사로 시작. 원문에 없는 내용 추가 금지.',
+  flashcards: '능동 회상(active recall) 원칙: 앞면은 하나의 구체적 질문(예/아니오 지양), 뒷면은 최소 정보(한 개념). 한 카드에 여러 사실 금지. 난이도 섞기(사실·개념·적용). 힌트는 답을 직접 말하지 않기. 원문 근거만.',
+  quiz: 'Bloom 단계 섞기(기억·이해·적용). 오답(distractor)은 흔한 오개념을 활용해 그럴듯하게, 정답과 길이·형식을 비슷하게. "모두/항상" 같은 단서 지양, 정답 위치 분산. 해설은 왜 정답이고 왜 오답인지. 원문 근거만 출제.',
+  blog: '카피 프레임워크(PAS 문제-선동-해결 또는 AIDA). 첫 문단에서 검색 의도 즉시 충족. H2/H3로 스캔 가능하게, 문단 2~4줄, 리스트·굵은 글씨 활용. 도입-본론(근거·예시)-결론-행동유도. subtitle은 클릭 유도, seo는 실제 검색어 형태.',
+  newsletter: '제목은 열고 싶게(호기심·이득), subtitle은 미리보기 한 줄. 1:1 대화체, 짧은 문단·여백. 하나의 핵심 메시지에 집중, 스캔 가능. 마지막에 다음 호 예고 또는 한 가지 행동 제안.',
+  ytscript: '콜드 오픈(0~15초): 이 영상을 봐야 할 이유 + 오픈루프. 각 챕터는 주장→근거/예시→소전환. 2~3분마다 리텐션 비트(질문·반전·프리뷰). 아웃트로는 다음 영상/구독으로 자연스러운 다리. 실제 말하듯 구어체, 문장 짧게.',
+  xthread: '1번 트윗=스크롤 스토퍼(약속·숫자·충돌)+스레드 예고. 트윗당 1아이디어, 280자 내, 줄바꿈으로 가독성, 화살표·리스트 활용. 마지막=요약+팔로우/리트윗 CTA. 해시태그 과다 금지.',
+  linkedin: '첫 2줄이 "…더 보기" 전 후킹(강한 주장/개인 서사). 짧은 문단·한 줄 띄우기. 개인 경험→인사이트→일반화, 자랑 대신 배움 공유. 마지막은 질문으로 댓글 유도. 해시태그 3~5개.',
+  videoBrief: '블록1=강한 훅(플랫폼별 3초룰). [구성] 흐름을 블록에 매핑. 각 visual은 촬영/생성 가능하게 구체적으로(피사체·앵글·모션·자막 위치). narration은 블록 길이(약 15초≈55~70자)에 맞게. B롤/모션 지시 명확히. style에 [비주얼 스타일] 키워드 반영. 마지막 블록=명확한 CTA.',
+};
+const CONTENT_SYSTEM = `당신은 각 콘텐츠 포맷(숏폼·카드뉴스·블로그·학습자료·소셜·영상 브리프)의 정상급 전문 카피라이터이자 콘텐츠 전략가입니다.
+요청된 포맷의 모범 사례와 프레임워크를 철저히 적용하고, 뻔하고 상투적인 표현을 피하며, 근거 없는 내용을 지어내지 않습니다.
+한국어로, 지정된 JSON 스키마로만 응답합니다.`;
 let studioFmt = 'reels';
 
 /* 포맷 선택 칩 + 설정 패널 렌더 */
@@ -1412,7 +1431,8 @@ function contentPrompt(seed, fmt, cfg, src) {
   const multi = (fmt.cfg || []).some(c => c.key === 'count');
   return `아래 인사이트를 바탕으로 "${fmt.label}" 콘텐츠를 만들어 주세요.\n\n` +
     `[요약]\n${seed.summary || ''}\n\n[핵심 노하우·인사이트]\n${kh}\n${grounding}\n` +
-    `[주제·키워드] ${topic}\n[설정]\n${cfgLines}\n\n[형식 가이드] ${fmt.guide}\n\n` +
+    `[주제·키워드] ${topic}\n[설정]\n${cfgLines}\n\n[형식 가이드] ${fmt.guide}\n` +
+    (EXPERT[fmt.id] ? `\n[전문가 지침 — 반드시 적용]\n${EXPERT[fmt.id]}\n` : '') + `\n` +
     (multi ? '서로 다른 앵글로 만들고, ' : '') +
     `과장·허위 표현을 쓰지 말고 원문 근거를 벗어난 사실은 만들지 마세요. 반드시 아래 JSON 스키마로만 한국어로 응답하세요.\n\n` +
     `{ "pieces": [ ${fmt.schema.replace('<라벨>', fmt.label)} ] }`;
@@ -1451,7 +1471,7 @@ async function callClaudeContent(key, model, prompt) {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-    body: JSON.stringify({ model, max_tokens: 16000, messages: [{ role: 'user', content: [{ type: 'text', text: prompt }] }] }),
+    body: JSON.stringify({ model, max_tokens: 16000, system: CONTENT_SYSTEM, messages: [{ role: 'user', content: [{ type: 'text', text: prompt }] }] }),
   });
   if (!res.ok) {
     let msg = `API 오류 (${res.status})`;
