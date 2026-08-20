@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="유튜브 렌즈">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎬</text></svg>">
-<title>유튜브 렌즈 — 영상을 붙여넣으면 노하우가 자동화 플랜이 됩니다</title>
+<title>인사이트 렌즈 — 영상·아티클·노트를 노하우와 콘텐츠로</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
@@ -327,7 +327,7 @@
 <header class="topbar">
   <div class="brand">
     <div class="logo">🎬</div>
-    <div><b>유튜브 렌즈</b><small>영상 → 노하우 → 자동화 플랜</small></div>
+    <div><b>인사이트 렌즈</b><small>소스 → 노하우 → 콘텐츠</small></div>
   </div>
   <div class="spacer"></div>
   <button class="icon-btn badge" id="histBtn" title="기록">🕘<span class="count hidden" id="histCount">0</span></button>
@@ -339,21 +339,21 @@
   <!-- ============ HOME ============ -->
   <section class="screen active" id="home">
     <div class="hero">
-      <h1>유튜브 영상을 붙여넣으면<br><span class="accent">인터뷰이의 노하우</span>가 <span class="accent2">자동화 플랜</span>이 됩니다</h1>
-      <p>영상 URL만 넣으면 핵심 요약 · 노하우 카드 · <b>단계별 자동화 플레이북</b>까지 한 번에 정리해 드려요.</p>
+      <h1>영상·아티클·노트를 넣으면<br><span class="accent">핵심 노하우</span>가 <span class="accent2">콘텐츠·자동화 플랜</span>이 됩니다</h1>
+      <p>유튜브·웹 링크나 텍스트만 넣으면 핵심 요약 · 노하우 카드 · <b>자동화 플레이북</b> · <b>콘텐츠 제작</b>까지 한 번에.</p>
     </div>
 
     <div class="card input-card">
-      <label class="field-label" for="urlIn">유튜브 URL</label>
+      <label class="field-label" for="urlIn">소스 — 유튜브 · 웹 링크</label>
       <div class="url-row">
-        <input type="url" id="urlIn" placeholder="https://youtu.be/… 또는 https://youtube.com/watch?v=…" autocomplete="off" inputmode="url">
+        <input type="url" id="urlIn" placeholder="유튜브 링크, 또는 아무 웹 아티클 링크를 붙여넣으세요" autocomplete="off" inputmode="url">
         <button class="btn btn-primary" id="goBtn" style="flex:none;padding-left:20px;padding-right:20px;">분석 →</button>
       </div>
-      <div class="hint">✨ URL만 붙여넣고 <b>분석</b>을 누르면 자막을 <b>자동으로 가져와</b> 분석합니다. 복사·붙여넣기 필요 없어요.</div>
+      <div class="hint">✨ 링크만 붙여넣고 <b>분석</b>을 누르면 유튜브 자막·웹 본문을 <b>자동으로 가져와</b> 분석합니다. 링크가 없으면 아래 “직접 붙여넣기”에 텍스트를 넣어도 돼요.</div>
 
       <div class="chip-row">
         <span class="chip" data-fill="sns">🧪 SNS 부업 인터뷰 데모 보기</span>
-        <span class="chip" id="pasteChip">📋 URL 붙여넣기</span>
+        <span class="chip" id="pasteChip">📋 링크 붙여넣기</span>
       </div>
 
       <!-- preview + transcript, revealed after load -->
@@ -366,21 +366,21 @@
         <div id="homeErr" class="err-box hidden"></div>
 
         <details id="pasteFallback" style="margin-top:14px;">
-          <summary style="cursor:pointer;font-size:13px;font-weight:700;color:var(--violet-soft);list-style:none;">🔧 자막이 자동으로 안 되나요? 직접 붙여넣기 ▾</summary>
+          <summary style="cursor:pointer;font-size:13px;font-weight:700;color:var(--violet-soft);list-style:none;">🔧 자동으로 안 되나요? 텍스트 직접 붙여넣기 ▾</summary>
           <div style="margin-top:12px;">
             <div class="steps">
-              <div class="step-li"><span class="n">1</span><span>유튜브에서 영상 아래 <b>⋯ 더보기 → 스크립트 표시</b>를 엽니다 (모바일은 설명란 하단).</span></div>
-              <div class="step-li"><span class="n">2</span><span>스크립트 영역을 전체 선택·복사해 아래에 붙여넣으세요. 타임스탬프가 섞여 있어도 괜찮아요.</span></div>
+              <div class="step-li"><span class="n">1</span><span>소스 텍스트를 준비하세요 — 유튜브 자막(⋯ 더보기 → 스크립트 표시), 웹 아티클 본문, 또는 직접 쓴 노트.</span></div>
+              <div class="step-li"><span class="n">2</span><span>전체 복사해 아래에 붙여넣으세요. 타임스탬프가 섞여 있어도 괜찮아요.</span></div>
             </div>
-            <textarea id="scriptIn" placeholder="0:00 안녕하세요 오늘은 SNS로 부수입 만드는 법을…&#10;0:12 제가 처음 시작한 건…"></textarea>
-            <button class="btn btn-primary block" id="analyzeBtn" style="margin-top:12px;">🔎 붙여넣은 스크립트로 분석</button>
+            <textarea id="scriptIn" placeholder="여기에 자막·아티클 본문·노트 등 소스 텍스트를 붙여넣으세요…"></textarea>
+            <button class="btn btn-primary block" id="analyzeBtn" style="margin-top:12px;">🔎 붙여넣은 텍스트로 분석</button>
           </div>
         </details>
       </div>
     </div>
 
     <div id="homeRecent" class="section hidden">
-      <h3><span class="ic">🕘</span> 최근 분석</h3>
+      <h3><span class="ic">🕘</span> 최근 프로젝트</h3>
       <div id="recentList"></div>
     </div>
 
@@ -407,7 +407,7 @@
       <button class="btn btn-ghost block" id="saveBtn">💾 저장</button>
       <button class="btn btn-violet block" id="shareBtn">📤 공유</button>
     </div>
-    <button class="btn btn-ghost block" id="againBtn" style="margin-top:10px;">← 새 영상 분석</button>
+    <button class="btn btn-ghost block" id="againBtn" style="margin-top:10px;">← 새 분석</button>
   </section>
 
   <!-- ============ CONTENT STUDIO ============ -->
@@ -534,30 +534,48 @@ function parseId(url) {
   return m ? m[1] : null;
 }
 function thumbUrl(id) { return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`; }
+function looksLikeUrl(s) { return /^https?:\/\//i.test(s) || /^[\w.-]+\.[a-z]{2,}(?:[\/?#]|$)/i.test(String(s).trim()); }
+function domainOf(u) { try { return new URL(/^https?:\/\//i.test(u) ? u : 'https://' + u).hostname.replace(/^www\./, ''); } catch { return ''; } }
 
-let current = { id: null, title: '', channel: '', transcript: '' };
+// current.sourceType: 'youtube' | 'web' | 'text'
+let current = { id: null, sourceType: 'youtube', sourceUrl: '', title: '', channel: '', transcript: '' };
+
+function showPreview({ thumb, title, sub }) {
+  $('#loadedBox').classList.remove('hidden');
+  $('#homeErr').classList.add('hidden');
+  const t = $('#pvThumb');
+  if (thumb) { t.src = thumb; t.style.display = ''; } else { t.removeAttribute('src'); t.style.display = 'none'; }
+  $('#pvTitle').textContent = title || '';
+  $('#pvChan').textContent = sub || '';
+  const sc = $('#scriptIn'); if (sc) sc.value = '';
+}
 
 async function loadVideo(url) {
   const id = parseId(url);
   if (!id) { toast('유튜브 URL을 확인해 주세요', true); return null; }
-  current = { id, title: '', channel: '', transcript: '' };
-  $('#pvThumb').src = thumbUrl(id);
-  $('#pvTitle').textContent = '불러오는 중…';
-  $('#pvChan').textContent = '';
-  $('#loadedBox').classList.remove('hidden');
-  $('#homeErr').classList.add('hidden');
-  const sc = $('#scriptIn'); if (sc) sc.value = '';
-  // best-effort metadata via CORS-friendly noembed
+  current = { id, sourceType: 'youtube', sourceUrl: 'https://youtu.be/' + id, title: '', channel: '', transcript: '' };
+  showPreview({ thumb: thumbUrl(id), title: '불러오는 중…', sub: '' });
   try {
     const r = await fetchWithTimeout(`https://noembed.com/embed?url=https://youtu.be/${id}`, 6000);
-    if (r.ok) {
-      const j = await r.json();
-      if (j && j.title) { current.title = j.title; current.channel = j.author_name || ''; }
-    }
+    if (r.ok) { const j = await r.json(); if (j && j.title) { current.title = j.title; current.channel = j.author_name || ''; } }
   } catch { /* ignore */ }
   $('#pvTitle').textContent = current.title || '(제목은 못 불러왔지만 분석에는 영향 없어요)';
   $('#pvChan').textContent = current.channel || '';
   return id;
+}
+
+// 웹 링크 → 백엔드에서 본문 추출
+async function fetchWebSource(url) {
+  current = { id: null, sourceType: 'web', sourceUrl: url, title: '', channel: domainOf(url), transcript: '' };
+  showPreview({ thumb: null, title: '웹 페이지를 읽는 중…', sub: domainOf(url) });
+  const ep = apiUrl('/api/fetch-source') + '?url=' + encodeURIComponent(url);
+  const r = await fetchWithTimeout(ep, 25000);
+  if (!r.ok) { let m = '웹 가져오기 ' + r.status; try { const j = await r.json(); if (j && j.error) m = j.error; } catch {} throw new Error(m); }
+  const j = await r.json();
+  if (!j.ok || !j.text) throw new Error(j.error || '본문을 추출하지 못했어요');
+  current.title = j.title || url; current.channel = j.siteName || domainOf(url);
+  showPreview({ thumb: null, title: current.title, sub: '🌐 ' + current.channel });
+  return j.text;
 }
 
 /* ================= AUTO TRANSCRIPT (URL만으로) =================
@@ -622,14 +640,15 @@ function parseTimedText(raw) {
 }
 // 1순위: 서버리스 자막 API (가장 안정적). 같은 도메인의 /api/transcript,
 //        또는 ⚙️ 설정에 지정한 엔드포인트(다른 도메인이면 CORS 허용 필요).
-// 자막 API 엔드포인트: 설정값 > (Vercel 배포면 같은 도메인) > 배포된 Vercel 함수
-const VERCEL_FN = 'https://youtube-lens-seven.vercel.app/api/transcript';
-function transcriptEndpoint() {
-  const b = store.apiBase();
-  if (b) return b;
-  if (/\.vercel\.app$/i.test(location.hostname)) return '/api/transcript';
-  return VERCEL_FN; // GitHub Pages·로컬에서도 배포된 함수를 호출
+// API 엔드포인트: (Vercel 배포면 같은 도메인) > 배포된 Vercel 함수.
+// 자막은 설정값(apiBase)이 있으면 그것을 우선.
+const VERCEL_HOST = 'https://youtube-lens-seven.vercel.app';
+function apiUrl(path) {
+  if (path === '/api/transcript' && store.apiBase()) return store.apiBase();
+  if (/\.vercel\.app$/i.test(location.hostname)) return path;
+  return VERCEL_HOST + path;
 }
+function transcriptEndpoint() { return apiUrl('/api/transcript'); }
 async function fetchViaApi(id) {
   const base = transcriptEndpoint();
   const url = base + (base.includes('?') ? '&' : '?') + 'id=' + encodeURIComponent(id) + '&lang=ko';
@@ -674,32 +693,46 @@ function decodeEntities(s) {
   const el = document.createElement('textarea'); el.innerHTML = s; return el.value;
 }
 
-/* 원클릭: URL → 메타 로드 → 자막 자동추출 → 분석 */
+/* 원클릭: 소스(유튜브/웹 링크) → 텍스트 추출 → 분석 */
 async function oneClickAnalyze() {
   const key = store.key();
   if (!key) { toast('먼저 ⚙️ 설정에서 API 키를 입력하거나 🧪 데모를 이용하세요', true); openDrawer('setDrawer'); return; }
-  const id = await loadVideo($('#urlIn').value);
-  if (!id) return;
-  show('loading');
-  setLoad('자막을 가져오는 중…', 'URL에서 자동으로 스크립트를 추출하고 있어요');
-  let transcript;
-  try {
-    transcript = await fetchTranscriptAuto(id);
-  } catch (e) {
-    show('home');
-    $('#pasteFallback').open = true;
-    showHomeErr('자막 자동 추출에 실패했어요 — ' + (e.message || '') + ' (프록시가 불안정할 수 있어요. ⚙️ 설정에서 다른 CORS 프록시를 넣거나 아래에 붙여넣어 주세요.)');
+  const input = ($('#urlIn').value || '').trim();
+  if (!input) { toast('유튜브·웹 링크를 넣거나, 아래 “직접 붙여넣기”를 이용하세요', true); return; }
+  const yid = parseId(input);
+  const isWeb = !yid && looksLikeUrl(input);
+  if (!yid && !isWeb) {
+    $('#loadedBox').classList.remove('hidden'); $('#pasteFallback').open = true;
+    showHomeErr('유튜브·웹 링크 형식이 아니에요. 아래 “직접 붙여넣기”에 텍스트를 넣고 분석하세요.');
     const sc = $('#scriptIn'); if (sc) sc.focus();
     return;
   }
-  await runAnalysis(transcript);
+  let text;
+  try {
+    if (yid) {
+      const id = await loadVideo(input); if (!id) return;
+      show('loading'); setLoad('자막을 가져오는 중…', 'URL에서 자동으로 스크립트를 추출하고 있어요');
+      text = await fetchTranscriptAuto(id);
+    } else {
+      show('loading'); setLoad('웹 페이지를 읽는 중…', '본문을 추출하고 있어요');
+      text = await fetchWebSource(input);
+    }
+  } catch (e) {
+    show('home');
+    $('#loadedBox').classList.remove('hidden'); $('#pasteFallback').open = true;
+    showHomeErr((yid ? '자막' : '웹 본문') + ' 자동 추출 실패 — ' + (e.message || '') + ' 아래에 텍스트를 직접 붙여넣어 주세요.');
+    const sc = $('#scriptIn'); if (sc) sc.focus();
+    return;
+  }
+  await runAnalysis(text);
 }
 
 /* ================= ANALYZE (Claude) ================= */
-const SYSTEM_PROMPT = `당신은 유튜브 영상(특히 인터뷰·노하우 공유 영상)을 분석해 시청자가 그 노하우를 실제로 따라 하고,
-가능한 부분은 자동화할 수 있도록 정리하는 한국어 콘텐츠 전략가이자 자동화 컨설턴트입니다.
-주어진 스크립트(자막)만을 근거로 분석하세요. 스크립트에 없는 사실을 지어내지 말고,
-불확실하면 그렇게 표시하세요. 인터뷰이가 여러 명이면 핵심 인물 위주로 정리합니다.
+const SYSTEM_PROMPT = `당신은 다양한 소스(유튜브 영상 자막, 웹 아티클, 사용자 노트 등)를 분석해
+핵심 노하우·인사이트를 실제로 따라 할 수 있게 정리하고, 가능한 부분은 자동화·콘텐츠화하도록
+돕는 한국어 전략가이자 자동화 컨설턴트입니다.
+주어진 소스 텍스트만을 근거로 분석하세요. 없는 사실을 지어내지 말고, 불확실하면 그렇게 표시합니다.
+저자/화자가 여럿이면 핵심 인물 위주로 정리하고, 정보성 아티클처럼 특정 인물이 없으면 인물 항목은 비워둡니다.
 자동화 제안은 실제 존재하는 도구(예: Make, Zapier, n8n, Google Sheets, Notion, 버퍼/메타 비즈니스 스위트,
 캡컷, ChatGPT/Claude API, 유튜브·인스타 API 등)를 근거로 현실적으로 제시하세요.
 반드시 지정된 JSON 스키마로만, 한국어로 응답합니다.`;
@@ -733,14 +766,18 @@ const JSON_SCHEMA = `{
   "quotes": [ { "text": "인상적인 인용구(스크립트에서 발췌)", "at": "타임스탬프 있으면(없으면 '')" } ]
 }`;
 
-// 붙여넣은 스크립트로 분석 (fallback 경로)
+// 붙여넣은 텍스트로 분석 (fallback 경로)
 async function manualAnalyze() {
   const key = store.key();
   const sc = $('#scriptIn');
   const transcript = (sc ? sc.value : '').trim();
   if (!key) { toast('먼저 ⚙️ 설정에서 API 키를 입력하거나 데모를 이용하세요', true); openDrawer('setDrawer'); return; }
-  if (transcript.length < 60) { showHomeErr('스크립트가 너무 짧아요. 영상 자막을 붙여넣어 주세요.'); return; }
-  if (!current.id) { const id = parseId($('#urlIn').value); if (id) current.id = id; }
+  if (transcript.length < 60) { showHomeErr('텍스트가 너무 짧아요. 소스 내용을 붙여넣어 주세요.'); return; }
+  const input = ($('#urlIn').value || '').trim();
+  const yid = parseId(input);
+  if (yid && !current.id) { current.id = yid; current.sourceType = 'youtube'; current.sourceUrl = 'https://youtu.be/' + yid; }
+  else if (!current.id && looksLikeUrl(input)) { current.sourceType = 'web'; current.sourceUrl = input; current.channel = current.channel || domainOf(input); }
+  else if (!current.id && !current.sourceUrl) { current.sourceType = 'text'; }
   await runAnalysis(transcript);
 }
 
@@ -791,13 +828,15 @@ function cycleStatus(on) {
 }
 
 async function callClaude(key, model, input) {
+  const kind = { youtube: '유튜브 영상 자막', web: '웹 아티클 본문', text: '사용자가 제공한 텍스트' }[input.sourceType] || '소스 텍스트';
   const meta = [];
-  if (input.title) meta.push(`영상 제목: ${input.title}`);
-  if (input.channel) meta.push(`채널/업로더: ${input.channel}`);
+  if (input.title) meta.push(`제목: ${input.title}`);
+  if (input.channel) meta.push(`출처/채널: ${input.channel}`);
+  if (input.sourceUrl) meta.push(`URL: ${input.sourceUrl}`);
   const userText =
-    `${meta.join('\n')}\n\n아래는 유튜브 영상의 스크립트(자막)입니다. 이 내용을 근거로 인터뷰이의 노하우를 정리하고,` +
-    ` 그 프로세스를 가능한 한 자동화할 수 있도록 분석하세요. 반드시 아래 JSON 스키마로만 응답하세요.\n\n` +
-    `[스크립트 시작]\n${input.transcript.slice(0, 48000)}\n[스크립트 끝]\n\n${JSON_SCHEMA}`;
+    `${meta.join('\n')}\n\n아래는 ${kind}입니다. 이 내용을 근거로 핵심 노하우·인사이트를 정리하고,` +
+    ` 그 프로세스를 가능한 한 자동화·콘텐츠화할 수 있도록 분석하세요. 반드시 아래 JSON 스키마로만 응답하세요.\n\n` +
+    `[소스 시작]\n${String(input.transcript).slice(0, 48000)}\n[소스 끝]\n\n${JSON_SCHEMA}`;
 
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -937,7 +976,8 @@ function saveSession(data) {
     id: 's_' + (current.id || 'x') + '_' + performance.now().toString(36).replace('.', ''),
     at: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    vid: current.id, title: (data.video && data.video.title) || current.title || '(제목 없음)',
+    vid: current.id, sourceType: current.sourceType || 'youtube', sourceUrl: current.sourceUrl || '',
+    title: (data.video && data.video.title) || current.title || '(제목 없음)',
     channel: current.channel || (data.video && data.video.creator) || '',
     data,
     contents: [],   // 스튜디오에서 생성한 콘텐츠가 누적됨
@@ -1004,7 +1044,7 @@ function openSession(id) {
   if (!s) return;
   currentSessionId = s.id;
   _demoPieces = [];
-  current = { id: s.vid, title: s.title, channel: s.channel, transcript: '' };
+  current = { id: s.vid, sourceType: s.sourceType || (s.vid ? 'youtube' : 'text'), sourceUrl: s.sourceUrl || '', title: s.title, channel: s.channel, transcript: '' };
   renderResult(s.data, false);
   closeDrawers(); show('result');
 }
@@ -1017,7 +1057,8 @@ function buildShareText() {
   t += `\n[핵심 요약]\n${arr(d.tldr).map(x => '• ' + x).join('\n')}\n`;
   if (arr(d.knowhow).length) t += `\n[노하우]\n${arr(d.knowhow).slice(0,5).map(k => '• ' + k.title).join('\n')}\n`;
   if (arr(d.playbook).length) t += `\n[자동화 플레이북]\n${arr(d.playbook).map(p => `${p.step}. ${p.name} (${p.automatable})`).join('\n')}\n`;
-  if (current.id) t += `\n▶ https://youtu.be/${current.id}`;
+  const link = current.sourceUrl || (current.id ? 'https://youtu.be/' + current.id : '');
+  if (link) t += `\n▶ ${link}`;
   return t;
 }
 async function share() {
@@ -1035,7 +1076,8 @@ function resultToMarkdown() {
   const L = [];
   L.push(`# 🎬 ${v.title || current.title || '유튜브 렌즈 분석'}`);
   if (v.creator || current.channel) L.push(`**채널/인터뷰이:** ${v.creator || current.channel}`);
-  if (current.id) L.push(`**영상:** https://youtu.be/${current.id}`);
+  const _link = current.sourceUrl || (current.id ? 'https://youtu.be/' + current.id : '');
+  if (_link) L.push(`**출처:** ${_link}`);
   if (v.oneLine) L.push(`\n> ${v.oneLine}`);
   if (d.summary) L.push(`\n## 요약\n${d.summary}`);
   if (arr(d.tldr).length) L.push(`\n## 핵심 요약\n${arr(d.tldr).map(x => `- ${x}`).join('\n')}`);
@@ -1167,7 +1209,7 @@ const DEMO_SNS = {
   ]
 };
 function loadDemo() {
-  current = { id: 'piUIgPTujSQ', title: DEMO_SNS.video.title, channel: DEMO_SNS.video.creator, transcript: '' };
+  current = { id: 'piUIgPTujSQ', sourceType: 'youtube', sourceUrl: 'https://youtu.be/piUIgPTujSQ', title: DEMO_SNS.video.title, channel: DEMO_SNS.video.creator, transcript: '' };
   renderResult(DEMO_SNS, true);
   show('result');
 }
@@ -1360,7 +1402,14 @@ function demoContent(opts) {
 $('#goBtn').addEventListener('click', oneClickAnalyze);
 $('#urlIn').addEventListener('keydown', e => { if (e.key === 'Enter') oneClickAnalyze(); });
 $('#analyzeBtn').addEventListener('click', manualAnalyze);
-$('#againBtn').addEventListener('click', () => { show('home'); });
+function resetInput() {
+  current = { id: null, sourceType: 'youtube', sourceUrl: '', title: '', channel: '', transcript: '' };
+  currentSessionId = null; _demoPieces = [];
+  $('#urlIn').value = ''; const sc = $('#scriptIn'); if (sc) sc.value = '';
+  $('#loadedBox').classList.add('hidden'); $('#homeErr').classList.add('hidden');
+  const pf = $('#pasteFallback'); if (pf) pf.open = false;
+}
+$('#againBtn').addEventListener('click', () => { resetInput(); show('home'); });
 $('#shareBtn').addEventListener('click', share);
 $('#saveBtn').addEventListener('click', saveResult);
 $('#studioBtn').addEventListener('click', openStudio);
@@ -1388,7 +1437,7 @@ $('#studioOut').addEventListener('click', e => {
 });
 
 $('#pasteChip').addEventListener('click', async () => {
-  try { const t = await navigator.clipboard.readText(); if (t) { $('#urlIn').value = t.trim(); loadVideo(t); } }
+  try { const t = await navigator.clipboard.readText(); if (t) { $('#urlIn').value = t.trim(); $('#urlIn').focus(); } }
   catch { toast('클립보드 접근이 안 돼요. 직접 붙여넣어 주세요', true); }
 });
 $$('.chip[data-fill]').forEach(c => c.addEventListener('click', () => { if (c.dataset.fill === 'sns') loadDemo(); }));
