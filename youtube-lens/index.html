@@ -133,6 +133,7 @@
     color: var(--ink-1); font-family: inherit; font-size: 15px; padding: 13px 14px; transition: border .15s;
   }
   input:focus, textarea:focus, select:focus { outline: none; border-color: var(--violet); }
+  input.masked { -webkit-text-security: disc; text-security: disc; letter-spacing: .06em; }
   textarea { resize: vertical; min-height: 120px; line-height: 1.5; }
   .hint { font-size: 12.5px; color: var(--ink-3); margin-top: 8px; }
   .chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
@@ -454,7 +455,7 @@
   <h3>설정 <button class="close" data-close>×</button></h3>
   <div class="grp">
     <label class="field-label" for="keyIn">Claude API 키</label>
-    <input type="password" id="keyIn" placeholder="sk-ant-…" autocomplete="off">
+    <input type="text" id="keyIn" class="masked" placeholder="sk-ant-…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true">
     <div class="hint"><a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>에서 발급. 브라우저에서 Anthropic API로 직접 호출됩니다(공유 기기 주의).</div>
   </div>
   <div class="grp">
@@ -467,7 +468,7 @@
   </div>
   <div class="grp">
     <label class="field-label" for="txKeyIn">자막 API 키 · Supadata (권장 · 가장 안정적)</label>
-    <input type="password" id="txKeyIn" placeholder="자막 자동추출용 키" autocomplete="off">
+    <input type="text" id="txKeyIn" class="masked" placeholder="자막 자동추출용 키" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true">
     <div class="hint">유튜브가 서버·프록시의 자막 다운로드를 막기 때문에, <a href="https://supadata.ai" target="_blank" rel="noopener">supadata.ai</a>에서 <b>무료 키</b>를 발급받아 넣으면 URL만으로 안정적으로 자동추출됩니다. (키는 이 브라우저에만 저장, 자막 API 엔드포인트를 통해 사용)</div>
   </div>
   <div class="grp">
@@ -1476,17 +1477,18 @@ $('#overlay').addEventListener('click', closeDrawers);
 $$('[data-close]').forEach(b => b.addEventListener('click', closeDrawers));
 
 $('#saveSet').addEventListener('click', () => {
-  store.setKey($('#keyIn').value.trim());
+  // API 키는 빈 칸이면 기존 값 유지 (브라우저 자동채움이 값을 지워도 삭제되지 않도록)
+  const kv = $('#keyIn').value.trim();   if (kv) store.setKey(kv);
+  const tv = $('#txKeyIn').value.trim(); if (tv) store.setTxKey(tv);
   store.setModel($('#modelIn').value);
   store.setProxy($('#proxyIn').value.trim());
   store.setApiBase($('#apiBaseIn').value.trim());
-  store.setTxKey($('#txKeyIn').value.trim());
   toast('저장했어요'); closeDrawers();
 });
 $('#clearData').addEventListener('click', () => {
   if (!confirm('API 키와 모든 분석 기록을 지울까요? 되돌릴 수 없어요.')) return;
-  ['yl_key','yl_model','yl_proxy','yl_sessions'].forEach(k => localStorage.removeItem(k));
-  refreshHistUI(); toast('모두 지웠어요'); closeDrawers();
+  ['yl_key','yl_model','yl_proxy','yl_apibase','yl_txkey','yl_sessions'].forEach(k => localStorage.removeItem(k));
+  currentSessionId = null; refreshHistUI(); toast('모두 지웠어요'); closeDrawers();
 });
 
 // delegated: open/delete history + recent
