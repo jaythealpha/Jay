@@ -51,6 +51,46 @@ function parseId(s) {
             s.match(/^([A-Za-z0-9_-]{11})$/);
   return m ? m[1] : '';
 }
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// Supadata 유니버설: 임의 URL(Instagram/TikTok/X/파일 등)의 전사/자막을 URL로 요청.
+// 일부 플랫폼은 비동기(jobId) 응답 → 몇 번 폴링.
+async function supadataByUrl(url, key, prefer) {
+  const headers = { 'x-api-key': key, 'accept': 'application/json' };
+  const endpoints = [
+    'https://api.supadata.ai/v1/transcript?url=' + encodeURIComponent(url) + '&lang=' + prefer + '&text=true',
+    'https://api.supadata.ai/v1/web/scrape?url=' + encodeURIComponent(url),
+  ];
+  const pickText = j => {
+    const c = j.content ?? j.transcript ?? j.text;
+    const t = typeof c === 'string' ? c : Array.isArray(c) ? c.map(x => x.text || x.content || '').join(' ') : '';
+    return String(t).replace(/\s+/g, ' ').trim();
+  };
+  let lastErr = 'supadata 실패';
+  for (const ep of endpoints) {
+    try {
+      const r = await fetch(ep, { headers });
+      if (!r.ok) { let m = 'HTTP ' + r.status; try { const e = await r.json(); if (e && (e.message || e.error)) m += ' ' + (e.message || e.error); } catch {} lastErr = m; if (r.status === 401 || r.status === 403) throw new Error(m); continue; }
+      let j = await r.json();
+      let text = pickText(j);
+      // 비동기 job 처리
+      if (!text && j.jobId) {
+        for (let i = 0; i < 4; i++) {
+          await sleep(1600);
+          const jr = await fetch('https://api.supadata.ai/v1/transcript/' + j.jobId, { headers });
+          if (!jr.ok) continue;
+          const jj = await jr.json();
+          if (jj.status === 'failed') { lastErr = 'job failed'; break; }
+          text = pickText(jj);
+          if (text) { j = jj; break; }
+        }
+      }
+      if (text && text.length >= 20) return { text, lang: j.lang || prefer, title: j.title || j.name || '' };
+      lastErr = '빈 응답';
+    } catch (e) { lastErr = String(e && e.message || e); if (/HTTP 40[13]/.test(lastErr)) break; }
+  }
+  throw new Error(lastErr);
+}
 
 // ---- caption track 수집 ----
 async function innertube(id, client) {
@@ -146,10 +186,22 @@ module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') { res.status(204).end(); return; }
 
   const q = req.query || {};
-  const id = parseId(q.id || q.url || '');
+  const rawUrl = (q.url || '').toString().trim();
+  const id = parseId(q.id || rawUrl);
   const prefer = (q.lang || 'ko').toString().toLowerCase();
   const debug = q.debug ? [] : null;
   const txKey = (q.key || req.headers['x-transcript-key'] || process.env.SUPADATA_API_KEY || '').toString().trim();
+
+  // 유튜브가 아닌 URL(Instagram/TikTok/X 등) → Supadata 유니버설 (키 필요)
+  if (!id && rawUrl) {
+    if (!txKey) { res.status(400).json({ ok: false, needKey: true, error: '이 링크 유형은 자막 API 키(Supadata)가 필요해요. ⚙️ 설정에 넣어주세요.' }); return; }
+    try {
+      const s = await supadataByUrl(rawUrl, txKey, prefer);
+      res.status(200).json({ ok: true, transcript: s.text, lang: s.lang, title: s.title || '', author: '', source: 'supadata-url' }); return;
+    } catch (e) {
+      res.status(502).json({ ok: false, error: '자막 API로 못 가져왔어요 (' + String(e && e.message || e) + '). 텍스트를 직접 붙여넣어 주세요.' }); return;
+    }
+  }
   if (!id) { res.status(400).json({ ok: false, error: '유효한 videoId/URL이 필요합니다.' }); return; }
 
   // 0순위: 외부 자막 API (키가 있을 때) — 데이터센터 IP 차단을 우회하는 유일하게 안정적인 경로

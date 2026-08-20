@@ -344,12 +344,12 @@
     </div>
 
     <div class="card input-card">
-      <label class="field-label" for="urlIn">소스 — 유튜브 · 웹 링크</label>
+      <label class="field-label" for="urlIn">소스 — 유튜브 · 인스타/틱톡 · 웹 링크</label>
       <div class="url-row">
-        <input type="url" id="urlIn" placeholder="유튜브 링크, 또는 아무 웹 아티클 링크를 붙여넣으세요" autocomplete="off" inputmode="url">
+        <input type="url" id="urlIn" placeholder="유튜브·인스타·틱톡·웹 아티클 링크를 붙여넣으세요" autocomplete="off" inputmode="url">
         <button class="btn btn-primary" id="goBtn" style="flex:none;padding-left:20px;padding-right:20px;">분석 →</button>
       </div>
-      <div class="hint">✨ 링크만 붙여넣고 <b>분석</b>을 누르면 유튜브 자막·웹 본문을 <b>자동으로 가져와</b> 분석합니다. 링크가 없으면 아래 “직접 붙여넣기”에 텍스트를 넣어도 돼요.</div>
+      <div class="hint">✨ 링크만 붙여넣고 <b>분석</b>을 누르면 유튜브 자막·웹 본문·소셜 전사를 <b>자동으로 가져와</b> 분석합니다. (인스타·틱톡 등 소셜은 ⚙️ Supadata 키 필요) 링크가 없으면 아래 “직접 붙여넣기”를 쓰세요.</div>
 
       <div class="chip-row">
         <span class="chip" data-fill="sns">🧪 SNS 부업 인터뷰 데모 보기</span>
@@ -536,6 +536,29 @@ function parseId(url) {
 function thumbUrl(id) { return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`; }
 function looksLikeUrl(s) { return /^https?:\/\//i.test(s) || /^[\w.-]+\.[a-z]{2,}(?:[\/?#]|$)/i.test(String(s).trim()); }
 function domainOf(u) { try { return new URL(/^https?:\/\//i.test(u) ? u : 'https://' + u).hostname.replace(/^www\./, ''); } catch { return ''; } }
+// 자막·전사가 필요한 소셜/미디어 플랫폼 (백엔드 Supadata 유니버설로 라우팅)
+function isSocial(u) { return /(?:instagram\.com|tiktok\.com|(?:^|\/\/|\.)x\.com|twitter\.com|facebook\.com|fb\.watch|threads\.net|vimeo\.com)/i.test(String(u)); }
+function socialName(u) {
+  const d = domainOf(u);
+  return /instagram/.test(d) ? 'Instagram' : /tiktok/.test(d) ? 'TikTok' : /(^|\.)x\.com|twitter/.test(d) ? 'X' :
+         /facebook|fb\.watch/.test(d) ? 'Facebook' : /threads/.test(d) ? 'Threads' : /vimeo/.test(d) ? 'Vimeo' : d;
+}
+// 소셜/미디어 링크 → 백엔드 자막 API(Supadata 유니버설, URL 기반)
+async function fetchSocialSource(url) {
+  const platform = socialName(url);
+  current = { id: null, sourceType: 'web', sourceUrl: url, title: '', channel: platform, transcript: '' };
+  showPreview({ thumb: null, title: platform + ' 콘텐츠를 읽는 중…', sub: domainOf(url) });
+  const base = transcriptEndpoint();
+  const ep = base + (base.includes('?') ? '&' : '?') + 'url=' + encodeURIComponent(url) + '&lang=ko';
+  const headers = {}; const tx = store.txKey(); if (tx) headers['x-transcript-key'] = tx;
+  const r = await fetchWithTimeout(ep, 30000, { headers });
+  if (!r.ok) { let m = '소셜 가져오기 ' + r.status; try { const j = await r.json(); if (j && j.error) m = j.error; } catch {} throw new Error(m); }
+  const j = await r.json();
+  if (!j.ok || !j.transcript) throw new Error(j.error || '본문/자막을 가져오지 못했어요');
+  current.title = j.title || (platform + ' 콘텐츠');
+  showPreview({ thumb: null, title: current.title, sub: '🔗 ' + platform });
+  return j.transcript;
+}
 
 // current.sourceType: 'youtube' | 'web' | 'text'
 let current = { id: null, sourceType: 'youtube', sourceUrl: '', title: '', channel: '', transcript: '' };
@@ -707,12 +730,16 @@ async function oneClickAnalyze() {
     const sc = $('#scriptIn'); if (sc) sc.focus();
     return;
   }
+  const social = !yid && isSocial(input);
   let text;
   try {
     if (yid) {
       const id = await loadVideo(input); if (!id) return;
       show('loading'); setLoad('자막을 가져오는 중…', 'URL에서 자동으로 스크립트를 추출하고 있어요');
       text = await fetchTranscriptAuto(id);
+    } else if (social) {
+      show('loading'); setLoad(socialName(input) + ' 콘텐츠를 읽는 중…', '자막·전사를 가져오고 있어요 (Supadata)');
+      text = await fetchSocialSource(input);
     } else {
       show('loading'); setLoad('웹 페이지를 읽는 중…', '본문을 추출하고 있어요');
       text = await fetchWebSource(input);
@@ -720,7 +747,8 @@ async function oneClickAnalyze() {
   } catch (e) {
     show('home');
     $('#loadedBox').classList.remove('hidden'); $('#pasteFallback').open = true;
-    showHomeErr((yid ? '자막' : '웹 본문') + ' 자동 추출 실패 — ' + (e.message || '') + ' 아래에 텍스트를 직접 붙여넣어 주세요.');
+    const what = yid ? '자막' : social ? (socialName(input) + ' 자막·전사') : '웹 본문';
+    showHomeErr(what + ' 자동 추출 실패 — ' + (e.message || '') + ' 아래에 텍스트를 직접 붙여넣어 주세요.');
     const sc = $('#scriptIn'); if (sc) sc.focus();
     return;
   }
