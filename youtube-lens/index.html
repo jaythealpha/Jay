@@ -1271,7 +1271,7 @@ function loadDemo() {
 
 /* ================= CONTENT STUDIO ================= */
 /* ============ 콘텐츠 포맷 레지스트리 ============ */
-const TONES = ['정보성·신뢰감', '친근·대화체', '자극적·후킹 강함', '담백·전문가'];
+const TONES = ['정보성·신뢰감', '친근·대화체', '자극적·후킹 강함', '담백·전문가', '유머·위트', '감성·스토리텔링', '전문·권위', '동기부여·응원', '차분·다큐멘터리', '반전·호기심 자극', '직설·팩폭', 'MZ·트렌디'];
 const CF_TONE = { key: 'tone', label: '톤', type: 'select', options: TONES, def: TONES[0] };
 const CF_COUNT = (def = 2, max = 5) => ({ key: 'count', label: '개수', type: 'number', min: 1, max, def });
 
@@ -1313,9 +1313,15 @@ const FORMATS = [
     guide: '링크드인 포스트. 첫 줄 후킹, 짧은 문단·줄바꿈으로 가독성, 인사이트 중심, 마지막 질문/CTA.',
     schema: `{ "format":"링크드인 포스트","title":"주제","post":"본문(줄바꿈 포함)","hashtags":["#태그 3~6개"] }` },
   // --- 영상 브리프 (Higgsfield 핸드오프) ---
-  { id: 'videoBrief', group: '영상 브리프', icon: '🎬', label: '영상 브리프', cfg: [{ key: 'platform', label: '플랫폼', type: 'select', options: ['릴스(9:16)', '쇼츠(9:16)', '롱폼(16:9)'], def: '릴스(9:16)' }, { key: 'durationSec', label: '길이(초)', type: 'select', options: ['30', '60', '90'], def: '60' }, CF_TONE],
-    guide: '영상 생성 도구(Higgsfield)에 바로 넣을 브리프. blocks는 15초 단위로 나눠 각 블록의 내레이션 한국어 문장 + 비주얼 지시. narration은 실제 읽을 문장으로.',
-    schema: `{ "format":"영상 브리프","title":"제목","platform":"플랫폼","durationSec":60,"style":"추천 비주얼 스타일 키워드","blocks":[{"n":1,"narration":"내레이션 문장","visual":"장면/비주얼 지시"}],"notes":"제작 참고 한 줄" }` },
+  { id: 'videoBrief', group: '영상 브리프', icon: '🎬', label: '영상 브리프', cfg: [
+      { key: 'platform', label: '플랫폼·비율', type: 'select', options: ['릴스(9:16)', '쇼츠(9:16)', '틱톡(9:16)', '유튜브 롱폼(16:9)', '정사각(1:1)'], def: '릴스(9:16)' },
+      { key: 'durationSec', label: '길이(초)', type: 'select', options: ['15', '30', '45', '60', '90', '120', '180', '300'], def: '60' },
+      { key: 'structure', label: '구성', type: 'select', options: ['훅-핵심-CTA', '스토리텔링', '리스트(N가지)', '문제-해결', '비포-애프터', '튜토리얼(단계)', '미스터리·떡밥'], def: '훅-핵심-CTA' },
+      { key: 'visual', label: '비주얼 스타일', type: 'select', options: ['실사 B롤', '모션그래픽', '2D 애니메이션', '화이트보드 손그림', '미니멀 텍스트', '3D 렌더', '아이소메트릭', '다큐 인터뷰'], def: '모션그래픽' },
+      { key: 'narration', label: '내레이션', type: 'select', options: ['한국어 TTS', '무음(자막용)'], def: '한국어 TTS' },
+      CF_TONE],
+    guide: '영상 생성 도구(Higgsfield)에 바로 넣을 브리프. durationSec를 약 15초 단위로 나눠 그만큼의 blocks를 만들고(예: 60초→4블록, 15초→1블록), 각 블록에 실제 읽을 한국어 내레이션 문장 + 비주얼 지시를 쓴다. [구성] 흐름을 따르고 [비주얼 스타일]을 style 필드와 각 visual에 반영. narration=무음이면 각 블록 narration은 자막용 짧은 문구로.',
+    schema: `{ "format":"영상 브리프","title":"제목","platform":"플랫폼","durationSec":60,"structure":"구성 요약","style":"비주얼 스타일 키워드","blocks":[{"n":1,"narration":"내레이션/자막 문장","visual":"장면/비주얼 지시"}],"notes":"제작 참고 한 줄" }` },
 ];
 const FMT_BY_ID = Object.fromEntries(FORMATS.map(f => [f.id, f]));
 let studioFmt = 'reels';
@@ -1376,7 +1382,7 @@ function renderBody(p) {
   if (arr(p.tweets).length) h += _lbl('🧵 스레드 ' + p.tweets.length + '개') + `<div class="thread">${li(p.tweets, (t, n) => `<div class="tw"><span class="tw-n">${n + 1}/${p.tweets.length}</span><p>${esc(t)}</p></div>`)}</div>`;
   if (p.post) h += _lbl('💼 포스트') + `<div class="caption-box">${esc(p.post).replace(/\n/g, '<br>')}</div>`;
   if (arr(p.script).length) h += _lbl('🎬 대본') + `<div class="scenes">${li(p.script, s => `<div class="scene"><div class="sc-h">${esc(s.scene || '')}</div>${s.visual ? `<div class="sc-v">🎥 ${esc(s.visual)}</div>` : ''}${s.voiceover ? `<div class="sc-t">${esc(s.voiceover)}</div>` : ''}</div>`)}</div>`;
-  if (arr(p.blocks).length) h += `<div class="brief-meta">${esc(p.platform || '')}${p.durationSec ? ' · ' + p.durationSec + '초' : ''}${p.style ? ' · ' + esc(p.style) : ''}</div>` + _lbl('🎬 영상 블록') + `<div class="scenes">${li(p.blocks, b => `<div class="scene"><div class="sc-h">블록 ${esc(String(b.n || ''))}</div>${b.visual ? `<div class="sc-v">🎥 ${esc(b.visual)}</div>` : ''}${b.narration ? `<div class="sc-t">${esc(b.narration)}</div>` : ''}</div>`)}</div>` + `<div class="hint" style="margin-top:8px;">📋 복사해서 Higgsfield 설명영상/광고 스킬에 붙여넣으면 이 구성대로 영상 제작이 이어집니다.</div>`;
+  if (arr(p.blocks).length) h += `<div class="brief-meta">${esc(p.platform || '')}${p.durationSec ? ' · ' + p.durationSec + '초' : ''}${p.structure ? ' · ' + esc(p.structure) : ''}${p.style ? ' · ' + esc(p.style) : ''}</div>` + _lbl('🎬 영상 블록') + `<div class="scenes">${li(p.blocks, b => `<div class="scene"><div class="sc-h">블록 ${esc(String(b.n || ''))}</div>${b.visual ? `<div class="sc-v">🎥 ${esc(b.visual)}</div>` : ''}${b.narration ? `<div class="sc-t">${esc(b.narration)}</div>` : ''}</div>`)}</div>` + `<div class="hint" style="margin-top:8px;">📋 복사해서 Higgsfield 설명영상/광고 스킬에 붙여넣으면 이 구성대로 영상 제작이 이어집니다.</div>`;
   if (arr(p.takeaways).length) h += _lbl('✅ 실행 포인트') + _tldr(p.takeaways);
   if (p.caption) h += _lbl('📝 캡션') + `<div class="caption-box">${esc(p.caption)}</div>`;
   if (arr(p.hashtags).length) h += _tags(p.hashtags);
