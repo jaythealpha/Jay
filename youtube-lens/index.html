@@ -353,6 +353,16 @@
   .tw-n { font-size: 11px; font-weight: 800; color: var(--violet-soft); }
   .tw p { font-size: 14px; color: var(--ink-1); margin-top: 3px; line-height: 1.55; }
   .brief-meta { font-size: 12.5px; font-weight: 700; color: var(--violet-soft); background: rgba(157,124,255,.08); border: 1px solid rgba(157,124,255,.22); border-radius: 10px; padding: 8px 11px; margin-bottom: 4px; }
+  /* format about + per-piece usage + edit */
+  .fmt-about { margin-top: 10px; background: rgba(53,208,165,.06); border: 1px solid rgba(53,208,165,.25); border-radius: 12px; padding: 10px 12px; }
+  .fmt-about:empty { display: none; }
+  .fa-what { font-size: 13px; font-weight: 800; color: var(--mint-soft); }
+  .fa-use { font-size: 12.5px; color: var(--ink-2); margin-top: 4px; line-height: 1.5; }
+  .pc-use { font-size: 12px; color: var(--ink-3); background: var(--bg); border: 1px dashed var(--line-solid); border-radius: 9px; padding: 7px 10px; margin: 2px 0 10px; line-height: 1.5; }
+  .edited-badge { font-size: 10.5px; font-weight: 800; color: var(--gold); background: rgba(255,192,72,.12); border: 1px solid rgba(255,192,72,.35); padding: 2px 7px; border-radius: 999px; margin-left: 8px; }
+  .edited-body { white-space: pre-wrap; font-family: var(--sans); font-size: 14px; line-height: 1.6; color: var(--ink-1); background: var(--bg); border: 1px solid var(--line-solid); border-radius: 12px; padding: 12px; margin-top: 4px; }
+  .edit-ta { width: 100%; min-height: 220px; margin-top: 10px; font-size: 13.5px; line-height: 1.6; }
+  .edit-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
   @media (max-width: 560px) {
     .result-hero { flex-direction: column; }
@@ -460,6 +470,7 @@
       <div class="studio-src" id="studioSrc"></div>
       <label class="field-label" style="margin-top:14px;">형식</label>
       <div id="cfFormat"></div>
+      <div id="cfAbout" class="fmt-about"></div>
       <label class="field-label" for="cfTopic" style="margin-top:14px;">주제 · 키워드 <span style="font-weight:600;color:var(--ink-3);">(비우면 소스 주제 사용)</span></label>
       <input type="text" id="cfTopic" placeholder="예: 직장인 아침 루틴 / 자동화 도구 추천 …" autocomplete="off">
       <div id="cfDynamic" style="margin-top:14px;"></div>
@@ -1039,7 +1050,7 @@ function saveSession(data) {
   };
   sessions.unshift(session);
   if (sessions.length > 25) sessions.length = 25;
-  try { store.saveSessions(sessions); } catch { /* full */ }
+  try { store.saveSessions(sessions); } catch { toast('저장 공간이 부족해 기록이 저장되지 않았어요. 오래된 프로젝트를 지워주세요', true); }
   currentSessionId = session.id;
   _demoPieces = [];
   refreshHistUI();
@@ -1052,7 +1063,7 @@ function saveContentsToSession(newPieces) {
   if (!s) return false;
   s.contents = (s.contents || []).concat(arr(newPieces).map(p => ({ ...p, savedAt: new Date().toISOString() })));
   s.updatedAt = new Date().toISOString();
-  try { store.saveSessions(sessions); } catch { /* full */ }
+  try { store.saveSessions(sessions); } catch { toast('저장 공간이 부족해요. 오래된 프로젝트를 지워주세요', true); }
   return true;
 }
 function deleteContentFromSession(idx) {
@@ -1343,6 +1354,27 @@ const EXPERT = {
 const CONTENT_SYSTEM = `당신은 각 콘텐츠 포맷(숏폼·카드뉴스·블로그·학습자료·소셜·영상 브리프)의 정상급 전문 카피라이터이자 콘텐츠 전략가입니다.
 요청된 포맷의 모범 사례와 프레임워크를 철저히 적용하고, 뻔하고 상투적인 표현을 피하며, 근거 없는 내용을 지어내지 않습니다.
 한국어로, 지정된 JSON 스키마로만 응답합니다.`;
+
+// 포맷별 활용법 안내 (무엇이고 어떻게 쓰나 + 예시)
+const USAGE = {
+  reels: { about: '15~40초 세로 영상(릴스/쇼츠) 대본', use: '훅→본문→CTA 대사와 장면 지시가 나옵니다. 캡컷(CapCut)에 자막·B롤을 얹어 편집한 뒤 인스타 릴스로 발행하세요.' },
+  cards: { about: '스와이프형 카드뉴스 (인스타/스레드)', use: '슬라이드별 텍스트를 Canva·미리캔버스 템플릿 각 장에 넣어 이미지로 만들고, 인스타 여러 장 게시물로 올립니다.' },
+  shorts: { about: '쇼츠/릴스용 훅 문구 모음', use: '마음에 드는 훅 하나를 골라 첫 3초 대사로 쓰고 영상을 찍으세요. 여러 훅을 A/B 테스트하기 좋습니다.' },
+  summary: { about: '핵심을 구조화한 학습 요약노트', use: '공부·리뷰용. 노션·옵시디언에 붙여 지식 노트로 보관하거나, 블로그·발표자료의 뼈대로 씁니다.' },
+  flashcards: { about: '앞면(질문)-뒷면(답) 암기 카드', use: '⬇ CSV로 내려받아 Anki·Quizlet에 가져오면 간격 반복 학습이 됩니다.' },
+  quiz: { about: '4지선다 퀴즈 (정답·해설 포함)', use: '학습 점검·강의 자료·이벤트 퀴즈로. 복사해 구글폼·노션에 붙이거나 인쇄해 쓰세요.' },
+  blog: { about: 'SEO를 고려한 블로그 글', use: '⬇ MD로 내려받아 티스토리·워드프레스·노션에 붙여 발행. seo 키워드를 제목·태그에 활용하세요.' },
+  newsletter: { about: '이메일 뉴스레터 본문', use: '스티비·메일침프에 붙여 발송. 제목·미리보기 문구를 그대로 쓰면 열람률에 도움이 됩니다.' },
+  ytscript: { about: '유튜브 롱폼 나레이션 대본', use: '챕터별 대사를 프롬프터로 읽어 촬영·녹음하거나, 페이스리스 영상(TTS)에 그대로 넣습니다.' },
+  xthread: { about: 'X(트위터) 스레드', use: '각 트윗을 순서대로 게시하거나 예약 도구(버퍼·타입풀리)에 스레드로 등록하세요.' },
+  linkedin: { about: '링크드인 포스트', use: '본문을 그대로 링크드인에 붙여 발행. 첫 2줄이 "더 보기" 전 후킹이라 그대로 두세요.' },
+  videoBrief: { about: 'AI 영상 제작용 블록 브리프', use: '📋 복사해 Higgsfield 설명영상·광고 스킬(대화창)에 붙여넣으면 이 구성대로 실제 영상 제작이 이어집니다.' },
+};
+function renderAbout() {
+  const u = USAGE[studioFmt]; const box = $('#cfAbout'); if (!box) return;
+  if (!u) { box.innerHTML = ''; return; }
+  box.innerHTML = `<div class="fa-what">💡 ${esc(u.about)}</div><div class="fa-use">${esc(u.use)}</div>`;
+}
 let studioFmt = 'reels';
 
 /* 포맷 선택 칩 + 설정 패널 렌더 */
@@ -1368,7 +1400,7 @@ function getConfigValues(f) {
   (f.cfg || []).forEach(c => { const el = $('#cf_' + c.key); o[c.key] = el ? el.value.toString().trim() : c.def; });
   return o;
 }
-function selectFormat(id) { studioFmt = id; renderFormatPicker(); renderFormatConfig(); }
+function selectFormat(id) { studioFmt = id; renderFormatPicker(); renderFormatConfig(); renderAbout(); }
 
 /* 파일 다운로드 공용 */
 function downloadText(text, name, mime) {
@@ -1389,6 +1421,7 @@ function _tldr(list) { return `<div class="tldr">${li(list, x => `<div class="li
 function _kv(list, a, b) { return `<div class="kv">${li(list, o => `<div class="kv-row"><b>${esc(o[a])}</b><span>${esc(o[b] || '')}</span></div>`)}</div>`; }
 function _tags(list) { return `<div class="tags">${li(list, t => `<span class="tg">${esc(String(t).startsWith('#') ? t : '#' + t)}</span>`)}</div>`; }
 function renderBody(p) {
+  if (p.editedText) return `<pre class="edited-body">${esc(p.editedText)}</pre>`;
   let h = '';
   if (arr(p.hooks).length) h += _lbl('🎣 훅 후보') + `<div class="hooklist">${li(p.hooks, (hk, n) => `<div class="hk"><span class="idx">${n + 1}</span><span>${esc(hk)}</span></div>`)}</div>`;
   if (arr(p.tldr).length) h += _lbl('⚡ 요약') + _tldr(p.tldr);
@@ -1415,7 +1448,7 @@ function openStudio() {
   $('#studioSrc').innerHTML = `<span class="ic">🧠</span><div>노하우 시드: <b>${esc(v.title || current.title || '분석 결과')}</b>의 인터뷰이 노하우 ${arr(_lastData.knowhow).length}개 반영. 만든 콘텐츠는 <b>이 프로젝트에 자동 저장</b>되어 계속 쌓여요.</div>`;
   $('#cfTopic').value = '';
   $('#studioErr').classList.add('hidden');
-  renderFormatPicker(); renderFormatConfig();
+  renderFormatPicker(); renderFormatConfig(); renderAbout();
   renderStudio();
   show('studio');
 }
@@ -1494,13 +1527,17 @@ function renderPieces(pieces) {
   }
   const head = `<div class="studio-count">🗂 이 프로젝트에 저장된 콘텐츠 <b>${pieces.length}개</b></div>`;
   out.innerHTML = head + pieces.map((p, i) => {
-    const dl = arr(p.cards).length ? 'CSV' : 'MD';
+    const dl = (!p.editedText && arr(p.cards).length) ? 'CSV' : 'MD';
+    const u = USAGE[p.fmtId];
+    const edited = p.editedText ? `<span class="edited-badge">✏️ 편집됨</span>` : '';
     return `<div class="content" id="pc${i}"><div class="pc-actions">` +
-      `<button class="copy-btn" data-copy="${i}">📋 복사</button>` +
-      `<button class="copy-btn" data-dl="${i}">⬇ ${dl}</button>` +
-      `<button class="copy-btn del-c" data-delc="${i}">🗑</button></div>` +
-      `<span class="fmt">${esc(p.format || (FMT_BY_ID[p.fmtId] && FMT_BY_ID[p.fmtId].label) || '콘텐츠')}</span>` +
+      `<button class="copy-btn" data-edit="${i}" title="편집">✏️</button>` +
+      `<button class="copy-btn" data-copy="${i}" title="복사">📋</button>` +
+      `<button class="copy-btn" data-dl="${i}" title="파일 저장">⬇ ${dl}</button>` +
+      `<button class="copy-btn del-c" data-delc="${i}" title="삭제">🗑</button></div>` +
+      `<span class="fmt">${esc(p.format || (FMT_BY_ID[p.fmtId] && FMT_BY_ID[p.fmtId].label) || '콘텐츠')}</span>${edited}` +
       `<h4>${esc(p.title || `콘텐츠 ${i + 1}`)}</h4>` +
+      (u ? `<div class="pc-use">💡 ${esc(u.use)}</div>` : '') +
       renderBody(p) + `</div>`;
   }).join('');
   _contentPieces = pieces;
@@ -1509,6 +1546,7 @@ function renderPieces(pieces) {
 let _contentPieces = [];
 // 범용 직렬화 (모든 포맷 필드 처리)
 function pieceToText(p) {
+  if (p.editedText) return p.editedText;
   const L = [`【${p.format || ''}】 ${p.title || ''}`];
   if (p.subtitle) L.push(p.subtitle);
   if (arr(p.hooks).length) L.push('\n[훅]\n' + p.hooks.map((h, i) => `${i + 1}. ${h}`).join('\n'));
@@ -1530,10 +1568,23 @@ function pieceToText(p) {
   if (p.cta) L.push('\n[CTA] ' + p.cta);
   return L.join('\n').trim();
 }
+// 편집(사람 최종 검토) — 편집본을 세션에 저장
+function saveStudioPieces(pieces) {
+  if (currentSessionId && currentSession()) {
+    const s = store.sessions(); const cur = s.find(x => x.id === currentSessionId);
+    if (cur) { cur.contents = pieces; cur.updatedAt = new Date().toISOString(); try { store.saveSessions(s); } catch { toast('저장 공간이 부족해요', true); } }
+  } else { _demoPieces = pieces; }
+}
+function editPiece(i) {
+  const p = _contentPieces[i]; if (!p) return;
+  const card = document.getElementById('pc' + i); if (!card) return;
+  card.innerHTML = `<div class="edit-actions"><button class="btn btn-primary sm" data-savee="${i}">저장</button><button class="btn btn-ghost sm" data-cancele="1">취소</button>${p.editedText ? `<button class="btn btn-ghost sm" data-reverte="${i}">원본 복원</button>` : ''}</div><textarea class="edit-ta" id="editTa${i}"></textarea>`;
+  const ta = document.getElementById('editTa' + i); ta.value = p.editedText || pieceToText(p); ta.focus();
+}
 function downloadPiece(i) {
   const p = _contentPieces[i]; if (!p) return;
   const base = (p.title || p.format || 'content').replace(/[\\/:*?"<>|]/g, '').slice(0, 50).trim() || 'content';
-  if (arr(p.cards).length) {
+  if (!p.editedText && arr(p.cards).length) {
     const csv = 'front,back,hint\n' + p.cards.map(c => [c.front, c.back, c.hint || ''].map(csvCell).join(',')).join('\n');
     downloadText(csv, base + '.csv', 'text/csv') ? toast('CSV로 저장했어요 (Anki 등에 가져오기)') : toast('저장 실패', true);
   } else {
@@ -1653,6 +1704,14 @@ $('#cfFormat').addEventListener('click', e => {
   const b = e.target.closest('[data-fmt]'); if (b) selectFormat(b.dataset.fmt);
 });
 $('#studioOut').addEventListener('click', e => {
+  const ed = e.target.closest('[data-edit]');
+  if (ed) { editPiece(Number(ed.dataset.edit)); return; }
+  const se = e.target.closest('[data-savee]');
+  if (se) { const i = Number(se.dataset.savee); const ta = document.getElementById('editTa' + i); if (_contentPieces[i]) { _contentPieces[i].editedText = ta.value; saveStudioPieces(_contentPieces); renderStudio(); refreshHistUI(); toast('편집을 저장했어요'); } return; }
+  const ce = e.target.closest('[data-cancele]');
+  if (ce) { renderStudio(); return; }
+  const re = e.target.closest('[data-reverte]');
+  if (re) { const i = Number(re.dataset.reverte); if (_contentPieces[i]) { delete _contentPieces[i].editedText; saveStudioPieces(_contentPieces); renderStudio(); refreshHistUI(); toast('원본으로 복원했어요'); } return; }
   const dl = e.target.closest('[data-dl]');
   if (dl) { downloadPiece(Number(dl.dataset.dl)); return; }
   const del = e.target.closest('[data-delc]');
