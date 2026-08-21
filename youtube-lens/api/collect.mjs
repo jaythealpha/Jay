@@ -75,9 +75,21 @@ function extractReadable(html) {
   return lines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
 }
 
+// ---- API 키 검증 ----
+// 마스킹된 화면 값(●●●●)을 그대로 복사해 붙여넣는 실수가 잦다. 그대로 두면 HTTP 헤더
+// 변환 단계에서 "Cannot convert argument to a ByteString" 같은 알 수 없는 오류로 실패하므로,
+// 여기서 먼저 걸러 한국어로 원인을 알려준다.
+function apiKey(name) {
+  const v = (process.env[name] || '').trim();
+  if (v && /[^\x20-\x7E]/.test(v)) {
+    throw new Error(`${name} 값이 올바르지 않아요. 화면에 가려져 보이던 ●●●● 를 복사하신 것 같아요 — Vercel 환경변수에 실제 키를 다시 저장한 뒤 재배포해 주세요.`);
+  }
+  return v;
+}
+
 // ---- Supadata 유튜브 자막 (mode=auto: 자막 없으면 AI 생성 폴백) ----
 async function ytTranscript(videoUrl) {
-  const key = (process.env.SUPADATA_API_KEY || '').trim();
+  const key = apiKey('SUPADATA_API_KEY');
   if (!key) return '';
   try {
     const r = await fetch('https://api.supadata.ai/v1/transcript?url=' + encodeURIComponent(videoUrl) + '&lang=ko&text=true&mode=auto', {
@@ -99,7 +111,7 @@ async function ytTranscript(videoUrl) {
 
 // ---- Haiku 필터링·요약 ----
 async function haiku(prompt, maxTokens = 500) {
-  const key = (process.env.ANTHROPIC_API_KEY || '').trim();
+  const key = apiKey('ANTHROPIC_API_KEY');
   if (!key) return '';
   const r = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -134,6 +146,8 @@ export default async function handler(req, res) {
   const dry = !!(req.query && req.query.dry);
   const report = { ok: true, sources: 0, found: 0, kept: 0, skipped: 0, errors: [] };
   try {
+    // 잘못 붙여넣은 키는 항목마다 같은 오류를 내므로 시작 전에 한 번에 걸러낸다
+    apiKey('ANTHROPIC_API_KEY'); apiKey('SUPADATA_API_KEY');
     // 1) 워치리스트 로드
     const wl = (await queryDb(WATCH_DB)).results.map(readProps).filter(w => w['활성']);
     const profileRows = wl.filter(w => w['유형'] === '관심 프로필');
