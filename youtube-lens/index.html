@@ -374,6 +374,22 @@
     .plan-cols { grid-template-columns: 1fr; }
     .vprev .thumb { width: 108px; }
   }
+  /* ---- 수집함 ---- */
+  .inb-item { padding: 14px 16px; margin-top: 12px; }
+  .inb-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .inb-head a { color: inherit; font-weight: 800; font-size: 14.5px; text-decoration: none; }
+  .inb-head a:hover { text-decoration: underline; }
+  .inb-badge { flex: none; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 999px; background: rgba(124,92,255,.14); color: var(--violet-soft); }
+  .inb-score { flex: none; font-size: 11.5px; font-weight: 800; color: var(--ink-2); }
+  .inb-meta { font-size: 12px; color: var(--ink-3); margin-top: 4px; }
+  .inb-sum { font-size: 13px; color: var(--ink-2); margin-top: 8px; white-space: pre-wrap; line-height: 1.55; }
+  .inb-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .inb-actions .btn { padding: 7px 12px; font-size: 12.5px; }
+  .wl-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px dashed rgba(255,255,255,.08); font-size: 13px; }
+  .wl-row .t { flex: none; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 999px; background: rgba(255,255,255,.07); color: var(--ink-2); }
+  .wl-row .v { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-2); }
+  .wl-row button { flex: none; background: none; border: 0; cursor: pointer; font-size: 14px; color: var(--ink-3); }
+  .wl-row.off .v, .wl-row.off .t { opacity: .4; }
 </style>
 </head>
 <body>
@@ -384,6 +400,7 @@
     <div><b>인사이트 렌즈</b><small>소스 → 노하우 → 콘텐츠</small></div>
   </div>
   <div class="spacer"></div>
+  <button class="icon-btn" id="inboxBtn" title="수집함 — 자동 수집된 콘텐츠">📥</button>
   <button class="icon-btn badge" id="histBtn" title="기록">🕘<span class="count hidden" id="histCount">0</span></button>
   <button class="icon-btn" id="setBtn" title="설정">⚙️</button>
 </header>
@@ -490,6 +507,52 @@
     </div>
   </section>
 
+  <!-- ============ INBOX (자동 수집함) ============ -->
+  <section class="screen" id="inbox">
+    <div class="hero" style="padding-top:18px;">
+      <h1 style="font-size:23px;">📥 <span class="accent">수집함</span></h1>
+      <p>워치리스트(유튜브 채널·RSS·키워드)의 새 콘텐츠를 <b>매일 자동 수집·필터링</b>해 모아둡니다. 마음에 드는 항목은 원클릭으로 분석하세요.</p>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-ghost" id="inboxRefresh">🔄 새로고침</button>
+        <button class="btn btn-violet" id="collectNow">⚡ 지금 수집 실행</button>
+      </div>
+      <details id="wlPanel" style="margin-top:14px;">
+        <summary style="cursor:pointer;font-size:13px;font-weight:700;color:var(--violet-soft);list-style:none;">👀 워치리스트 관리 ▾</summary>
+        <div id="wlList" style="margin-top:10px;"></div>
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+          <select id="wlType" style="flex:none;width:auto;">
+            <option value="유튜브 채널">유튜브 채널</option>
+            <option value="키워드">뉴스 키워드</option>
+            <option value="RSS">RSS 피드</option>
+            <option value="관심 프로필">관심 프로필</option>
+          </select>
+          <input type="text" id="wlValue" placeholder="채널 URL/@핸들 · 키워드 · RSS URL · 관심사 설명" style="flex:1;min-width:180px;" autocomplete="off">
+          <button class="btn btn-primary" id="wlAdd" style="flex:none;">추가</button>
+        </div>
+        <div class="hint" style="margin-top:8px;">💡 <b>관심 프로필</b>은 필터 기준이에요 — 어떤 콘텐츠가 유용한지 문장으로 적으면, 수집 시 Haiku가 0~10점으로 평가해 6점 미만은 걸러냅니다. 워치리스트·수집함 데이터는 Notion에 저장되어 <b>모든 기기에서 동일</b>하게 보입니다.</div>
+      </details>
+    </div>
+
+    <div id="inboxSetup" class="card hidden" style="margin-top:14px;">
+      <b style="font-size:14.5px;">🔌 자동 수집 셋업이 필요해요</b>
+      <div class="steps" style="margin-top:10px;">
+        <div class="step-li"><span class="n">1</span><span><a href="https://www.notion.so/my-integrations" target="_blank" rel="noopener">notion.so/my-integrations</a>에서 내부 통합을 만들고 토큰을 복사하세요.</span></div>
+        <div class="step-li"><span class="n">2</span><span>Notion의 <b>“유튜브 렌즈”</b> 페이지 → ⋯ 메뉴 → 연결에서 방금 만든 통합을 연결하세요 (하위 수집함·워치리스트 DB 권한 포함).</span></div>
+        <div class="step-li"><span class="n">3</span><span>Vercel 프로젝트 → Settings → Environment Variables에 <code>NOTION_TOKEN</code>(1의 토큰), <code>ANTHROPIC_API_KEY</code>(필터·요약), <code>SUPADATA_API_KEY</code>(유튜브 자막)를 넣고 재배포하세요.</span></div>
+        <div class="step-li"><span class="n">4</span><span>매일 오전 6시(KST)에 자동 수집되고, <b>⚡ 지금 수집 실행</b>으로 언제든 수동 실행할 수 있어요.</span></div>
+      </div>
+      <div id="inboxSetupErr" class="hint" style="margin-top:10px;"></div>
+    </div>
+
+    <div id="inboxList"></div>
+    <div id="inboxEmpty" class="hint hidden" style="text-align:center;margin-top:24px;">아직 수집된 항목이 없어요. 워치리스트에 소스를 추가하고 ⚡ 지금 수집 실행을 눌러보세요.</div>
+
+    <button class="btn btn-ghost block" id="inboxBack" style="margin-top:22px;">← 홈으로</button>
+  </section>
+
 </div>
 
 <!-- ============ SETTINGS DRAWER ============ -->
@@ -523,6 +586,11 @@
     <label class="field-label" for="proxyIn">자동 추출용 CORS 프록시 (선택 · 폴백)</label>
     <input type="text" id="proxyIn" placeholder="https://corsproxy.io/?url=" autocomplete="off">
     <div class="hint">위 API가 없을 때 쓰는 브라우저 폴백. 기본 공개 프록시로 시도하며, 잘 안 되면 <b>신뢰할 수 있는 CORS 프록시</b> 접두사를 넣으세요(예: <code>https://api.allorigins.win/raw?url=</code>).</div>
+  </div>
+  <div class="grp">
+    <label class="field-label" for="appKeyIn">수집함 앱 키 (선택)</label>
+    <input type="text" id="appKeyIn" class="masked" placeholder="Vercel의 APP_KEY와 동일하게" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true">
+    <div class="hint">Vercel 환경변수 <code>APP_KEY</code>를 설정한 경우에만 필요해요. 수집함(📥)·워치리스트 접근을 본인만 가능하게 잠급니다. 미설정 시 비워두세요.</div>
   </div>
   <div class="grp">
     <label class="field-label">프로젝트 백업 / 이동 (기기 간)</label>
@@ -560,6 +628,8 @@ const store = {
   proxy:  () => localStorage.getItem('yl_proxy') || '',
   apiBase:() => localStorage.getItem('yl_apibase') || '',
   txKey:  () => localStorage.getItem('yl_txkey') || '',
+  appKey: () => localStorage.getItem('yl_appkey') || '',
+  setAppKey: v => localStorage.setItem('yl_appkey', v),
   setKey:   v => localStorage.setItem('yl_key', v),
   setModel: v => localStorage.setItem('yl_model', v),
   setProxy: v => localStorage.setItem('yl_proxy', v),
@@ -776,6 +846,17 @@ async function fetchPdfUrl(url) {
   const ep = apiUrl('/api/extract') + '?url=' + encodeURIComponent(url);
   const r = await fetchWithTimeout(ep, 45000);
   const j = await r.json().catch(() => ({}));
+  if (r.status === 422) {
+    // 스캔 이미지 PDF → 서버에서 원본(base64)을 받아 Claude 문서(비전)로 폴백
+    const rr = await fetchWithTimeout(ep + '&raw=1', 45000);
+    const jj = await rr.json().catch(() => ({}));
+    if (rr.ok && jj.ok && jj.data) {
+      current.pdfData = { data: jj.data };
+      showPreview({ thumb: null, title: current.title, sub: '📕 스캔 PDF · Claude 비전 분석' });
+      return '';
+    }
+    throw new Error(jj.error || j.error || 'PDF 추출 실패');
+  }
   if (!r.ok || !j.ok) throw new Error(j.error || 'PDF 추출 실패');
   if (j.name) { current.title = j.name; showPreview({ thumb: null, title: j.name, sub: '📕 PDF · ' + (j.pages || '?') + '쪽' }); }
   return j.text;
@@ -822,6 +903,15 @@ async function handleFile(file) {
       const ep = apiUrl('/api/extract');
       const r = await fetchWithTimeout(ep, 45000, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ data: b64, name }) });
       const j = await r.json().catch(() => ({}));
+      if (r.status === 422 || (r.ok && j.ok && String(j.text || '').length < 20)) {
+        // 스캔 이미지 PDF → Claude 문서(비전)로 직접 분석 폴백
+        if (file.size > 30 * 1024 * 1024) throw new Error('스캔 PDF가 너무 커요(30MB 초과).');
+        current.pdfData = { data: b64 };
+        showPreview({ thumb: null, title: name, sub: '📕 스캔 PDF · Claude 비전 분석' });
+        setLoad('스캔 PDF를 읽는 중…', '텍스트 추출이 안 되는 PDF라 Claude가 문서를 직접 읽어요');
+        await runAnalysis('');
+        return;
+      }
       if (!r.ok || !j.ok) throw new Error(j.error || ('PDF 추출 실패 (' + r.status + ')'));
       current.transcript = j.text;
       showPreview({ thumb: null, title: name, sub: '📕 PDF · ' + (j.pages || '?') + '쪽' });
@@ -997,6 +1087,11 @@ async function callClaude(key, model, input) {
   if (input.imageData) {
     content.push({ type: 'image', source: { type: 'base64', media_type: input.imageData.media_type, data: input.imageData.data } });
     userText = `${meta.join('\n')}\n\n위 이미지를 읽고(이미지 속 텍스트·도표·손글씨 포함) 핵심 노하우·인사이트를 정리하고,` +
+      ` 자동화·콘텐츠화할 수 있도록 분석하세요. 반드시 아래 JSON 스키마로만 응답하세요.\n\n${JSON_SCHEMA}`;
+  } else if (input.pdfData) {
+    // 스캔 이미지 PDF 폴백: 텍스트 추출이 안 되는 PDF를 Claude가 문서(비전)로 직접 읽음
+    content.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: input.pdfData.data } });
+    userText = `${meta.join('\n')}\n\n위 PDF 문서를 읽고(스캔 이미지·표·도표 포함) 핵심 노하우·인사이트를 정리하고,` +
       ` 자동화·콘텐츠화할 수 있도록 분석하세요. 반드시 아래 JSON 스키마로만 응답하세요.\n\n${JSON_SCHEMA}`;
   } else {
     userText = `${meta.join('\n')}\n\n아래는 ${kind}입니다. 이 내용을 근거로 핵심 노하우·인사이트를 정리하고,` +
@@ -1290,7 +1385,7 @@ function openDrawer(id) {
   $('#overlay').classList.add('open');
   $('#' + id).classList.add('open');
   if (id === 'histDrawer') renderHistList();
-  if (id === 'setDrawer') { $('#keyIn').value = store.key(); $('#modelIn').value = store.model(); $('#proxyIn').value = store.proxy(); $('#apiBaseIn').value = store.apiBase(); $('#txKeyIn').value = store.txKey(); }
+  if (id === 'setDrawer') { $('#keyIn').value = store.key(); $('#modelIn').value = store.model(); $('#proxyIn').value = store.proxy(); $('#apiBaseIn').value = store.apiBase(); $('#txKeyIn').value = store.txKey(); $('#appKeyIn').value = store.appKey(); }
 }
 function closeDrawers() {
   $('#overlay').classList.remove('open');
@@ -1847,6 +1942,148 @@ $('#pasteChip').addEventListener('click', async () => {
 $$('.chip[data-fill]').forEach(c => c.addEventListener('click', () => { if (c.dataset.fill === 'sns') loadDemo(); }));
 
 function goHome() { closeDrawers(); resetInput(); show('home'); }
+/* ================= 수집함 (자동 수집 · Notion 백본) ================= */
+let _inboxItems = [];
+function inboxFetch(path, opts = {}) {
+  const headers = Object.assign({}, opts.headers || {});
+  const ak = store.appKey(); if (ak) headers['x-app-key'] = ak;
+  return fetchWithTimeout(apiUrl(path), opts.timeout || 30000, Object.assign({}, opts, { headers }));
+}
+function openInbox() { show('inbox'); loadInbox(); loadWatchlist(); }
+async function loadInbox() {
+  const list = $('#inboxList');
+  list.innerHTML = '<div class="hint" style="text-align:center;margin-top:20px;">수집함을 불러오는 중…</div>';
+  $('#inboxSetup').classList.add('hidden'); $('#inboxEmpty').classList.add('hidden');
+  try {
+    const r = await inboxFetch('/api/inbox');
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.ok) {
+      list.innerHTML = '';
+      if (j.needSetup || r.status === 424) { $('#inboxSetup').classList.remove('hidden'); $('#inboxSetupErr').textContent = j.error ? '서버 응답: ' + j.error : ''; }
+      else toast(j.error || ('수집함 오류 ' + r.status), true);
+      return;
+    }
+    _inboxItems = j.items || [];
+    renderInboxItems();
+  } catch (e) { list.innerHTML = ''; toast('수집함 연결 실패 — ' + (e.message || ''), true); }
+}
+function renderInboxItems() {
+  const list = $('#inboxList');
+  const items = _inboxItems.filter(it => it.status !== '제외');
+  $('#inboxEmpty').classList.toggle('hidden', items.length > 0);
+  const badge = s => s === '유튜브' ? '▶️ 유튜브' : s === '뉴스' ? '📰 뉴스' : '📡 RSS';
+  list.innerHTML = items.map(it => `
+    <div class="card inb-item" data-id="${esc(it.id)}">
+      <div class="inb-head">
+        <span class="inb-badge">${badge(it.source)}</span>
+        ${typeof it.score === 'number' ? `<span class="inb-score">★ ${esc(it.score)}/10</span>` : ''}
+        <a href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.title)}</a>
+        ${it.status && it.status !== '새 항목' ? `<span class="inb-score">· ${esc(it.status)}</span>` : ''}
+      </div>
+      <div class="inb-meta">${esc(it.channel || '')}${it.date ? ' · ' + esc(String(it.date).slice(0, 10)) : ''}</div>
+      ${it.summary ? `<div class="inb-sum">${esc(it.summary)}</div>` : ''}
+      <div class="inb-actions">
+        <button class="btn btn-primary" data-inb="analyze">🔎 분석하기</button>
+        <button class="btn btn-ghost" data-inb="keep">🗂 보관</button>
+        <button class="btn btn-ghost" data-inb="drop">✕ 제외</button>
+      </div>
+    </div>`).join('');
+}
+async function markInbox(id, status, silent) {
+  try {
+    await inboxFetch('/api/inbox', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'status', id, status }) });
+    const it = _inboxItems.find(x => x.id === id); if (it) it.status = status;
+    if (!silent) renderInboxItems();
+  } catch { if (!silent) toast('상태 변경 실패', true); }
+}
+async function analyzeInboxItem(id) {
+  const item = _inboxItems.find(x => x.id === id); if (!item) return;
+  if (!store.key()) { toast('먼저 ⚙️ 설정에서 API 키를 입력하세요', true); openDrawer('setDrawer'); return; }
+  markInbox(id, '분석됨', true);
+  const url = item.url || '';
+  const isGoogleNews = /news\.google\./i.test(url);
+  if (parseId(url) || (looksLikeUrl(url) && !isGoogleNews && !(item.excerpt && item.excerpt.length >= 400))) {
+    // 유튜브·일반 링크는 기존 원클릭 파이프라인 재사용 (자막·본문 새로 추출)
+    $('#urlIn').value = url;
+    await oneClickAnalyze();
+    return;
+  }
+  if (item.excerpt && item.excerpt.length >= 120) {
+    // 수집 시 저장해 둔 본문으로 즉시 분석 (구글뉴스 리다이렉트 등 재추출이 어려운 경우 포함)
+    current = { id: null, sourceType: 'web', sourceUrl: url, title: item.title, channel: item.channel || item.source, transcript: '' };
+    showPreview({ thumb: null, title: item.title, sub: '📥 수집함 · ' + (item.channel || item.source || '') });
+    await runAnalysis(item.excerpt);
+    return;
+  }
+  toast('저장된 본문이 없어요. 링크를 열어 텍스트를 직접 붙여넣어 주세요.', true);
+}
+async function runCollect() {
+  const btn = $('#collectNow');
+  btn.disabled = true; btn.textContent = '⏳ 수집 중… (최대 1분)';
+  try {
+    const r = await inboxFetch('/api/collect', { timeout: 70000 });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.ok) {
+      if (r.status === 424 || j.needSetup || /NOTION_TOKEN/.test(j.error || '')) { $('#inboxSetup').classList.remove('hidden'); $('#inboxSetupErr').textContent = j.error || ''; }
+      else toast(j.error || ('수집 실패 ' + r.status), true);
+    } else {
+      toast(`수집 완료 — 새 항목 ${j.found || 0}개 중 ${j.kept || 0}개 적재` + (j.skipped ? `, ${j.skipped}개 필터링` : ''));
+      if (j.errors && j.errors.length) console.warn('collect errors:', j.errors);
+      await loadInbox();
+    }
+  } catch (e) { toast('수집 실행 실패 — ' + (e.message || ''), true); }
+  btn.disabled = false; btn.textContent = '⚡ 지금 수집 실행';
+}
+async function loadWatchlist() {
+  const box = $('#wlList');
+  try {
+    const r = await inboxFetch('/api/inbox?watchlist=1');
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.ok) { box.innerHTML = '<div class="hint">워치리스트를 불러오지 못했어요' + (j.needSetup ? ' — 아래 셋업을 먼저 완료하세요' : '') + '</div>'; return; }
+    box.innerHTML = (j.watchlist || []).map(w => `
+      <div class="wl-row ${w.active ? '' : 'off'}" data-id="${esc(w.id)}">
+        <span class="t">${esc(w.type)}</span>
+        <span class="v" title="${esc(w.value)}">${esc(w.name || w.value)}</span>
+        <button data-wl="toggle" data-active="${w.active ? 1 : ''}" title="${w.active ? '끄기' : '켜기'}">${w.active ? '🟢' : '⚪'}</button>
+        <button data-wl="remove" title="삭제">🗑</button>
+      </div>`).join('') || '<div class="hint">아직 등록된 소스가 없어요.</div>';
+  } catch { box.innerHTML = '<div class="hint">워치리스트 연결 실패</div>'; }
+}
+async function addWatch() {
+  const type = $('#wlType').value, value = $('#wlValue').value.trim();
+  if (!value) { toast('값을 입력하세요', true); return; }
+  try {
+    const r = await inboxFetch('/api/inbox', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'watch-add', type, value, name: value }) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.ok) { toast(j.error || '추가 실패', true); return; }
+    $('#wlValue').value = ''; toast('워치리스트에 추가했어요'); loadWatchlist();
+  } catch (e) { toast('추가 실패 — ' + (e.message || ''), true); }
+}
+$('#inboxBtn').addEventListener('click', openInbox);
+$('#inboxBack').addEventListener('click', goHome);
+$('#inboxRefresh').addEventListener('click', loadInbox);
+$('#collectNow').addEventListener('click', runCollect);
+$('#wlAdd').addEventListener('click', addWatch);
+$('#wlValue').addEventListener('keydown', e => { if (e.key === 'Enter') addWatch(); });
+$('#wlList').addEventListener('click', async e => {
+  const b = e.target.closest('[data-wl]'); if (!b) return;
+  const row = b.closest('.wl-row'); const id = row && row.dataset.id; if (!id) return;
+  if (b.dataset.wl === 'remove') {
+    if (!confirm('이 소스를 워치리스트에서 삭제할까요?')) return;
+    await inboxFetch('/api/inbox', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'watch-remove', id }) }).catch(() => {});
+  } else {
+    await inboxFetch('/api/inbox', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'watch-toggle', id, active: !b.dataset.active }) }).catch(() => {});
+  }
+  loadWatchlist();
+});
+$('#inboxList').addEventListener('click', e => {
+  const b = e.target.closest('[data-inb]'); if (!b) return;
+  const id = b.closest('.inb-item').dataset.id;
+  if (b.dataset.inb === 'analyze') analyzeInboxItem(id);
+  else if (b.dataset.inb === 'keep') markInbox(id, '보관');
+  else if (b.dataset.inb === 'drop') markInbox(id, '제외');
+});
+
 $('#brandHome').addEventListener('click', goHome);
 $('#brandHome').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goHome(); } });
 $('#setBtn').addEventListener('click', () => openDrawer('setDrawer'));
@@ -1861,11 +2098,12 @@ $('#saveSet').addEventListener('click', () => {
   store.setModel($('#modelIn').value);
   store.setProxy($('#proxyIn').value.trim());
   store.setApiBase($('#apiBaseIn').value.trim());
+  store.setAppKey($('#appKeyIn').value.trim());
   toast('저장했어요'); closeDrawers();
 });
 $('#clearData').addEventListener('click', () => {
   if (!confirm('API 키와 모든 분석 기록을 지울까요? 되돌릴 수 없어요.')) return;
-  ['yl_key','yl_model','yl_proxy','yl_apibase','yl_txkey','yl_sessions'].forEach(k => localStorage.removeItem(k));
+  ['yl_key','yl_model','yl_proxy','yl_apibase','yl_txkey','yl_appkey','yl_sessions'].forEach(k => localStorage.removeItem(k));
   currentSessionId = null; refreshHistUI(); toast('모두 지웠어요'); closeDrawers();
 });
 
