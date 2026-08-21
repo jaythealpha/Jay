@@ -209,7 +209,7 @@ export default async function handler(req, res) {
     report.kept = kept;
     res.status(200).json(report);
   } catch (e) {
-    res.status(500).json({ ok: false, error: String(e && e.message || e), ...report });
+    res.status(500).json({ ...report, ok: false, error: String(e && e.message || e) });
   }
 }
 function sourceLabel(src) { return (src['이름'] || src['값'] || '').slice(0, 40); }
