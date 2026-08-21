@@ -66,7 +66,8 @@
     background: linear-gradient(180deg, rgba(10,8,16,.96) 60%, rgba(10,8,16,0));
     backdrop-filter: blur(8px);
   }
-  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: -.02em; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: -.02em; cursor: pointer; }
+  .brand:active { transform: scale(.98); }
   .brand .logo {
     width: 40px; height: 40px; border-radius: 12px; flex: none;
     display: grid; place-items: center; font-size: 21px;
@@ -375,7 +376,7 @@
 <body>
 
 <header class="topbar">
-  <div class="brand">
+  <div class="brand" id="brandHome" role="button" tabindex="0" title="홈으로">
     <div class="logo">🎬</div>
     <div><b>인사이트 렌즈</b><small>소스 → 노하우 → 콘텐츠</small></div>
   </div>
@@ -1745,6 +1746,9 @@ $('#pasteChip').addEventListener('click', async () => {
 });
 $$('.chip[data-fill]').forEach(c => c.addEventListener('click', () => { if (c.dataset.fill === 'sns') loadDemo(); }));
 
+function goHome() { closeDrawers(); resetInput(); show('home'); }
+$('#brandHome').addEventListener('click', goHome);
+$('#brandHome').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goHome(); } });
 $('#setBtn').addEventListener('click', () => openDrawer('setDrawer'));
 $('#histBtn').addEventListener('click', () => openDrawer('histDrawer'));
 $('#overlay').addEventListener('click', closeDrawers);
