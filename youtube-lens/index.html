@@ -143,6 +143,9 @@
     background: var(--card-2); border: 1px solid var(--line-solid); color: var(--ink-2); cursor: pointer;
   }
   .chip:hover { border-color: var(--violet); color: var(--ink-1); }
+  .drop-note { display: none; margin-top: 12px; text-align: center; font-size: 12.5px; color: var(--violet-soft); border: 1.5px dashed var(--line-solid); border-radius: 12px; padding: 14px; }
+  .input-card.drag-over { border-color: var(--violet); box-shadow: 0 0 0 3px rgba(157,124,255,.2); }
+  .input-card.drag-over .drop-note { display: block; border-color: var(--violet); background: rgba(157,124,255,.08); }
 
   /* Video preview */
   .vprev { display: flex; gap: 14px; align-items: center; margin-top: 16px; }
@@ -404,8 +407,11 @@
 
       <div class="chip-row">
         <span class="chip" data-fill="sns">🧪 SNS 부업 인터뷰 데모 보기</span>
+        <span class="chip" id="fileChip">📎 파일 (md·txt·json·csv·이미지)</span>
         <span class="chip" id="pasteChip">📋 링크 붙여넣기</span>
       </div>
+      <input type="file" id="fileIn" accept=".md,.markdown,.txt,.json,.csv,.pdf,image/*" hidden>
+      <div class="drop-note" id="dropNote">여기에 파일을 끌어다 놓아도 돼요</div>
 
       <!-- preview + transcript, revealed after load -->
       <div id="loadedBox" class="hidden">
@@ -763,6 +769,54 @@ function decodeEntities(s) {
   const el = document.createElement('textarea'); el.innerHTML = s; return el.value;
 }
 
+/* ================= 파일·이미지 소스 ================= */
+const TEXT_EXT = /\.(md|markdown|txt|json|csv|log|tsv)$/i;
+function readText(file) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result || '')); r.onerror = rej; r.readAsText(file); }); }
+async function fileToImageData(file) {
+  try {
+    const img = await createImageBitmap(file);
+    const max = 1600, scale = Math.min(1, max / Math.max(img.width, img.height));
+    const w = Math.round(img.width * scale), h = Math.round(img.height * scale);
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    c.getContext('2d').drawImage(img, 0, 0, w, h);
+    const url = c.toDataURL('image/jpeg', 0.85);
+    return { media_type: 'image/jpeg', data: url.split(',')[1], preview: url };
+  } catch {
+    const data = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(file); });
+    return { media_type: file.type || 'image/png', data, preview: '' };
+  }
+}
+async function handleFile(file) {
+  if (!file) return;
+  if (!store.key()) { toast('먼저 ⚙️ 설정에서 API 키를 입력하세요', true); openDrawer('setDrawer'); return; }
+  const name = file.name || '파일';
+  const isImage = /^image\//.test(file.type) || /\.(png|jpe?g|webp|gif|heic|heif|bmp)$/i.test(name);
+  const isPdf = /\.pdf$/i.test(name) || file.type === 'application/pdf';
+  try {
+    if (isImage) {
+      const img = await fileToImageData(file);
+      current = { id: null, sourceType: 'image', sourceUrl: '', title: name, channel: '이미지', transcript: '', imageData: { media_type: img.media_type, data: img.data } };
+      showPreview({ thumb: img.preview || null, title: name, sub: '🖼 이미지 · Claude 비전 분석' });
+      show('loading'); setLoad('이미지를 분석하는 중…', '이미지 속 텍스트·도표·손글씨를 읽고 있어요');
+      await runAnalysis('');
+      return;
+    }
+    if (isPdf) { toast('PDF 지원은 백엔드 작업 중이에요 — 곧 추가됩니다', true); return; }
+    if (TEXT_EXT.test(name) || /^text\//.test(file.type) || file.type === 'application/json') {
+      const text = await readText(file);
+      if (text.trim().length < 20) { $('#loadedBox').classList.remove('hidden'); showHomeErr('파일 내용이 너무 짧아요.'); return; }
+      current = { id: null, sourceType: 'file', sourceUrl: '', title: name, channel: '파일', transcript: text };
+      showPreview({ thumb: null, title: name, sub: '📄 파일 · ' + Math.round(text.length / 1000) + 'K자' });
+      show('loading'); setLoad('파일을 분석하는 중…', '내용을 읽고 있어요');
+      await runAnalysis(text);
+      return;
+    }
+    toast('지원하지 않는 파일 형식이에요 (md·txt·json·csv·이미지·pdf)', true);
+  } catch (e) {
+    show('home'); $('#loadedBox').classList.remove('hidden'); showHomeErr('파일 처리 실패 — ' + (e.message || ''));
+  }
+}
+
 /* 원클릭: 소스(유튜브/웹 링크) → 텍스트 추출 → 분석 */
 async function oneClickAnalyze() {
   const key = store.key();
@@ -903,15 +957,23 @@ function cycleStatus(on) {
 }
 
 async function callClaude(key, model, input) {
-  const kind = { youtube: '유튜브 영상 자막', web: '웹 아티클 본문', text: '사용자가 제공한 텍스트' }[input.sourceType] || '소스 텍스트';
+  const kind = { youtube: '유튜브 영상 자막', web: '웹 아티클 본문', text: '사용자가 제공한 텍스트', file: '파일 텍스트', image: '이미지' }[input.sourceType] || '소스 텍스트';
   const meta = [];
   if (input.title) meta.push(`제목: ${input.title}`);
   if (input.channel) meta.push(`출처/채널: ${input.channel}`);
   if (input.sourceUrl) meta.push(`URL: ${input.sourceUrl}`);
-  const userText =
-    `${meta.join('\n')}\n\n아래는 ${kind}입니다. 이 내용을 근거로 핵심 노하우·인사이트를 정리하고,` +
-    ` 그 프로세스를 가능한 한 자동화·콘텐츠화할 수 있도록 분석하세요. 반드시 아래 JSON 스키마로만 응답하세요.\n\n` +
-    `[소스 시작]\n${String(input.transcript).slice(0, 48000)}\n[소스 끝]\n\n${JSON_SCHEMA}`;
+  const content = [];
+  let userText;
+  if (input.imageData) {
+    content.push({ type: 'image', source: { type: 'base64', media_type: input.imageData.media_type, data: input.imageData.data } });
+    userText = `${meta.join('\n')}\n\n위 이미지를 읽고(이미지 속 텍스트·도표·손글씨 포함) 핵심 노하우·인사이트를 정리하고,` +
+      ` 자동화·콘텐츠화할 수 있도록 분석하세요. 반드시 아래 JSON 스키마로만 응답하세요.\n\n${JSON_SCHEMA}`;
+  } else {
+    userText = `${meta.join('\n')}\n\n아래는 ${kind}입니다. 이 내용을 근거로 핵심 노하우·인사이트를 정리하고,` +
+      ` 그 프로세스를 가능한 한 자동화·콘텐츠화할 수 있도록 분석하세요. 반드시 아래 JSON 스키마로만 응답하세요.\n\n` +
+      `[소스 시작]\n${String(input.transcript).slice(0, 48000)}\n[소스 끝]\n\n${JSON_SCHEMA}`;
+  }
+  content.push({ type: 'text', text: userText });
 
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -925,7 +987,7 @@ async function callClaude(key, model, input) {
       model,
       max_tokens: 16000,
       system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: [{ type: 'text', text: userText }] }],
+      messages: [{ role: 'user', content }],
     }),
   });
   if (!res.ok) {
@@ -1740,6 +1802,14 @@ $('#studioOut').addEventListener('click', e => {
   }).catch(() => toast('복사에 실패했어요', true));
 });
 
+$('#fileChip').addEventListener('click', () => $('#fileIn').click());
+$('#fileIn').addEventListener('change', e => { const f = e.target.files && e.target.files[0]; if (f) handleFile(f); e.target.value = ''; });
+(() => {
+  const card = $('.input-card'); if (!card) return;
+  ['dragenter', 'dragover'].forEach(ev => card.addEventListener(ev, e => { e.preventDefault(); card.classList.add('drag-over'); }));
+  ['dragleave', 'dragend'].forEach(ev => card.addEventListener(ev, e => { e.preventDefault(); card.classList.remove('drag-over'); }));
+  card.addEventListener('drop', e => { e.preventDefault(); card.classList.remove('drag-over'); const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]; if (f) handleFile(f); });
+})();
 $('#pasteChip').addEventListener('click', async () => {
   try { const t = await navigator.clipboard.readText(); if (t) { $('#urlIn').value = t.trim(); $('#urlIn').focus(); } }
   catch { toast('클립보드 접근이 안 돼요. 직접 붙여넣어 주세요', true); }
