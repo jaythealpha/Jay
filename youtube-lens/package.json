@@ -1,0 +1,8 @@
+{
+  "name": "insight-lens-api",
+  "private": true,
+  "description": "Serverless functions for Insight Lens (transcript, web fetch, pdf extract)",
+  "dependencies": {
+    "unpdf": "^0.12.1"
+  }
+}
