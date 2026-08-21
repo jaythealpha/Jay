@@ -398,7 +398,7 @@
     </div>
 
     <div class="card input-card">
-      <label class="field-label" for="urlIn">소스 — 유튜브 · 인스타/틱톡 · 웹 링크</label>
+      <label class="field-label" for="urlIn">소스 — 유튜브 · 인스타/틱톡 · 웹/PDF 링크</label>
       <div class="url-row">
         <input type="url" id="urlIn" placeholder="유튜브·인스타·틱톡·웹 아티클 링크를 붙여넣으세요" autocomplete="off" inputmode="url">
         <button class="btn btn-primary" id="goBtn" style="flex:none;padding-left:20px;padding-right:20px;">분석 →</button>
@@ -769,6 +769,19 @@ function decodeEntities(s) {
   const el = document.createElement('textarea'); el.innerHTML = s; return el.value;
 }
 
+// PDF 링크 → 백엔드 추출(GET)
+async function fetchPdfUrl(url) {
+  current = { id: null, sourceType: 'file', sourceUrl: url, title: (url.split('/').pop() || 'PDF'), channel: 'PDF', transcript: '' };
+  showPreview({ thumb: null, title: current.title, sub: '📕 PDF · ' + domainOf(url) });
+  const ep = apiUrl('/api/extract') + '?url=' + encodeURIComponent(url);
+  const r = await fetchWithTimeout(ep, 45000);
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || !j.ok) throw new Error(j.error || 'PDF 추출 실패');
+  if (j.name) { current.title = j.name; showPreview({ thumb: null, title: j.name, sub: '📕 PDF · ' + (j.pages || '?') + '쪽' }); }
+  return j.text;
+}
+function isPdfUrl(s) { return looksLikeUrl(s) && /\.pdf(\?|#|$)/i.test(String(s)); }
+
 /* ================= 파일·이미지 소스 ================= */
 const TEXT_EXT = /\.(md|markdown|txt|json|csv|log|tsv)$/i;
 function readText(file) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result || '')); r.onerror = rej; r.readAsText(file); }); }
@@ -801,7 +814,20 @@ async function handleFile(file) {
       await runAnalysis('');
       return;
     }
-    if (isPdf) { toast('PDF 지원은 백엔드 작업 중이에요 — 곧 추가됩니다', true); return; }
+    if (isPdf) {
+      const b64 = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(file); });
+      current = { id: null, sourceType: 'file', sourceUrl: '', title: name, channel: 'PDF', transcript: '' };
+      showPreview({ thumb: null, title: name, sub: '📕 PDF · 텍스트 추출 중…' });
+      show('loading'); setLoad('PDF에서 텍스트를 추출하는 중…', '서버에서 처리하고 있어요');
+      const ep = apiUrl('/api/extract');
+      const r = await fetchWithTimeout(ep, 45000, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ data: b64, name }) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j.ok) throw new Error(j.error || ('PDF 추출 실패 (' + r.status + ')'));
+      current.transcript = j.text;
+      showPreview({ thumb: null, title: name, sub: '📕 PDF · ' + (j.pages || '?') + '쪽' });
+      await runAnalysis(j.text);
+      return;
+    }
     if (TEXT_EXT.test(name) || /^text\//.test(file.type) || file.type === 'application/json') {
       const text = await readText(file);
       if (text.trim().length < 20) { $('#loadedBox').classList.remove('hidden'); showHomeErr('파일 내용이 너무 짧아요.'); return; }
@@ -832,6 +858,7 @@ async function oneClickAnalyze() {
     return;
   }
   const social = !yid && isSocial(input);
+  const pdf = !yid && !social && isPdfUrl(input);
   let text;
   try {
     if (yid) {
@@ -841,6 +868,9 @@ async function oneClickAnalyze() {
     } else if (social) {
       show('loading'); setLoad(socialName(input) + ' 콘텐츠를 읽는 중…', '자막·전사를 가져오고 있어요 (Supadata)');
       text = await fetchSocialSource(input);
+    } else if (pdf) {
+      show('loading'); setLoad('PDF에서 텍스트를 추출하는 중…', '서버에서 처리하고 있어요');
+      text = await fetchPdfUrl(input);
     } else {
       show('loading'); setLoad('웹 페이지를 읽는 중…', '본문을 추출하고 있어요');
       text = await fetchWebSource(input);
@@ -848,7 +878,7 @@ async function oneClickAnalyze() {
   } catch (e) {
     show('home');
     $('#loadedBox').classList.remove('hidden'); $('#pasteFallback').open = true;
-    const what = yid ? '자막' : social ? (socialName(input) + ' 자막·전사') : '웹 본문';
+    const what = yid ? '자막' : social ? (socialName(input) + ' 자막·전사') : pdf ? 'PDF 텍스트' : '웹 본문';
     showHomeErr(what + ' 자동 추출 실패 — ' + (e.message || '') + ' 아래에 텍스트를 직접 붙여넣어 주세요.');
     const sc = $('#scriptIn'); if (sc) sc.focus();
     return;
