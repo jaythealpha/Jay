@@ -80,10 +80,35 @@ GitHub Pages로 배포된 경우: `https://<user>.github.io/<repo>/youtube-lens/
 
 ```
 youtube-lens/
-├── index.html   # 앱 전체 (마크업 + 스타일 + 로직, 외부 의존성 없음)
-├── vercel.json  # 정적 배포 설정
+├── index.html          # 앱 전체 (마크업 + 스타일 + 로직)
+├── vercel.json         # 배포 설정 + 크론(매일 자동 수집)
+├── package.json        # 서버 함수 의존성 (unpdf)
+├── api/
+│   ├── transcript.js   # 유튜브·소셜 자막 (Supadata, AI 자막 폴백)
+│   ├── fetch-source.js # 웹 아티클 본문 추출
+│   ├── extract.mjs     # PDF 텍스트 추출 (+스캔 PDF raw 폴백)
+│   ├── collect.mjs     # 자동 수집 크론 (워치리스트 → 필터 → Notion)
+│   ├── inbox.mjs       # 수집함/워치리스트 프록시 (앱 ↔ Notion)
+│   └── _notion.mjs     # Notion REST 공용 헬퍼
 └── README.md
 ```
+
+## 📥 자동 수집 (워치리스트 → 수집함)
+
+미리 지정한 **유튜브 채널 · 뉴스 키워드 · RSS 피드**에서 새 콘텐츠를 매일 자동으로 모아,
+**관심 프로필**과 대조(Claude Haiku, 0~10점)해 유용한 것만 Notion 수집함에 쌓습니다.
+앱의 📥 수집함에서 확인하고 원클릭으로 분석하세요. 데이터가 Notion에 있어 **모든 기기에서 동일**합니다.
+
+셋업 (1회):
+
+1. [notion.so/my-integrations](https://www.notion.so/my-integrations)에서 내부 통합 생성 → 토큰 복사
+2. Notion **"유튜브 렌즈"** 페이지 → ⋯ → 연결에서 그 통합 연결 (하위 수집함·워치리스트 DB 포함)
+3. Vercel → Settings → Environment Variables:
+   - `NOTION_TOKEN` — 1의 토큰 (필수)
+   - `ANTHROPIC_API_KEY` — 필터링·요약용 (없으면 필터 없이 전부 적재)
+   - `SUPADATA_API_KEY` — 유튜브 자막 추출용
+   - `APP_KEY` — (선택) 수집함 접근 잠금. 설정 시 앱 ⚙️ 설정의 "수집함 앱 키"에 같은 값 입력
+4. 재배포 → 매일 06:00 KST 자동 수집 (앱에서 **⚡ 지금 수집 실행**으로 수동 실행 가능)
 
 ## ▲ Vercel로 배포하기
 

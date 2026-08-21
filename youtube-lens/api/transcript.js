@@ -18,11 +18,17 @@ const IK_ANDROID = 'AIzaSyA8eiZmM1FaDVjRy-df2KTyQ_vz_yYM39w';
 async function supadata(id, key, prefer) {
   const yurl = 'https://youtu.be/' + id;
   // 여러 문서 버전에 대응해 요청 형태를 순서대로 시도
+  // mode=auto: 업로더 자막이 없으면 Supadata가 AI 자막을 생성해 폴백 (크레딧 추가 소모)
   const endpoints = [
-    'https://api.supadata.ai/v1/youtube/transcript?videoId=' + encodeURIComponent(id) + '&lang=' + prefer + '&text=true',
-    'https://api.supadata.ai/v1/youtube/transcript?url=' + encodeURIComponent(yurl) + '&lang=' + prefer + '&text=true',
-    'https://api.supadata.ai/v1/transcript?url=' + encodeURIComponent(yurl) + '&lang=' + prefer + '&text=true',
+    'https://api.supadata.ai/v1/youtube/transcript?videoId=' + encodeURIComponent(id) + '&lang=' + prefer + '&text=true&mode=auto',
+    'https://api.supadata.ai/v1/youtube/transcript?url=' + encodeURIComponent(yurl) + '&lang=' + prefer + '&text=true&mode=auto',
+    'https://api.supadata.ai/v1/transcript?url=' + encodeURIComponent(yurl) + '&lang=' + prefer + '&text=true&mode=auto',
   ];
+  const pickText = j => {
+    const c = j.content ?? j.transcript ?? j.text;
+    const t = typeof c === 'string' ? c : Array.isArray(c) ? c.map(x => x.text || x.content || '').join(' ') : '';
+    return String(t).replace(/\s+/g, ' ').trim();
+  };
   let lastErr = 'supadata 실패';
   for (const url of endpoints) {
     try {
@@ -34,12 +40,22 @@ async function supadata(id, key, prefer) {
         if (r.status === 401 || r.status === 403) throw new Error(m); // 키 문제면 즉시 중단
         continue;
       }
-      const j = await r.json();
-      const c = j.content ?? j.transcript ?? j.text;
-      const text = typeof c === 'string' ? c : Array.isArray(c) ? c.map(x => x.text || x.content || '').join(' ') : '';
-      const clean = String(text).replace(/\s+/g, ' ').trim();
+      let j = await r.json();
+      let clean = pickText(j);
+      // AI 자막 생성은 비동기(jobId) — 잠시 폴링
+      if (!clean && j.jobId) {
+        for (let i = 0; i < 5; i++) {
+          await sleep(2000);
+          const jr = await fetch('https://api.supadata.ai/v1/transcript/' + j.jobId, { headers: { 'x-api-key': key, 'accept': 'application/json' } });
+          if (!jr.ok) continue;
+          const jj = await jr.json();
+          if (jj.status === 'failed') { lastErr = 'AI 자막 생성 실패'; break; }
+          clean = pickText(jj);
+          if (clean) { j = jj; break; }
+        }
+      }
       if (clean.length >= 20) return { text: clean, lang: j.lang || prefer };
-      lastErr = '빈 응답';
+      lastErr = j.jobId ? 'AI 자막 생성이 아직 안 끝났어요. 잠시 후 다시 시도해 주세요.' : '빈 응답';
     } catch (e) { lastErr = String(e && e.message || e); if (/HTTP 40[13]/.test(lastErr)) break; }
   }
   throw new Error(lastErr);
