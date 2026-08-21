@@ -162,7 +162,11 @@ export default async function handler(req, res) {
     for (const p of recent.results) { const u = readProps(p)['URL']; if (u) seen.add(u); }
 
     // 3) 소스별 새 항목 수집
+    // '마지막수집'(워터마크)은 여기서 올리지 않는다. 처리에 실패한 항목까지 "지나간 것"으로
+    // 표시되어 영구 유실되기 때문. 실제 처리가 끝난 뒤, 실패·미처리가 없는 소스만 갱신한다.
     const candidates = [];
+    const watermarks = new Map(); // watchId -> 이번 회차에 본 가장 최신 항목 시각(ms)
+    const unfinished = new Set(); // 실패했거나 이번 회차에 다 못 본 소스
     for (const src of sources) {
       try {
         let items = [], sourceType = 'RSS', sourceName = src['이름'] || src['값'];
@@ -185,18 +189,18 @@ export default async function handler(req, res) {
         if (!lastSeen) fresh = fresh.slice(0, FIRST_RUN_PER_SOURCE);
         else fresh = fresh.slice(0, 6);
         for (const it of fresh) candidates.push({ ...it, sourceType, sourceName, watchId: src.id });
-        if (items.length && !dry) {
-          const newest = new Date(Math.max(items[0].ts || 0, lastSeen)).toISOString();
-          await notion('/pages/' + src.id, 'PATCH', { properties: { '마지막수집': P.text(newest) } });
-        }
-      } catch (e) { report.errors.push(sourceLabel(src) + ': ' + String(e.message || e)); }
+        if (items.length) watermarks.set(src.id, Math.max(items[0].ts || 0, lastSeen));
+      } catch (e) {
+        report.errors.push(sourceLabel(src) + ': ' + String(e.message || e));
+        unfinished.add(src.id);
+      }
     }
     report.found = candidates.length;
 
     // 4) 점수화 → 임계 통과분만 본문 추출·요약·적재
     let kept = 0;
     for (const item of candidates) {
-      if (kept >= MAX_NEW_PER_RUN) break;
+      if (kept >= MAX_NEW_PER_RUN) { unfinished.add(item.watchId); continue; } // 다음 회차에 다시
       try {
         const { score, reason } = await scoreItem(profile, item);
         if (score !== null && score < SCORE_THRESHOLD) { report.skipped++; continue; }
@@ -218,9 +222,21 @@ export default async function handler(req, res) {
           });
         }
         seen.add(item.link); kept++;
-      } catch (e) { report.errors.push(item.title.slice(0, 40) + ': ' + String(e.message || e)); }
+      } catch (e) {
+        report.errors.push(item.title.slice(0, 40) + ': ' + String(e.message || e));
+        unfinished.add(item.watchId); // 이 소스는 워터마크를 올리지 않아 다음 회차에 재시도
+      }
     }
     report.kept = kept;
+
+    // 5) 끝까지 처리된 소스만 '마지막수집' 갱신
+    if (!dry) {
+      for (const [watchId, ts] of watermarks) {
+        if (unfinished.has(watchId)) { report.retry = (report.retry || 0) + 1; continue; }
+        try { await notion('/pages/' + watchId, 'PATCH', { properties: { '마지막수집': P.text(new Date(ts).toISOString()) } }); }
+        catch (e) { report.errors.push('마지막수집 갱신 실패: ' + String(e.message || e)); }
+      }
+    }
     res.status(200).json(report);
   } catch (e) {
     res.status(500).json({ ...report, ok: false, error: String(e && e.message || e) });
