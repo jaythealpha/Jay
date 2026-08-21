@@ -9,6 +9,8 @@ export const WATCH_DB = (process.env.NOTION_WATCH_DB || '354f80b3053348358410a5b
 export function notionHeaders() {
   const token = (process.env.NOTION_TOKEN || '').trim();
   if (!token) throw new Error('NOTION_TOKEN이 설정되지 않았어요. Vercel 환경변수에 Notion 통합 토큰을 넣어주세요.');
+  // 마스킹된 화면 값(●●●●)을 복사해 넣은 경우를 원인 불명 오류 대신 명확히 알려준다
+  if (/[^\x20-\x7E]/.test(token)) throw new Error('NOTION_TOKEN 값이 올바르지 않아요. 화면에 가려져 보이던 ●●●● 를 복사하신 것 같아요 — 실제 토큰으로 다시 저장한 뒤 재배포해 주세요.');
   return {
     'authorization': 'Bearer ' + token,
     'notion-version': '2022-06-28',
