@@ -390,6 +390,10 @@
   .wl-row .v { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-2); }
   .wl-row button { flex: none; background: none; border: 0; cursor: pointer; font-size: 14px; color: var(--ink-3); }
   .wl-row.off .v, .wl-row.off .t { opacity: .4; }
+  .rej-row { display: flex; gap: 10px; padding: 9px 0; border-top: 1px dashed rgba(255,255,255,.08); }
+  .rej-score { flex: none; font-size: 11.5px; font-weight: 800; color: var(--red-soft); padding-top: 1px; }
+  .rej-title { font-size: 13.5px; font-weight: 700; color: var(--ink-2); }
+  .rej-why { font-size: 12px; color: var(--ink-3); margin-top: 3px; line-height: 1.5; }
 </style>
 </head>
 <body>
@@ -546,6 +550,8 @@
       </div>
       <div id="inboxSetupErr" class="hint" style="margin-top:10px;"></div>
     </div>
+
+    <div id="inboxRejected" class="card hidden" style="margin-top:14px;"></div>
 
     <div id="inboxList"></div>
     <div id="inboxEmpty" class="hint hidden" style="text-align:center;margin-top:24px;">아직 수집된 항목이 없어요. 워치리스트에 소스를 추가하고 ⚡ 지금 수집 실행을 눌러보세요.</div>
@@ -2029,10 +2035,29 @@ async function runCollect() {
     } else {
       toast(`수집 완료 — 새 항목 ${j.found || 0}개 중 ${j.kept || 0}개 적재` + (j.skipped ? `, ${j.skipped}개 필터링` : ''));
       if (j.errors && j.errors.length) console.warn('collect errors:', j.errors);
+      renderRejected(j);
       await loadInbox();
     }
   } catch (e) { toast('수집 실행 실패 — ' + (e.message || ''), true); }
   btn.disabled = false; btn.textContent = '⚡ 지금 수집 실행';
+}
+// 필터가 걸러낸 항목을 보여준다 — 무엇이 왜 제외됐는지 봐야 관심 프로필을 조정할 수 있다
+function renderRejected(j) {
+  const box = $('#inboxRejected');
+  const list = (j && j.rejected) || [];
+  if (!list.length) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+  box.classList.remove('hidden');
+  box.innerHTML = `
+    <b style="font-size:14px;">🚫 필터가 제외한 ${list.length}개 <span style="font-weight:600;color:var(--ink-3);">(${j.threshold || 6}점 미만)</span></b>
+    <div class="hint" style="margin:6px 0 10px;">기대와 다르면 <b>👀 워치리스트 관리 → 관심 프로필</b>의 문장을 실제 관심사에 맞게 고치세요. 그 문장이 곧 필터 기준입니다.</div>
+    ${list.map(x => `
+      <div class="rej-row">
+        <span class="rej-score">${esc(x.score)}점</span>
+        <div style="min-width:0;">
+          <div class="rej-title">${esc(x.title)}</div>
+          <div class="rej-why">${esc(x.reason || '')}</div>
+        </div>
+      </div>`).join('')}`;
 }
 async function loadWatchlist() {
   const box = $('#wlList');

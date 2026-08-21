@@ -144,7 +144,7 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') { res.status(204).end(); return; }
   if (!authorized(req)) { res.status(401).json({ ok: false, error: '인증 실패 (x-app-key 필요)' }); return; }
   const dry = !!(req.query && req.query.dry);
-  const report = { ok: true, sources: 0, found: 0, kept: 0, skipped: 0, errors: [] };
+  const report = { ok: true, sources: 0, found: 0, kept: 0, skipped: 0, threshold: SCORE_THRESHOLD, rejected: [], errors: [] };
   try {
     // 잘못 붙여넣은 키는 항목마다 같은 오류를 내므로 시작 전에 한 번에 걸러낸다
     apiKey('ANTHROPIC_API_KEY'); apiKey('SUPADATA_API_KEY');
@@ -203,7 +203,12 @@ export default async function handler(req, res) {
       if (kept >= MAX_NEW_PER_RUN) { unfinished.add(item.watchId); continue; } // 다음 회차에 다시
       try {
         const { score, reason } = await scoreItem(profile, item);
-        if (score !== null && score < SCORE_THRESHOLD) { report.skipped++; continue; }
+        if (score !== null && score < SCORE_THRESHOLD) {
+          report.skipped++;
+          // 무엇이 왜 걸러졌는지 보이지 않으면 필터를 조정할 수 없다 → 응답에 함께 보고
+          if (report.rejected.length < 12) report.rejected.push({ title: item.title.slice(0, 80), score, reason: String(reason || '').slice(0, 160), source: item.sourceName });
+          continue;
+        }
         let excerpt = '';
         if (item.sourceType === '유튜브') excerpt = await ytTranscript(item.link);
         else { try { excerpt = extractReadable(await fetchText(item.link)); } catch {} }
