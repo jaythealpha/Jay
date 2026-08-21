@@ -13,6 +13,7 @@ export const config = { maxDuration: 60 };
 const MAX_NEW_PER_RUN = 10;      // 한 번 실행당 적재 상한 (시간·비용 보호)
 const FIRST_RUN_PER_SOURCE = 3;  // 처음 보는 소스는 최신 N개만
 const SCORE_THRESHOLD = 6;       // 이 점수 미만은 버림 (0~10)
+const HOPELESS_SCORE = 3;        // 제목 단계에서 이 점수 이하면 본문도 받지 않고 폐기
 
 // ---- RSS/Atom 파서 (의존성 없이 정규식으로 최소 파싱) ----
 function dec(s) {
@@ -122,11 +123,12 @@ async function haiku(prompt, maxTokens = 500) {
   const j = await r.json();
   return (j.content && j.content[0] && j.content[0].text) || '';
 }
-async function scoreItem(profile, item) {
+async function scoreItem(profile, item, body) {
   if (!(process.env.ANTHROPIC_API_KEY || '').trim()) return { score: null, reason: '필터 미사용(ANTHROPIC_API_KEY 없음)' };
   const out = await haiku(
     '당신은 콘텐츠 큐레이터입니다. 아래 관심 프로필과 새 콘텐츠를 대조해 관련성·유용성을 0~10 점수로 평가하세요.\n\n' +
-    '[관심 프로필]\n' + profile + '\n\n[콘텐츠]\n제목: ' + item.title + '\n출처: ' + (item.author || item.sourceName || '') + '\n설명: ' + (item.desc || '(없음)') + '\n\n' +
+    '[관심 프로필]\n' + profile + '\n\n[콘텐츠]\n제목: ' + item.title + '\n출처: ' + (item.author || item.sourceName || '') + '\n설명: ' + (item.desc || '(없음)') +
+    (body ? '\n\n[본문 발췌]\n' + body.slice(0, 3000) : '') + '\n\n' +
     'JSON만 출력: {"score": 0-10 정수, "reason": "근거 한 문장(한국어)"}', 200);
   try { const j = JSON.parse(out.match(/\{[\s\S]*\}/)[0]); return { score: Math.max(0, Math.min(10, +j.score || 0)), reason: String(j.reason || '') }; }
   catch { return { score: 5, reason: '평가 파싱 실패 — 보류 점수' }; }
@@ -202,17 +204,35 @@ export default async function handler(req, res) {
     for (const item of candidates) {
       if (kept >= MAX_NEW_PER_RUN) { unfinished.add(item.watchId); continue; } // 다음 회차에 다시
       try {
-        const { score, reason } = await scoreItem(profile, item);
-        if (score !== null && score < SCORE_THRESHOLD) {
+        let { score, reason } = await scoreItem(profile, item);
+        // 명백히 무관한 것은 본문을 받지 않고 바로 버린다 (크레딧 절약)
+        if (score !== null && score <= HOPELESS_SCORE) {
           report.skipped++;
-          // 무엇이 왜 걸러졌는지 보이지 않으면 필터를 조정할 수 없다 → 응답에 함께 보고
           if (report.rejected.length < 12) report.rejected.push({ title: item.title.slice(0, 80), score, reason: String(reason || '').slice(0, 160), source: item.sourceName });
           continue;
         }
+        // 본문 확보. 유튜브 제목은 후킹용이라 정보를 감춰서 제목만으로는 거의 항상
+        // "판단 불가(5점)"가 나온다 → 애매한 구간은 본문을 받아 2차 판정한다.
         let excerpt = '';
         if (item.sourceType === '유튜브') excerpt = await ytTranscript(item.link);
         else { try { excerpt = extractReadable(await fetchText(item.link)); } catch {} }
         excerpt = String(excerpt || '').slice(0, 5500);
+
+        if (score !== null && score < SCORE_THRESHOLD) {
+          if (excerpt.length < 200) { // 재판정할 근거가 없으면 1차 판정을 따른다
+            report.skipped++;
+            if (report.rejected.length < 12) report.rejected.push({ title: item.title.slice(0, 80), score, reason: String(reason || '').slice(0, 160), source: item.sourceName });
+            continue;
+          }
+          const second = await scoreItem(profile, item, excerpt);
+          report.rescored = (report.rescored || 0) + 1;
+          score = second.score; reason = second.reason;
+          if (score !== null && score < SCORE_THRESHOLD) {
+            report.skipped++;
+            if (report.rejected.length < 12) report.rejected.push({ title: item.title.slice(0, 80), score, reason: String(reason || '').slice(0, 160), source: item.sourceName, stage: '본문 확인 후' });
+            continue;
+          }
+        }
         const summary = await summarize({ ...item, reason }, excerpt);
         if (!dry) {
           await notion('/pages', 'POST', {
