@@ -518,6 +518,15 @@
     <div class="hint">위 API가 없을 때 쓰는 브라우저 폴백. 기본 공개 프록시로 시도하며, 잘 안 되면 <b>신뢰할 수 있는 CORS 프록시</b> 접두사를 넣으세요(예: <code>https://api.allorigins.win/raw?url=</code>).</div>
   </div>
   <div class="grp">
+    <label class="field-label">프로젝트 백업 / 이동 (기기 간)</label>
+    <div class="hint" style="margin-bottom:8px;">데이터는 <b>이 브라우저에만</b> 저장돼요(클라우드 동기화 없음). 다른 기기로 옮기려면 여기서 <b>내보내기</b> → 그 파일을 다른 기기에서 <b>가져오기</b> 하세요.</div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-ghost block" id="exportProjects">⬇ 내보내기</button>
+      <button class="btn btn-ghost block" id="importBtn">⬆ 가져오기</button>
+    </div>
+    <input type="file" id="importFile" accept="application/json,.json" hidden>
+  </div>
+  <div class="grp">
     <button class="btn btn-primary block" id="saveSet">저장</button>
     <button class="btn btn-ghost block" id="clearData" style="margin-top:10px;">저장된 데이터 모두 지우기</button>
   </div>
@@ -1049,7 +1058,7 @@ function saveSession(data) {
     contents: [],   // 스튜디오에서 생성한 콘텐츠가 누적됨
   };
   sessions.unshift(session);
-  if (sessions.length > 25) sessions.length = 25;
+  if (sessions.length > 50) sessions.length = 50;
   try { store.saveSessions(sessions); } catch { toast('저장 공간이 부족해 기록이 저장되지 않았어요. 오래된 프로젝트를 지워주세요', true); }
   currentSessionId = session.id;
   _demoPieces = [];
@@ -1754,6 +1763,42 @@ $('#clearData').addEventListener('click', () => {
   if (!confirm('API 키와 모든 분석 기록을 지울까요? 되돌릴 수 없어요.')) return;
   ['yl_key','yl_model','yl_proxy','yl_apibase','yl_txkey','yl_sessions'].forEach(k => localStorage.removeItem(k));
   currentSessionId = null; refreshHistUI(); toast('모두 지웠어요'); closeDrawers();
+});
+
+/* ===== 프로젝트 백업(내보내기) / 가져오기 — 기기 간 이동 ===== */
+function exportProjects() {
+  const sessions = store.sessions();
+  if (!sessions.length) { toast('내보낼 프로젝트가 없어요', true); return; }
+  const payload = JSON.stringify({ app: 'insight-lens', v: 1, exportedAt: new Date().toISOString(), sessions });
+  const name = 'insight-lens-projects-' + new Date().toISOString().slice(0, 10) + '.json';
+  if (downloadText(payload, name, 'application/json')) toast(`프로젝트 ${sessions.length}개 내보냈어요`);
+  else toast('내보내기 실패', true);
+}
+function importProjectsFromText(text) {
+  let data; try { data = JSON.parse(text); } catch { toast('파일을 읽지 못했어요 (JSON 형식 아님)', true); return; }
+  const incoming = Array.isArray(data) ? data : arr(data.sessions);
+  if (!incoming.length) { toast('가져올 프로젝트가 없어요', true); return; }
+  const byId = new Map();
+  const when = s => new Date(s && (s.updatedAt || s.at) || 0).getTime() || 0;
+  [...store.sessions(), ...incoming].forEach(s => {
+    if (!s || !s.id) return;
+    const prev = byId.get(s.id);
+    if (!prev || when(s) >= when(prev)) byId.set(s.id, s);
+  });
+  let merged = [...byId.values()].sort((a, b) => when(b) - when(a));
+  if (merged.length > 50) merged.length = 50;
+  try { store.saveSessions(merged); } catch { toast('저장 공간이 부족해요. 일부만 가져와졌을 수 있어요', true); }
+  refreshHistUI(); toast(`가져오기 완료 · 총 ${merged.length}개 프로젝트`);
+}
+$('#exportProjects').addEventListener('click', exportProjects);
+$('#importBtn').addEventListener('click', () => $('#importFile').click());
+$('#importFile').addEventListener('change', e => {
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => importProjectsFromText(String(r.result || ''));
+  r.onerror = () => toast('파일을 읽지 못했어요', true);
+  r.readAsText(f);
+  e.target.value = '';
 });
 
 // delegated: open/delete history + recent
