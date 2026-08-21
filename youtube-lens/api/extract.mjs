@@ -33,6 +33,14 @@ export default async function handler(req, res) {
       if (!r.ok) { res.status(502).json({ ok: false, error: `PDF 가져오기 실패 (HTTP ${r.status})` }); return; }
       buf = Buffer.from(await r.arrayBuffer());
       srcName = url.split('/').pop() || 'pdf';
+      // raw=1: 텍스트 추출 대신 PDF 원본(base64)을 반환 — 스캔 PDF를 Claude 비전으로
+      // 직접 분석하는 폴백용 (브라우저는 CORS로 외부 PDF를 못 받으므로 서버가 중개)
+      if (req.query && req.query.raw) {
+        if (buf.length > 3.5 * 1024 * 1024) { res.status(413).json({ ok: false, error: 'PDF가 너무 커요(3.5MB 초과). 파일로 직접 업로드해 주세요.' }); return; }
+        res.setHeader('Cache-Control', 'public, max-age=3600');
+        res.status(200).json({ ok: true, data: buf.toString('base64'), name: srcName });
+        return;
+      }
     } else if (req.method === 'POST') {
       let body = req.body;
       if (!body || typeof body !== 'object') { try { body = JSON.parse(await readRawBody(req)); } catch { body = {}; } }
