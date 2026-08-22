@@ -7,6 +7,8 @@
 // env: NOTION_TOKEN(필수), ANTHROPIC_API_KEY(필터링·요약, 없으면 필터 없이 적재),
 //      SUPADATA_API_KEY(유튜브 자막), APP_KEY/CRON_SECRET(선택)
 import { INBOX_DB, WATCH_DB, notion, queryDb, readProps, P, authorized, cors } from './_notion.mjs';
+import { upsertProject } from './_projects.mjs';
+import { analyzeSource } from './_analyze.mjs';
 
 export const config = { maxDuration: 60 };
 
@@ -14,6 +16,8 @@ const MAX_NEW_PER_RUN = 10;      // 한 번 실행당 적재 상한 (시간·비
 const FIRST_RUN_PER_SOURCE = 3;  // 처음 보는 소스는 최신 N개만
 const SCORE_THRESHOLD = 6;       // 이 점수 미만은 버림 (0~10)
 const HOPELESS_SCORE = 3;        // 제목 단계에서 이 점수 이하면 본문도 받지 않고 폐기
+const AUTO_ANALYZE_SCORE = 8;    // 이 점수 이상이면 수집 단계에서 전체 분석까지 수행
+const MAX_AUTO_ANALYZE = 2;      // 회차당 자동 분석 상한 (Sonnet 호출이라 비용·시간 보호)
 
 // ---- RSS/Atom 파서 (의존성 없이 정규식으로 최소 파싱) ----
 function dec(s) {
@@ -161,7 +165,7 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') { res.status(204).end(); return; }
   if (!authorized(req)) { res.status(401).json({ ok: false, error: '인증 실패 (x-app-key 필요)' }); return; }
   const dry = !!(req.query && req.query.dry);
-  const report = { ok: true, sources: 0, found: 0, kept: 0, skipped: 0, threshold: SCORE_THRESHOLD, rejected: [], errors: [] };
+  const report = { ok: true, sources: 0, found: 0, kept: 0, skipped: 0, analyzed: 0, threshold: SCORE_THRESHOLD, rejected: [], errors: [] };
   try {
     // 잘못 붙여넣은 키는 항목마다 같은 오류를 내므로 시작 전에 한 번에 걸러낸다
     apiKey('ANTHROPIC_API_KEY'); apiKey('SUPADATA_API_KEY');
@@ -174,7 +178,11 @@ export default async function handler(req, res) {
     // 자동 수집 스위치: '설정' 행의 활성 체크가 꺼져 있으면 예약 실행을 건너뛴다.
     // 앱에서 누르는 수동 실행(manual=1)은 스위치와 무관하게 항상 동작한다.
     const manual = !!(req.query && (req.query.manual || req.query.only));
-    const autoRow = all.find(w => w['유형'] === '설정');
+    const settingRows = all.filter(w => w['유형'] === '설정');
+    const autoRow = settingRows.find(w => /자동 수집/.test(w['이름'] || '')) || settingRows[0];
+    // 자동 분석 설정 행이 없으면 기본 켜짐. 끄고 싶으면 Notion에 '⚡ 자동 분석' 행을 만들고 체크 해제
+    const analyzeRow = settingRows.find(w => /자동 분석/.test(w['이름'] || ''));
+    const autoAnalyze = analyzeRow ? !!analyzeRow['활성'] : true;
     if (!manual && autoRow && !autoRow['활성']) {
       res.status(200).json({ ...report, ok: true, paused: true, note: '자동 수집이 꺼져 있어요. 앱에서 수동 실행하거나 설정을 켜주세요.' });
       return;
@@ -263,6 +271,29 @@ export default async function handler(req, res) {
           }
         }
         const summary = await summarize({ ...item, reason }, excerpt);
+
+        // 확실히 좋은 것(8점 이상)은 여기서 전체 분석까지 끝내 프로젝트로 만든다.
+        // 아침에 앱을 열면 이미 완성된 결과가 기다린다. Sonnet 호출이라 회차당 상한을 둔다.
+        let analyzed = false;
+        if (autoAnalyze && score >= AUTO_ANALYZE_SCORE && report.analyzed < MAX_AUTO_ANALYZE
+            && excerpt.length >= 400 && (process.env.ANTHROPIC_API_KEY || '').trim() && !dry) {
+          try {
+            const data = await analyzeSource({
+              key: apiKey('ANTHROPIC_API_KEY'), model: process.env.ANALYSIS_MODEL || 'claude-sonnet-5',
+              title: item.title, channel: item.author || item.sourceName, url: item.link, transcript: excerpt,
+            });
+            const now = new Date().toISOString();
+            await upsertProject({
+              id: 's_auto_' + Date.now().toString(36) + '_' + report.analyzed,
+              at: now, updatedAt: now,
+              sourceType: item.sourceType === '유튜브' ? 'youtube' : 'web',
+              sourceUrl: item.link, title: item.title, channel: item.author || item.sourceName,
+              data, sourceExcerpt: excerpt, contents: [],
+            });
+            report.analyzed++; analyzed = true;
+          } catch (e) { report.errors.push('자동 분석 실패(' + item.title.slice(0, 30) + '): ' + String(e.message || e)); }
+        }
+
         if (!dry) {
           await notion('/pages', 'POST', {
             parent: { database_id: INBOX_DB },
@@ -270,7 +301,7 @@ export default async function handler(req, res) {
               '제목': P.title(item.title), 'URL': P.url(item.link), '출처': P.select(item.sourceType),
               '채널/매체': P.text(item.author || item.sourceName), '점수': P.number(score),
               '요약': P.text((reason ? '[' + (score ?? '-') + '점] ' + reason + '\n' : '') + summary),
-              '본문': P.text(excerpt), '상태': P.select('새 항목'), '썸네일': P.url(item.thumb || ''),
+              '본문': P.text(excerpt), '상태': P.select(analyzed ? '분석됨' : '새 항목'), '썸네일': P.url(item.thumb || ''),
               '수집일': P.date(new Date(item.ts || Date.now()).toISOString()),
             },
           });

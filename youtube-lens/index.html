@@ -571,6 +571,15 @@
       <div id="inboxSetupErr" class="hint" style="margin-top:10px;"></div>
     </div>
 
+    <div class="card" id="inboxFilters" style="margin-top:14px;display:flex;gap:9px;flex-wrap:wrap;align-items:center;">
+      <input type="search" id="inbQ" placeholder="🔍 제목·요약·채널 검색" style="flex:1;min-width:170px;" autocomplete="off">
+      <select id="inbSource" style="flex:none;width:auto;"><option value="">모든 출처</option><option value="유튜브">▶️ 유튜브</option><option value="뉴스">📰 뉴스</option><option value="RSS">📡 RSS</option></select>
+      <select id="inbStatus" style="flex:none;width:auto;"><option value="">보관 제외 전체</option><option value="새 항목">새 항목</option><option value="분석됨">분석됨</option><option value="보관">보관</option><option value="all">제외까지 전부</option></select>
+      <select id="inbSort" style="flex:none;width:auto;"><option value="date">최신순</option><option value="score">점수순</option></select>
+    </div>
+    <div id="inbCount" class="hint" style="margin-top:8px;"></div>
+
+    <div id="inboxUnlocked" class="err-box hidden" style="margin-top:14px;"></div>
     <div id="inboxRejected" class="card hidden" style="margin-top:14px;"></div>
 
     <div id="inboxList"></div>
@@ -619,8 +628,13 @@
     <div class="hint">Vercel 환경변수 <code>APP_KEY</code>를 설정한 경우에만 필요해요. 수집함(📥)·워치리스트 접근을 본인만 가능하게 잠급니다. 미설정 시 비워두세요.</div>
   </div>
   <div class="grp">
-    <label class="field-label">프로젝트 백업 / 이동 (기기 간)</label>
-    <div class="hint" style="margin-bottom:8px;">데이터는 <b>이 브라우저에만</b> 저장돼요(클라우드 동기화 없음). 다른 기기로 옮기려면 여기서 <b>내보내기</b> → 그 파일을 다른 기기에서 <b>가져오기</b> 하세요.</div>
+    <label class="field-label">클라우드 동기화 (Notion)</label>
+    <div class="hint" style="margin-bottom:8px;">분석 결과와 만든 콘텐츠가 <b>Notion에 자동 저장</b>되어 집·회사 어디서 열어도 같은 내용이 보입니다. 저장할 때마다 자동으로 올라가고, 앱을 열 때 새로운 것만 내려받습니다.</div>
+    <button class="btn btn-ghost block" id="syncNow">☁️ 지금 동기화</button>
+  </div>
+  <div class="grp">
+    <label class="field-label">파일 백업 (선택)</label>
+    <div class="hint" style="margin-bottom:8px;">클라우드 동기화와 별개로 <b>파일로 보관</b>하고 싶을 때 사용하세요.</div>
     <div style="display:flex;gap:10px;">
       <button class="btn btn-ghost block" id="exportProjects">⬇ 내보내기</button>
       <button class="btn btn-ghost block" id="importBtn">⬆ 가져오기</button>
@@ -1277,6 +1291,7 @@ function saveSession(data) {
   currentSessionId = session.id;
   _demoPieces = [];
   refreshHistUI();
+  syncPush(session);   // 클라우드 사본 (실패해도 로컬은 이미 저장됨)
   return session;
 }
 // 현재 프로젝트에 생성 콘텐츠 누적 저장
@@ -1287,6 +1302,7 @@ function saveContentsToSession(newPieces) {
   s.contents = (s.contents || []).concat(arr(newPieces).map(p => ({ ...p, savedAt: new Date().toISOString() })));
   s.updatedAt = new Date().toISOString();
   try { store.saveSessions(sessions); } catch { toast('저장 공간이 부족해요. 오래된 프로젝트를 지워주세요', true); }
+  syncPush(s);
   return true;
 }
 function deleteContentFromSession(idx) {
@@ -1296,11 +1312,14 @@ function deleteContentFromSession(idx) {
   s.contents.splice(idx, 1);
   s.updatedAt = new Date().toISOString();
   try { store.saveSessions(sessions); } catch {}
+  syncPush(s);
 }
 function deleteSession(id) {
   store.saveSessions(store.sessions().filter(s => s.id !== id));
   if (currentSessionId === id) currentSessionId = null;
   renderHistList(); refreshHistUI();
+  // 클라우드 사본도 지운다 — 안 지우면 다음 동기화에서 되살아난다
+  apiFetch('/api/projects', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'delete', id }) }).catch(() => {});
 }
 function refreshHistUI() {
   const n = store.sessions().length;
@@ -1795,7 +1814,7 @@ function pieceToText(p) {
 function saveStudioPieces(pieces) {
   if (currentSessionId && currentSession()) {
     const s = store.sessions(); const cur = s.find(x => x.id === currentSessionId);
-    if (cur) { cur.contents = pieces; cur.updatedAt = new Date().toISOString(); try { store.saveSessions(s); } catch { toast('저장 공간이 부족해요', true); } }
+    if (cur) { cur.contents = pieces; cur.updatedAt = new Date().toISOString(); try { store.saveSessions(s); } catch { toast('저장 공간이 부족해요', true); } syncPush(cur); }
   } else { _demoPieces = pieces; }
 }
 function editPiece(i) {
@@ -1968,6 +1987,76 @@ $('#pasteChip').addEventListener('click', async () => {
 $$('.chip[data-fill]').forEach(c => c.addEventListener('click', () => { if (c.dataset.fill === 'sns') loadDemo(); }));
 
 function goHome() { closeDrawers(); resetInput(); show('home'); }
+/* ================= 클라우드 동기화 (프로젝트 ↔ Notion) =================
+   브라우저(localStorage)가 작업 저장소이고 Notion은 기기 간 백본이다.
+   저장할 때마다 조용히 올리고(push), 앱을 열 때 새로운 것만 내려받아(pull) 병합한다.
+   충돌은 updatedAt 기준 최신본 우선 — 내보내기/가져오기와 같은 규칙. */
+let _syncBusy = false;
+function syncEnabled() { return true; } // 셋업이 안 됐으면 API가 424로 알려주므로 항상 시도
+function apiFetch(path, opts = {}) {
+  const headers = Object.assign({}, opts.headers || {});
+  const ak = store.appKey(); if (ak) headers['x-app-key'] = ak;
+  return fetchWithTimeout(apiUrl(path), opts.timeout || 30000, Object.assign({}, opts, { headers }));
+}
+// 한 프로젝트를 클라우드에 올린다. 실패해도 로컬 저장은 이미 끝났으므로 조용히 넘어간다.
+async function syncPush(session) {
+  if (!session || !syncEnabled()) return;
+  try {
+    const r = await apiFetch('/api/projects', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ action: 'upsert', project: session }),
+    });
+    if (!r.ok) { const j = await r.json().catch(() => ({})); console.warn('sync push 실패:', j.error || r.status); }
+  } catch (e) { console.warn('sync push 오류:', e.message || e); }
+}
+// 클라우드에서 더 최신인 프로젝트만 내려받아 병합한다.
+async function syncPull(loud) {
+  if (_syncBusy) return; _syncBusy = true;
+  const when = s => new Date(s && (s.updatedAt || s.at) || 0).getTime() || 0;
+  try {
+    const r = await apiFetch('/api/projects');
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.ok) {
+      if (loud) toast(j.needSetup ? '동기화 설정이 필요해요 (📥 수집함의 셋업 안내 참고)' : (j.error || '동기화 실패'), true);
+      return;
+    }
+    const local = store.sessions();
+    const localById = new Map(local.map(s => [s.id, s]));
+    const stale = (j.projects || []).filter(p => {
+      const mine = localById.get(p.id);
+      return !mine || when(p) > when(mine);
+    });
+    if (!stale.length) { if (loud) toast('이미 최신 상태예요'); return; }
+    let merged = local.slice(), added = 0;
+    for (const p of stale.slice(0, 30)) {  // 한 번에 과도한 요청을 막는다
+      try {
+        const rr = await apiFetch('/api/projects?id=' + encodeURIComponent(p.id));
+        const jj = await rr.json().catch(() => ({}));
+        if (!rr.ok || !jj.ok || !jj.project) continue;
+        const full = jj.project;
+        const item = {
+          id: full.id, at: full.updatedAt, updatedAt: full.updatedAt,
+          vid: parseId(full.sourceUrl || '') || null,
+          sourceType: full.sourceUrl && parseId(full.sourceUrl) ? 'youtube' : 'web',
+          sourceUrl: full.sourceUrl || '', title: full.title, channel: full.channel || '',
+          data: full.data || {}, sourceExcerpt: full.sourceExcerpt || '', contents: full.contents || [],
+        };
+        const i = merged.findIndex(s => s.id === item.id);
+        if (i >= 0) merged[i] = item; else merged.unshift(item);
+        added++;
+      } catch { /* 개별 실패는 건너뛴다 */ }
+    }
+    merged.sort((a, b) => when(b) - when(a));
+    if (merged.length > 50) merged.length = 50;
+    try { store.saveSessions(merged); } catch { toast('저장 공간이 부족해 일부만 동기화됐어요', true); }
+    refreshHistUI(); renderHistList();
+    if (added) toast(`☁️ ${added}개 프로젝트를 동기화했어요`);
+    else if (loud) toast('이미 최신 상태예요');
+  } catch (e) {
+    if (loud) toast('동기화 오류 — ' + (e.message || ''), true);
+  } finally { _syncBusy = false; }
+}
+
 /* ================= 수집함 (자동 수집 · Notion 백본) ================= */
 let _inboxItems = [];
 function inboxFetch(path, opts = {}) {
@@ -1995,8 +2084,22 @@ async function loadInbox() {
 }
 function renderInboxItems() {
   const list = $('#inboxList');
-  const items = _inboxItems.filter(it => it.status !== '제외');
-  $('#inboxEmpty').classList.toggle('hidden', items.length > 0);
+  const q = ($('#inbQ').value || '').trim().toLowerCase();
+  const fSrc = $('#inbSource').value, fSt = $('#inbStatus').value, sort = $('#inbSort').value;
+  let items = _inboxItems.filter(it => {
+    if (fSt === 'all') { /* 제외까지 전부 */ }
+    else if (fSt) { if (it.status !== fSt) return false; }
+    else if (it.status === '제외') return false;
+    if (fSrc && it.source !== fSrc) return false;
+    if (q && !((it.title || '') + ' ' + (it.summary || '') + ' ' + (it.channel || '')).toLowerCase().includes(q)) return false;
+    return true;
+  });
+  if (sort === 'score') items = items.slice().sort((a, b) => (b.score || 0) - (a.score || 0));
+  const total = _inboxItems.length;
+  $('#inbCount').textContent = total ? `${items.length}개 표시 · 전체 ${total}개` : '';
+  $('#inboxFilters').style.display = total ? '' : 'none';
+  $('#inboxEmpty').classList.toggle('hidden', items.length > 0 || (total > 0));
+  if (total && !items.length) { list.innerHTML = '<div class="hint" style="text-align:center;margin-top:20px;">조건에 맞는 항목이 없어요.</div>'; return; }
   const badge = s => s === '유튜브' ? '▶️ 유튜브' : s === '뉴스' ? '📰 뉴스' : '📡 RSS';
   // 썸네일은 원본 URL을 참조만 한다(저장 없음). 유튜브는 저장된 값이 없어도 URL의 영상 ID로
   // 만들 수 있어 폴백한다(썸네일 기능 이전에 수집된 항목도 보이게). 깨지면 onerror로 숨김.
@@ -2068,13 +2171,25 @@ async function runCollect() {
       if (r.status === 424 || j.needSetup || /NOTION_TOKEN/.test(j.error || '')) { $('#inboxSetup').classList.remove('hidden'); $('#inboxSetupErr').textContent = j.error || ''; }
       else toast(j.error || ('수집 실패 ' + r.status), true);
     } else {
-      toast(`수집 완료 — 새 항목 ${j.found || 0}개 중 ${j.kept || 0}개 적재` + (j.skipped ? `, ${j.skipped}개 필터링` : ''));
+      toast(`수집 완료 — 새 항목 ${j.found || 0}개 중 ${j.kept || 0}개 적재`
+        + (j.skipped ? `, ${j.skipped}개 필터링` : '')
+        + (j.analyzed ? ` · ⭐ ${j.analyzed}개는 분석까지 완료` : ''));
       if (j.errors && j.errors.length) console.warn('collect errors:', j.errors);
       renderRejected(j);
       await loadInbox();
+      if (j.analyzed) syncPull(false);   // 서버가 만든 프로젝트를 바로 내려받는다
     }
   } catch (e) { toast('수집 실행 실패 — ' + (e.message || ''), true); }
   btn.disabled = false; btn.textContent = '⚡ 지금 수집 실행';
+}
+// APP_KEY 미설정이면 수집함 API가 공개 상태 — 주소를 아는 사람이 내용을 읽거나
+// 수집을 실행(크레딧 소모)할 수 있으므로 눈에 띄게 알린다.
+function renderLockWarning(locked) {
+  const box = $('#inboxUnlocked');
+  if (locked !== false) { box.classList.add('hidden'); return; }
+  box.classList.remove('hidden');
+  box.innerHTML = '🔓 <b>수집함이 잠겨 있지 않아요.</b> 주소를 아는 사람이 수집한 내용을 보거나 수집을 실행(=API 크레딧 소모)할 수 있습니다. ' +
+    'Vercel 환경변수에 <code>APP_KEY</code>를 넣고 재배포한 뒤, ⚙️ 설정의 <b>수집함 앱 키</b>에 같은 값을 저장하세요.';
 }
 // 자동 수집 스위치 — 끄면 매일 예약 실행만 멈추고, ⚡ 수동 실행은 그대로 동작한다
 let _autoCfg = null;
@@ -2123,6 +2238,7 @@ async function loadWatchlist() {
     const r = await inboxFetch('/api/inbox?watchlist=1');
     const j = await r.json().catch(() => ({}));
     if (!r.ok || !j.ok) { box.innerHTML = '<div class="hint">워치리스트를 불러오지 못했어요' + (j.needSetup ? ' — 아래 셋업을 먼저 완료하세요' : '') + '</div>'; return; }
+    renderLockWarning(j.locked);
     renderAutoSwitch(j.auto);
     renderPickList(j.watchlist || []);
     box.innerHTML = (j.watchlist || []).filter(w => w.type !== '설정').map(w => `
@@ -2147,6 +2263,10 @@ async function addWatch() {
 $('#inboxBtn').addEventListener('click', openInbox);
 $('#inboxBack').addEventListener('click', goHome);
 $('#inboxRefresh').addEventListener('click', loadInbox);
+['#inbQ', '#inbSource', '#inbStatus', '#inbSort'].forEach(sel => {
+  const el = $(sel);
+  el.addEventListener(sel === '#inbQ' ? 'input' : 'change', () => renderInboxItems());
+});
 $('#collectNow').addEventListener('click', runCollect);
 $('#wlAdd').addEventListener('click', addWatch);
 $('#autoSw').addEventListener('change', async e => {
@@ -2247,8 +2367,12 @@ document.addEventListener('click', e => {
   if (open) openSession(open.dataset.open);
 });
 
+$('#syncNow').addEventListener('click', () => syncPull(true));
+
 /* ================= INIT ================= */
 refreshHistUI();
+// 앱을 열면 다른 기기에서 만든 최신 프로젝트를 조용히 가져온다
+setTimeout(() => syncPull(false), 800);
 </script>
 </body>
 </html>
