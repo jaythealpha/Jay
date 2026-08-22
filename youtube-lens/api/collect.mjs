@@ -17,7 +17,11 @@ const FIRST_RUN_PER_SOURCE = 3;  // 처음 보는 소스는 최신 N개만
 const SCORE_THRESHOLD = 6;       // 이 점수 미만은 버림 (0~10)
 const HOPELESS_SCORE = 3;        // 제목 단계에서 이 점수 이하면 본문도 받지 않고 폐기
 const AUTO_ANALYZE_SCORE = 8;    // 이 점수 이상이면 수집 단계에서 전체 분석까지 수행
-const MAX_AUTO_ANALYZE = 2;      // 회차당 자동 분석 상한 (Sonnet 호출이라 비용·시간 보호)
+const MAX_AUTO_ANALYZE = 1;      // 회차당 자동 분석 상한 (Sonnet 호출이라 비용·시간 보호)
+// 서버리스 함수는 60초에 강제 종료된다. 분석 한 건이 30~40초라 수집과 겹치면 넘치므로,
+// 남은 시간이 충분할 때만 시작한다. 건너뛴 항목은 '새 항목'으로 남아 앱에서 분석하면 된다.
+const FN_BUDGET_MS = 55000;
+const ANALYZE_NEEDS_MS = 32000;
 
 // ---- RSS/Atom 파서 (의존성 없이 정규식으로 최소 파싱) ----
 function dec(s) {
@@ -164,6 +168,8 @@ export default async function handler(req, res) {
   cors(res);
   if (req.method === 'OPTIONS') { res.status(204).end(); return; }
   if (!authorized(req)) { res.status(401).json({ ok: false, error: '인증 실패 (x-app-key 필요)' }); return; }
+  const T0 = Date.now();
+  const timeLeft = () => FN_BUDGET_MS - (Date.now() - T0);
   const dry = !!(req.query && req.query.dry);
   const report = { ok: true, sources: 0, found: 0, kept: 0, skipped: 0, analyzed: 0, threshold: SCORE_THRESHOLD, rejected: [], errors: [] };
   try {
@@ -239,7 +245,9 @@ export default async function handler(req, res) {
     // 4) 점수화 → 임계 통과분만 본문 추출·요약·적재
     let kept = 0;
     for (const item of candidates) {
-      if (kept >= MAX_NEW_PER_RUN) { unfinished.add(item.watchId); continue; } // 다음 회차에 다시
+      // 회차 상한이거나 함수 시간이 얼마 안 남았으면 남은 항목은 다음 회차로 미룬다.
+      // (시간 초과로 강제 종료되면 아무것도 보고되지 않고 워터마크도 어긋난다)
+      if (kept >= MAX_NEW_PER_RUN || timeLeft() < 8000) { unfinished.add(item.watchId); continue; }
       try {
         let { score, reason } = await scoreItem(profile, item);
         // 명백히 무관한 것은 본문을 받지 않고 바로 버린다 (크레딧 절약)
@@ -275,8 +283,11 @@ export default async function handler(req, res) {
         // 확실히 좋은 것(8점 이상)은 여기서 전체 분석까지 끝내 프로젝트로 만든다.
         // 아침에 앱을 열면 이미 완성된 결과가 기다린다. Sonnet 호출이라 회차당 상한을 둔다.
         let analyzed = false;
-        if (autoAnalyze && score >= AUTO_ANALYZE_SCORE && report.analyzed < MAX_AUTO_ANALYZE
-            && excerpt.length >= 400 && (process.env.ANTHROPIC_API_KEY || '').trim() && !dry) {
+        const canAnalyze = autoAnalyze && score >= AUTO_ANALYZE_SCORE && report.analyzed < MAX_AUTO_ANALYZE
+          && excerpt.length >= 400 && (process.env.ANTHROPIC_API_KEY || '').trim() && !dry;
+        if (canAnalyze && timeLeft() < ANALYZE_NEEDS_MS) {
+          report.analyzeSkipped = (report.analyzeSkipped || 0) + 1;  // 시간 부족 → 앱에서 수동 분석
+        } else if (canAnalyze) {
           try {
             const data = await analyzeSource({
               key: apiKey('ANTHROPIC_API_KEY'), model: process.env.ANALYSIS_MODEL || 'claude-sonnet-5',

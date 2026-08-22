@@ -48,7 +48,9 @@ export async function analyzeSource({ key, model, title, channel, url, transcrip
     headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
     body: JSON.stringify({
       model: model || 'claude-sonnet-5',
-      max_tokens: 16000,
+      // 앱(16000)보다 낮게 잡는다 — 서버리스 60초 제한 안에서 끝나야 하고,
+      // 발췌가 5,500자로 제한돼 있어 이 스키마 출력에는 충분하다
+      max_tokens: 8000,
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: [{ type: 'text', text: userText }] }],
     }),
