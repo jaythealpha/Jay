@@ -1998,11 +1998,14 @@ function renderInboxItems() {
   const items = _inboxItems.filter(it => it.status !== '제외');
   $('#inboxEmpty').classList.toggle('hidden', items.length > 0);
   const badge = s => s === '유튜브' ? '▶️ 유튜브' : s === '뉴스' ? '📰 뉴스' : '📡 RSS';
-  // 썸네일은 원본 URL을 참조만 한다(저장 없음). 유튜브는 영상 ID로 생성되므로 항상 있고,
-  // 없거나 깨지면 onerror로 숨겨 레이아웃이 무너지지 않게 한다.
-  list.innerHTML = items.map(it => `
+  // 썸네일은 원본 URL을 참조만 한다(저장 없음). 유튜브는 저장된 값이 없어도 URL의 영상 ID로
+  // 만들 수 있어 폴백한다(썸네일 기능 이전에 수집된 항목도 보이게). 깨지면 onerror로 숨김.
+  const thumbOf = it => { if (it.thumb) return it.thumb; const id = parseId(it.url || ''); return id ? thumbUrl(id) : ''; };
+  list.innerHTML = items.map(it => {
+    const th = thumbOf(it);
+    return `
     <div class="card inb-item" data-id="${esc(it.id)}">
-      ${it.thumb ? `<a href="${esc(it.url)}" target="_blank" rel="noopener" style="flex:none;"><img class="inb-thumb" src="${esc(it.thumb)}" alt="" loading="lazy" onerror="this.style.display='none'"></a>` : ''}
+      ${th ? `<a href="${esc(it.url)}" target="_blank" rel="noopener" style="flex:none;"><img class="inb-thumb" src="${esc(th)}" alt="" loading="lazy" onerror="this.style.display='none'"></a>` : ''}
       <div class="inb-body">
         <div class="inb-head">
           <span class="inb-badge">${badge(it.source)}</span>
@@ -2018,7 +2021,8 @@ function renderInboxItems() {
           <button class="btn btn-ghost" data-inb="drop">✕ 제외</button>
         </div>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 async function markInbox(id, status, silent) {
   try {
