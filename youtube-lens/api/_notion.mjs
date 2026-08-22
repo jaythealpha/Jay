@@ -64,8 +64,18 @@ export function readProps(page) {
   return out;
 }
 
-export async function queryDb(dbId, body = {}) {
-  return notion('/databases/' + dbId + '/query', 'POST', { page_size: 100, ...body });
+// 100건 상한을 넘는 DB에서 뒷부분이 조용히 빠지지 않도록 커서를 따라간다.
+// (중복 방지용 URL 셋이 최근 100건만 보던 탓에 같은 항목이 다시 적재될 수 있었다)
+export async function queryDb(dbId, body = {}, maxPages = 5) {
+  let out = null, cursor;
+  for (let i = 0; i < maxPages; i++) {
+    const page = await notion('/databases/' + dbId + '/query', 'POST',
+      { page_size: 100, ...body, ...(cursor ? { start_cursor: cursor } : {}) });
+    if (!out) out = page; else out.results = out.results.concat(page.results || []);
+    if (!page.has_more || !page.next_cursor) { out.has_more = false; break; }
+    cursor = page.next_cursor;
+  }
+  return out || { results: [] };
 }
 
 // ---- 요청 인증 ----
@@ -74,14 +84,17 @@ export async function queryDb(dbId, body = {}) {
 // 앱이 경고를 띄우게 한다.
 export function isLocked() { return !!(process.env.APP_KEY || '').trim(); }
 
-// Vercel 예약 실행(크론) 판별. CRON_SECRET을 설정하면 Vercel이 Authorization 헤더를
-// 붙여 보낸다(권장). 설정하지 않은 경우를 위해 vercel-cron user-agent도 허용한다.
+// Vercel 예약 실행(크론) 판별.
+// user-agent는 누구나 위조할 수 있으므로 신뢰하지 않는다. 예전에 UA 폴백을 두었더니
+// `user-agent: vercel-cron/1.0` 한 줄로 APP_KEY 잠금이 통째로 우회됐다.
+// CRON_SECRET을 설정하면 Vercel이 Authorization: Bearer <값>을 붙여 보낸다.
 export function isCron(req) {
   const cronSecret = (process.env.CRON_SECRET || '').trim();
-  const auth = String(req.headers['authorization'] || '');
-  if (cronSecret) return auth === 'Bearer ' + cronSecret;
-  return /^vercel-cron\//i.test(String(req.headers['user-agent'] || ''));
+  if (!cronSecret) return false;
+  return String(req.headers['authorization'] || '') === 'Bearer ' + cronSecret;
 }
+// 잠금은 걸었는데 CRON_SECRET이 없으면 예약 수집이 인증에 막힌다 → 앱이 경고하도록 노출
+export function cronReady() { return !!(process.env.CRON_SECRET || '').trim(); }
 
 export function authorized(req) {
   if (isCron(req)) return true;

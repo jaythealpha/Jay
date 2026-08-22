@@ -12,18 +12,37 @@ export const SYSTEM_PROMPT = `당신은 다양한 소스(유튜브 영상 자막
 캡컷, ChatGPT/Claude API, 유튜브·인스타 API 등)를 근거로 현실적으로 제시하세요.
 반드시 지정된 JSON 스키마로만, 한국어로 응답합니다.`;
 
+// ⚠️ index.html의 JSON_SCHEMA와 **한 글자도 다르면 안 된다**.
+// 앱의 renderResult가 tldr·interviewee·playbook·knowhow[].category·knowhow[].why를 직접 읽기 때문에,
+// 여기서 필드가 빠지면 자동 분석 결과만 화면에서 텅 비어 보인다.
+// scripts/check-schema-sync.mjs가 두 파일의 일치를 검사한다.
 export const JSON_SCHEMA = `{
-  "video": { "title": "소스 제목", "creator": "화자/저자 이름(모르면 '')", "oneLine": "이 소스를 한 문장으로" },
+  "video": { "title": "영상 제목(모르면 '')", "creator": "채널/인터뷰이(모르면 '')", "topic": "한 문장 주제", "oneLine": "이 영상의 핵심을 한 줄로" },
   "summary": "3~5문장 핵심 요약",
-  "knowhow": [ { "title": "노하우 제목", "detail": "구체적 설명 2~4문장", "steps": ["따라 할 수 있는 단계 2~5개"], "automation": "높음|중간|낮음|불가", "automationHow": "자동화한다면 어떤 도구로 어떻게(한 문장)" } ],
+  "tldr": ["가장 중요한 시사점 5개 내외, 각 한 문장"],
+  "interviewee": { "who": "인터뷰이가 누구인지/무엇을 하는 사람인지", "credibility": "왜 이 사람 말을 들을 만한지(성과·경력 등, 스크립트 근거)" },
+  "knowhow": [
+    { "category": "콘텐츠제작|계정성장|수익화|플랫폼전략|운영·루틴|마인드셋 중 하나",
+      "title": "노하우 제목", "detail": "구체적으로 무엇을 하라는 것인지 2~3문장",
+      "why": "왜 효과가 있는지 한 문장" }
+  ],
+  "playbook": [
+    { "step": 1, "name": "단계 이름", "action": "이 단계에서 실제로 하는 일",
+      "automatable": "높음|중간|낮음|불가",
+      "tools": ["이 단계 자동화에 쓸 실제 도구 1~3개"],
+      "howToAutomate": "이 단계를 어떻게 자동화/반자동화하는지 구체적으로 1~2문장" }
+  ],
   "automationBlueprint": {
-    "overview": "전체 프로세스를 하나의 자동화 파이프라인으로 묶으면 어떤 모습인지 3~4문장",
+    "overview": "이 영상의 프로세스를 하나의 자동화 파이프라인으로 묶으면 어떤 모습인지 3~4문장",
     "stack": [ { "layer": "아이디어|제작|배포|분석|수익화 중 하나", "tool": "도구 이름", "role": "그 도구가 하는 역할 한 문장" } ],
     "cronIdeas": ["정기적으로 자동 실행하면 좋은 작업 3~5개"]
   },
-  "actionPlan": { "day1": ["오늘 당장 할 일 3~5개"], "week1": ["첫 주에 할 일 3~5개"] },
-  "risks": ["주의사항·리스크·윤리/정책 이슈 2~4개"],
-  "quotes": [ { "text": "인상적인 인용구(원문에서 발췌)", "at": "타임스탬프 있으면(없으면 '')" } ]
+  "actionPlan": {
+    "day1": ["오늘 당장 할 일 3~5개(체크리스트 문장)"],
+    "week1": ["첫 주에 할 일 3~5개"]
+  },
+  "risks": ["주의사항·리스크·윤리/정책 이슈 2~4개 (예: 과장·사기 소지, 플랫폼 정책 위반, 지속가능성 등)"],
+  "quotes": [ { "text": "인상적인 인용구(스크립트에서 발췌)", "at": "타임스탬프 있으면(없으면 '')" } ]
 }`;
 
 function parseJson(text) {
