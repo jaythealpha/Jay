@@ -28,6 +28,21 @@ function tag(block, name) {
   const m = block.match(new RegExp('<' + name + '[^>]*>([\\s\\S]*?)</' + name + '>', 'i'));
   return m ? m[1] : '';
 }
+// 썸네일: 유튜브는 영상 ID로 생성(항상 존재), 그 외는 RSS의 media:thumbnail·enclosure를 사용.
+// 이미지를 저장하지 않고 원본 URL만 참조하므로 저장 공간을 쓰지 않는다.
+function ytIdOf(url) {
+  const m = String(url || '').match(/(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/|\/live\/)([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : '';
+}
+function thumbOf(entry, link) {
+  const vid = ytIdOf(link);
+  if (vid) return 'https://i.ytimg.com/vi/' + vid + '/hqdefault.jpg';
+  const m = entry.match(/<media:thumbnail[^>]+url=["']([^"']+)["']/i)
+        || entry.match(/<media:content[^>]+url=["']([^"']+\.(?:jpe?g|png|webp)[^"']*)["']/i)
+        || entry.match(/<enclosure[^>]+url=["']([^"']+\.(?:jpe?g|png|webp)[^"']*)["']/i)
+        || entry.match(/<img[^>]+src=["']([^"']+)["']/i);
+  return m ? dec(m[1]) : '';
+}
 function parseFeed(xml) {
   const items = [];
   const entries = xml.match(/<entry[\s>][\s\S]*?<\/entry>/gi) || xml.match(/<item[\s>][\s\S]*?<\/item>/gi) || [];
@@ -40,7 +55,7 @@ function parseFeed(xml) {
     const desc = dec(tag(e, 'media:description') || tag(e, 'description') || tag(e, 'summary') || tag(e, 'content')).slice(0, 800);
     const author = dec(tag(e, 'author') ? tag(tag(e, 'author'), 'name') || tag(e, 'author') : tag(e, 'source'));
     const ts = published ? Date.parse(published.trim()) : NaN;
-    if (title && link) items.push({ title, link: link.trim(), ts: isNaN(ts) ? 0 : ts, desc, author });
+    if (title && link) items.push({ title, link: link.trim(), ts: isNaN(ts) ? 0 : ts, desc, author, thumb: thumbOf(e, link) });
   }
   items.sort((a, b) => b.ts - a.ts);
   return items;
@@ -151,12 +166,26 @@ export default async function handler(req, res) {
     // 잘못 붙여넣은 키는 항목마다 같은 오류를 내므로 시작 전에 한 번에 걸러낸다
     apiKey('ANTHROPIC_API_KEY'); apiKey('SUPADATA_API_KEY');
     // 1) 워치리스트 로드
-    const wl = (await queryDb(WATCH_DB)).results.map(readProps).filter(w => w['활성']);
+    const all = (await queryDb(WATCH_DB)).results.map(readProps);
+    const wl = all.filter(w => w['활성']);
     const profileRows = wl.filter(w => w['유형'] === '관심 프로필');
     const profile = profileRows.map(w => w['값']).join('\n') || '실전 노하우, 구체적 사례, 실행 가능한 전략이 있는 콘텐츠';
-    const sources = wl.filter(w => w['유형'] !== '관심 프로필');
+
+    // 자동 수집 스위치: '설정' 행의 활성 체크가 꺼져 있으면 예약 실행을 건너뛴다.
+    // 앱에서 누르는 수동 실행(manual=1)은 스위치와 무관하게 항상 동작한다.
+    const manual = !!(req.query && (req.query.manual || req.query.only));
+    const autoRow = all.find(w => w['유형'] === '설정');
+    if (!manual && autoRow && !autoRow['활성']) {
+      res.status(200).json({ ...report, ok: true, paused: true, note: '자동 수집이 꺼져 있어요. 앱에서 수동 실행하거나 설정을 켜주세요.' });
+      return;
+    }
+
+    // 이번 회차에 사용할 소스. only=id,id 가 오면 그 소스만 (앱의 소스 선택 수집)
+    const only = String((req.query && req.query.only) || '').split(',').map(s => s.trim().replace(/-/g, '')).filter(Boolean);
+    let sources = wl.filter(w => w['유형'] !== '관심 프로필' && w['유형'] !== '설정');
+    if (only.length) sources = sources.filter(s => only.includes(String(s.id).replace(/-/g, '')));
     report.sources = sources.length;
-    if (!sources.length) { res.status(200).json({ ...report, note: '워치리스트에 활성 소스가 없어요.' }); return; }
+    if (!sources.length) { res.status(200).json({ ...report, note: only.length ? '선택한 소스를 찾지 못했어요.' : '워치리스트에 활성 소스가 없어요.' }); return; }
 
     // 2) 기존 수집함 URL 셋 (중복 방지)
     const seen = new Set();
@@ -241,7 +270,7 @@ export default async function handler(req, res) {
               '제목': P.title(item.title), 'URL': P.url(item.link), '출처': P.select(item.sourceType),
               '채널/매체': P.text(item.author || item.sourceName), '점수': P.number(score),
               '요약': P.text((reason ? '[' + (score ?? '-') + '점] ' + reason + '\n' : '') + summary),
-              '본문': P.text(excerpt), '상태': P.select('새 항목'),
+              '본문': P.text(excerpt), '상태': P.select('새 항목'), '썸네일': P.url(item.thumb || ''),
               '수집일': P.date(new Date(item.ts || Date.now()).toISOString()),
             },
           });
