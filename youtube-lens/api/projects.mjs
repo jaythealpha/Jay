@@ -6,12 +6,10 @@
 //   GET  /api/projects?id=<pid>       → 그 프로젝트 전체(분석·콘텐츠 JSON 포함)
 //   POST /api/projects {action:'upsert', project}  → 생성 또는 갱신(프로젝트ID 기준)
 //   POST /api/projects {action:'delete', id}       → 보관 처리
-import { notion, queryDb, readProps, P, authorized, isLocked, cors, TEXT_MAX } from './_notion.mjs';
+import { notion, queryDb, readProps, authorized, isLocked, cors } from './_notion.mjs';
+import { PROJ_DB, findByPid, upsertProject } from './_projects.mjs';
 
 export const config = { maxDuration: 60 };
-
-const PROJ_DB = (process.env.NOTION_PROJECT_DB || 'a1e1b93e71274e4d957e6ba260d6cabb').replace(/-/g, '');
-const SRC_LABEL = { youtube: '유튜브', web: '웹', text: '텍스트', file: '파일', image: '이미지' };
 
 async function readBody(req) {
   if (req.body && typeof req.body === 'object') return req.body;
@@ -19,21 +17,6 @@ async function readBody(req) {
   try { return JSON.parse(Buffer.concat(chunks).toString('utf8')); } catch { return {}; }
 }
 const parse = s => { try { return JSON.parse(s || ''); } catch { return null; } };
-
-// 저장 한도를 넘으면 잘린 JSON이 저장돼 다음 읽기에서 전부 유실된다.
-// 오래된 콘텐츠부터 덜어내 항상 온전한 JSON이 되게 한다.
-function fitContents(list) {
-  let items = Array.isArray(list) ? list.slice() : [];
-  let json = JSON.stringify(items), dropped = 0;
-  while (json.length > TEXT_MAX && items.length > 1) { items.shift(); dropped++; json = JSON.stringify(items); }
-  if (json.length > TEXT_MAX) { items = []; json = '[]'; dropped = (list || []).length; }
-  return { json, dropped };
-}
-
-async function findByPid(pid) {
-  const r = await queryDb(PROJ_DB, { filter: { property: '프로젝트ID', rich_text: { equals: pid } }, page_size: 1 });
-  return r.results[0] || null;
-}
 
 export default async function handler(req, res) {
   cors(res);
@@ -73,25 +56,8 @@ export default async function handler(req, res) {
         res.status(200).json({ ok: true }); return;
       }
       if (b.action === 'upsert' && b.project && b.project.id) {
-        const p = b.project;
-        const contents = Array.isArray(p.contents) ? p.contents : [];
-        const fit = fitContents(contents);
-        const properties = {
-          '제목': P.title(p.title || '(제목 없음)'),
-          '프로젝트ID': P.text(String(p.id)),
-          '출처': P.select(SRC_LABEL[p.sourceType] || '텍스트'),
-          'URL': P.url(p.sourceUrl || ''),
-          '채널': P.text(p.channel || ''),
-          '수정일': P.date(p.updatedAt || p.at || new Date().toISOString()),
-          '콘텐츠수': P.number(contents.length),
-          '분석': P.text(JSON.stringify(p.data || {}).slice(0, TEXT_MAX)),
-          '콘텐츠': P.text(fit.json),
-          '소스발췌': P.text(String(p.sourceExcerpt || '').slice(0, 8000)),
-        };
-        const page = await findByPid(String(p.id));
-        if (page) await notion('/pages/' + page.id, 'PATCH', { properties });
-        else await notion('/pages', 'POST', { parent: { database_id: PROJ_DB }, properties });
-        res.status(200).json({ ok: true, created: !page, dropped: fit.dropped }); return;
+        const out = await upsertProject(b.project);
+        res.status(200).json({ ok: true, ...out }); return;
       }
       res.status(400).json({ ok: false, error: '알 수 없는 action' }); return;
     }

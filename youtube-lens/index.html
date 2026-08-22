@@ -571,6 +571,14 @@
       <div id="inboxSetupErr" class="hint" style="margin-top:10px;"></div>
     </div>
 
+    <div class="card" id="inboxFilters" style="margin-top:14px;display:flex;gap:9px;flex-wrap:wrap;align-items:center;">
+      <input type="search" id="inbQ" placeholder="🔍 제목·요약·채널 검색" style="flex:1;min-width:170px;" autocomplete="off">
+      <select id="inbSource" style="flex:none;width:auto;"><option value="">모든 출처</option><option value="유튜브">▶️ 유튜브</option><option value="뉴스">📰 뉴스</option><option value="RSS">📡 RSS</option></select>
+      <select id="inbStatus" style="flex:none;width:auto;"><option value="">보관 제외 전체</option><option value="새 항목">새 항목</option><option value="분석됨">분석됨</option><option value="보관">보관</option><option value="all">제외까지 전부</option></select>
+      <select id="inbSort" style="flex:none;width:auto;"><option value="date">최신순</option><option value="score">점수순</option></select>
+    </div>
+    <div id="inbCount" class="hint" style="margin-top:8px;"></div>
+
     <div id="inboxUnlocked" class="err-box hidden" style="margin-top:14px;"></div>
     <div id="inboxRejected" class="card hidden" style="margin-top:14px;"></div>
 
@@ -2076,8 +2084,22 @@ async function loadInbox() {
 }
 function renderInboxItems() {
   const list = $('#inboxList');
-  const items = _inboxItems.filter(it => it.status !== '제외');
-  $('#inboxEmpty').classList.toggle('hidden', items.length > 0);
+  const q = ($('#inbQ').value || '').trim().toLowerCase();
+  const fSrc = $('#inbSource').value, fSt = $('#inbStatus').value, sort = $('#inbSort').value;
+  let items = _inboxItems.filter(it => {
+    if (fSt === 'all') { /* 제외까지 전부 */ }
+    else if (fSt) { if (it.status !== fSt) return false; }
+    else if (it.status === '제외') return false;
+    if (fSrc && it.source !== fSrc) return false;
+    if (q && !((it.title || '') + ' ' + (it.summary || '') + ' ' + (it.channel || '')).toLowerCase().includes(q)) return false;
+    return true;
+  });
+  if (sort === 'score') items = items.slice().sort((a, b) => (b.score || 0) - (a.score || 0));
+  const total = _inboxItems.length;
+  $('#inbCount').textContent = total ? `${items.length}개 표시 · 전체 ${total}개` : '';
+  $('#inboxFilters').style.display = total ? '' : 'none';
+  $('#inboxEmpty').classList.toggle('hidden', items.length > 0 || (total > 0));
+  if (total && !items.length) { list.innerHTML = '<div class="hint" style="text-align:center;margin-top:20px;">조건에 맞는 항목이 없어요.</div>'; return; }
   const badge = s => s === '유튜브' ? '▶️ 유튜브' : s === '뉴스' ? '📰 뉴스' : '📡 RSS';
   // 썸네일은 원본 URL을 참조만 한다(저장 없음). 유튜브는 저장된 값이 없어도 URL의 영상 ID로
   // 만들 수 있어 폴백한다(썸네일 기능 이전에 수집된 항목도 보이게). 깨지면 onerror로 숨김.
@@ -2149,10 +2171,13 @@ async function runCollect() {
       if (r.status === 424 || j.needSetup || /NOTION_TOKEN/.test(j.error || '')) { $('#inboxSetup').classList.remove('hidden'); $('#inboxSetupErr').textContent = j.error || ''; }
       else toast(j.error || ('수집 실패 ' + r.status), true);
     } else {
-      toast(`수집 완료 — 새 항목 ${j.found || 0}개 중 ${j.kept || 0}개 적재` + (j.skipped ? `, ${j.skipped}개 필터링` : ''));
+      toast(`수집 완료 — 새 항목 ${j.found || 0}개 중 ${j.kept || 0}개 적재`
+        + (j.skipped ? `, ${j.skipped}개 필터링` : '')
+        + (j.analyzed ? ` · ⭐ ${j.analyzed}개는 분석까지 완료` : ''));
       if (j.errors && j.errors.length) console.warn('collect errors:', j.errors);
       renderRejected(j);
       await loadInbox();
+      if (j.analyzed) syncPull(false);   // 서버가 만든 프로젝트를 바로 내려받는다
     }
   } catch (e) { toast('수집 실행 실패 — ' + (e.message || ''), true); }
   btn.disabled = false; btn.textContent = '⚡ 지금 수집 실행';
@@ -2238,6 +2263,10 @@ async function addWatch() {
 $('#inboxBtn').addEventListener('click', openInbox);
 $('#inboxBack').addEventListener('click', goHome);
 $('#inboxRefresh').addEventListener('click', loadInbox);
+['#inbQ', '#inbSource', '#inbStatus', '#inbSort'].forEach(sel => {
+  const el = $(sel);
+  el.addEventListener(sel === '#inbQ' ? 'input' : 'change', () => renderInboxItems());
+});
 $('#collectNow').addEventListener('click', runCollect);
 $('#wlAdd').addEventListener('click', addWatch);
 $('#autoSw').addEventListener('change', async e => {
