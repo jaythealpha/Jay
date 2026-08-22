@@ -197,8 +197,10 @@ async function fetchTrackText(baseUrl) {
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'x-transcript-key, content-type');
+  res.setHeader('Access-Control-Allow-Headers', 'x-transcript-key, x-app-key, content-type');
+  // 인증 여부에 따라 응답이 달라지므로 캐시가 키를 구분하게 한다
   res.setHeader('Cache-Control', 'public, max-age=86400');
+  res.setHeader('Vary', 'x-app-key, x-transcript-key');
   if (req.method === 'OPTIONS') { res.status(204).end(); return; }
 
   const q = req.query || {};
@@ -206,7 +208,14 @@ module.exports = async (req, res) => {
   const id = parseId(q.id || rawUrl);
   const prefer = (q.lang || 'ko').toString().toLowerCase();
   const debug = q.debug ? [] : null;
-  const txKey = (q.key || req.headers['x-transcript-key'] || process.env.SUPADATA_API_KEY || '').toString().trim();
+
+  // 서버에 저장된 SUPADATA_API_KEY(=내 크레딧)는 인증된 요청에만 빌려준다.
+  // 아니면 주소만 아는 사람이 임의 링크로 무제한 호출해 크레딧을 태울 수 있다.
+  // 사용자가 본인 키를 직접 보내는 경우(x-transcript-key)는 인증 없이도 허용.
+  const appKey = (process.env.APP_KEY || '').trim();
+  const ownKey = (q.key || req.headers['x-transcript-key'] || '').toString().trim();
+  const trusted = !appKey || String(req.headers['x-app-key'] || q.appkey || '') === appKey;
+  const txKey = ownKey || (trusted ? (process.env.SUPADATA_API_KEY || '').trim() : '');
 
   // 유튜브가 아닌 URL(Instagram/TikTok/X 등) → Supadata 유니버설 (키 필요)
   if (!id && rawUrl) {

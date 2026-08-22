@@ -8,7 +8,7 @@
 //   POST /api/inbox {action:'watch-remove', id}              → 워치 삭제(보관)
 //
 // env: NOTION_TOKEN(필수), APP_KEY(선택 — 설정 시 x-app-key 헤더 필요)
-import { INBOX_DB, WATCH_DB, notion, queryDb, readProps, P, authorized, isLocked, cors } from './_notion.mjs';
+import { INBOX_DB, WATCH_DB, notion, queryDb, readProps, P, authorized, isLocked, cronReady, cors } from './_notion.mjs';
 
 export const config = { maxDuration: 30 };
 
@@ -26,9 +26,12 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
       if (req.query && req.query.watchlist) {
         const rows = (await queryDb(WATCH_DB)).results.map(readProps);
-        const setting = rows.find(w => w['유형'] === '설정');
+        // 설정 행이 둘 이상이므로(자동 수집 / 자동 분석) 이름으로 골라야 한다.
+        // 유형만 보고 첫 행을 잡으면 스위치가 엉뚱한 행을 껐다 켠다.
+        const settings = rows.filter(w => w['유형'] === '설정');
+        const setting = settings.find(w => /자동 수집/.test(w['이름'] || '')) || settings[0];
         res.status(200).json({
-          ok: true, locked: isLocked(),
+          ok: true, locked: isLocked(), cronReady: cronReady(),
           watchlist: rows.map(w => ({ id: w.id, name: w['이름'], type: w['유형'], value: w['값'], active: !!w['활성'] })),
           auto: setting ? { id: setting.id, enabled: !!setting['활성'], time: setting['값'] || '' } : null,
         });

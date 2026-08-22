@@ -230,10 +230,13 @@ export default async function handler(req, res) {
           items = parseFeed(await fetchText(src['값']));
         }
         const lastSeen = Date.parse(src['마지막수집'] || '') || 0;
-        let fresh = items.filter(it => !seen.has(it.link) && (lastSeen ? it.ts > lastSeen : true));
-        if (!lastSeen) fresh = fresh.slice(0, FIRST_RUN_PER_SOURCE);
-        else fresh = fresh.slice(0, 6);
+        const eligible = items.filter(it => !seen.has(it.link) && (lastSeen ? it.ts > lastSeen : true));
+        const cap = lastSeen ? 6 : FIRST_RUN_PER_SOURCE;
+        const fresh = eligible.slice(0, cap);   // parseFeed가 최신순 정렬 → 최신 cap개만
         for (const it of fresh) candidates.push({ ...it, sourceType, sourceName, watchId: src.id });
+        // 상한에 걸려 뒤로 밀린 항목이 있으면 워터마크를 올리면 안 된다.
+        // 올리면 밀린 항목이 "이미 지나간 것"이 되어 영영 수집되지 않는다.
+        if (eligible.length > fresh.length) unfinished.add(src.id);
         if (items.length) watermarks.set(src.id, Math.max(items[0].ts || 0, lastSeen));
       } catch (e) {
         report.errors.push(sourceLabel(src) + ': ' + String(e.message || e));
@@ -247,7 +250,10 @@ export default async function handler(req, res) {
     for (const item of candidates) {
       // 회차 상한이거나 함수 시간이 얼마 안 남았으면 남은 항목은 다음 회차로 미룬다.
       // (시간 초과로 강제 종료되면 아무것도 보고되지 않고 워터마크도 어긋난다)
-      if (kept >= MAX_NEW_PER_RUN || timeLeft() < 8000) { unfinished.add(item.watchId); continue; }
+      // 한 항목의 최악 소요: 유튜브는 점수화 + 자막(폴링 6초 포함) + 재판정 + 요약 ≈ 25초,
+      // 그 외는 ≈ 12초. 남은 시간이 그보다 적으면 시작하지 않는다.
+      const needMs = item.sourceType === '유튜브' ? 25000 : 12000;
+      if (kept >= MAX_NEW_PER_RUN || timeLeft() < needMs) { unfinished.add(item.watchId); continue; }
       try {
         let { score, reason } = await scoreItem(profile, item);
         // 명백히 무관한 것은 본문을 받지 않고 바로 버린다 (크레딧 절약)
@@ -258,10 +264,14 @@ export default async function handler(req, res) {
         }
         // 본문 확보. 유튜브 제목은 후킹용이라 정보를 감춰서 제목만으로는 거의 항상
         // "판단 불가(5점)"가 나온다 → 애매한 구간은 본문을 받아 2차 판정한다.
-        let excerpt = '';
-        if (item.sourceType === '유튜브') excerpt = await ytTranscript(item.link);
-        else { try { excerpt = extractReadable(await fetchText(item.link)); } catch {} }
-        excerpt = String(excerpt || '').slice(0, 5500);
+        let body = '';
+        if (item.sourceType === '유튜브') body = await ytTranscript(item.link);
+        else { try { body = extractReadable(await fetchText(item.link)); } catch {} }
+        body = String(body || '');
+        // Notion 저장·점수화·요약에는 발췌(5,500자)를 쓰되, 전체 분석에는 원문을 최대한 넘긴다.
+        // 발췌만 넘기면 자동 분석이 소스의 일부만 보고 판단해 수동 분석보다 품질이 떨어진다.
+        const full = body.slice(0, 40000);
+        const excerpt = body.slice(0, 5500);
 
         if (score !== null && score < SCORE_THRESHOLD) {
           if (excerpt.length < 200) { // 재판정할 근거가 없으면 1차 판정을 따른다
@@ -291,7 +301,7 @@ export default async function handler(req, res) {
           try {
             const data = await analyzeSource({
               key: apiKey('ANTHROPIC_API_KEY'), model: process.env.ANALYSIS_MODEL || 'claude-sonnet-5',
-              title: item.title, channel: item.author || item.sourceName, url: item.link, transcript: excerpt,
+              title: item.title, channel: item.author || item.sourceName, url: item.link, transcript: full,
             });
             const now = new Date().toISOString();
             await upsertProject({
