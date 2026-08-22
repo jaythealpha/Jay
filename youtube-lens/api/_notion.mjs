@@ -30,9 +30,11 @@ export async function notion(path, method = 'GET', body) {
 }
 
 // ---- property 빌더 (Notion API 형식) ----
+// Notion rich_text는 요소당 2000자, 배열 100개가 상한 → 1900자씩 최대 100조각(약 190K)
+export const TEXT_MAX = 1900 * 100;
 const chunk = (s, n = 1900) => {
   const out = []; s = String(s || '');
-  for (let i = 0; i < s.length && out.length < 40; i += n) out.push({ text: { content: s.slice(i, i + n) } });
+  for (let i = 0; i < s.length && out.length < 100; i += n) out.push({ text: { content: s.slice(i, i + n) } });
   return out;
 };
 export const P = {

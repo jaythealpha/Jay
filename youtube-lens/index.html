@@ -620,8 +620,13 @@
     <div class="hint">Vercel 환경변수 <code>APP_KEY</code>를 설정한 경우에만 필요해요. 수집함(📥)·워치리스트 접근을 본인만 가능하게 잠급니다. 미설정 시 비워두세요.</div>
   </div>
   <div class="grp">
-    <label class="field-label">프로젝트 백업 / 이동 (기기 간)</label>
-    <div class="hint" style="margin-bottom:8px;">데이터는 <b>이 브라우저에만</b> 저장돼요(클라우드 동기화 없음). 다른 기기로 옮기려면 여기서 <b>내보내기</b> → 그 파일을 다른 기기에서 <b>가져오기</b> 하세요.</div>
+    <label class="field-label">클라우드 동기화 (Notion)</label>
+    <div class="hint" style="margin-bottom:8px;">분석 결과와 만든 콘텐츠가 <b>Notion에 자동 저장</b>되어 집·회사 어디서 열어도 같은 내용이 보입니다. 저장할 때마다 자동으로 올라가고, 앱을 열 때 새로운 것만 내려받습니다.</div>
+    <button class="btn btn-ghost block" id="syncNow">☁️ 지금 동기화</button>
+  </div>
+  <div class="grp">
+    <label class="field-label">파일 백업 (선택)</label>
+    <div class="hint" style="margin-bottom:8px;">클라우드 동기화와 별개로 <b>파일로 보관</b>하고 싶을 때 사용하세요.</div>
     <div style="display:flex;gap:10px;">
       <button class="btn btn-ghost block" id="exportProjects">⬇ 내보내기</button>
       <button class="btn btn-ghost block" id="importBtn">⬆ 가져오기</button>
@@ -1278,6 +1283,7 @@ function saveSession(data) {
   currentSessionId = session.id;
   _demoPieces = [];
   refreshHistUI();
+  syncPush(session);   // 클라우드 사본 (실패해도 로컬은 이미 저장됨)
   return session;
 }
 // 현재 프로젝트에 생성 콘텐츠 누적 저장
@@ -1288,6 +1294,7 @@ function saveContentsToSession(newPieces) {
   s.contents = (s.contents || []).concat(arr(newPieces).map(p => ({ ...p, savedAt: new Date().toISOString() })));
   s.updatedAt = new Date().toISOString();
   try { store.saveSessions(sessions); } catch { toast('저장 공간이 부족해요. 오래된 프로젝트를 지워주세요', true); }
+  syncPush(s);
   return true;
 }
 function deleteContentFromSession(idx) {
@@ -1297,11 +1304,14 @@ function deleteContentFromSession(idx) {
   s.contents.splice(idx, 1);
   s.updatedAt = new Date().toISOString();
   try { store.saveSessions(sessions); } catch {}
+  syncPush(s);
 }
 function deleteSession(id) {
   store.saveSessions(store.sessions().filter(s => s.id !== id));
   if (currentSessionId === id) currentSessionId = null;
   renderHistList(); refreshHistUI();
+  // 클라우드 사본도 지운다 — 안 지우면 다음 동기화에서 되살아난다
+  apiFetch('/api/projects', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'delete', id }) }).catch(() => {});
 }
 function refreshHistUI() {
   const n = store.sessions().length;
@@ -1796,7 +1806,7 @@ function pieceToText(p) {
 function saveStudioPieces(pieces) {
   if (currentSessionId && currentSession()) {
     const s = store.sessions(); const cur = s.find(x => x.id === currentSessionId);
-    if (cur) { cur.contents = pieces; cur.updatedAt = new Date().toISOString(); try { store.saveSessions(s); } catch { toast('저장 공간이 부족해요', true); } }
+    if (cur) { cur.contents = pieces; cur.updatedAt = new Date().toISOString(); try { store.saveSessions(s); } catch { toast('저장 공간이 부족해요', true); } syncPush(cur); }
   } else { _demoPieces = pieces; }
 }
 function editPiece(i) {
@@ -1969,6 +1979,76 @@ $('#pasteChip').addEventListener('click', async () => {
 $$('.chip[data-fill]').forEach(c => c.addEventListener('click', () => { if (c.dataset.fill === 'sns') loadDemo(); }));
 
 function goHome() { closeDrawers(); resetInput(); show('home'); }
+/* ================= 클라우드 동기화 (프로젝트 ↔ Notion) =================
+   브라우저(localStorage)가 작업 저장소이고 Notion은 기기 간 백본이다.
+   저장할 때마다 조용히 올리고(push), 앱을 열 때 새로운 것만 내려받아(pull) 병합한다.
+   충돌은 updatedAt 기준 최신본 우선 — 내보내기/가져오기와 같은 규칙. */
+let _syncBusy = false;
+function syncEnabled() { return true; } // 셋업이 안 됐으면 API가 424로 알려주므로 항상 시도
+function apiFetch(path, opts = {}) {
+  const headers = Object.assign({}, opts.headers || {});
+  const ak = store.appKey(); if (ak) headers['x-app-key'] = ak;
+  return fetchWithTimeout(apiUrl(path), opts.timeout || 30000, Object.assign({}, opts, { headers }));
+}
+// 한 프로젝트를 클라우드에 올린다. 실패해도 로컬 저장은 이미 끝났으므로 조용히 넘어간다.
+async function syncPush(session) {
+  if (!session || !syncEnabled()) return;
+  try {
+    const r = await apiFetch('/api/projects', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ action: 'upsert', project: session }),
+    });
+    if (!r.ok) { const j = await r.json().catch(() => ({})); console.warn('sync push 실패:', j.error || r.status); }
+  } catch (e) { console.warn('sync push 오류:', e.message || e); }
+}
+// 클라우드에서 더 최신인 프로젝트만 내려받아 병합한다.
+async function syncPull(loud) {
+  if (_syncBusy) return; _syncBusy = true;
+  const when = s => new Date(s && (s.updatedAt || s.at) || 0).getTime() || 0;
+  try {
+    const r = await apiFetch('/api/projects');
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.ok) {
+      if (loud) toast(j.needSetup ? '동기화 설정이 필요해요 (📥 수집함의 셋업 안내 참고)' : (j.error || '동기화 실패'), true);
+      return;
+    }
+    const local = store.sessions();
+    const localById = new Map(local.map(s => [s.id, s]));
+    const stale = (j.projects || []).filter(p => {
+      const mine = localById.get(p.id);
+      return !mine || when(p) > when(mine);
+    });
+    if (!stale.length) { if (loud) toast('이미 최신 상태예요'); return; }
+    let merged = local.slice(), added = 0;
+    for (const p of stale.slice(0, 30)) {  // 한 번에 과도한 요청을 막는다
+      try {
+        const rr = await apiFetch('/api/projects?id=' + encodeURIComponent(p.id));
+        const jj = await rr.json().catch(() => ({}));
+        if (!rr.ok || !jj.ok || !jj.project) continue;
+        const full = jj.project;
+        const item = {
+          id: full.id, at: full.updatedAt, updatedAt: full.updatedAt,
+          vid: parseId(full.sourceUrl || '') || null,
+          sourceType: full.sourceUrl && parseId(full.sourceUrl) ? 'youtube' : 'web',
+          sourceUrl: full.sourceUrl || '', title: full.title, channel: full.channel || '',
+          data: full.data || {}, sourceExcerpt: full.sourceExcerpt || '', contents: full.contents || [],
+        };
+        const i = merged.findIndex(s => s.id === item.id);
+        if (i >= 0) merged[i] = item; else merged.unshift(item);
+        added++;
+      } catch { /* 개별 실패는 건너뛴다 */ }
+    }
+    merged.sort((a, b) => when(b) - when(a));
+    if (merged.length > 50) merged.length = 50;
+    try { store.saveSessions(merged); } catch { toast('저장 공간이 부족해 일부만 동기화됐어요', true); }
+    refreshHistUI(); renderHistList();
+    if (added) toast(`☁️ ${added}개 프로젝트를 동기화했어요`);
+    else if (loud) toast('이미 최신 상태예요');
+  } catch (e) {
+    if (loud) toast('동기화 오류 — ' + (e.message || ''), true);
+  } finally { _syncBusy = false; }
+}
+
 /* ================= 수집함 (자동 수집 · Notion 백본) ================= */
 let _inboxItems = [];
 function inboxFetch(path, opts = {}) {
@@ -2258,8 +2338,12 @@ document.addEventListener('click', e => {
   if (open) openSession(open.dataset.open);
 });
 
+$('#syncNow').addEventListener('click', () => syncPull(true));
+
 /* ================= INIT ================= */
 refreshHistUI();
+// 앱을 열면 다른 기기에서 만든 최신 프로젝트를 조용히 가져온다
+setTimeout(() => syncPull(false), 800);
 </script>
 </body>
 </html>
