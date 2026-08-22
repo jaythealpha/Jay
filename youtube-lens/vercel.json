@@ -3,7 +3,8 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "crons": [
-    { "path": "/api/collect", "schedule": "0 21 * * *" }
+    { "path": "/api/collect", "schedule": "0 21 * * *" },
+    { "path": "/api/generate", "schedule": "30 21 * * *" }
   ],
   "functions": {
     "api/*.js": { "maxDuration": 60 },

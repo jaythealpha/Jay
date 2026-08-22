@@ -399,6 +399,7 @@
   .auto-sw b { font-weight: 800; color: var(--violet-soft); font-size: 12px; }
   .auto-sw.off { opacity: .55; }
   .sync-badge { font-size: 11px; font-weight: 800; padding: 4px 9px; border-radius: 999px; background: rgba(255,59,92,.14); color: var(--red-soft); white-space: nowrap; }
+  .auto-tag { font-size: 10.5px; font-weight: 800; color: var(--violet-soft); background: rgba(124,92,255,.14); border: 1px solid rgba(124,92,255,.3); padding: 2px 7px; border-radius: 999px; margin-left: 8px; }
   .pick-row { display: flex; align-items: center; gap: 9px; padding: 7px 0; font-size: 13px; }
   .pick-row input { width: 16px; height: 16px; accent-color: var(--violet); cursor: pointer; flex: none; }
   .pick-row .t { flex: none; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 999px; background: rgba(255,255,255,.07); color: var(--ink-2); }
@@ -1780,14 +1781,16 @@ function renderPieces(pieces) {
   const head = `<div class="studio-count">🗂 이 프로젝트에 저장된 콘텐츠 <b>${pieces.length}개</b></div>`;
   out.innerHTML = head + pieces.map((p, i) => {
     const dl = (!p.editedText && arr(p.cards).length) ? 'CSV' : 'MD';
-    const u = USAGE[p.fmtId];
+    const u = USAGE[p.fmtId || p.formatId];
     const edited = p.editedText ? `<span class="edited-badge">✏️ 편집됨</span>` : '';
+    // 서버가 밤새 만든 초안은 검토 전이므로 눈에 띄게 구분한다
+    const auto = p.auto ? `<span class="auto-tag">🤖 자동 초안 · 검토 필요</span>` : '';
     return `<div class="content" id="pc${i}"><div class="pc-actions">` +
       `<button class="copy-btn" data-edit="${i}" title="편집">✏️</button>` +
       `<button class="copy-btn" data-copy="${i}" title="복사">📋</button>` +
       `<button class="copy-btn" data-dl="${i}" title="파일 저장">⬇ ${dl}</button>` +
       `<button class="copy-btn del-c" data-delc="${i}" title="삭제">🗑</button></div>` +
-      `<span class="fmt">${esc(p.format || (FMT_BY_ID[p.fmtId] && FMT_BY_ID[p.fmtId].label) || '콘텐츠')}</span>${edited}` +
+      `<span class="fmt">${esc(p.format || (FMT_BY_ID[p.fmtId] && FMT_BY_ID[p.fmtId].label) || '콘텐츠')}</span>${edited}${auto}` +
       `<h4>${esc(p.title || `콘텐츠 ${i + 1}`)}</h4>` +
       (u ? `<div class="pc-use">💡 ${esc(u.use)}</div>` : '') +
       renderBody(p) + `</div>`;
