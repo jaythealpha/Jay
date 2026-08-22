@@ -26,7 +26,12 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
       if (req.query && req.query.watchlist) {
         const rows = (await queryDb(WATCH_DB)).results.map(readProps);
-        res.status(200).json({ ok: true, watchlist: rows.map(w => ({ id: w.id, name: w['이름'], type: w['유형'], value: w['값'], active: !!w['활성'] })) });
+        const setting = rows.find(w => w['유형'] === '설정');
+        res.status(200).json({
+          ok: true,
+          watchlist: rows.map(w => ({ id: w.id, name: w['이름'], type: w['유형'], value: w['값'], active: !!w['활성'] })),
+          auto: setting ? { id: setting.id, enabled: !!setting['활성'], time: setting['값'] || '' } : null,
+        });
         return;
       }
       const showAll = !!(req.query && req.query.all);
@@ -41,7 +46,7 @@ export default async function handler(req, res) {
         items: rows.map(r => ({
           id: r.id, title: r['제목'], url: r['URL'], source: r['출처'], channel: r['채널/매체'],
           score: r['점수'], summary: r['요약'], status: r['상태'], date: r['수집일'],
-          excerpt: String(r['본문'] || '').slice(0, 6000),
+          thumb: r['썸네일'] || '', excerpt: String(r['본문'] || '').slice(0, 6000),
         })),
       });
       return;
@@ -64,6 +69,13 @@ export default async function handler(req, res) {
       }
       if (b.action === 'watch-remove' && b.id) {
         await notion('/pages/' + b.id, 'PATCH', { archived: true });
+        res.status(200).json({ ok: true }); return;
+      }
+      if (b.action === 'auto-set' && b.id) { // 자동 수집 켜기/끄기 + 시각 저장
+        const props = {};
+        if (typeof b.enabled === 'boolean') props['활성'] = { checkbox: b.enabled };
+        if (b.time) props['값'] = P.text(String(b.time).slice(0, 5));
+        await notion('/pages/' + b.id, 'PATCH', { properties: props });
         res.status(200).json({ ok: true }); return;
       }
       if (b.action === 'watch-toggle' && b.id) {
