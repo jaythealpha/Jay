@@ -66,13 +66,25 @@ export async function queryDb(dbId, body = {}) {
   return notion('/databases/' + dbId + '/query', 'POST', { page_size: 100, ...body });
 }
 
-// ---- 요청 인증: APP_KEY(선택) 또는 Vercel CRON_SECRET ----
-export function authorized(req) {
-  const appKey = (process.env.APP_KEY || '').trim();
+// ---- 요청 인증 ----
+// APP_KEY를 설정하면 앱(x-app-key 헤더)만 호출할 수 있다. 설정하지 않으면 누구나
+// 수집함을 읽고 수집을 실행(=크레딧 소모)할 수 있으므로, locked=false를 응답에 실어
+// 앱이 경고를 띄우게 한다.
+export function isLocked() { return !!(process.env.APP_KEY || '').trim(); }
+
+// Vercel 예약 실행(크론) 판별. CRON_SECRET을 설정하면 Vercel이 Authorization 헤더를
+// 붙여 보낸다(권장). 설정하지 않은 경우를 위해 vercel-cron user-agent도 허용한다.
+export function isCron(req) {
   const cronSecret = (process.env.CRON_SECRET || '').trim();
   const auth = String(req.headers['authorization'] || '');
-  if (cronSecret && auth === 'Bearer ' + cronSecret) return true;
-  if (!appKey) return true; // APP_KEY 미설정 = 공개 (개인용 소규모 앱 기본값)
+  if (cronSecret) return auth === 'Bearer ' + cronSecret;
+  return /^vercel-cron\//i.test(String(req.headers['user-agent'] || ''));
+}
+
+export function authorized(req) {
+  if (isCron(req)) return true;
+  const appKey = (process.env.APP_KEY || '').trim();
+  if (!appKey) return true; // 미설정 = 공개. 앱이 locked:false 경고를 표시한다
   return String(req.headers['x-app-key'] || (req.query && req.query.appkey) || '') === appKey;
 }
 
