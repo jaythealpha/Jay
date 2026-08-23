@@ -26,14 +26,17 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
       if (req.query && req.query.watchlist) {
         const rows = (await queryDb(WATCH_DB)).results.map(readProps);
-        // 설정 행이 둘 이상이므로(자동 수집 / 자동 분석) 이름으로 골라야 한다.
+        // 설정 행이 여럿이므로(수집/분석/초안) 이름으로 골라야 한다.
         // 유형만 보고 첫 행을 잡으면 스위치가 엉뚱한 행을 껐다 켠다.
         const settings = rows.filter(w => w['유형'] === '설정');
+        const pick = re => { const w = settings.find(s => re.test(s['이름'] || '')); return w ? { id: w.id, enabled: !!w['활성'], value: w['값'] || '' } : null; };
         const setting = settings.find(w => /자동 수집/.test(w['이름'] || '')) || settings[0];
         res.status(200).json({
           ok: true, locked: isLocked(), cronReady: cronReady(),
           watchlist: rows.map(w => ({ id: w.id, name: w['이름'], type: w['유형'], value: w['값'], active: !!w['활성'] })),
           auto: setting ? { id: setting.id, enabled: !!setting['활성'], time: setting['값'] || '' } : null,
+          // 자동화 3종을 앱에서 각각 켜고 끌 수 있도록 함께 반환
+          autos: { collect: pick(/자동 수집/), analyze: pick(/자동 분석/), draft: pick(/자동 초안/) },
         });
         return;
       }
