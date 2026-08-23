@@ -645,6 +645,8 @@
     <input type="file" id="importFile" accept="application/json,.json" hidden>
   </div>
   <div class="grp">
+    <button class="btn btn-ghost block" id="checkKeys" style="margin-bottom:10px;">🔍 키 점검 — 어떤 키가 문제인지 확인</button>
+    <div id="keyCheckOut" class="hint hidden" style="margin-bottom:10px;"></div>
     <button class="btn btn-primary block" id="saveSet">저장</button>
     <button class="btn btn-ghost block" id="clearData" style="margin-top:10px;">저장된 데이터 모두 지우기</button>
   </div>
@@ -1161,7 +1163,7 @@ async function callClaude(key, model, input) {
   if (!res.ok) {
     let msg = `API 오류 (${res.status})`;
     try { const j = await res.json(); if (j.error?.message) msg += ': ' + j.error.message; } catch {}
-    if (res.status === 401) msg = 'API 키가 올바르지 않아요. ⚙️ 설정을 확인하세요.';
+    if (res.status === 401) msg = 'Claude API 키가 올바르지 않아요. ⚙️ 설정 → 🔍 키 점검으로 어떤 키가 문제인지 확인하세요.';
     if (res.status === 429) msg = '요청이 많아요. 잠시 후 다시 시도해 주세요.';
     throw new Error(msg);
   }
@@ -2362,9 +2364,66 @@ $('#histBtn').addEventListener('click', () => openDrawer('histDrawer'));
 $('#overlay').addEventListener('click', closeDrawers);
 $$('[data-close]').forEach(b => b.addEventListener('click', closeDrawers));
 
+/* ===== 키 점검 — 어떤 키가 문제인지 한 번에 알려준다 =====
+   키를 여러 개(Claude·Supadata·앱 키) 다루다 보니 엉뚱한 칸에 넣거나 가려진 값(●●●●)을
+   복사해 넣는 실수가 반복됐다. 실제로 호출해 보고 결과를 알려준다. */
+async function checkKeys() {
+  const box = $('#keyCheckOut'), btn = $('#checkKeys');
+  box.classList.remove('hidden');
+  box.innerHTML = '점검 중…';
+  btn.disabled = true;
+  const lines = [];
+  const ok = t => `<div style="color:var(--mint-soft);">✅ ${t}</div>`;
+  const bad = t => `<div style="color:var(--red-soft);">❌ ${t}</div>`;
+  const warn = t => `<div style="color:var(--gold);">⚠️ ${t}</div>`;
+
+  // 1) Claude 키 — 형태 검사 후 실제 호출
+  const k = $('#keyIn').value.trim() || store.key();
+  if (!k) lines.push(bad('Claude API 키 — 비어 있어요'));
+  else if (!/^sk-ant-/.test(k)) {
+    lines.push(bad(`Claude API 키 — <b>sk-ant-</b>로 시작해야 하는데 "${esc(k.slice(0, 8))}…"입니다. 다른 키(앱 키 등)를 넣으신 것 같아요`));
+  } else {
+    try {
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-api-key': k, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+        body: JSON.stringify({ model: store.model(), max_tokens: 1, messages: [{ role: 'user', content: 'hi' }] }),
+      });
+      if (r.ok || r.status === 400) lines.push(ok('Claude API 키 — 정상'));   // 400은 키는 맞고 요청만 트집
+      else if (r.status === 401) lines.push(bad('Claude API 키 — 인증 실패(401). 콘솔에서 새로 발급받아 주세요'));
+      else if (r.status === 429) lines.push(warn('Claude API 키 — 정상이지만 사용량 한도에 걸렸어요(429)'));
+      else lines.push(warn(`Claude API 키 — 응답 ${r.status}`));
+    } catch (e) { lines.push(warn('Claude API 키 — 네트워크 오류: ' + esc(e.message || ''))); }
+  }
+
+  // 2) 앱 키 — 수집함/동기화 접근
+  try {
+    const r = await apiFetch('/api/inbox?watchlist=1', { timeout: 15000 });
+    if (r.ok) lines.push(ok('수집함 앱 키 — 정상 (수집함·클라우드 동기화 사용 가능)'));
+    else if (r.status === 401) lines.push(bad('수집함 앱 키 — 서버의 APP_KEY와 다릅니다'));
+    else if (r.status === 424) lines.push(warn('수집함 — 서버 설정 미완료(NOTION_TOKEN)'));
+    else lines.push(warn(`수집함 — 응답 ${r.status}`));
+  } catch (e) { lines.push(warn('수집함 — 연결 실패: ' + esc(e.message || ''))); }
+
+  // 3) 자막 키 — 형태만(실호출은 크레딧을 쓰므로 하지 않는다)
+  const tx = $('#txKeyIn').value.trim() || store.txKey();
+  if (!tx) lines.push(warn('자막 API 키 — 비어 있어요. 서버에 키가 있으면 그대로 동작합니다'));
+  else if (/^sk-ant-/.test(tx)) lines.push(bad('자막 API 키 — Claude 키가 들어가 있어요. Supadata 키를 넣으세요'));
+  else lines.push(ok('자막 API 키 — 입력됨'));
+
+  box.innerHTML = lines.join('');
+  btn.disabled = false;
+}
+$('#checkKeys').addEventListener('click', checkKeys);
+
 $('#saveSet').addEventListener('click', () => {
   // API 키는 빈 칸이면 기존 값 유지 (브라우저 자동채움이 값을 지워도 삭제되지 않도록)
-  const kv = $('#keyIn').value.trim();   if (kv) store.setKey(kv);
+  const kv = $('#keyIn').value.trim();
+  // 키를 여러 개 다루다 보니 엉뚱한 칸에 넣는 실수가 잦다. 형태가 다르면 저장 전에 확인받는다.
+  if (kv && !/^sk-ant-/.test(kv)) {
+    if (!confirm(`Claude API 키는 보통 "sk-ant-"로 시작하는데 입력값은 "${kv.slice(0, 8)}…"입니다.\n다른 키(수집함 앱 키 등)를 잘못 넣으셨을 수 있어요.\n\n그대로 저장할까요?`)) return;
+  }
+  if (kv) store.setKey(kv);
   const tv = $('#txKeyIn').value.trim(); if (tv) store.setTxKey(tv);
   store.setModel($('#modelIn').value);
   store.setProxy($('#proxyIn').value.trim());
