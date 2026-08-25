@@ -639,9 +639,11 @@
 <aside class="drawer" id="setDrawer">
   <h3>설정 <button class="close" data-close>×</button></h3>
   <div class="grp">
-    <label class="field-label" for="keyIn">Claude API 키</label>
-    <input type="text" id="keyIn" class="masked" placeholder="sk-ant-…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true">
-    <div class="hint"><a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>에서 발급. 브라우저에서 Anthropic API로 직접 호출됩니다(공유 기기 주의).</div>
+    <label class="field-label" for="keyIn">Claude API 키 <span style="font-weight:600;color:var(--ink-3);">(비워두면 서버 키 사용 — 권장)</span></label>
+    <input type="text" id="keyIn" class="masked" placeholder="비워두면 서버 키를 씁니다" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true">
+    <div class="hint"><b>비워두는 것을 권합니다.</b> 그러면 Vercel에 있는 서버 키 한 벌만 관리하면 되고, 키를 바꿔도 앱을 다시 설정할 필요가 없습니다. 새 기기에서도 수집함 앱 키만 넣으면 바로 씁니다.<br>
+      여기에 <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">본인 키</a>를 넣으면 브라우저가 Anthropic으로 직접 호출합니다(사용량을 따로 쓰고 싶을 때. 공유 기기 주의).</div>
+    <button class="btn btn-ghost block" id="clearKey" style="margin-top:8px;">🗑 저장된 Claude 키 지우고 서버 키 사용</button>
   </div>
   <div class="grp">
     <label class="field-label" for="modelIn">모델</label>
@@ -963,7 +965,6 @@ async function fileToImageData(file) {
 }
 async function handleFile(file) {
   if (!file) return;
-  if (!store.key()) { toast('먼저 ⚙️ 설정에서 API 키를 입력하세요', true); openDrawer('setDrawer'); return; }
   const name = file.name || '파일';
   const isImage = /^image\//.test(file.type) || /\.(png|jpe?g|webp|gif|heic|heif|bmp)$/i.test(name);
   const isPdf = /\.pdf$/i.test(name) || file.type === 'application/pdf';
@@ -1017,7 +1018,6 @@ async function handleFile(file) {
 /* 원클릭: 소스(유튜브/웹 링크) → 텍스트 추출 → 분석 */
 async function oneClickAnalyze() {
   const key = store.key();
-  if (!key) { toast('먼저 ⚙️ 설정에서 API 키를 입력하거나 🧪 데모를 이용하세요', true); openDrawer('setDrawer'); return; }
   const input = ($('#urlIn').value || '').trim();
   if (!input) { toast('유튜브·웹 링크를 넣거나, 아래 “직접 붙여넣기”를 이용하세요', true); return; }
   const yid = parseId(input);
@@ -1101,7 +1101,6 @@ async function manualAnalyze() {
   const key = store.key();
   const sc = $('#scriptIn');
   const transcript = (sc ? sc.value : '').trim();
-  if (!key) { toast('먼저 ⚙️ 설정에서 API 키를 입력하거나 데모를 이용하세요', true); openDrawer('setDrawer'); return; }
   if (transcript.length < 60) { showHomeErr('텍스트가 너무 짧아요. 소스 내용을 붙여넣어 주세요.'); return; }
   const input = ($('#urlIn').value || '').trim();
   const yid = parseId(input);
@@ -1114,7 +1113,6 @@ async function manualAnalyze() {
 // 실제 분석 실행 (자동/수동 공통)
 async function runAnalysis(transcript) {
   const key = store.key();
-  if (!key) { toast('먼저 ⚙️ 설정에서 API 키를 입력하세요', true); openDrawer('setDrawer'); return; }
   current.transcript = transcript;
   show('loading');
   cycleStatus(true);
@@ -1157,6 +1155,24 @@ function cycleStatus(on) {
   _statusTimer = setInterval(() => { i = Math.min(i + 1, steps.length - 1); apply(); }, 4500);
 }
 
+/* Claude 호출 — 키가 어디에 있느냐에 따라 경로가 다르다.
+   같은 키를 브라우저와 서버 두 곳에 유지하다 보니 한쪽을 바꾸면 다른 쪽이 죽어
+   "API 키가 올바르지 않아요"가 반복됐다. 기본은 서버 프록시(키가 Vercel 한 곳에만
+   있으면 됨)이고, 본인 키를 넣어둔 경우에만 브라우저가 직접 호출한다. */
+async function askClaude(payload) {
+  const own = store.key();
+  if (own) {
+    return fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-api-key': own, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify(payload),
+    });
+  }
+  return apiFetch('/api/claude', {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(payload), timeout: 120000,
+  });
+}
 async function callClaude(key, model, input) {
   const kind = { youtube: '유튜브 영상 자막', web: '웹 아티클 본문', text: '사용자가 제공한 텍스트', file: '파일 텍스트', image: '이미지' }[input.sourceType] || '소스 텍스트';
   const meta = [];
@@ -1181,21 +1197,7 @@ async function callClaude(key, model, input) {
   }
   content.push({ type: 'text', text: userText });
 
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': key,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
-    },
-    body: JSON.stringify({
-      model,
-      max_tokens: 16000,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content }],
-    }),
-  });
+  const res = await askClaude({ model, max_tokens: 16000, system: SYSTEM_PROMPT, messages: [{ role: 'user', content }] });
   if (!res.ok) {
     let msg = `API 오류 (${res.status})`;
     try { const j = await res.json(); if (j.error?.message) msg += ': ' + j.error.message; } catch {}
@@ -1762,14 +1764,11 @@ async function generateContent() {
   const cfg = getConfigValues(fmt);
   $('#studioErr').classList.add('hidden');
   const tag = added => added.map(p => ({ ...p, fmtId: fmt.id, format: p.format || fmt.label }));
-  // demo fallback (no key)
-  if (!key) {
-    if (_renderState.isDemo) {
-      const d = demoContent(fmt, cfg);
-      if (d.none) { toast('이 형식은 데모가 없어요 — 실제 생성은 API 키가 필요해요', true); return; }
-      _demoPieces = _demoPieces.concat(tag(arr(d.pieces))); renderStudio(); toast('데모 콘텐츠예요. 실제 생성은 API 키가 필요해요'); return;
-    }
-    toast('⚙️ 설정에서 API 키를 입력하거나 데모에서 사용해 보세요', true); openDrawer('setDrawer'); return;
+  // 데모 결과에서는 실제 생성 대신 데모 콘텐츠를 보여준다 (키 유무와 무관)
+  if (_renderState.isDemo) {
+    const d = demoContent(fmt, cfg);
+    if (d.none) { toast('이 형식은 데모가 없어요 — 실제 소스를 분석한 뒤 만들어보세요', true); return; }
+    _demoPieces = _demoPieces.concat(tag(arr(d.pieces))); renderStudio(); toast('데모 콘텐츠예요. 실제 소스를 분석하면 진짜 콘텐츠가 나옵니다'); return;
   }
   const btn = $('#genBtn'); const orig = btn.textContent; btn.disabled = true; btn.textContent = '생성 중…';
   try {
@@ -1790,15 +1789,11 @@ async function generateContent() {
 }
 
 async function callClaudeContent(key, model, prompt) {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-    body: JSON.stringify({ model, max_tokens: 16000, system: CONTENT_SYSTEM, messages: [{ role: 'user', content: [{ type: 'text', text: prompt }] }] }),
-  });
+  const res = await askClaude({ model, max_tokens: 16000, system: CONTENT_SYSTEM, messages: [{ role: 'user', content: [{ type: 'text', text: prompt }] }] });
   if (!res.ok) {
     let msg = `API 오류 (${res.status})`;
     try { const j = await res.json(); if (j.error?.message) msg += ': ' + j.error.message; } catch {}
-    if (res.status === 401) msg = 'API 키가 올바르지 않아요.';
+    if (res.status === 401) msg = 'Claude API 키가 올바르지 않아요. ⚙️ 설정 → 🔍 키 점검을 눌러보세요.';
     throw new Error(msg);
   }
   const j = await res.json();
@@ -2319,7 +2314,6 @@ async function markInbox(id, status, silent) {
 }
 async function analyzeInboxItem(id) {
   const item = _inboxItems.find(x => x.id === id); if (!item) return;
-  if (!store.key()) { toast('먼저 ⚙️ 설정에서 API 키를 입력하세요', true); openDrawer('setDrawer'); return; }
   // 분석이 성공한 뒤에 표시한다. 미리 찍으면 자막 추출에 실패해도 '분석됨'으로 남아
   // 필터에서 사라지고, 실제로는 아무것도 분석되지 않은 항목이 처리된 것처럼 보인다.
   const before = currentSessionId;
@@ -2540,9 +2534,20 @@ async function checkKeys() {
   const bad = t => `<div style="color:var(--red-soft);">❌ ${t}</div>`;
   const warn = t => `<div style="color:var(--gold);">⚠️ ${t}</div>`;
 
-  // 1) Claude 키 — 형태 검사 후 실제 호출
+  // 1) Claude 키 — 비어 있으면 서버 프록시를 실제로 호출해 확인
   const k = $('#keyIn').value.trim() || store.key();
-  if (!k) lines.push(bad('Claude API 키 — 비어 있어요'));
+  if (!k) {
+    try {
+      const r = await apiFetch('/api/claude', {
+        method: 'POST', headers: { 'content-type': 'application/json' }, timeout: 20000,
+        body: JSON.stringify({ model: store.model(), max_tokens: 1, messages: [{ role: 'user', content: 'hi' }] }),
+      });
+      if (r.ok || r.status === 400) lines.push(ok('Claude — 서버 키 사용 중, 정상 (앱에는 키를 두지 않습니다)'));
+      else if (r.status === 401) lines.push(bad('Claude — 수집함 앱 키가 맞지 않아 서버 키를 쓸 수 없어요'));
+      else if (r.status === 424) lines.push(bad('Claude — 서버(Vercel)에 ANTHROPIC_API_KEY가 없거나 잘못됐어요'));
+      else lines.push(warn(`Claude — 서버 응답 ${r.status}`));
+    } catch (e) { lines.push(warn('Claude — 서버 연결 실패: ' + esc(e.message || ''))); }
+  }
   else if (!/^sk-ant-/.test(k)) {
     lines.push(bad(`Claude API 키 — <b>sk-ant-</b>로 시작해야 하는데 "${esc(k.slice(0, 8))}…"입니다. 다른 키(앱 키 등)를 넣으신 것 같아요`));
   } else {
@@ -2578,6 +2583,16 @@ async function checkKeys() {
   btn.disabled = false;
 }
 $('#checkKeys').addEventListener('click', checkKeys);
+// 브라우저에 남은 죽은 키를 지우고 서버 키로 되돌리는 탈출구.
+// 키를 교체할 때마다 브라우저 쪽이 낡아 "API 키가 올바르지 않아요"가 반복됐다.
+$('#clearKey').addEventListener('click', () => {
+  if (!store.key()) { toast('이미 서버 키를 쓰고 있어요'); return; }
+  if (!confirm('이 브라우저에 저장된 Claude 키를 지울까요?\n앞으로는 서버(Vercel)의 키를 사용합니다.')) return;
+  localStorage.removeItem('yl_key');
+  $('#keyIn').value = '';
+  toast('지웠어요 — 이제 서버 키를 사용합니다');
+  checkKeys();
+});
 
 $('#saveSet').addEventListener('click', () => {
   // API 키는 빈 칸이면 기존 값 유지 (브라우저 자동채움이 값을 지워도 삭제되지 않도록)
