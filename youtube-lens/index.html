@@ -671,7 +671,9 @@
   <div class="grp">
     <label class="field-label" for="appKeyIn">수집함 앱 키 (선택)</label>
     <input type="text" id="appKeyIn" class="masked" placeholder="Vercel의 APP_KEY와 동일하게" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true">
-    <div class="hint">Vercel 환경변수 <code>APP_KEY</code>를 설정한 경우에만 필요해요. 수집함(📥)·워치리스트 접근을 본인만 가능하게 잠급니다. 미설정 시 비워두세요.</div>
+    <div class="hint">Vercel 환경변수 <code>APP_KEY</code>와 <b>같은 값</b>을 넣으세요. 수집함(📥)·클라우드 동기화·서버 Claude 키를 쓰려면 필요합니다.<br>
+      저장할 때 이 칸이 비어 있으면 <b>기존 값을 그대로 둡니다</b>(실수로 지워지지 않게). 정말 지우려면 아래 버튼을 쓰세요.</div>
+    <button class="btn btn-ghost block" id="clearAppKey" style="margin-top:8px;">🗑 앱 키 지우기</button>
   </div>
   <div class="grp">
     <label class="field-label">클라우드 동기화 (Notion)</label>
@@ -2565,9 +2567,12 @@ async function checkKeys() {
   }
 
   // 2) 앱 키 — 수집함/동기화 접근
+  const ak = $('#appKeyIn').value.trim() || store.appKey();
   try {
     const r = await apiFetch('/api/inbox?watchlist=1', { timeout: 15000 });
     if (r.ok) lines.push(ok('수집함 앱 키 — 정상 (수집함·클라우드 동기화 사용 가능)'));
+    // 비어 있는 것과 값이 틀린 것은 조치가 다르므로 구분해서 알린다
+    else if (r.status === 401 && !ak) lines.push(bad('수집함 앱 키 — <b>비어 있어요.</b> Vercel의 APP_KEY와 같은 값을 입력하세요'));
     else if (r.status === 401) lines.push(bad('수집함 앱 키 — 서버의 APP_KEY와 다릅니다'));
     else if (r.status === 424) lines.push(warn('수집함 — 서버 설정 미완료(NOTION_TOKEN)'));
     else lines.push(warn(`수집함 — 응답 ${r.status}`));
@@ -2583,6 +2588,12 @@ async function checkKeys() {
   btn.disabled = false;
 }
 $('#checkKeys').addEventListener('click', checkKeys);
+$('#clearAppKey').addEventListener('click', () => {
+  if (!store.appKey()) { toast('이미 비어 있어요'); return; }
+  if (!confirm('수집함 앱 키를 지울까요?\n수집함·클라우드 동기화·서버 Claude 키를 쓸 수 없게 됩니다.')) return;
+  localStorage.removeItem('yl_appkey'); $('#appKeyIn').value = '';
+  toast('앱 키를 지웠어요'); checkKeys();
+});
 // 브라우저에 남은 죽은 키를 지우고 서버 키로 되돌리는 탈출구.
 // 키를 교체할 때마다 브라우저 쪽이 낡아 "API 키가 올바르지 않아요"가 반복됐다.
 $('#clearKey').addEventListener('click', () => {
@@ -2606,7 +2617,10 @@ $('#saveSet').addEventListener('click', () => {
   store.setModel($('#modelIn').value);
   store.setProxy($('#proxyIn').value.trim());
   store.setApiBase($('#apiBaseIn').value.trim());
-  store.setAppKey($('#appKeyIn').value.trim());
+  // 앱 키도 빈 칸이면 기존 값을 유지한다. Claude·자막 키에는 이 보호가 있었는데
+  // 여기만 무조건 덮어써서, 저장을 누를 때 칸이 비어 있으면 조용히 지워졌다.
+  // 지우려면 아래 "앱 키 지우기" 버튼을 쓴다.
+  const av = $('#appKeyIn').value.trim(); if (av) store.setAppKey(av);
   toast('저장했어요'); closeDrawers();
 });
 $('#clearData').addEventListener('click', () => {
