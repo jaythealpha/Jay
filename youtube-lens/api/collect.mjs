@@ -22,6 +22,7 @@ const MAX_AUTO_ANALYZE = 1;      // 회차당 자동 분석 상한 (Sonnet 호�
 // 남은 시간이 충분할 때만 시작한다. 건너뛴 항목은 '새 항목'으로 남아 앱에서 분석하면 된다.
 const FN_BUDGET_MS = 55000;
 const ANALYZE_NEEDS_MS = 32000;
+const FEEDBACK_N = 12;           // 채점에 넣을 최근 판정 사례 수 (긍정·부정 각각)
 
 // ---- RSS/Atom 파서 (의존성 없이 정규식으로 최소 파싱) ----
 function dec(s) {
@@ -172,11 +173,24 @@ async function haiku(prompt, maxTokens = 500) {
   const j = await r.json();
   return (j.content && j.content[0] && j.content[0].text) || '';
 }
-async function scoreItem(profile, item, body) {
+/* 사람의 판정을 채점에 되먹인다.
+   수집함의 '제외'는 필터가 통과시켰는데 사람이 버린 것 — 곧 필터의 오탐이다.
+   '보관'·'분석됨'은 실제로 쓸모 있었다는 확인이다. 이 둘을 예시로 주지 않으면
+   사용자가 제외를 백 번 눌러도 필터는 아무것도 배우지 못하고 같은 것을 계속 올린다. */
+export function buildFeedback(liked, disliked) {
+  if (!liked.length && !disliked.length) return '';
+  const L = ['\n[이 사용자의 실제 판정 이력]',
+    '관심 프로필과 충돌하면 이 이력을 우선하세요. 아래와 성격이 비슷한 콘텐츠는 같은 방향으로 판정합니다.'];
+  if (disliked.length) L.push('\n▼ 사용자가 직접 "제외"함 (필터는 통과시켰으나 사람이 버림 → 이런 유형은 낮게)\n' + disliked.map(t => '· ' + t).join('\n'));
+  if (liked.length) L.push('\n▲ 사용자가 "보관"하거나 분석까지 함 (실제로 유용했음 → 이런 유형은 높게)\n' + liked.map(t => '· ' + t).join('\n'));
+  return L.join('\n') + '\n';
+}
+export async function scoreItem(profile, item, body, feedback) {
   if (!(process.env.ANTHROPIC_API_KEY || '').trim()) return { score: null, reason: '필터 미사용(ANTHROPIC_API_KEY 없음)' };
   const out = await haiku(
     '당신은 콘텐츠 큐레이터입니다. 아래 관심 프로필과 새 콘텐츠를 대조해 관련성·유용성을 0~10 점수로 평가하세요.\n\n' +
-    '[관심 프로필]\n' + profile + '\n\n[콘텐츠]\n제목: ' + item.title + '\n출처: ' + (item.author || item.sourceName || '') + '\n설명: ' + (item.desc || '(없음)') +
+    '[관심 프로필]\n' + profile + '\n' + (feedback || '') +
+    '\n[콘텐츠]\n제목: ' + item.title + '\n출처: ' + (item.author || item.sourceName || '') + '\n설명: ' + (item.desc || '(없음)') +
     (body ? '\n\n[본문 발췌]\n' + body.slice(0, 3000) : '') + '\n\n' +
     'JSON만 출력: {"score": 0-10 정수, "reason": "근거 한 문장(한국어)"}', 200);
   try { const j = JSON.parse(out.match(/\{[\s\S]*\}/)[0]); return { score: Math.max(0, Math.min(10, +j.score || 0)), reason: String(j.reason || '') }; }
@@ -227,10 +241,21 @@ export default async function handler(req, res) {
     report.sources = sources.length;
     if (!sources.length) { res.status(200).json({ ...report, note: only.length ? '선택한 소스를 찾지 못했어요.' : '워치리스트에 활성 소스가 없어요.' }); return; }
 
-    // 2) 기존 수집함 URL 셋 (중복 방지)
+    // 2) 기존 수집함 — URL 셋(중복 방지) + 사람의 판정 이력(필터 학습)
     const seen = new Set();
+    const liked = [], disliked = [];
     const recent = await queryDb(INBOX_DB, { sorts: [{ timestamp: 'created_time', direction: 'descending' }] });
-    for (const p of recent.results) { const u = readProps(p)['URL']; if (u) seen.add(u); }
+    for (const p of recent.results) {
+      const r = readProps(p);
+      if (r['URL']) seen.add(r['URL']);
+      const t = String(r['제목'] || '').trim().slice(0, 90);
+      if (!t) continue;
+      const st = r['상태'];
+      if (st === '제외') { if (disliked.length < FEEDBACK_N) disliked.push(t); }
+      else if (st === '보관' || st === '분석됨') { if (liked.length < FEEDBACK_N) liked.push(t); }
+    }
+    const feedback = buildFeedback(liked, disliked);
+    report.learned = { liked: liked.length, disliked: disliked.length };
 
     // 3) 소스별 새 항목 수집
     // '마지막수집'(워터마크)은 여기서 올리지 않는다. 처리에 실패한 항목까지 "지나간 것"으로
@@ -294,7 +319,7 @@ export default async function handler(req, res) {
       const needMs = item.sourceType === '유튜브' ? 25000 : 12000;
       if (kept >= MAX_NEW_PER_RUN || timeLeft() < needMs) { unfinished.add(item.watchId); continue; }
       try {
-        let { score, reason } = await scoreItem(profile, item);
+        let { score, reason } = await scoreItem(profile, item, '', feedback);
         // 명백히 무관한 것은 본문을 받지 않고 바로 버린다 (크레딧 절약)
         if (score !== null && score <= HOPELESS_SCORE) {
           report.skipped++;
@@ -318,7 +343,7 @@ export default async function handler(req, res) {
             if (report.rejected.length < 12) report.rejected.push({ title: item.title.slice(0, 80), score, reason: String(reason || '').slice(0, 160), source: item.sourceName });
             continue;
           }
-          const second = await scoreItem(profile, item, excerpt);
+          const second = await scoreItem(profile, item, excerpt, feedback);
           report.rescored = (report.rescored || 0) + 1;
           score = second.score; reason = second.reason;
           if (score !== null && score < SCORE_THRESHOLD) {
