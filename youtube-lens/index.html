@@ -1162,18 +1162,33 @@ function cycleStatus(on) {
    "API 키가 올바르지 않아요"가 반복됐다. 기본은 서버 프록시(키가 Vercel 한 곳에만
    있으면 됨)이고, 본인 키를 넣어둔 경우에만 브라우저가 직접 호출한다. */
 async function askClaude(payload) {
+  const proxy = () => apiFetch('/api/claude', {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(payload), timeout: 120000,
+  });
   const own = store.key();
-  if (own) {
-    return fetch('https://api.anthropic.com/v1/messages', {
+  if (!own) return proxy();
+
+  let r;
+  try {
+    r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'content-type': 'application/json', 'x-api-key': own, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify(payload),
     });
+  } catch { return proxy(); }   // 네트워크·CORS 실패도 서버로 우회
+  if (r.status !== 401) return r;
+
+  // 브라우저에 남은 낡은 키(폐기·오타)로 실패한 경우. 서버에 멀쩡한 키가 있으면
+  // 사용자를 세우지 않고 그리로 넘어간다 — 예전엔 여기서 작업 전체가 멈췄다.
+  const alt = await proxy();
+  if (alt.ok) {
+    localStorage.removeItem('yl_key');
+    const el = $('#keyIn'); if (el) el.value = '';
+    toast('저장된 Claude 키가 만료돼 서버 키로 전환했어요');
+    return alt;
   }
-  return apiFetch('/api/claude', {
-    method: 'POST', headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(payload), timeout: 120000,
-  });
+  return r;   // 서버도 안 되면 원래 오류를 그대로 보여준다
 }
 async function callClaude(key, model, input) {
   const kind = { youtube: '유튜브 영상 자막', web: '웹 아티클 본문', text: '사용자가 제공한 텍스트', file: '파일 텍스트', image: '이미지' }[input.sourceType] || '소스 텍스트';
@@ -2536,19 +2551,26 @@ async function checkKeys() {
   const bad = t => `<div style="color:var(--red-soft);">❌ ${t}</div>`;
   const warn = t => `<div style="color:var(--gold);">⚠️ ${t}</div>`;
 
-  // 1) Claude 키 — 비어 있으면 서버 프록시를 실제로 호출해 확인
-  const k = $('#keyIn').value.trim() || store.key();
-  if (!k) {
+  // 서버 프록시가 지금 쓸 수 있는 상태인지 확인 (0=정상, 그 외는 상태코드)
+  const probeServer = async () => {
     try {
       const r = await apiFetch('/api/claude', {
         method: 'POST', headers: { 'content-type': 'application/json' }, timeout: 20000,
         body: JSON.stringify({ model: store.model(), max_tokens: 1, messages: [{ role: 'user', content: 'hi' }] }),
       });
-      if (r.ok || r.status === 400) lines.push(ok('Claude — 서버 키 사용 중, 정상 (앱에는 키를 두지 않습니다)'));
-      else if (r.status === 401) lines.push(bad('Claude — 수집함 앱 키가 맞지 않아 서버 키를 쓸 수 없어요'));
-      else if (r.status === 424) lines.push(bad('Claude — 서버(Vercel)에 ANTHROPIC_API_KEY가 없거나 잘못됐어요'));
-      else lines.push(warn(`Claude — 서버 응답 ${r.status}`));
-    } catch (e) { lines.push(warn('Claude — 서버 연결 실패: ' + esc(e.message || ''))); }
+      return (r.ok || r.status === 400) ? 0 : r.status;   // 400은 키는 맞고 요청만 트집
+    } catch { return -1; }
+  };
+
+  // 1) Claude 키 — 비어 있으면 서버 프록시를 실제로 호출해 확인
+  const k = $('#keyIn').value.trim() || store.key();
+  if (!k) {
+    const s = await probeServer();
+    if (s === 0) lines.push(ok('Claude — 서버 키 사용 중, 정상 (앱에는 키를 두지 않습니다)'));
+    else if (s === 401) lines.push(bad('Claude — 수집함 앱 키가 맞지 않아 서버 키를 쓸 수 없어요'));
+    else if (s === 424) lines.push(bad('Claude — 서버(Vercel)에 ANTHROPIC_API_KEY가 없거나 잘못됐어요'));
+    else if (s === -1) lines.push(warn('Claude — 서버 연결 실패'));
+    else lines.push(warn(`Claude — 서버 응답 ${s}`));
   }
   else if (!/^sk-ant-/.test(k)) {
     lines.push(bad(`Claude API 키 — <b>sk-ant-</b>로 시작해야 하는데 "${esc(k.slice(0, 8))}…"입니다. 다른 키(앱 키 등)를 넣으신 것 같아요`));
@@ -2560,7 +2582,16 @@ async function checkKeys() {
         body: JSON.stringify({ model: store.model(), max_tokens: 1, messages: [{ role: 'user', content: 'hi' }] }),
       });
       if (r.ok || r.status === 400) lines.push(ok('Claude API 키 — 정상'));   // 400은 키는 맞고 요청만 트집
-      else if (r.status === 401) lines.push(bad('Claude API 키 — 인증 실패(401). 콘솔에서 새로 발급받아 주세요'));
+      else if (r.status === 401) {
+        // 브라우저에 남은 낡은 키가 서버 키를 가로막고 있는 흔한 상황.
+        // 새 키를 발급받으라고만 하면 서버에 멀쩡한 키가 있어도 헤매게 된다.
+        lines.push(bad('Claude API 키 — 이 브라우저에 저장된 키가 인증 실패(401). 폐기됐거나 오타예요'));
+        if (await probeServer() === 0) {
+          lines.push(ok('서버(Vercel) 키는 정상이에요 → 위 <b>🗑 저장된 Claude 키 지우고 서버 키 사용</b>을 누르면 바로 해결됩니다 (새 키 발급 불필요)'));
+        } else {
+          lines.push(warn('서버 키도 쓸 수 없어요 → 콘솔에서 새 키를 발급받아 Vercel <b>ANTHROPIC_API_KEY</b>에 넣으세요'));
+        }
+      }
       else if (r.status === 429) lines.push(warn('Claude API 키 — 정상이지만 사용량 한도에 걸렸어요(429)'));
       else lines.push(warn(`Claude API 키 — 응답 ${r.status}`));
     } catch (e) { lines.push(warn('Claude API 키 — 네트워크 오류: ' + esc(e.message || ''))); }
