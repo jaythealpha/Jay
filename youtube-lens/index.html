@@ -419,6 +419,10 @@
   @media (max-width: 520px) { .lib-item { flex-direction: column; } .lib-thumb { width: 100%; } }
   .sync-badge { font-size: 11px; font-weight: 800; padding: 4px 9px; border-radius: 999px; background: rgba(255,59,92,.14); color: var(--red-soft); white-space: nowrap; }
   .auto-tag { font-size: 10.5px; font-weight: 800; color: var(--violet-soft); background: rgba(124,92,255,.14); border: 1px solid rgba(124,92,255,.3); padding: 2px 7px; border-radius: 999px; margin-left: 8px; }
+  .lang-tag { font-size: 10.5px; font-weight: 800; color: var(--mint-soft); background: rgba(64,220,180,.13); border: 1px solid rgba(64,220,180,.32); padding: 2px 7px; border-radius: 999px; margin-left: 8px; }
+  .lang-menu { position: absolute; right: 8px; top: 34px; z-index: 30; background: var(--bg-2); border: 1px solid var(--line); border-radius: 12px; padding: 6px; box-shadow: 0 12px 30px rgba(0,0,0,.4); min-width: 168px; }
+  .lang-menu button { display: block; width: 100%; text-align: left; background: none; border: 0; color: var(--ink-1); font: inherit; font-size: 13px; padding: 8px 10px; border-radius: 8px; cursor: pointer; }
+  .lang-menu button:hover { background: rgba(255,255,255,.07); }
   .pick-row { display: flex; align-items: center; gap: 9px; padding: 7px 0; font-size: 13px; }
   .pick-row input { width: 16px; height: 16px; accent-color: var(--violet); cursor: pointer; flex: none; }
   .pick-row .t { flex: none; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 999px; background: rgba(255,255,255,.07); color: var(--ink-2); }
@@ -1805,8 +1809,8 @@ async function generateContent() {
   } finally { btn.disabled = false; btn.textContent = orig; }
 }
 
-async function callClaudeContent(key, model, prompt) {
-  const res = await askClaude({ model, max_tokens: 16000, system: CONTENT_SYSTEM, messages: [{ role: 'user', content: [{ type: 'text', text: prompt }] }] });
+async function callClaudeContent(key, model, prompt, system) {
+  const res = await askClaude({ model, max_tokens: 16000, system: system || CONTENT_SYSTEM, messages: [{ role: 'user', content: [{ type: 'text', text: prompt }] }] });
   if (!res.ok) {
     let msg = `API 오류 (${res.status})`;
     try { const j = await res.json(); if (j.error?.message) msg += ': ' + j.error.message; } catch {}
@@ -1817,6 +1821,85 @@ async function callClaudeContent(key, model, prompt) {
   const texts = (j.content || []).filter(c => c.type === 'text').map(c => c.text || '');
   for (const t of [texts.join('\n'), texts[texts.length - 1] || '']) { try { return parseJson(t); } catch {} }
   throw new Error('응답을 해석하지 못했어요. 다시 시도해 주세요.');
+}
+
+/* ===== 콘텐츠 번역 — 만든 콘텐츠를 해외 채널에 그대로 올릴 수 있게 =====
+   직역이 아니라 현지화다. 훅·캡션·해시태그는 그 언어권에서 실제로 쓰는 표현이어야
+   하고, 릴스 대본은 초 단위 길이가 맞아야 한다. 그래서 번역도 Claude로 돌린다. */
+const TRANS_LANGS = [
+  { id: 'en', flag: '🇺🇸', ko: '영어',   native: 'English' },
+  { id: 'ja', flag: '🇯🇵', ko: '일본어', native: '日本語' },
+  { id: 'zh', flag: '🇨🇳', ko: '중국어', native: '简体中文' },
+  { id: 'es', flag: '🇪🇸', ko: '스페인어', native: 'Español' },
+];
+const LANG_BY_ID = Object.fromEntries(TRANS_LANGS.map(l => [l.id, l]));
+
+const TRANS_SYSTEM = `당신은 콘텐츠 현지화 전문가입니다. 원문을 그대로 옮기는 번역가가 아니라,
+같은 메시지를 대상 언어권 시청자에게 가장 잘 먹히도록 다시 쓰는 카피라이터입니다.
+
+원칙:
+- 훅·제목·CTA는 직역하지 말고, 그 언어권에서 실제로 스크롤을 멈추게 하는 표현으로 다시 씁니다.
+- 해시태그는 번역하지 말고, 그 언어권에서 실제로 검색·사용되는 태그로 교체합니다.
+- 영상 대본은 말할 때의 길이가 원문과 비슷해야 합니다. 길어지면 문장을 줄이세요.
+- 숫자, 고유명사(인명·브랜드·제품명), URL은 그대로 둡니다.
+- 한국 특유의 사례·비유가 통하지 않으면, 같은 뜻이 전달되는 현지 사례로 바꿉니다.
+- 원문에 없는 정보를 지어내지 않습니다.
+
+출력은 입력과 **완전히 동일한 JSON 구조**여야 합니다. 키 이름·배열 길이·중첩 구조를 바꾸지 말고,
+사람이 읽는 문자열 값만 대상 언어로 바꾸세요. JSON만 출력하고 설명은 붙이지 마세요.`;
+
+// 번역하면 안 되는 제어용 필드 — 번역본에도 원본 값을 그대로 물려준다
+const TRANS_KEEP = ['fmtId', 'formatId', 'auto', 'savedAt', 'editedText', 'lang', 'srcTitle'];
+
+function translatePrompt(piece, lang) {
+  const body = {};
+  for (const [k, v] of Object.entries(piece)) if (!TRANS_KEEP.includes(k)) body[k] = v;
+  return `아래 JSON 콘텐츠를 **${lang.native}(${lang.ko})**로 현지화해 주세요.
+
+주의: \`answerIndex\` 같은 숫자 값과 배열의 순서·개수는 절대 바꾸지 마세요.
+\`format\` 값도 ${lang.native}로 바꿔 주세요.
+
+${JSON.stringify(body, null, 2)}`;
+}
+
+async function translatePiece(idx, langId) {
+  const p = _contentPieces[idx], lang = LANG_BY_ID[langId];
+  if (!p || !lang) return;
+  if (_renderState.isDemo) { toast('데모 콘텐츠는 번역할 수 없어요. 실제 소스를 분석한 뒤 만들어보세요', true); return; }
+
+  const card = document.getElementById('pc' + idx);
+  const btn = card && card.querySelector('[data-trans]');
+  const orig = btn ? btn.textContent : '';
+  if (btn) { btn.textContent = '번역 중…'; btn.disabled = true; }
+  try {
+    const data = await callClaudeContent(store.key(), store.model(), translatePrompt(p, lang), TRANS_SYSTEM);
+    // 편집본이 있으면 그쪽이 사람이 손본 최신본이므로, 번역본에는 편집 흔적을 넘기지 않는다
+    const piece = {
+      ...data, fmtId: p.fmtId, formatId: p.formatId,
+      lang: lang.id, srcTitle: p.title || '',
+      title: data.title || `${p.title || '콘텐츠'} (${lang.native})`,
+    };
+    delete piece.editedText; delete piece.auto; delete piece.savedAt;
+    const saved = saveContentsToSession([piece]);
+    if (saved) refreshHistUI(); else _demoPieces = _demoPieces.concat([piece]);
+    renderStudio();
+    toast(saved ? `${lang.flag} ${lang.ko} 번역본을 프로젝트에 저장했어요`
+                : `${lang.ko}로 번역했어요 — ⚠️ 저장 실패, 화면을 벗어나면 사라집니다`, !saved);
+  } catch (e) {
+    toast('번역 실패: ' + (e.message || ''), true);
+  } finally { if (btn) { btn.textContent = orig; btn.disabled = false; } }
+}
+
+function openLangMenu(idx, anchor) {
+  document.querySelectorAll('.lang-menu').forEach(m => m.remove());
+  const card = document.getElementById('pc' + idx); if (!card) return;
+  const menu = document.createElement('div');
+  menu.className = 'lang-menu';
+  menu.innerHTML = TRANS_LANGS.map(l =>
+    `<button data-tlang="${l.id}" data-tidx="${idx}">${l.flag} ${l.ko} <span style="color:var(--ink-3);">${l.native}</span></button>`).join('');
+  card.appendChild(menu);
+  const close = ev => { if (!menu.contains(ev.target) && ev.target !== anchor) { menu.remove(); document.removeEventListener('click', close); } };
+  setTimeout(() => document.addEventListener('click', close), 0);
 }
 
 function renderPieces(pieces) {
@@ -1833,12 +1916,16 @@ function renderPieces(pieces) {
     const edited = p.editedText ? `<span class="edited-badge">✏️ 편집됨</span>` : '';
     // 서버가 밤새 만든 초안은 검토 전이므로 눈에 띄게 구분한다
     const auto = p.auto ? `<span class="auto-tag">🤖 자동 초안 · 검토 필요</span>` : '';
-    return `<div class="content" id="pc${i}"><div class="pc-actions">` +
+    // 번역본임을 분명히 — 원본과 나란히 쌓이므로 구분이 없으면 헷갈린다
+    const L = LANG_BY_ID[p.lang];
+    const langTag = L ? `<span class="lang-tag">${L.flag} ${esc(L.native)}</span>` : '';
+    return `<div class="content" id="pc${i}" style="position:relative;"><div class="pc-actions">` +
+      `<button class="copy-btn" data-trans="${i}" title="다른 언어로 번역">🌐</button>` +
       `<button class="copy-btn" data-edit="${i}" title="편집">✏️</button>` +
       `<button class="copy-btn" data-copy="${i}" title="복사">📋</button>` +
       `<button class="copy-btn" data-dl="${i}" title="파일 저장">⬇ ${dl}</button>` +
       `<button class="copy-btn del-c" data-delc="${i}" title="삭제">🗑</button></div>` +
-      `<span class="fmt">${esc(p.format || (FMT_BY_ID[p.fmtId] && FMT_BY_ID[p.fmtId].label) || '콘텐츠')}</span>${edited}${auto}` +
+      `<span class="fmt">${esc(p.format || (FMT_BY_ID[p.fmtId] && FMT_BY_ID[p.fmtId].label) || '콘텐츠')}</span>${langTag}${edited}${auto}` +
       `<h4>${esc(p.title || `콘텐츠 ${i + 1}`)}</h4>` +
       (u ? `<div class="pc-use">💡 ${esc(u.use)}</div>` : '') +
       renderBody(p) + `</div>`;
@@ -2007,6 +2094,10 @@ $('#cfFormat').addEventListener('click', e => {
   const b = e.target.closest('[data-fmt]'); if (b) selectFormat(b.dataset.fmt);
 });
 $('#studioOut').addEventListener('click', e => {
+  const tl = e.target.closest('[data-tlang]');
+  if (tl) { document.querySelectorAll('.lang-menu').forEach(m => m.remove()); translatePiece(Number(tl.dataset.tidx), tl.dataset.tlang); return; }
+  const tr = e.target.closest('[data-trans]');
+  if (tr) { openLangMenu(Number(tr.dataset.trans), tr); return; }
   const ed = e.target.closest('[data-edit]');
   if (ed) { editPiece(Number(ed.dataset.edit)); return; }
   const se = e.target.closest('[data-savee]');
@@ -2113,7 +2204,10 @@ function renderLibrary() {
     const label = c.piece.format || (FMT_BY_ID[c.piece.fmtId] && FMT_BY_ID[c.piece.fmtId].label) || '';
     if (fmtSel.value && label !== fmtSel.value) return false;
     if (!q) return true;
-    return `${c.piece.title || ''} ${c.sTitle || ''} ${pieceToText(c.piece)}`.toLowerCase().includes(q);
+    // 언어명으로도 찾을 수 있게 ("영어", "English", "日本語")
+    const L = LANG_BY_ID[c.piece.lang];
+    const langWords = L ? `${L.ko} ${L.native}` : '한국어';
+    return `${c.piece.title || ''} ${c.sTitle || ''} ${langWords} ${pieceToText(c.piece)}`.toLowerCase().includes(q);
   });
   items = items.slice().sort(sort === 'title' ? (a, b) => String(a.piece.title || '').localeCompare(String(b.piece.title || '')) : (a, b) => new Date(b.at) - new Date(a.at));
   $('#libCount').textContent = cons.length ? `${items.length}개 표시 · 전체 ${cons.length}개` : '';
@@ -2125,7 +2219,7 @@ function renderLibrary() {
     const preview = (p.editedText || pieceToText(p)).replace(/\s+/g, ' ').slice(0, 160);
     return `<div class="card lib-item" data-libc="${i}">
       <div class="lib-body">
-        <div class="lib-chips"><span class="lib-chip">${esc(label)}</span>${p.auto ? '<span class="auto-tag">🤖 자동 초안</span>' : ''}${p.editedText ? '<span class="edited-badge">✏️ 편집됨</span>' : ''}</div>
+        <div class="lib-chips"><span class="lib-chip">${esc(label)}</span>${(L => L ? `<span class="lang-tag">${L.flag} ${esc(L.native)}</span>` : '')(LANG_BY_ID[p.lang])}${p.auto ? '<span class="auto-tag">🤖 자동 초안</span>' : ''}${p.editedText ? '<span class="edited-badge">✏️ 편집됨</span>' : ''}</div>
         <div class="lib-title" style="margin-top:7px;">${esc(p.title || label)}</div>
         <div class="lib-sum">${esc(preview)}</div>
         <div class="lib-src">📄 ${esc(c.sTitle)}</div>
