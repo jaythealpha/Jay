@@ -2668,6 +2668,7 @@ async function checkKeys() {
   }
   else if (!/^sk-ant-/.test(k)) {
     lines.push(bad(`Claude API 키 — <b>sk-ant-</b>로 시작해야 하는데 "${esc(k.slice(0, 8))}…"입니다. 다른 키(앱 키 등)를 넣으신 것 같아요`));
+    lines.push(warn('이 칸을 <b>비우면</b> 서버(Vercel) 키를 씁니다 — 본인 키를 따로 쓸 게 아니면 비워두는 쪽을 권합니다'));
   } else {
     try {
       const r = await fetch('https://api.anthropic.com/v1/messages', {
@@ -2677,13 +2678,15 @@ async function checkKeys() {
       });
       if (r.ok || r.status === 400) lines.push(ok('Claude API 키 — 정상'));   // 400은 키는 맞고 요청만 트집
       else if (r.status === 401) {
-        // 브라우저에 남은 낡은 키가 서버 키를 가로막고 있는 흔한 상황.
-        // 새 키를 발급받으라고만 하면 서버에 멀쩡한 키가 있어도 헤매게 된다.
-        lines.push(bad('Claude API 키 — 이 브라우저에 저장된 키가 인증 실패(401). 폐기됐거나 오타예요'));
+        // 죽은 키는 남겨둘 이유가 없다. 서버 키가 멀쩡하면 askClaude가 어차피 그리로
+        // 넘어가므로, 점검에서도 똑같이 정리해 준다 — 버튼을 누르라고 시키지 않는다.
         if (await probeServer() === 0) {
-          lines.push(ok('서버(Vercel) 키는 정상이에요 → 위 <b>🗑 저장된 Claude 키 지우고 서버 키 사용</b>을 누르면 바로 해결됩니다 (새 키 발급 불필요)'));
+          localStorage.removeItem('yl_key');
+          $('#keyIn').value = '';
+          lines.push(ok('Claude — 서버 키 사용 중, 정상 <span style="color:var(--ink-3);">(만료된 브라우저 키는 자동으로 정리했어요)</span>'));
         } else {
-          lines.push(warn('서버 키도 쓸 수 없어요 → 콘솔에서 새 키를 발급받아 Vercel <b>ANTHROPIC_API_KEY</b>에 넣으세요'));
+          lines.push(bad('Claude API 키 — 이 브라우저의 키도, 서버(Vercel) 키도 인증 실패(401)'));
+          lines.push(warn('<a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">콘솔</a>에서 새 키를 발급받아 Vercel <b>ANTHROPIC_API_KEY</b>에 넣어주세요'));
         }
       }
       else if (r.status === 429) lines.push(warn('Claude API 키 — 정상이지만 사용량 한도에 걸렸어요(429)'));
