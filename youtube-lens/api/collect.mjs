@@ -75,16 +75,42 @@ async function fetchText(url, headers = {}) {
 }
 
 // ---- 유튜브 채널 → channel_id 해석 (@handle/URL 지원, 워치 행에 캐시) ----
+// 예전에는 페이지 HTML의 "첫 번째" channelId를 잡았는데, 그 값은 추천 채널 등
+// 남의 채널일 수 있다. 실제로 @AlexHormozi를 등록했더니 다른 채널이 잡혔고,
+// 나중엔 그 ID의 피드가 404가 나면서 유튜브 수집이 통째로 멈췄다.
+// → 페이지 "자신"을 가리키는 표식(canonical·externalId·identifier)을 우선 쓴다.
+function pickChannelId(html) {
+  const pats = [
+    /<link[^>]+rel=["']canonical["'][^>]+href=["'][^"']*\/channel\/(UC[0-9A-Za-z_-]{22})/i,
+    /<meta[^>]+itemprop=["']identifier["'][^>]+content=["'](UC[0-9A-Za-z_-]{22})["']/i,
+    /<meta[^>]+property=["']og:url["'][^>]+content=["'][^"']*\/channel\/(UC[0-9A-Za-z_-]{22})/i,
+    /"externalId"\s*:\s*"(UC[0-9A-Za-z_-]{22})"/,
+    /"channelId"\s*:\s*"(UC[0-9A-Za-z_-]{22})"/,   // 최후의 수단
+  ];
+  for (const re of pats) { const m = html.match(re); if (m) return m[1]; }
+  return '';
+}
+// 해석한 ID가 실제로 피드를 주는지 확인한다. 확인 없이 캐시하면 잘못된 ID가
+// 굳어져서 매일 404만 반복한다.
+async function feedWorks(cid) {
+  try {
+    const r = await fetch('https://www.youtube.com/feeds/videos.xml?channel_id=' + cid, {
+      headers: { 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/122 Safari/537.36' },
+    });
+    return r.ok;
+  } catch { return false; }
+}
 async function resolveChannelId(value) {
   const v = String(value || '').trim();
-  const m = v.match(/(UC[0-9A-Za-z_-]{22})/);
-  if (m) return m[1];
+  const direct = v.match(/\/channel\/(UC[0-9A-Za-z_-]{22})/) || v.match(/^(UC[0-9A-Za-z_-]{22})$/);
+  if (direct) return direct[1];
   let url = v;
   if (!/^https?:\/\//i.test(url)) url = 'https://www.youtube.com/' + (url.startsWith('@') ? url : '@' + url);
   const html = await fetchText(url);
-  const c = html.match(/"channelId":"(UC[0-9A-Za-z_-]{22})"/) || html.match(/channel\/(UC[0-9A-Za-z_-]{22})/);
-  if (!c) throw new Error('채널 ID를 찾지 못했어요: ' + v);
-  return c[1];
+  const cid = pickChannelId(html);
+  if (!cid) throw new Error('채널 ID를 찾지 못했어요: ' + v);
+  if (!(await feedWorks(cid))) throw new Error(`채널 ID(${cid})의 피드를 열 수 없어요. 채널 주소를 확인해 주세요: ${v}`);
+  return cid;
 }
 
 // ---- 웹 본문 추출 (fetch-source.js의 축약판) ----
@@ -218,11 +244,24 @@ export default async function handler(req, res) {
         if (src['유형'] === '유튜브 채널') {
           sourceType = '유튜브';
           let cid = (src['채널ID'] || '').trim();
+          const feedOf = c => 'https://www.youtube.com/feeds/videos.xml?channel_id=' + c;
           if (!cid) {
             cid = await resolveChannelId(src['값']);
             if (!dry) await notion('/pages/' + src.id, 'PATCH', { properties: { '채널ID': P.text(cid) } });
           }
-          items = parseFeed(await fetchText('https://www.youtube.com/feeds/videos.xml?channel_id=' + cid));
+          try {
+            items = parseFeed(await fetchText(feedOf(cid)));
+          } catch (e) {
+            // 캐시된 ID가 낡거나 잘못됐으면(피드 404) 한 번 다시 해석해 스스로 고친다.
+            // 안 그러면 잘못된 ID가 굳어져 매일 404만 반복한다.
+            if (!/HTTP 40[04]/.test(String(e.message || e))) throw e;
+            const fresh = await resolveChannelId(src['값']);
+            if (fresh === cid) throw e;
+            cid = fresh;
+            if (!dry) await notion('/pages/' + src.id, 'PATCH', { properties: { '채널ID': P.text(cid) } });
+            report.rechecked = (report.rechecked || 0) + 1;
+            items = parseFeed(await fetchText(feedOf(cid)));
+          }
         } else if (src['유형'] === '키워드') {
           sourceType = '뉴스';
           items = parseFeed(await fetchText('https://news.google.com/rss/search?q=' + encodeURIComponent(src['값']) + '&hl=ko&gl=KR&ceid=KR:ko'));
