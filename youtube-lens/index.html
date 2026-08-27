@@ -1592,20 +1592,24 @@ function loadDemo() {
 /* ============ 콘텐츠 포맷 레지스트리 ============ */
 const TONES = ['정보성·신뢰감', '친근·대화체', '자극적·후킹 강함', '담백·전문가', '유머·위트', '감성·스토리텔링', '전문·권위', '동기부여·응원', '차분·다큐멘터리', '반전·호기심 자극', '직설·팩폭', 'MZ·트렌디'];
 const CF_TONE = { key: 'tone', label: '톤', type: 'select', options: TONES, def: TONES[0] };
-const CF_COUNT = (def = 2, max = 5) => ({ key: 'count', label: '개수', type: 'number', min: 1, max, def });
+// '개수'는 만들 **결과물 벌 수**지 길이가 아니다. 라벨이 뭉뚱그려져 있어 카드뉴스에서
+// "개수 = 카드 장수"로 읽히는 오해가 있었다 → 포맷마다 무엇의 개수인지 이름을 붙인다.
+const CF_COUNT = (def = 2, max = 5, label = '개수') => ({ key: 'count', label, type: 'number', min: 1, max, def });
+// 카드뉴스 장수는 가이드에 6~9장으로 박혀 있어 사람이 조절할 수 없었다.
+const CF_SLIDES = { key: 'slides', label: '장수', type: 'number', min: 5, max: 15, def: 8 };
 
 const S_SNS = `{ "format":"<라벨>","title":"관리용 제목","hooks":["스크롤을 멈추게 하는 훅 후보 3개"],"script":[{"scene":"장면/시간(예 0-2초) 또는 슬라이드 번호","visual":"화면·비주얼·자막 배치 지시","voiceover":"나레이션 또는 화면 텍스트"}],"caption":"게시물 캡션(줄바꿈, 첫 줄 후킹, 이모지)","hashtags":["#해시태그 8~12개"],"cta":"저장/공유/팔로우 유도 한 문장" }`;
 
 const FORMATS = [
   // --- SNS ---
-  { id: 'reels', group: 'SNS 숏폼', icon: '🎞', label: '릴스 대본', cfg: [CF_TONE, CF_COUNT()],
+  { id: 'reels', group: 'SNS 숏폼', icon: '🎞', label: '릴스 대본', cfg: [CF_TONE, CF_COUNT(2, 5, '대본 수')],
     guide: '15~40초 릴스용. script는 시간 단위(0-2초 등) 5~8개, 첫 장면은 강한 훅.', schema: S_SNS },
-  { id: 'cards', group: 'SNS 숏폼', icon: '🖼', label: '카드뉴스', cfg: [CF_TONE, CF_COUNT()],
-    guide: '인스타 카드뉴스. script는 슬라이드 단위(1,2,…6~9장), 1번 표지(훅), 마지막 CTA. voiceover=슬라이드 텍스트.', schema: S_SNS },
-  { id: 'shorts', group: 'SNS 숏폼', icon: '⚡', label: '쇼츠 훅 세트', cfg: [CF_COUNT(1, 2)],
+  { id: 'cards', group: 'SNS 숏폼', icon: '🖼', label: '카드뉴스', cfg: [CF_TONE, CF_SLIDES, CF_COUNT(1, 3, '세트 수')],
+    guide: '인스타 카드뉴스. script는 슬라이드 단위로 [설정]의 장수와 정확히 같은 개수를 만들 것. 1번 표지(훅), 마지막 CTA. voiceover=슬라이드 텍스트.', schema: S_SNS },
+  { id: 'shorts', group: 'SNS 숏폼', icon: '⚡', label: '쇼츠 훅 세트', cfg: [CF_COUNT(1, 2, '세트 수')],
     guide: '같은 주제로 쓸 강한 훅 10개(hooks)와 상위 3개의 오프닝 3초 대본(script).', schema: S_SNS },
   // --- 학습자료 ---
-  { id: 'summary', group: '학습자료', icon: '📓', label: '요약노트', cfg: [CF_COUNT(1, 2)],
+  { id: 'summary', group: '학습자료', icon: '📓', label: '요약노트', cfg: [CF_COUNT(1, 2, '노트 수')],
     guide: '핵심을 구조화한 학습 요약. 원문 근거에 충실하게.',
     schema: `{ "format":"요약노트","title":"제목","tldr":["3~5줄 핵심 요약"],"keyPoints":[{"point":"핵심 개념","detail":"1~2문장 설명"}],"glossary":[{"term":"용어","def":"정의"}],"takeaways":["실행/기억 포인트 3~5개"] }` },
   { id: 'flashcards', group: '학습자료', icon: '🃏', label: '플래시카드', cfg: [{ key: 'cardCount', label: '카드 수', type: 'number', min: 5, max: 30, def: 12 }],
@@ -1628,7 +1632,7 @@ const FORMATS = [
   { id: 'xthread', group: '소셜', icon: '🧵', label: 'X 스레드', cfg: [{ key: 'tweetCount', label: '트윗 수', type: 'number', min: 4, max: 12, def: 7 }, CF_TONE],
     guide: 'X(트위터) 스레드. 첫 트윗은 강한 훅, 각 트윗 280자 이내, 마지막은 요약/CTA.',
     schema: `{ "format":"X 스레드","title":"주제","tweets":["각 트윗 텍스트(280자 이내)"] }` },
-  { id: 'linkedin', group: '소셜', icon: '💼', label: '링크드인 포스트', cfg: [CF_TONE, CF_COUNT(1, 3)],
+  { id: 'linkedin', group: '소셜', icon: '💼', label: '링크드인 포스트', cfg: [CF_TONE, CF_COUNT(1, 3, '포스트 수')],
     guide: '링크드인 포스트. 첫 줄 후킹, 짧은 문단·줄바꿈으로 가독성, 인사이트 중심, 마지막 질문/CTA.',
     schema: `{ "format":"링크드인 포스트","title":"주제","post":"본문(줄바꿈 포함)","hashtags":["#태그 3~6개"] }` },
   // --- 영상 브리프 (Higgsfield 핸드오프) ---
