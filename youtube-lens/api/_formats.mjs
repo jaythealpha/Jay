@@ -18,7 +18,9 @@ export const SERVER_FORMATS = {
   },
   cards: {
     label: '카드뉴스',
-    guide: '인스타 카드뉴스. script는 슬라이드 단위(1,2,…6~9장), 1번 표지(훅), 마지막 CTA. voiceover=슬라이드 텍스트.',
+    guide: '인스타 카드뉴스. script는 슬라이드 단위로 [설정]의 장수와 정확히 같은 개수를 만들 것. 1번 표지(훅), 마지막 CTA. voiceover=슬라이드 텍스트.',
+    // 가이드가 [설정]의 장수를 참조하므로 무인 초안에도 기본값을 넣어줘야 한다.
+    settings: '- 장수: 8',
     schema: S_SNS,
     expert: '1번 표지=강한 훅(숫자·결과 약속). 각 카드=1아이디어(한 줄 헤드라인 + 짧은 부연). 카드 간 오픈루프로 스와이프 유지. 마지막=요약+저장 유도. 정보 밀도를 높여 "저장"을 유발.',
   },
@@ -46,7 +48,8 @@ export function draftPrompt(data, fmt, sourceExcerpt) {
     ? `\n[원문 발췌 — 사실 근거로만 사용, 없는 내용을 지어내지 말 것]\n${String(sourceExcerpt).slice(0, 6000)}\n` : '';
   return `아래 인사이트를 바탕으로 "${fmt.label}" 콘텐츠를 만들어 주세요.\n\n` +
     `[요약]\n${data.summary || ''}\n\n[핵심 노하우·인사이트]\n${kh}\n${grounding}\n` +
-    `[주제·키워드] ${topic}\n[설정]\n- 톤: 정보형(깔끔·정확)\n- 개수: 1\n\n[형식 가이드] ${fmt.guide}\n` +
+    `[주제·키워드] ${topic}\n[설정]\n- 톤: 정보형(깔끔·정확)\n- 개수: 1` +
+    (fmt.settings ? `\n${fmt.settings}` : '') + `\n\n[형식 가이드] ${fmt.guide}\n` +
     `\n[전문가 지침 — 반드시 적용]\n${fmt.expert}\n\n` +
     `과장·허위 표현을 쓰지 말고 원문 근거를 벗어난 사실은 만들지 마세요. 반드시 아래 JSON 스키마로만 한국어로 응답하세요.\n\n` +
     `{ "pieces": [ ${fmt.schema.replace('<라벨>', fmt.label)} ] }`;
