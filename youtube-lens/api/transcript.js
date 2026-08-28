@@ -223,8 +223,11 @@ module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'x-transcript-key, x-app-key, content-type');
-  // 인증 여부에 따라 응답이 달라지므로 캐시가 키를 구분하게 한다
-  res.setHeader('Cache-Control', 'public, max-age=86400');
+  // 성공한 응답만 오래 캐시한다. 예전엔 여기서 모든 응답에 24시간 캐시를 걸어,
+  // 일시적 실패(자막 API 장애·레이트리밋·잠깐 비공개였던 게시물)까지 CDN에 하루 굳었다.
+  // 사용자는 다시 시도해도 같은 오류만 보고 원인을 찾을 방법이 없었다.
+  const cacheOk = () => res.setHeader('Cache-Control', 'public, max-age=86400');
+  res.setHeader('Cache-Control', 'no-store');
   res.setHeader('Vary', 'x-app-key, x-transcript-key');
   if (req.method === 'OPTIONS') { res.status(204).end(); return; }
 
@@ -247,7 +250,7 @@ module.exports = async (req, res) => {
     if (!txKey) { res.status(400).json({ ok: false, needKey: true, error: '이 링크 유형은 자막 API 키(Supadata)가 필요해요. ⚙️ 설정에 넣어주세요.' }); return; }
     try {
       const s = await supadataByUrl(rawUrl, txKey, prefer);
-      res.status(200).json({ ok: true, transcript: s.text, lang: s.lang, title: s.title || '', author: '', source: 'supadata-url' }); return;
+      cacheOk(); res.status(200).json({ ok: true, transcript: s.text, lang: s.lang, title: s.title || '', author: '', source: 'supadata-url' }); return;
     } catch (e) {
       const msg = String(e && e.message || e);
       // 차단은 키·링크 문제가 아니라 플랫폼 정책이다. 원인을 정확히 말해 주지 않으면
@@ -270,7 +273,7 @@ module.exports = async (req, res) => {
       const s = await supadata(id, txKey, prefer);
       const body = { ok: true, transcript: s.text, lang: s.lang, title: '', author: '', source: 'supadata' };
       if (debug) body.debug = [{ src: 'supadata', chars: s.text.length }];
-      res.status(200).json(body); return;
+      cacheOk(); res.status(200).json(body); return;
     } catch (e) { sdErr = String(e && e.message || e); if (debug) debug.push({ src: 'supadata', error: sdErr }); /* 폴백 진행 */ }
   }
 
@@ -303,7 +306,7 @@ module.exports = async (req, res) => {
     if (text) {
       const body = { ok: true, transcript: text, lang: cand.track.languageCode || prefer, title, author, durationSec, source: cand.from };
       if (debug) body.debug = debug;
-      res.status(200).json(body); return;
+      cacheOk(); res.status(200).json(body); return;
     }
   }
 
