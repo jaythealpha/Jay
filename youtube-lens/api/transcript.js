@@ -69,6 +69,25 @@ function parseId(s) {
 }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
+// 플랫폼이 본문 대신 돌려주는 로그인·차단·오류 페이지의 지문.
+// 실제로 인스타 릴스 링크에서 "Log in / Post isn't available / Sign up for Instagram"이
+// 정상 자막으로 통과해 분석까지 넘어갔다.
+const BLOCKED_PATTERNS = [
+  /post isn'?t available/i, /page isn'?t available/i, /content isn'?t available/i,
+  /log ?in to (instagram|tiktok|facebook|x)/i, /sign up for instagram/i,
+  /this account is private/i, /비공개 계정/,
+  /(페이지|게시물).{0,6}(사용할 수 없|찾을 수 없)/,
+  /are you a robot/i, /verify (that )?you'?re human/i, /enable javascript/i,
+  /login[ _-]?required/i, /rate ?limit/i,
+];
+const BLOCKED_MSG = '플랫폼이 본문 대신 로그인·차단 페이지를 돌려줬어요';
+function looksBlocked(t) {
+  const s = String(t || '');
+  // 긴 본문 안에 우연히 섞인 문구까지 막지 않도록, 짧은 응답에만 지문을 적용한다.
+  if (s.length > 1200) return false;
+  return BLOCKED_PATTERNS.some(re => re.test(s));
+}
+
 // Supadata 유니버설: 임의 URL(Instagram/TikTok/X/파일 등)의 전사/자막을 URL로 요청.
 // 일부 플랫폼은 비동기(jobId) 응답 → 몇 번 폴링.
 async function supadataByUrl(url, key, prefer) {
@@ -84,6 +103,7 @@ async function supadataByUrl(url, key, prefer) {
   };
   let lastErr = 'supadata 실패';
   for (const ep of endpoints) {
+    const isScrape = ep.includes('/web/scrape');
     try {
       const r = await fetch(ep, { headers });
       if (!r.ok) { let m = 'HTTP ' + r.status; try { const e = await r.json(); if (e && (e.message || e.error)) m += ' ' + (e.message || e.error); } catch {} lastErr = m; if (r.status === 401 || r.status === 403) throw new Error(m); continue; }
@@ -101,8 +121,13 @@ async function supadataByUrl(url, key, prefer) {
           if (text) { j = jj; break; }
         }
       }
-      if (text && text.length >= 20) return { text, lang: j.lang || prefer, title: j.title || j.name || '' };
-      lastErr = '빈 응답';
+      // 인스타·틱톡은 데이터센터 IP를 막기 때문에, 스크랩 폴백이 본문 대신
+      // 로그인 안내·오류 페이지를 그대로 돌려준다. 길이만 재면 이게 통과해서
+      // "성공"으로 위장된 쓰레기 텍스트가 분석까지 흘러간다.
+      if (text && looksBlocked(text)) { lastErr = BLOCKED_MSG; continue; }
+      // 스크랩 폴백은 짧은 안내문을 물어오기 쉬우므로 기준을 높인다.
+      if (text && text.length >= (isScrape ? 200 : 20)) return { text, lang: j.lang || prefer, title: j.title || j.name || '' };
+      lastErr = text ? '내용이 너무 짧아 분석할 수 없어요' : '빈 응답';
     } catch (e) { lastErr = String(e && e.message || e); if (/HTTP 40[13]/.test(lastErr)) break; }
   }
   throw new Error(lastErr);
@@ -224,7 +249,16 @@ module.exports = async (req, res) => {
       const s = await supadataByUrl(rawUrl, txKey, prefer);
       res.status(200).json({ ok: true, transcript: s.text, lang: s.lang, title: s.title || '', author: '', source: 'supadata-url' }); return;
     } catch (e) {
-      res.status(502).json({ ok: false, error: '자막 API로 못 가져왔어요 (' + String(e && e.message || e) + '). 텍스트를 직접 붙여넣어 주세요.' }); return;
+      const msg = String(e && e.message || e);
+      // 차단은 키·링크 문제가 아니라 플랫폼 정책이다. 원인을 정확히 말해 주지 않으면
+      // 사용자가 키를 다시 발급받거나 링크를 계속 바꾸며 헤매게 된다.
+      const blocked = msg === BLOCKED_MSG;
+      res.status(502).json({
+        ok: false, blocked,
+        error: blocked
+          ? '플랫폼이 서버 접근을 막았어요 — 비공개·삭제됐거나 로그인이 필요한 게시물일 수 있어요.'
+          : '자막 API로 못 가져왔어요 (' + msg + ').',
+      }); return;
     }
   }
   if (!id) { res.status(400).json({ ok: false, error: '유효한 videoId/URL이 필요합니다.' }); return; }
