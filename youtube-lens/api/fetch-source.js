@@ -41,27 +41,12 @@ function extractReadable(html) {
   return lines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
 }
 
+const { looksBlocked } = require('./_blocked.js');
+
 /* Jina Reader 폴백 — Agent Reach(github.com/Panniantong/Agent-Reach)의 웹 채널 방식.
    직접 HTML을 파싱하면 본문을 JS로 그리는 사이트에서 빈손이 된다. r.jina.ai는
    페이지를 렌더링해 마크다운으로 돌려주고 키가 필요 없다. */
 const JINA_TIMEOUT_MS = 20000;
-
-// Jina/Cloudflare가 본문 대신 돌려주는 차단·검증 페이지.
-// 이걸 그대로 본문으로 넘기면 "성공"으로 위장된 쓰레기가 분석까지 흘러간다.
-function isAntibotPage(text) {
-  const s = String(text || '').slice(0, 4096).toLowerCase();
-  const jinaCaptcha = s.includes('warning:') && s.includes('requiring captcha');
-  const challenge = ['title: just a moment...', '## performing security verification',
-    'title: attention required! | cloudflare'].some(m => s.includes(m));
-  const cfBlock = s.includes('title: attention required! | cloudflare') &&
-    (s.includes('ray id') || s.includes('/cdn-cgi/challenge-platform/'));
-  // 원본(Agent Reach)은 Jina 경고 문구가 함께 있을 때만 챌린지로 본다. 그러면
-  // 경고 없이 오는 순수 Cloudflare 대기 페이지가 본문으로 통과한다. 이 두 문구는
-  // 실제 기사에 나올 일이 없으므로 단독으로도 차단으로 취급한다.
-  const cfChallenge = s.includes('title: just a moment...') ||
-    s.includes('## performing security verification');
-  return (jinaCaptcha && challenge) || cfBlock || cfChallenge;
-}
 
 async function jinaReader(url) {
   const ac = new AbortController();
@@ -73,7 +58,7 @@ async function jinaReader(url) {
     });
     if (!r.ok) throw new Error('Jina HTTP ' + r.status);
     const md = await r.text();
-    if (isAntibotPage(md)) throw new Error('차단·검증 페이지');
+    if (looksBlocked(md)) throw new Error('로그인·차단 페이지');
     // Jina는 본문 앞에 Title/URL Source/Markdown Content 헤더를 붙인다
     const title = ((md.match(/^Title:\s*(.+)$/m) || [])[1] || '').trim();
     const body = (md.split(/^Markdown Content:\s*$/m)[1] || md).trim();

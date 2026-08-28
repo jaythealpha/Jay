@@ -4,14 +4,8 @@
 //   "Log in  Post isn't available  ... Sign up for Instagram"
 // 을 돌려줬는데, 길이(110자)가 최소 기준 20자를 넘어 ok:true로 나갔다.
 // 오류도 없이 이 쓰레기 텍스트가 Claude 분석까지 흘러갔다.
-import { readFileSync } from 'node:fs';
-
-// transcript.js는 Vercel 핸들러(CommonJS)라 통째로 import하면 실행된다.
-// 검사 대상 함수만 떼어내 평가한다.
-const src = readFileSync(new URL('../api/transcript.js', import.meta.url), 'utf8');
-const block = src.match(/const BLOCKED_PATTERNS = \[[\s\S]*?\n}/);
-if (!block) { console.error('❌ BLOCKED_PATTERNS/looksBlocked 정의를 찾지 못했어요'); process.exit(1); }
-const looksBlocked = new Function(block[0] + '; return looksBlocked;')();
+import { createRequire } from 'node:module';
+const { looksBlocked } = createRequire(import.meta.url)('../api/_blocked.js');
 
 let fail = 0;
 const t = (name, got, want) => {

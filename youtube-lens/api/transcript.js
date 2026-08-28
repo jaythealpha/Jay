@@ -69,24 +69,7 @@ function parseId(s) {
 }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-// 플랫폼이 본문 대신 돌려주는 로그인·차단·오류 페이지의 지문.
-// 실제로 인스타 릴스 링크에서 "Log in / Post isn't available / Sign up for Instagram"이
-// 정상 자막으로 통과해 분석까지 넘어갔다.
-const BLOCKED_PATTERNS = [
-  /post isn'?t available/i, /page isn'?t available/i, /content isn'?t available/i,
-  /log ?in to (instagram|tiktok|facebook|x)/i, /sign up for instagram/i,
-  /this account is private/i, /비공개 계정/,
-  /(페이지|게시물).{0,6}(사용할 수 없|찾을 수 없)/,
-  /are you a robot/i, /verify (that )?you'?re human/i, /enable javascript/i,
-  /login[ _-]?required/i, /rate ?limit/i,
-];
-const BLOCKED_MSG = '플랫폼이 본문 대신 로그인·차단 페이지를 돌려줬어요';
-function looksBlocked(t) {
-  const s = String(t || '');
-  // 긴 본문 안에 우연히 섞인 문구까지 막지 않도록, 짧은 응답에만 지문을 적용한다.
-  if (s.length > 1200) return false;
-  return BLOCKED_PATTERNS.some(re => re.test(s));
-}
+const { looksBlocked, BLOCKED_MSG } = require('./_blocked.js');
 
 // Supadata 유니버설: 임의 URL(Instagram/TikTok/X/파일 등)의 전사/자막을 URL로 요청.
 // 일부 플랫폼은 비동기(jobId) 응답 → 몇 번 폴링.
