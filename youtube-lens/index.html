@@ -750,6 +750,21 @@ function looksLikeUrl(s) { return /^https?:\/\//i.test(s) || /^[\w.-]+\.[a-z]{2,
 function domainOf(u) { try { return new URL(/^https?:\/\//i.test(u) ? u : 'https://' + u).hostname.replace(/^www\./, ''); } catch { return ''; } }
 // 자막·전사가 필요한 소셜/미디어 플랫폼 (백엔드 Supadata 유니버설로 라우팅)
 function isSocial(u) { return /(?:instagram\.com|tiktok\.com|(?:^|\/\/|\.)x\.com|twitter\.com|facebook\.com|fb\.watch|threads\.net|vimeo\.com)/i.test(String(u)); }
+/* 계정(프로필) 링크인지 개별 게시물 링크인지 가른다.
+   Supadata는 "게시물 하나"의 전사만 해준다. 계정 주소를 그대로 넘기면 정체 모를
+   실패로 끝나서, 사용자는 인스타가 아예 안 되는 줄 알게 된다. 미리 갈라 안내한다. */
+function socialProfile(u) {
+  let p; try { p = new URL(/^https?:\/\//i.test(u) ? u : 'https://' + u); } catch { return null; }
+  const d = p.hostname.replace(/^www\./, '');
+  const seg = p.pathname.split('/').filter(Boolean);
+  if (seg.length !== 1) return null;            // /p/<id>, /@user/video/<id> 등은 게시물
+  const s = seg[0], handle = s.replace(/^@/, '');
+  if (/(^|\.)instagram\.com$/.test(d) && !/^(p|reel|reels|tv|explore|stories|accounts)$/i.test(s)) return { platform: 'Instagram', handle };
+  if (/(^|\.)tiktok\.com$/.test(d) && s.startsWith('@')) return { platform: 'TikTok', handle };
+  if (/(^|\.)(x|twitter)\.com$/.test(d) && !/^(home|search|explore|i|notifications)$/i.test(s)) return { platform: 'X', handle };
+  if (/(^|\.)threads\.net$/.test(d) && s.startsWith('@')) return { platform: 'Threads', handle };
+  return null;
+}
 function socialName(u) {
   const d = domainOf(u);
   return /instagram/.test(d) ? 'Instagram' : /tiktok/.test(d) ? 'TikTok' : /(^|\.)x\.com|twitter/.test(d) ? 'X' :
@@ -1035,6 +1050,15 @@ async function oneClickAnalyze() {
     return;
   }
   const social = !yid && isSocial(input);
+  // 계정 페이지는 "게시물 하나"가 아니라서 전사할 대상이 없다. 무엇을 넣어야 하는지 알려준다.
+  const prof = social ? socialProfile(input) : null;
+  if (prof) {
+    $('#loadedBox').classList.remove('hidden');
+    showHomeErr(`${prof.platform} <b>계정 페이지</b>(@${esc(prof.handle)})는 통째로 분석할 수 없어요. ` +
+      `분석할 <b>게시물·릴스 링크 하나</b>를 넣어주세요 (예: instagram.com/p/… , /reel/…).<br>` +
+      `계정을 매일 자동으로 따라가고 싶으시면 📥 수집함 → 워치리스트에 등록하세요.`);
+    return;
+  }
   const pdf = !yid && !social && isPdfUrl(input);
   let text;
   try {
