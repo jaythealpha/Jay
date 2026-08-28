@@ -574,6 +574,7 @@
         <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
           <select id="wlType" style="flex:none;width:auto;">
             <option value="유튜브 채널">유튜브 채널</option>
+            <option value="유튜브 인기">유튜브 인기 영상</option>
             <option value="키워드">뉴스 키워드</option>
             <option value="RSS">RSS 피드</option>
             <option value="관심 프로필">관심 프로필</option>
@@ -581,6 +582,7 @@
           <input type="text" id="wlValue" placeholder="채널 URL/@핸들 · 키워드 · RSS URL · 관심사 설명" style="flex:1;min-width:180px;" autocomplete="off">
           <button class="btn btn-primary" id="wlAdd" style="flex:none;">추가</button>
         </div>
+        <div class="hint" style="margin-top:8px;">🔥 <b>유튜브 인기 영상</b>은 전일 기준 조회수 상위 10개를 가져옵니다. <b>값에 키워드를 넣으세요</b>(예: <code>1인 창업 수익화</code>) — 비워두면 국내 인기 영상 전체라 음악·예능이 대부분이고 필터에서 거의 다 걸러집니다. Vercel에 <code>YOUTUBE_API_KEY</code>가 필요합니다.</div>
         <div class="hint" style="margin-top:8px;">💡 <b>관심 프로필</b>은 필터 기준이에요 — 어떤 콘텐츠가 유용한지 문장으로 적으면, 수집 시 Haiku가 0~10점으로 평가해 6점 미만은 걸러냅니다. 워치리스트·수집함 데이터는 Notion에 저장되어 <b>모든 기기에서 동일</b>하게 보입니다.</div>
       </details>
     </div>

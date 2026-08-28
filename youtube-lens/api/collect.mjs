@@ -23,6 +23,7 @@ const MAX_AUTO_ANALYZE = 1;      // 회차당 자동 분석 상한 (Sonnet 호�
 const FN_BUDGET_MS = 55000;
 const ANALYZE_NEEDS_MS = 32000;
 const FEEDBACK_N = 12;           // 채점에 넣을 최근 판정 사례 수 (긍정·부정 각각)
+const TOP_VIDEOS_N = 10;         // '유튜브 인기' 소스가 한 회차에 가져올 상위 영상 수
 
 // ---- RSS/Atom 파서 (의존성 없이 정규식으로 최소 파싱) ----
 function dec(s) {
@@ -118,6 +119,58 @@ async function resolveChannelId(value) {
   if (st === 404) throw new Error(`채널 ID(${cid})의 피드가 없어요(404). 채널 주소를 확인해 주세요: ${v}`);
   // 429·403·5xx·네트워크 오류는 유튜브 쪽 사정이다. 주소를 고치라고 하면 안 된다.
   throw new Error(`유튜브가 피드 요청을 거부했어요(${st || '네트워크 오류'}) — 채널 주소 문제가 아닐 수 있어요. 다음 회차에 다시 시도합니다: ${v}`);
+}
+
+// ---- YouTube Data API (선택) ----
+// RSS는 두 가지 한계가 있다. (1) 데이터센터 IP가 자주 막힌다 — 실제로 잘 되던
+// 채널이 갑자기 피드를 못 열었다. (2) '인기 영상' 같은 목록을 아예 제공하지 않는다.
+// YOUTUBE_API_KEY가 있으면 이 경로를 쓰고, 없으면 기존 RSS로 그대로 동작한다.
+const YT_API = 'https://www.googleapis.com/youtube/v3';
+function ytApiKey() { return apiKey('YOUTUBE_API_KEY'); }
+
+async function ytApi(path, params) {
+  const key = ytApiKey();
+  if (!key) throw new Error('YOUTUBE_API_KEY가 없어요');
+  const r = await fetch(YT_API + '/' + path + '?' + new URLSearchParams({ ...params, key }));
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    const m = (j && j.error && j.error.message) || '';
+    throw new Error('YouTube API ' + r.status + (m ? ' — ' + m.slice(0, 140) : ''));
+  }
+  return j;
+}
+// search.list 결과를 RSS 파서와 같은 항목 모양으로 맞춘다
+export function ytSearchItems(j) {
+  return (j.items || []).filter(it => it.id && it.id.videoId).map(it => {
+    const sn = it.snippet || {};
+    return {
+      title: dec(sn.title || ''),
+      link: 'https://www.youtube.com/watch?v=' + it.id.videoId,
+      ts: Date.parse(sn.publishedAt || '') || 0,
+      desc: dec(sn.description || '').slice(0, 800),
+      author: dec(sn.channelTitle || ''),
+      thumb: 'https://i.ytimg.com/vi/' + it.id.videoId + '/hqdefault.jpg',
+    };
+  });
+}
+// 지정 시각 이후에 올라온 영상 중 조회수 상위 N개.
+// 키워드가 없으면 지역 인기 영상이 되는데, 그러면 음악·예능이 대부분이라
+// 관심 프로필에 걸려 전부 버려진다(크레딧만 태운다). 키워드를 주는 쪽을 권한다.
+export async function ytTopVideos(query, sinceMs, max) {
+  const params = {
+    part: 'snippet', type: 'video', order: 'viewCount',
+    publishedAfter: new Date(sinceMs).toISOString(),
+    maxResults: String(Math.min(Math.max(max, 1), 50)),
+  };
+  if (query) params.q = query; else params.regionCode = 'KR';
+  return ytSearchItems(await ytApi('search', params));
+}
+// 채널의 최신 영상 — RSS가 막혔을 때의 우회로
+export async function ytChannelVideos(channelId, max) {
+  return ytSearchItems(await ytApi('search', {
+    part: 'snippet', type: 'video', order: 'date',
+    channelId, maxResults: String(Math.min(Math.max(max, 1), 50)),
+  }));
 }
 
 // ---- 웹 본문 추출 (fetch-source.js의 축약판) ----
@@ -296,6 +349,17 @@ export default async function handler(req, res) {
             report.rechecked = (report.rechecked || 0) + 1;
             items = parseFeed(await fetchText(feedOf(cid)));
           }
+          // RSS가 계속 막히면(데이터센터 IP 차단) 키가 있을 때 Data API로 우회한다.
+          // 이 폴백이 없으면 유튜브 사정 하나로 수집이 통째로 멈춘다.
+          if (!items.length && ytApiKey() && cid) {
+            try { items = await ytChannelVideos(cid, 10); report.viaApi = (report.viaApi || 0) + 1; }
+            catch { /* 폴백 실패는 조용히 넘어간다 — 원래 오류를 덮지 않도록 */ }
+          }
+        } else if (src['유형'] === '유튜브 인기') {
+          // 전일 기준(마지막 수집 이후) 조회수 상위 영상. RSS로는 불가능해서 Data API를 쓴다.
+          sourceType = '유튜브';
+          const since = Date.parse(src['마지막수집'] || '') || (Date.now() - 24 * 3600 * 1000);
+          items = await ytTopVideos((src['값'] || '').trim(), since, TOP_VIDEOS_N);
         } else if (src['유형'] === '키워드') {
           sourceType = '뉴스';
           items = parseFeed(await fetchText('https://news.google.com/rss/search?q=' + encodeURIComponent(src['값']) + '&hl=ko&gl=KR&ceid=KR:ko'));
@@ -304,7 +368,8 @@ export default async function handler(req, res) {
         }
         const lastSeen = Date.parse(src['마지막수집'] || '') || 0;
         const eligible = items.filter(it => !seen.has(it.link) && (lastSeen ? it.ts > lastSeen : true));
-        const cap = lastSeen ? 6 : FIRST_RUN_PER_SOURCE;
+        const cap = src['유형'] === '유튜브 인기' ? TOP_VIDEOS_N
+                  : lastSeen ? 6 : FIRST_RUN_PER_SOURCE;
         const fresh = eligible.slice(0, cap);   // parseFeed가 최신순 정렬 → 최신 cap개만
         for (const it of fresh) candidates.push({ ...it, sourceType, sourceName, watchId: src.id });
         // 상한에 걸려 뒤로 밀린 항목이 있으면 워터마크를 올리면 안 된다.
