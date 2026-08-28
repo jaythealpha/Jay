@@ -2609,12 +2609,37 @@ async function loadWatchlist() {
     box.innerHTML = (j.watchlist || []).filter(w => w.type !== '설정').map(w => `
       <div class="wl-row ${w.active ? '' : 'off'}" data-id="${esc(w.id)}">
         <span class="t">${esc(w.type)}</span>
-        <span class="v" title="${esc(w.value)}">${esc(w.name || w.value)}</span>
+        <span class="v" title="${esc(w.value)}">${esc(w.name || w.value)}${sourceHealth(w)}</span>
         <button data-wl="toggle" data-active="${w.active ? 1 : ''}" title="${w.active ? '끄기' : '켜기'}">${w.active ? '🟢' : '⚪'}</button>
         <button data-wl="remove" title="삭제">🗑</button>
       </div>`).join('') || '<div class="hint">아직 등록된 소스가 없어요.</div>';
   } catch { box.innerHTML = '<div class="hint">워치리스트 연결 실패</div>'; }
 }
+/* 소스 건강 표시 — 조용히 죽은 소스를 드러낸다.
+   유튜브 채널 ID가 잘못 잡혀 며칠간 0건이었는데 화면에 아무 표시가 없어서,
+   "요즘 새 게 없나 보다"로 보였다. 실패와 헛돎을 눈에 띄게 구분한다. */
+function sourceHealth(w) {
+  if (w.type === '관심 프로필') return '';
+  const days = w.lastOk ? Math.floor((Date.now() - new Date(w.lastOk)) / 86400000) : null;
+  const when = days === null ? '아직 수집 전' : days <= 0 ? '오늘' : days + '일 전';
+  const wrap = (color, text, tip) =>
+    `<small style="display:block;color:${color};font-weight:700;margin-top:2px;" title="${esc(tip || '')}">${text}</small>`;
+
+  if (w.fails >= 1) {
+    return wrap('var(--red-soft)',
+      `🔴 연속 실패 ${w.fails}회 — ${esc(String(w.lastResult || '').replace(/^실패: /, '').slice(0, 60))}`,
+      w.lastResult);
+  }
+  if (days === null) return wrap('var(--ink-3)', '⚪ 아직 수집 전');
+  // 여러 번 돌았는데 통과가 0이면 관심 프로필과 안 맞는 소스다 — 크레딧만 태운다
+  if (w.passed === 0 && days >= 3) {
+    return wrap('var(--gold)', `🟡 ${when} 실행 · 통과 0건`,
+      '이 소스는 관심 프로필과 맞지 않아 계속 걸러지고 있어요. 키워드를 좁히거나 프로필을 조정해 보세요.');
+  }
+  if (days >= 3) return wrap('var(--gold)', `🟡 ${when} 마지막 성공 · 누적 ${w.passed}건`);
+  return wrap('var(--mint-soft)', `🟢 ${when} · ${esc(w.lastResult || '')} (누적 ${w.passed}건)`);
+}
+
 async function addWatch() {
   const type = $('#wlType').value, value = $('#wlValue').value.trim();
   if (!value) { toast('값을 입력하세요', true); return; }

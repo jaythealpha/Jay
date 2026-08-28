@@ -33,7 +33,12 @@ export default async function handler(req, res) {
         const setting = settings.find(w => /자동 수집/.test(w['이름'] || '')) || settings[0];
         res.status(200).json({
           ok: true, locked: isLocked(), cronReady: cronReady(),
-          watchlist: rows.map(w => ({ id: w.id, name: w['이름'], type: w['유형'], value: w['값'], active: !!w['활성'] })),
+          // 소스 건강 상태 — 조용히 죽은 소스를 앱에서 알아챌 수 있도록 함께 내려준다
+          watchlist: rows.map(w => ({
+            id: w.id, name: w['이름'], type: w['유형'], value: w['값'], active: !!w['활성'],
+            lastOk: w['마지막성공'] || '', lastResult: w['최근결과'] || '',
+            fails: Number(w['연속실패']) || 0, passed: Number(w['누적통과']) || 0,
+          })),
           auto: setting ? { id: setting.id, enabled: !!setting['활성'], time: setting['값'] || '' } : null,
           // 자동화 3종을 앱에서 각각 켜고 끌 수 있도록 함께 반환
           autos: { collect: pick(/자동 수집/), analyze: pick(/자동 분석/), draft: pick(/자동 초안/) },
