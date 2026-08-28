@@ -5,9 +5,9 @@
 // (api/transcript.js에서 실제로 겪은 사고와 같은 유형)
 import { readFileSync } from 'node:fs';
 
+import { createRequire } from 'node:module';
 const src = readFileSync(new URL('../api/fetch-source.js', import.meta.url), 'utf8');
-const grab = re => { const m = src.match(re); if (!m) { console.error('❌ 정의를 찾지 못했어요: ' + re); process.exit(1); } return m[0]; };
-const isAntibotPage = new Function(grab(/function isAntibotPage[\s\S]*?\n}/) + '; return isAntibotPage;')();
+const { isAntibotPage, looksBlocked } = createRequire(import.meta.url)('../api/_blocked.js');
 
 let fail = 0;
 const t = (name, got, want) => {
@@ -27,6 +27,13 @@ t('정상 기사', isAntibotPage(
   'Title: 1인 창업 수익화 사례\n\nMarkdown Content:\n창업 첫 해 매출은 3천만원이었다. 핵심은...'), false);
 t('"warning:"만 있는 정상 본문', isAntibotPage(
   'Title: 보안 경고 대응법\n\nMarkdown Content:\n로그에 warning: 이 찍히면 먼저 확인할 것은...'), false);
+
+// --- 회귀: Jina가 물어온 인스타 로그인 벽이 본문으로 통과하면 안 된다 ---
+// 실제 프로덕션 응답(237자). isAntibotPage(클라우드플레어 전용)만으로는 못 잡아서
+// looksBlocked(공용 지문)를 쓰도록 고쳤다.
+t('인스타 로그인 벽 (Jina 실제 응답)', looksBlocked(
+  "[](https://www.instagram.com/accounts/emailsignup/)[Log in](https://www.instagram.com/accounts/login/)\n\n" +
+  "Post isn't available\n\nThe link may be broken, or the profile may have been removed.\n\nSign up for Instagram"), true);
 
 // --- Jina 응답 파싱 (핸들러와 같은 규칙) ---
 const parse = md => ({
