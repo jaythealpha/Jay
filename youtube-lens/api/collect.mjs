@@ -93,13 +93,16 @@ function pickChannelId(html) {
 }
 // 해석한 ID가 실제로 피드를 주는지 확인한다. 확인 없이 캐시하면 잘못된 ID가
 // 굳어져서 매일 404만 반복한다.
-async function feedWorks(cid) {
+// 상태 코드를 그대로 돌려준다 — 예전엔 boolean만 봐서, 유튜브가 데이터센터 IP를
+// 일시적으로 막은 것까지 "채널 주소를 확인하세요"라고 안내했다. 멀쩡한 주소를
+// 붙잡고 헤매게 만드는 오진이다. (0 = 네트워크 실패)
+async function feedStatus(cid) {
   try {
     const r = await fetch('https://www.youtube.com/feeds/videos.xml?channel_id=' + cid, {
       headers: { 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/122 Safari/537.36' },
     });
-    return r.ok;
-  } catch { return false; }
+    return r.status;
+  } catch { return 0; }
 }
 async function resolveChannelId(value) {
   const v = String(value || '').trim();
@@ -110,8 +113,11 @@ async function resolveChannelId(value) {
   const html = await fetchText(url);
   const cid = pickChannelId(html);
   if (!cid) throw new Error('채널 ID를 찾지 못했어요: ' + v);
-  if (!(await feedWorks(cid))) throw new Error(`채널 ID(${cid})의 피드를 열 수 없어요. 채널 주소를 확인해 주세요: ${v}`);
-  return cid;
+  const st = await feedStatus(cid);
+  if (st === 200) return cid;
+  if (st === 404) throw new Error(`채널 ID(${cid})의 피드가 없어요(404). 채널 주소를 확인해 주세요: ${v}`);
+  // 429·403·5xx·네트워크 오류는 유튜브 쪽 사정이다. 주소를 고치라고 하면 안 된다.
+  throw new Error(`유튜브가 피드 요청을 거부했어요(${st || '네트워크 오류'}) — 채널 주소 문제가 아닐 수 있어요. 다음 회차에 다시 시도합니다: ${v}`);
 }
 
 // ---- 웹 본문 추출 (fetch-source.js의 축약판) ----
@@ -304,7 +310,7 @@ export default async function handler(req, res) {
         // 상한에 걸려 뒤로 밀린 항목이 있으면 워터마크를 올리면 안 된다.
         // 올리면 밀린 항목이 "이미 지나간 것"이 되어 영영 수집되지 않는다.
         if (eligible.length > fresh.length) unfinished.add(src.id);
-        health.set(src.id, { found: items.length, kept: 0, error: '' });
+        health.set(src.id, { found: fresh.length, kept: 0, error: '' });
         if (items.length) watermarks.set(src.id, Math.max(items[0].ts || 0, lastSeen));
       } catch (e) {
         const msg = String(e.message || e);
@@ -424,7 +430,7 @@ export default async function handler(req, res) {
           props['마지막성공'] = P.text(nowIso);
           props['연속실패'] = P.number(0);
           props['누적통과'] = P.number((Number(src['누적통과']) || 0) + h.kept);
-          props['최근결과'] = P.text(h.found + '건 발견 · ' + h.kept + '건 통과');
+          props['최근결과'] = P.text('신규 ' + h.found + '건 · 통과 ' + h.kept + '건');
         }
         try { await notion('/pages/' + src.id, 'PATCH', { properties: props }); }
         catch (e) { report.errors.push('상태 기록 실패(' + sourceLabel(src) + '): ' + String(e.message || e)); }
