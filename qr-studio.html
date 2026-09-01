@@ -238,7 +238,20 @@
   .seg button{flex:1;min-width:60px;background:var(--bg2);border:1px solid var(--line);color:var(--mut);border-radius:var(--pill);padding:9px 8px;font-size:12px;font-weight:500;cursor:pointer;transition:.12s}
   .seg button:hover{border-color:var(--line2);color:var(--txt)}
   .seg button.on{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}
-  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .row2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  /* native date/time pickers have a large intrinsic min-width that overflows a
+     narrow grid cell (the 시작/종료 boxes) — clamp them so content stays inside. */
+  input[type=datetime-local],input[type=date],input[type=time]{width:100%;min-width:0;max-width:100%;
+    background:var(--card);border:1px solid var(--line);color:var(--txt);border-radius:var(--rs);
+    padding:9px 11px;font-size:13px;font-family:inherit;outline:none;transition:.15s}
+  input[type=datetime-local]:focus,input[type=date]:focus,input[type=time]:focus{border-color:var(--txt);box-shadow:0 0 0 3px var(--focus)}
+  input[type=datetime-local]::-webkit-calendar-picker-indicator,
+  input[type=date]::-webkit-calendar-picker-indicator{margin-left:2px;cursor:pointer}
+  :root[data-theme="dark"] input[type=datetime-local]::-webkit-calendar-picker-indicator,
+  :root[data-theme="dark"] input[type=date]::-webkit-calendar-picker-indicator{filter:invert(1)}
+  /* content-type buttons: emoji + label together */
+  #ctypeSeg button{display:inline-flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap}
+  #ctypeSeg button .ct-em{font-size:13px;line-height:1}
   .switch{display:flex;align-items:center;justify-content:space-between;gap:10px}
   .toggle{position:relative;width:44px;height:24px;flex:none}
   .toggle input{opacity:0;width:0;height:0}
@@ -249,7 +262,7 @@
   .toggle input:checked+span::before{transform:translateX(20px)}
   .hint{font-size:11px;color:var(--mut2);margin-top:8px;line-height:1.5}
   #aiStyleSeg button{flex:1 1 28%;min-width:0}   /* 9 presets → balanced 3×3 grid */
-  #ctypeSeg button{flex:1 1 22%;min-width:0}     /* 12 content types → balanced 4-col grid */
+  #ctypeSeg button{flex:1 1 30%;min-width:0}     /* 24 content types → 3-col grid (emoji + label) */
   .picto-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;margin-top:6px}
   .picto-grid button{aspect-ratio:1;font-size:20px;line-height:1;background:var(--bg2);border:1px solid var(--line);border-radius:var(--rs);cursor:pointer;padding:0;transition:.1s}
   .picto-grid button.on{border-color:var(--acc);background:var(--acc)}
@@ -500,20 +513,32 @@
             <label class="fld">
               <div class="lbl" data-i18n="ct.label">QR 연결 유형</div>
               <div class="seg" id="ctypeSeg">
-                <button data-ct="url" class="on" data-i18n-tip="ct.tip.url" data-tip="웹사이트·유튜브·인스타 등 링크로 이동합니다. 가장 많이 쓰는 기본 유형이에요.">URL</button>
-                <button data-ct="text" data-i18n-tip="ct.tip.text" data-tip="자유 문구를 담습니다. 스캔하면 텍스트가 그대로 표시돼요(쿠폰 코드·안내문 등)."><span data-i18n="ct.text">텍스트</span></button>
-                <button data-ct="wifi" data-i18n-tip="ct.tip.wifi" data-tip="네트워크 이름·비밀번호를 담아, 스캔 한 번으로 Wi-Fi에 자동 접속시켜요. 카페·매장에 유용."><span data-i18n="ct.wifi">Wi-Fi</span></button>
-                <button data-ct="vcard" data-i18n-tip="ct.tip.vcard" data-tip="이름·전화·이메일을 담은 디지털 명함. 스캔하면 연락처에 바로 저장됩니다."><span data-i18n="ct.vcard">연락처</span></button>
-                <button data-ct="tel" data-i18n-tip="ct.tip.tel" data-tip="전화번호를 담습니다. 스캔하면 전화 앱에 번호가 떠서 바로 걸 수 있어요."><span data-i18n="ct.tel">전화</span></button>
-                <button data-ct="sms" data-i18n-tip="ct.tip.sms" data-tip="받는 번호와 메시지를 미리 채워 문자 작성창을 엽니다(이벤트 참여 등)."><span data-i18n="ct.sms">문자</span></button>
-                <button data-ct="email" data-i18n-tip="ct.tip.email" data-tip="받는사람·제목·내용을 채워 메일 작성창을 엽니다."><span data-i18n="ct.email">이메일</span></button>
-                <button data-ct="geo" data-i18n-tip="ct.tip.geo" data-tip="위도·경도를 담아 지도 앱에 위치 핀을 띄웁니다(매장 찾아오기)."><span data-i18n="ct.geo">위치</span></button>
-                <button data-ct="whatsapp" data-i18n-tip="ct.tip.whatsapp" data-tip="번호와 메시지를 담아, 스캔하면 WhatsApp 채팅창이 바로 열립니다(문의·예약).">WhatsApp</button>
-                <button data-ct="paypal" data-i18n-tip="ct.tip.paypal" data-tip="PayPal.Me 사용자명으로 결제·송금 페이지를 엽니다(금액 지정 가능).">PayPal</button>
-                <button data-ct="crypto" data-i18n-tip="ct.tip.crypto" data-tip="비트코인 주소·금액을 담아, 스캔하면 지갑 앱에서 바로 송금할 수 있어요(BIP-21)."><span data-i18n="ct.crypto">암호화폐</span></button>
-                <button data-ct="event" data-i18n-tip="ct.tip.event" data-tip="제목·장소·시간을 담아, 스캔하면 캘린더에 일정을 추가합니다(iCalendar)."><span data-i18n="ct.event">일정</span></button>
+                <button data-ct="url" class="on" data-i18n-tip="ct.tip.url" data-tip="웹사이트·유튜브·인스타 등 링크로 이동합니다. 가장 많이 쓰는 기본 유형이에요."><span class="ct-em">🔗</span>URL</button>
+                <button data-ct="text" data-i18n-tip="ct.tip.text" data-tip="자유 문구를 담습니다. 스캔하면 텍스트가 그대로 표시돼요(쿠폰 코드·안내문 등)."><span class="ct-em">📝</span><span data-i18n="ct.text">텍스트</span></button>
+                <button data-ct="wifi" data-i18n-tip="ct.tip.wifi" data-tip="네트워크 이름·비밀번호를 담아, 스캔 한 번으로 Wi-Fi에 자동 접속시켜요. 카페·매장에 유용."><span class="ct-em">📶</span><span data-i18n="ct.wifi">Wi-Fi</span></button>
+                <button data-ct="vcard" data-i18n-tip="ct.tip.vcard" data-tip="이름·전화·이메일·소셜을 담은 디지털 명함. 스캔하면 연락처에 바로 저장됩니다."><span class="ct-em">👤</span><span data-i18n="ct.vcard">연락처</span></button>
+                <button data-ct="tel" data-i18n-tip="ct.tip.tel" data-tip="전화번호를 담습니다. 스캔하면 전화 앱에 번호가 떠서 바로 걸 수 있어요."><span class="ct-em">📞</span><span data-i18n="ct.tel">전화</span></button>
+                <button data-ct="sms" data-i18n-tip="ct.tip.sms" data-tip="받는 번호와 메시지를 미리 채워 문자 작성창을 엽니다(이벤트 참여 등)."><span class="ct-em">💬</span><span data-i18n="ct.sms">문자</span></button>
+                <button data-ct="email" data-i18n-tip="ct.tip.email" data-tip="받는사람·제목·내용을 채워 메일 작성창을 엽니다."><span class="ct-em">✉️</span><span data-i18n="ct.email">이메일</span></button>
+                <button data-ct="geo" data-i18n-tip="ct.tip.geo" data-tip="위도·경도를 담아 지도 앱에 위치 핀을 띄웁니다(매장 찾아오기)."><span class="ct-em">📍</span><span data-i18n="ct.geo">위치</span></button>
+                <button data-ct="event" data-i18n-tip="ct.tip.event" data-tip="제목·장소·시간을 담아, 스캔하면 캘린더에 일정을 추가합니다(iCalendar)."><span class="ct-em">📅</span><span data-i18n="ct.event">일정</span></button>
+                <button data-ct="instagram" data-i18n-tip="ct.tip.instagram" data-tip="인스타그램 사용자명을 담아 프로필로 바로 이동합니다."><span class="ct-em">📸</span>Instagram</button>
+                <button data-ct="youtube" data-i18n-tip="ct.tip.youtube" data-tip="유튜브 채널 핸들(@이름)로 채널을 엽니다."><span class="ct-em">▶️</span>YouTube</button>
+                <button data-ct="tiktok" data-i18n-tip="ct.tip.tiktok" data-tip="틱톡 사용자명(@이름)으로 프로필을 엽니다."><span class="ct-em">🎵</span>TikTok</button>
+                <button data-ct="x" data-i18n-tip="ct.tip.x" data-tip="X(트위터) 사용자명으로 프로필을 엽니다."><span class="ct-em">✖️</span>X</button>
+                <button data-ct="facebook" data-i18n-tip="ct.tip.facebook" data-tip="페이스북 사용자명/페이지로 이동합니다."><span class="ct-em">👍</span>Facebook</button>
+                <button data-ct="linkedin" data-i18n-tip="ct.tip.linkedin" data-tip="링크드인 프로필(in/사용자명)로 이동합니다."><span class="ct-em">💼</span>LinkedIn</button>
+                <button data-ct="telegram" data-i18n-tip="ct.tip.telegram" data-tip="텔레그램 사용자명으로 대화를 엽니다."><span class="ct-em">✈️</span>Telegram</button>
+                <button data-ct="github" data-i18n-tip="ct.tip.github" data-tip="깃허브 사용자명으로 프로필을 엽니다."><span class="ct-em">🐙</span>GitHub</button>
+                <button data-ct="whatsapp" data-i18n-tip="ct.tip.whatsapp" data-tip="번호와 메시지를 담아, 스캔하면 WhatsApp 채팅창이 바로 열립니다(문의·예약)."><span class="ct-em">🟢</span>WhatsApp</button>
+                <button data-ct="appstore" data-i18n-tip="ct.tip.appstore" data-tip="앱 스토어/플레이스토어 링크로 앱 다운로드 페이지를 엽니다."><span class="ct-em">📱</span><span data-i18n="ct.appstore">앱 설치</span></button>
+                <button data-ct="spotify" data-i18n-tip="ct.tip.spotify" data-tip="스포티파이 트랙·앨범·플레이리스트 링크를 엽니다."><span class="ct-em">🎧</span>Spotify</button>
+                <button data-ct="review" data-i18n-tip="ct.tip.review" data-tip="구글 리뷰/지도 장소 링크로 리뷰 작성 페이지를 엽니다."><span class="ct-em">⭐</span><span data-i18n="ct.review">리뷰</span></button>
+                <button data-ct="video" data-i18n-tip="ct.tip.video" data-tip="Zoom·Meet 등 화상회의 참가 링크를 엽니다."><span class="ct-em">🎥</span><span data-i18n="ct.video">화상회의</span></button>
+                <button data-ct="paypal" data-i18n-tip="ct.tip.paypal" data-tip="PayPal.Me 사용자명으로 결제·송금 페이지를 엽니다(금액 지정 가능)."><span class="ct-em">💰</span>PayPal</button>
+                <button data-ct="crypto" data-i18n-tip="ct.tip.crypto" data-tip="비트코인 주소·금액을 담아, 스캔하면 지갑 앱에서 바로 송금할 수 있어요(BIP-21)."><span class="ct-em">₿</span><span data-i18n="ct.crypto">암호화폐</span></button>
               </div>
-              <div class="hint" data-i18n-html="ct.hint">각 버튼에 <b>마우스를 올리면</b> 설명이 나옵니다. 스캔하면 바로 실행 — Wi-Fi 접속, 연락처 저장, 전화·문자·메일, 지도 열기.</div>
+              <div class="hint" data-i18n-html="ct.hint">각 버튼에 <b>마우스를 올리면</b> 설명이 나옵니다. 스캔하면 바로 실행 — Wi-Fi 접속, 연락처 저장, 소셜·전화·문자·메일, 지도 열기.</div>
             </label>
             <label class="fld" id="ctRaw">
               <div class="lbl" id="ctRawLbl">URL</div>
@@ -542,6 +567,11 @@
                 <label class="fld"><div class="lbl" data-i18n="lbl.vcOrg">회사/조직</div><input type="text" id="vcOrg" maxlength="60" /></label>
                 <label class="fld"><div class="lbl" data-i18n="lbl.vcUrl">웹사이트</div><input type="text" id="vcUrl" maxlength="120" /></label>
               </div>
+              <div class="row2">
+                <label class="fld"><div class="lbl">📸 Instagram</div><input type="text" id="vcInsta" maxlength="40" data-i18n-ph="ph.handle" placeholder="사용자명 또는 @핸들" /></label>
+                <label class="fld"><div class="lbl">▶️ YouTube</div><input type="text" id="vcYt" maxlength="60" data-i18n-ph="ph.handle" placeholder="@채널핸들" /></label>
+              </div>
+              <div class="hint" data-i18n="hint.vcSocial">소셜은 연락처의 웹사이트 항목으로 함께 저장됩니다(대부분의 연락처 앱에서 링크로 열림).</div>
             </div>
             <div id="ctTel" style="display:none">
               <label class="fld"><div class="lbl" data-i18n="lbl.telNum">전화번호</div><input type="text" id="telNum" maxlength="24" placeholder="010-1234-5678" /></label>
@@ -590,6 +620,16 @@
                 <label class="fld"><div class="lbl" data-i18n="lbl.evEnd">종료</div><input type="datetime-local" id="evEnd" /></label>
               </div>
               <div class="hint" data-i18n="hint.ev">스캔하면 캘린더에 이 일정을 추가할 수 있습니다(iCalendar 표준).</div>
+            </div>
+            <div id="ctSocial" style="display:none">
+              <label class="fld"><div class="lbl"><span id="socialLbl">사용자명</span></div>
+                <input type="text" id="socialUser" maxlength="60" data-i18n-ph="ph.handle" placeholder="사용자명 또는 @핸들" /></label>
+              <div class="hint" id="socialHint" data-i18n="hint.social">사용자명만 입력하면 해당 플랫폼 프로필 주소로 연결됩니다(@ 는 자동 처리).</div>
+            </div>
+            <div id="ctLink" style="display:none">
+              <label class="fld"><div class="lbl"><span id="linkLbl">링크</span></div>
+                <input type="text" id="linkUrl" maxlength="300" placeholder="https://" /></label>
+              <div class="hint" id="linkHint" data-i18n="hint.link">전체 링크(https://…)를 붙여넣으세요. 스캔하면 그대로 열립니다.</div>
             </div>
             <div class="hint" id="ctPreview" style="display:none"></div>
             <label class="fld">
@@ -1049,7 +1089,7 @@
   <footer>
     <div>Aesthetic QR Studio · 아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.09.01-b</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.09.02-a</b></div>
   </footer>
 </div>
 
@@ -4662,6 +4702,28 @@ function setContent(v){
   rerender();
 }
 function ctEsc(v){ return String(v||"").replace(/([\\;,:"])/g, "\\$1"); }  // WIFI: payload escaping
+// username-based social profiles → each builds its platform URL from a handle
+var SOCIAL = {
+  instagram:{name:"Instagram", url:function(u){return "https://instagram.com/"+u;}},
+  youtube:  {name:"YouTube",   at:true, url:function(u){return "https://youtube.com/@"+u;}},
+  tiktok:   {name:"TikTok",    at:true, url:function(u){return "https://tiktok.com/@"+u;}},
+  x:        {name:"X (Twitter)", url:function(u){return "https://x.com/"+u;}},
+  facebook: {name:"Facebook",  url:function(u){return "https://facebook.com/"+u;}},
+  linkedin: {name:"LinkedIn",  url:function(u){return "https://linkedin.com/in/"+u;}},
+  telegram: {name:"Telegram",  url:function(u){return "https://t.me/"+u;}},
+  github:   {name:"GitHub",    url:function(u){return "https://github.com/"+u;}}
+};
+// arbitrary-link types → the user pastes a full URL, we pass it through
+var LINKT = {
+  appstore:{lblKey:"lbl.appstore", lbl:"앱 스토어 링크", ph:"https://apps.apple.com/…  또는  play.google.com/…"},
+  spotify: {lblKey:"lbl.spotify",  lbl:"Spotify 링크",   ph:"https://open.spotify.com/…"},
+  review:  {lblKey:"lbl.review",   lbl:"구글 리뷰 / 지도 링크", ph:"https://g.page/…/review"},
+  video:   {lblKey:"lbl.video",    lbl:"화상회의 링크",  ph:"https://zoom.us/j/…  또는  meet.google.com/…"}
+};
+function socialHandle(raw){ return String(raw||"").trim().replace(/^@+/,"").replace(/\s+/g,""); }
+function socialLabel(ct){ return SOCIAL[ct].name + " " + (t("lbl.handle")||"사용자명"); }
+function socialPh(ct){ return SOCIAL[ct].at ? "@핸들" : (t("ph.handle")||"사용자명 또는 @핸들"); }
+function linkLabel(ct){ return (t(LINKT[ct].lblKey)||LINKT[ct].lbl); }
 function buildContent(){
   var v = "";
   if (CT==="url" || CT==="text"){ v = $("content").value; }
@@ -4674,9 +4736,12 @@ function buildContent(){
   else if (CT==="vcard"){
     var nm=$("vcName").value.trim(), tel=$("vcTel").value.trim(), em=$("vcEmail").value.trim(),
         org=$("vcOrg").value.trim(), url=$("vcUrl").value.trim();
+    var ig=socialHandle($("vcInsta").value), yt=socialHandle($("vcYt").value);
     v = "BEGIN:VCARD\nVERSION:3.0\nN:"+nm+"\nFN:"+nm
       + (org?"\nORG:"+org:"") + (tel?"\nTEL;TYPE=CELL:"+tel:"")
-      + (em?"\nEMAIL:"+em:"") + (url?"\nURL:"+url:"") + "\nEND:VCARD";
+      + (em?"\nEMAIL:"+em:"") + (url?"\nURL:"+url:"")
+      + (ig?"\nURL:https://instagram.com/"+ig:"") + (yt?"\nURL:https://youtube.com/@"+yt:"")
+      + "\nEND:VCARD";
   }
   else if (CT==="tel"){ v = "tel:" + $("telNum").value.replace(/[\s-]/g,""); }
   else if (CT==="sms"){ v = "SMSTO:" + $("smsNum").value.replace(/[\s-]/g,"") + ":" + $("smsMsg").value; }
@@ -4690,6 +4755,8 @@ function buildContent(){
   else if (CT==="paypal"){ var pu=$("ppUser").value.trim().replace(/^@/,""); var pa=$("ppAmt").value.trim().replace(/[^0-9.]/g,""); var pc=document.querySelector("#ppCurSeg button.on").dataset.cur; v = "https://www.paypal.com/paypalme/"+encodeURIComponent(pu)+(pa?"/"+pa+pc:""); }
   else if (CT==="crypto"){ var ca=$("cyAddr").value.trim(); var cm=$("cyAmt").value.trim().replace(/[^0-9.]/g,""); v = "bitcoin:"+ca+(cm?"?amount="+cm:""); }
   else if (CT==="event"){ v = buildVEvent(); }
+  else if (SOCIAL[CT]){ var su=socialHandle($("socialUser").value); v = su ? SOCIAL[CT].url(encodeURIComponent(su)) : ""; }
+  else if (LINKT[CT]){ v = $("linkUrl").value.trim(); }
   setContent(v);
   var pv=$("ctPreview");
   if (CT==="url" || CT==="text"){ pv.style.display="none"; }
@@ -4702,8 +4769,14 @@ function selectCType(ct){
   CT = ct;
   Array.prototype.forEach.call($("ctypeSeg").children, function(x){x.classList.toggle("on", x.dataset.ct===ct);});
   $("ctRaw").style.display = (ct==="url"||ct==="text") ? "block" : "none";
-  $("ctRawLbl").textContent = (ct==="text") ? "텍스트" : "URL";
+  $("ctRawLbl").textContent = (ct==="text") ? (t("ct.text")||"텍스트") : "URL";
   for (var k in CTFORMS){ $(CTFORMS[k]).style.display = (ct===k) ? "block" : "none"; }
+  // shared forms for the username-based socials and arbitrary links
+  var soc = !!SOCIAL[ct], lnk = !!LINKT[ct];
+  $("ctSocial").style.display = soc ? "block" : "none";
+  $("ctLink").style.display   = lnk ? "block" : "none";
+  if (soc){ $("socialLbl").textContent = socialLabel(ct); $("socialUser").placeholder = socialPh(ct); }
+  if (lnk){ $("linkLbl").textContent = linkLabel(ct); $("linkUrl").placeholder = LINKT[ct].ph; }
 }
 $("ctypeSeg").addEventListener("click", function(e){
   var b=e.target.closest("button"); if(!b) return;
@@ -4712,7 +4785,7 @@ $("ctypeSeg").addEventListener("click", function(e){
   try{ b.blur(); }catch(x){}  // don't leave the button focused (would keep its tooltip showing)
 });
 $("ppCurSeg").addEventListener("click", function(e){ var b=e.target.closest("button"); if(!b) return; Array.prototype.forEach.call(this.children,function(x){x.classList.toggle("on",x===b);}); buildContent(); });
-["content","wifiSsid","wifiPass","vcName","vcTel","vcEmail","vcOrg","vcUrl","telNum","smsNum","smsMsg","emTo","emSubj","emBody","geoLat","geoLng","waNum","waMsg","ppUser","ppAmt","cyAddr","cyAmt","evTitle","evLoc","evStart","evEnd"].forEach(function(id){
+["content","wifiSsid","wifiPass","vcName","vcTel","vcEmail","vcOrg","vcUrl","vcInsta","vcYt","telNum","smsNum","smsMsg","emTo","emSubj","emBody","geoLat","geoLng","waNum","waMsg","ppUser","ppAmt","cyAddr","cyAmt","evTitle","evLoc","evStart","evEnd","socialUser","linkUrl"].forEach(function(id){
   $(id).addEventListener("input", buildContent);
 });
 $("wifiHidden").addEventListener("change", buildContent);
@@ -6175,6 +6248,18 @@ $("saveMyQr").addEventListener("click",saveCurrentQr);
 var I18N = {
   "nav.gallery":{ko:"갤러리",en:"Gallery",zh:"图库",ja:"ギャラリー"},
   "tip.theme":{ko:"라이트 / 다크 테마 전환",en:"Toggle light / dark theme",zh:"切换浅色 / 深色主题",ja:"ライト / ダークテーマ切替"},
+  "ct.appstore":{ko:"앱 설치",en:"App",zh:"应用",ja:"アプリ"},
+  "ct.review":{ko:"리뷰",en:"Review",zh:"评价",ja:"レビュー"},
+  "ct.video":{ko:"화상회의",en:"Meeting",zh:"视频会议",ja:"会議"},
+  "lbl.handle":{ko:"사용자명",en:"username",zh:"用户名",ja:"ユーザー名"},
+  "ph.handle":{ko:"사용자명 또는 @핸들",en:"username or @handle",zh:"用户名或 @句柄",ja:"ユーザー名 または @ハンドル"},
+  "hint.social":{ko:"사용자명만 입력하면 해당 플랫폼 프로필 주소로 연결됩니다(@ 는 자동 처리).",en:"Enter just the username — it links to that platform's profile (@ handled automatically).",zh:"只需输入用户名，即可链接到该平台主页（@ 会自动处理）。",ja:"ユーザー名を入力するだけで各プラットフォームのプロフィールに接続します（@は自動処理）。"},
+  "hint.link":{ko:"전체 링크(https://…)를 붙여넣으세요. 스캔하면 그대로 열립니다.",en:"Paste the full link (https://…). Scanning opens it directly.",zh:"粘贴完整链接（https://…）。扫描后直接打开。",ja:"完全なリンク（https://…）を貼り付けてください。スキャンでそのまま開きます。"},
+  "hint.vcSocial":{ko:"소셜은 연락처의 웹사이트 항목으로 함께 저장됩니다(대부분의 연락처 앱에서 링크로 열림).",en:"Social links are saved as website entries on the contact (opened as links in most contact apps).",zh:"社交链接会作为联系人的网站项一起保存（大多数通讯录应用可作为链接打开）。",ja:"ソーシャルは連絡先のウェブサイト項目として保存されます（多くの連絡先アプリでリンクとして開けます）。"},
+  "lbl.appstore":{ko:"앱 스토어 링크",en:"App store link",zh:"应用商店链接",ja:"アプリストアのリンク"},
+  "lbl.spotify":{ko:"Spotify 링크",en:"Spotify link",zh:"Spotify 链接",ja:"Spotify リンク"},
+  "lbl.review":{ko:"구글 리뷰 / 지도 링크",en:"Google review / Maps link",zh:"谷歌评价 / 地图链接",ja:"Google レビュー / マップ リンク"},
+  "lbl.video":{ko:"화상회의 링크",en:"Video meeting link",zh:"视频会议链接",ja:"ビデオ会議のリンク"},
   "nav.studio":{ko:"스튜디오",en:"Studio",zh:"工作室",ja:"スタジオ"},
   "nav.ar":{ko:"AR",en:"AR",zh:"AR",ja:"AR"},
   "nav.guide":{ko:"사용법",en:"Guide",zh:"使用指南",ja:"使い方"},
