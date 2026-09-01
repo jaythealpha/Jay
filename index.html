@@ -24,6 +24,7 @@
     --card:#ffffff;          /* surface-card */
     --card2:#fafafa;
     --dark:#171717;          /* surface-dark — the single inverted surface */
+    --on-dark:#ffffff;       /* text on --dark (toast / tooltip) */
     /* hairlines */
     --line:#e5e5e5;          /* hairline */
     --line2:#d4d4d4;         /* hairline-strong */
@@ -35,6 +36,7 @@
     --mut2:#a3a3a3;          /* mute */
     /* the system has ONE brand color: black. everything "accent" resolves to ink. */
     --acc:#000000; --acc2:#000000; --acc3:#000000;
+    --on-acc:#ffffff;        /* text/glyph on the black brand pill */
     --ok:#171717; --warn:#525252;
     /* terminal traffic-light dots (only decorative color in the system) */
     --term-red:#ff5f56; --term-yellow:#ffbd2e; --term-green:#27c93f;
@@ -55,6 +57,18 @@
     --hero-bg:none;
     --hero-opacity:0;
   }
+  /* ---- dark theme: the same flat pill system, inverted. Brand flips to white,
+     surfaces to near-black, hairlines to dark gray. Toggled via [data-theme]. ---- */
+  :root[data-theme="dark"]{
+    --bg:#0d0d0d; --bg2:#1a1a1a; --card:#141414; --card2:#1c1c1c;
+    --dark:#f5f5f5; --on-dark:#0d0d0d;            /* inverted attention surface → light */
+    --line:#2a2a2a; --line2:#3a3a3a;
+    --txt:#f5f5f5; --ink-deep:#e6e6e6; --charcoal:#c8c8c8; --mut:#a3a3a3; --mut2:#6a6a6a;
+    --acc:#ffffff; --acc2:#ffffff; --acc3:#ffffff; --on-acc:#0d0d0d;
+    --ok:#f5f5f5; --warn:#c8c8c8;
+    --glass:#141414; --glass2:#1a1a1a; --glass-line:#2a2a2a;
+    color-scheme:dark;
+  }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0}
   body{
@@ -69,7 +83,7 @@
   #heroArt{display:none}
   a{color:var(--txt);text-decoration:none}
   .wrap{max-width:1120px;margin:0 auto;padding:20px 20px 90px}
-  ::selection{background:#000;color:#fff}
+  ::selection{background:var(--acc);color:var(--on-acc)}
 
   /* header — flat white bar with a single hairline underline (Ollama primary-nav) */
   header.top{position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;gap:16px;
@@ -77,8 +91,8 @@
     background:var(--bg);border:0;border-bottom:1px solid var(--line);box-shadow:none}
   .brand{display:flex;align-items:center;gap:12px}
   .logo{width:40px;height:40px;border-radius:var(--rs);display:grid;place-items:center;position:relative;
-    background:#000;box-shadow:none}
-  .logo svg{width:22px;height:22px;position:relative;z-index:1;color:#fff}
+    background:var(--acc);box-shadow:none}
+  .logo svg{width:22px;height:22px;position:relative;z-index:1;color:var(--on-acc)}
   .brand h1{font-family:var(--font-display);font-size:19px;margin:0;letter-spacing:0;font-weight:600;color:var(--txt)}
   .brand p{margin:1px 0 0;font-size:12px;color:var(--mut)}
   .tabs{display:flex;gap:4px;background:transparent;padding:0;border-radius:0;border:0}
@@ -86,11 +100,18 @@
     border:1px solid var(--line);border-radius:var(--pill);width:max-content}
   .lang-switch button{background:transparent;border:0;color:var(--mut);font-family:inherit;font-weight:600;font-size:13px;letter-spacing:0;padding:6px 16px;border-radius:var(--pill);cursor:pointer;transition:.15s}
   .lang-switch button:hover{color:var(--txt)}
-  .lang-switch button.on{background:#000;color:#fff;box-shadow:none}
+  .lang-switch button.on{background:var(--acc);color:var(--on-acc);box-shadow:none}
   .tabs button{border:0;background:transparent;color:var(--mut);padding:8px 16px;border-radius:var(--pill);cursor:pointer;font-size:14px;font-weight:500;transition:.15s}
   .tabs button:hover{color:var(--txt)}
-  .tabs button.active{background:#000;color:#fff;box-shadow:none}
-  .tabs button.active:hover{background:var(--ink-deep)}
+  .tabs button.active{background:var(--acc);color:var(--on-acc);box-shadow:none}
+  .tabs button.active:hover{background:var(--acc);opacity:.88}
+  .nav-cluster{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .theme-toggle{display:grid;place-items:center;width:38px;height:38px;flex:none;padding:0;cursor:pointer;
+    background:var(--bg2);border:1px solid var(--line);border-radius:var(--pill);color:var(--txt);transition:.15s}
+  .theme-toggle:hover{border-color:var(--txt)}
+  .theme-toggle .th-moon{display:none}
+  :root[data-theme="dark"] .theme-toggle .th-sun{display:none}
+  :root[data-theme="dark"] .theme-toggle .th-moon{display:block}
   /* AR is experimental until fully tested across devices — flag it (grayscale, on-brand) */
   .tabs button[data-view="ar"]{position:relative;overflow:visible}
   .tabs button[data-view="ar"]::after{content:"BETA";position:absolute;top:-6px;right:-2px;font-size:7.5px;font-weight:700;
@@ -118,9 +139,9 @@
   .stage{position:sticky;top:80px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:24px;box-shadow:none}
   .canvas-hold{position:relative;display:grid;place-items:center;min-height:420px;overflow:hidden;
     background:
-      linear-gradient(45deg,#f0f0f0 25%,transparent 25%,transparent 75%,#f0f0f0 75%) 0 0/22px 22px,
-      linear-gradient(45deg,#f0f0f0 25%,#fafafa 25%,#fafafa 75%,#f0f0f0 75%) 11px 11px/22px 22px,
-      #fafafa;
+      linear-gradient(45deg,var(--line) 25%,transparent 25%,transparent 75%,var(--line) 75%) 0 0/22px 22px,
+      linear-gradient(45deg,var(--line) 25%,var(--bg2) 25%,var(--bg2) 75%,var(--line) 75%) 11px 11px/22px 22px,
+      var(--bg2);
     border-radius:var(--r);padding:26px;border:1px solid var(--line)}
   #preview{width:min(380px,72vw);height:auto;border-radius:var(--rs);image-rendering:-webkit-optimize-contrast;
     box-shadow:0 0 0 1px var(--line);position:relative;z-index:1}
@@ -144,14 +165,14 @@
   .seg.mini{display:inline-flex;gap:3px;background:var(--bg2);padding:3px;border-radius:var(--pill);border:1px solid var(--line)}
   .seg.mini button{flex:none;min-width:0;background:transparent;border:0;color:var(--mut);border-radius:var(--pill);padding:5px 13px;font-size:12px;font-weight:500;cursor:pointer;transition:.12s;font-family:inherit}
   .seg.mini button:hover{color:var(--txt)}
-  .seg.mini button.on{background:#000;color:#fff;box-shadow:none}
+  .seg.mini button.on{background:var(--acc);color:var(--on-acc);box-shadow:none}
   /* lock badge on Pro-gated resolutions (shown while not unlocked) */
   .export-opts.free #exportResSeg button[data-res="2048"]::after,
   .export-opts.free #exportResSeg button[data-res="4096"]::after{content:"🔒";margin-left:4px;font-size:9px;opacity:.7;filter:grayscale(1)}
   .pro-btn{border:1px solid var(--line2);background:var(--bg2);
     color:var(--txt);font-family:inherit;font-weight:500;font-size:12px;padding:7px 15px;border-radius:var(--pill);cursor:pointer;transition:.15s;white-space:nowrap}
   .pro-btn:hover{border-color:var(--txt)}
-  .pro-btn.on{color:#fff;background:#000;border-color:#000}
+  .pro-btn.on{color:var(--on-acc);background:var(--acc);border-color:var(--acc)}
 
   /* Pro modal */
   .pro-card{position:relative;max-width:480px}
@@ -175,8 +196,8 @@
   .pro-msg.ok{color:var(--txt);font-weight:600} .pro-msg.err{color:var(--term-red)}
 
   /* primary CTA — the universal black pill. no gradient, no shadow, no lift. */
-  button.btn{border:0;cursor:pointer;font-weight:500;font-size:14px;border-radius:var(--pill);padding:11px 22px;color:#fff;
-    background:#000;box-shadow:none;transition:.15s;flex:1;min-width:120px}
+  button.btn{border:0;cursor:pointer;font-weight:500;font-size:14px;border-radius:var(--pill);padding:11px 22px;color:var(--on-acc);
+    background:var(--acc);box-shadow:none;transition:.15s;flex:1;min-width:120px}
   button.btn:hover{background:var(--ink-deep)}
   button.btn:active{background:var(--ink-deep)}
   button.btn.sec{background:var(--card);border:1px solid var(--line2);box-shadow:none;color:var(--txt)}
@@ -208,7 +229,7 @@
   textarea:focus,input[type=text]:focus,select:focus{border-color:var(--txt);box-shadow:0 0 0 3px var(--focus)}
   textarea{resize:vertical;min-height:64px;line-height:1.4;border-radius:var(--r)}
   input[type=text]{border-radius:var(--pill)}
-  input[type=range]{width:100%;accent-color:#000}
+  input[type=range]{width:100%;accent-color:var(--acc)}
   input[type=color]{-webkit-appearance:none;appearance:none;width:100%;height:40px;border:1px solid var(--line);border-radius:var(--rs);background:var(--card);cursor:pointer;padding:4px}
   input[type=color]::-webkit-color-swatch-wrapper{padding:0}
   input[type=color]::-webkit-color-swatch{border:0;border-radius:5px}
@@ -216,22 +237,24 @@
   .seg{display:flex;gap:6px;flex-wrap:wrap}
   .seg button{flex:1;min-width:60px;background:var(--bg2);border:1px solid var(--line);color:var(--mut);border-radius:var(--pill);padding:9px 8px;font-size:12px;font-weight:500;cursor:pointer;transition:.12s}
   .seg button:hover{border-color:var(--line2);color:var(--txt)}
-  .seg button.on{background:#000;border-color:#000;color:#fff}
+  .seg button.on{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .switch{display:flex;align-items:center;justify-content:space-between;gap:10px}
   .toggle{position:relative;width:44px;height:24px;flex:none}
   .toggle input{opacity:0;width:0;height:0}
   .toggle span{position:absolute;inset:0;background:var(--line2);border-radius:24px;transition:.2s;cursor:pointer}
   .toggle span::before{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
-  .toggle input:checked+span{background:#000}
+  .toggle input:checked+span{background:var(--acc)}
+  .toggle input:checked+span::before{background:var(--on-acc)}
   .toggle input:checked+span::before{transform:translateX(20px)}
   .hint{font-size:11px;color:var(--mut2);margin-top:8px;line-height:1.5}
   #aiStyleSeg button{flex:1 1 28%;min-width:0}   /* 9 presets → balanced 3×3 grid */
   #ctypeSeg button{flex:1 1 22%;min-width:0}     /* 12 content types → balanced 4-col grid */
   .picto-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;margin-top:6px}
   .picto-grid button{aspect-ratio:1;font-size:20px;line-height:1;background:var(--bg2);border:1px solid var(--line);border-radius:var(--rs);cursor:pointer;padding:0;transition:.1s}
-  .picto-grid button.on{border-color:#000;background:#000}
+  .picto-grid button.on{border-color:var(--acc);background:var(--acc)}
   .picto-grid button.on canvas{filter:invert(1)}
+  :root[data-theme="dark"] .picto-grid button.on canvas{filter:none}
   .picto-grid button:hover{border-color:var(--line2)}
   .picto-grid button canvas{width:100%;height:100%;display:block}
   .seg.seg-wrap{display:flex;flex-wrap:wrap;height:auto;gap:4px;padding:0}
@@ -248,7 +271,7 @@
   .cat-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 20px}
   .cat-tabs button{border:1px solid var(--line);background:var(--bg2);color:var(--mut);border-radius:var(--pill);padding:9px 18px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:.15s}
   .cat-tabs button:hover{border-color:var(--line2);color:var(--txt)}
-  .cat-tabs button.on{background:#000;border-color:#000;color:#fff;box-shadow:none}
+  .cat-tabs button.on{background:var(--acc);border-color:var(--acc);color:var(--on-acc);box-shadow:none}
   .gal-card .del{position:absolute;top:12px;left:12px;background:var(--card);border:1px solid var(--line2);color:var(--term-red);font-size:11px;font-weight:600;padding:5px 10px;border-radius:var(--pill);opacity:0;transition:.15s;z-index:2}
   .gal-card:hover .del{opacity:1}
   .gal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(184px,1fr));gap:18px}
@@ -257,8 +280,8 @@
   .gal-card canvas{width:100%;height:auto;border-radius:var(--rs);background:#fff;display:block;box-shadow:0 0 0 1px var(--line)}
   .gal-card .name{font-size:14px;font-weight:600;margin-top:12px;letter-spacing:0}
   .gal-card .tag{font-size:11px;color:var(--mut);margin-top:3px}
-  .gal-card .use{position:absolute;top:12px;right:12px;background:#000;border:0;
-    color:#fff;font-size:11px;font-weight:500;padding:5px 12px;border-radius:var(--pill);opacity:0;transition:.15s}
+  .gal-card .use{position:absolute;top:12px;right:12px;background:var(--acc);border:0;
+    color:var(--on-acc);font-size:11px;font-weight:500;padding:5px 12px;border-radius:var(--pill);opacity:0;transition:.15s}
   .gal-card:hover .use{opacity:1}
   .gal-intro{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:18px;flex-wrap:wrap;gap:10px}
   .gal-intro h3{margin:0;font-family:var(--font-display);font-size:24px;font-weight:600;letter-spacing:0}
@@ -291,7 +314,7 @@
 
   footer{text-align:center;color:var(--mut);font-size:12px;margin-top:50px;padding-top:24px;border-top:1px solid var(--line);line-height:1.7}
   .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--dark);border:0;
-    color:#fff;padding:11px 22px;border-radius:var(--pill);font-size:13px;font-weight:500;opacity:0;transition:.25s;pointer-events:none;z-index:50;box-shadow:none}
+    color:var(--on-dark);padding:11px 22px;border-radius:var(--pill);font-size:13px;font-weight:500;opacity:0;transition:.25s;pointer-events:none;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.18)}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
   /* ---- hover/focus tooltips (data-tip) ---- */
@@ -301,7 +324,7 @@
   [data-tip]{position:relative}
   #tipBubble{
     position:fixed;top:0;left:0;z-index:2000;pointer-events:none;
-    background:var(--dark);color:#fff;border:0;border-radius:var(--rs);padding:8px 12px;
+    background:var(--dark);color:var(--on-dark);border:0;border-radius:var(--rs);padding:8px 12px;
     font-size:11.5px;font-weight:400;line-height:1.5;white-space:normal;width:max-content;max-width:230px;
     text-align:left;box-shadow:0 8px 24px rgba(0,0,0,.18);
     opacity:0;transform:translateY(-3px);transition:opacity .12s ease,transform .12s ease}
@@ -325,7 +348,7 @@
   .ob-card .sub{color:var(--mut);font-size:13px;margin-bottom:18px}
   .ob-step{display:flex;gap:13px;align-items:flex-start;margin:13px 0}
   .ob-step .n{flex:none;width:30px;height:30px;border-radius:var(--rs);display:flex;align-items:center;justify-content:center;
-    font-weight:700;font-size:14px;color:#fff;background:#000}
+    font-weight:700;font-size:14px;color:var(--on-acc);background:var(--acc)}
   .ob-step h4{margin:2px 0 3px;font-size:14.5px;font-weight:600}
   .ob-step p{margin:0;font-size:12.5px;color:var(--mut);line-height:1.55}
   .ob-actions{display:flex;gap:10px;margin-top:22px}
@@ -342,6 +365,15 @@
   .guide-card .tag2{display:inline-block;font-size:10px;font-weight:600;color:var(--txt);background:var(--bg2);
     border:1px solid var(--line);border-radius:var(--pill);padding:2px 9px;margin-bottom:10px}
 </style>
+<script>
+  /* set the theme before first paint to avoid a flash. stored choice wins,
+     else follow the OS preference. */
+  (function(){try{
+    var s=localStorage.getItem("aqr_theme_v1");
+    var d=s?s==="dark":(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches);
+    if(d)document.documentElement.setAttribute("data-theme","dark");
+  }catch(e){}})();
+</script>
 </head>
 <body>
 <!-- Higgsfield 히어로 아트 훅: assets/hero-bg.webp 를 넣고 :root 의 --hero-bg 한 줄만 켜면
@@ -358,12 +390,18 @@
         <p data-i18n="hdr.sub">아름답고 스캔되는 QR을 만드는 스튜디오</p>
       </div>
     </div>
+    <div class="nav-cluster">
       <nav class="tabs" id="tabs">
         <button data-view="gallery" class="active" data-i18n="nav.gallery">갤러리</button>
         <button data-view="studio" data-i18n="nav.studio">스튜디오</button>
         <button data-view="ar" data-i18n="nav.ar">AR</button>
         <button data-view="about" data-i18n="nav.guide">사용법</button>
       </nav>
+      <button id="themeToggle" class="theme-toggle" type="button" aria-label="Toggle dark mode" data-tip="라이트 / 다크 테마 전환" data-i18n-tip="tip.theme">
+        <svg class="th-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg class="th-moon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      </button>
+    </div>
   </header>
 
   <!-- ============ GALLERY ============ -->
@@ -568,7 +606,7 @@
         </details>
 
         <details class="grp" id="grpArt" open>
-          <summary><svg class="ic" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="10" r="2" fill="currentColor"/><path d="M4 18l5-5 3 3 4-4 4 4" stroke="currentColor" stroke-width="2" fill="none"/></svg><span data-i18n="grp.art">이미지 · 영상 · GIF 아트 QR</span><span style="margin-left:8px;font-size:10px;font-weight:600;color:#fff;background:#000;padding:2px 8px;border-radius:9999px">핵심</span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
+          <summary><svg class="ic" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="10" r="2" fill="currentColor"/><path d="M4 18l5-5 3 3 4-4 4 4" stroke="currentColor" stroke-width="2" fill="none"/></svg><span data-i18n="grp.art">이미지 · 영상 · GIF 아트 QR</span><span style="margin-left:8px;font-size:10px;font-weight:600;color:var(--on-acc);background:var(--acc);padding:2px 8px;border-radius:9999px">핵심</span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
           <div class="body">
             <label class="file-btn" for="artFile" id="artLabel" data-i18n="btn.artUpload">＋ 이미지 / 영상 / GIF 업로드 — QR 전체를 덮는 아트</label>
             <input type="file" id="artFile" accept="image/*,image/gif,video/*" />
@@ -594,7 +632,7 @@
         </details>
 
         <details class="grp" id="grpAI" open>
-          <summary><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 5.8L20 10l-5.6 2.2L12 18l-2.4-5.8L4 10l5.6-2.2L12 2z" fill="currentColor"/><circle cx="19" cy="17" r="2.4" fill="currentColor"/><circle cx="5.5" cy="18.5" r="1.6" fill="currentColor"/></svg><span data-i18n="grp.ai">AI 아트 QR</span><span style="margin-left:8px;font-size:10px;font-weight:600;color:#fff;background:#000;padding:2px 8px;border-radius:9999px">서버 생성 · 최고 품질</span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
+          <summary><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 5.8L20 10l-5.6 2.2L12 18l-2.4-5.8L4 10l5.6-2.2L12 2z" fill="currentColor"/><circle cx="19" cy="17" r="2.4" fill="currentColor"/><circle cx="5.5" cy="18.5" r="1.6" fill="currentColor"/></svg><span data-i18n="grp.ai">AI 아트 QR</span><span style="margin-left:8px;font-size:10px;font-weight:600;color:var(--on-acc);background:var(--acc);padding:2px 8px;border-radius:9999px">서버 생성 · 최고 품질</span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
           <div class="body">
             <label class="fld">
               <div class="lbl" data-i18n="lbl.prompt">프롬프트 (영어 권장 — 그릴 장면을 서술)</div>
@@ -1011,7 +1049,7 @@
   <footer>
     <div>Aesthetic QR Studio · 아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.09.01-a</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.09.01-b</b></div>
   </footer>
 </div>
 
@@ -4415,14 +4453,14 @@ function updateMeta(){
   $("metaEcc").textContent = "ECC "+S.ecc;
   if (S.aiArt){
     $("metaScan").textContent=t("dyn.aiApplied");
-    $("metaScan").style.color="#ffcc4d";
+    $("metaScan").style.color="var(--txt)";
     return;
   }
   if (S.artImg){
     var msg = (S.artIsVideo?t("dyn.vidArt"):t("dyn.imgArt"));
-    if (S.artVisibility > 70) { $("metaScan").textContent="⚠ "+msg+" · "+t("dyn.expHigh"); $("metaScan").style.color="#ffcc4d"; }
-    else { $("metaScan").textContent="✓ "+msg+" · "+t("dyn.scanGood"); $("metaScan").style.color="#3ddc97"; }
-    if (S.ecc!=="H"){ $("metaScan").textContent="⚠ "+msg+" · "+t("dyn.eccHRec"); $("metaScan").style.color="#ffcc4d"; }
+    if (S.artVisibility > 70) { $("metaScan").textContent="⚠ "+msg+" · "+t("dyn.expHigh"); $("metaScan").style.color="var(--txt)"; }
+    else { $("metaScan").textContent="✓ "+msg+" · "+t("dyn.scanGood"); $("metaScan").style.color="var(--mut)"; }
+    if (S.ecc!=="H"){ $("metaScan").textContent="⚠ "+msg+" · "+t("dyn.eccHRec"); $("metaScan").style.color="var(--txt)"; }
     return;
   }
   var warn=[];
@@ -4432,8 +4470,8 @@ function updateMeta(){
   var maxLogo = ({L:14,M:18,Q:24,H:30})[S.ecc];
   if (S.logo && S.logoSize > maxLogo-4) warn.push(t("dyn.logoBig"));
   if (S.dot === "diamond" || S.dot === "classy") warn.push(t("dyn.decoModule"));
-  if (warn.length){ $("metaScan").textContent="⚠ "+warn.join(" · "); $("metaScan").style.color="#ffcc4d"; }
-  else { $("metaScan").textContent="✓ "+t("dyn.scanGood"); $("metaScan").style.color="#3ddc97"; }
+  if (warn.length){ $("metaScan").textContent="⚠ "+warn.join(" · "); $("metaScan").style.color="var(--txt)"; }
+  else { $("metaScan").textContent="✓ "+t("dyn.scanGood"); $("metaScan").style.color="var(--mut)"; }
 }
 
 // ---------- animation loop ----------
@@ -4511,6 +4549,19 @@ function exportWebM(){
 // ---------- toast ----------
 var _tt=null;
 function toast(msg){ var t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(_tt); _tt=setTimeout(function(){t.classList.remove("show");},1900); }
+
+// ---------- dark / light theme toggle ----------
+// The early inline <head> script already applied the stored/OS theme before paint;
+// this only wires the header button and persists the user's explicit choice.
+(function(){
+  var btn=document.getElementById("themeToggle"); if(!btn) return;
+  btn.addEventListener("click", function(){
+    var dark=document.documentElement.getAttribute("data-theme")==="dark";
+    if(dark) document.documentElement.removeAttribute("data-theme");
+    else document.documentElement.setAttribute("data-theme","dark");
+    try{ localStorage.setItem("aqr_theme_v1", dark?"light":"dark"); }catch(e){}
+  });
+})();
 
 // ---------- shared tooltip (single element, never overlaps) ----------
 // One #tipBubble is reused for every [data-tip]. Because a single node is moved/shown,
@@ -6123,6 +6174,7 @@ $("saveMyQr").addEventListener("click",saveCurrentQr);
 // ---------- i18n (KO / EN / ZH / JA) ----------
 var I18N = {
   "nav.gallery":{ko:"갤러리",en:"Gallery",zh:"图库",ja:"ギャラリー"},
+  "tip.theme":{ko:"라이트 / 다크 테마 전환",en:"Toggle light / dark theme",zh:"切换浅色 / 深色主题",ja:"ライト / ダークテーマ切替"},
   "nav.studio":{ko:"스튜디오",en:"Studio",zh:"工作室",ja:"スタジオ"},
   "nav.ar":{ko:"AR",en:"AR",zh:"AR",ja:"AR"},
   "nav.guide":{ko:"사용법",en:"Guide",zh:"使用指南",ja:"使い方"},
