@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mates 캐릭터 데이터베이스</title>
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 24px; }
+    .char-table-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 14px;
+    }
+    .char-entry {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: var(--shadow);
+    }
+    .char-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+    .char-head .e { font-size: 28px; }
+    .char-head h3 { margin: 0; font-size: 15px; }
+    .char-head .en { font-size: 11px; color: var(--muted); }
+    .char-row { font-size: 12px; margin: 4px 0; }
+    .char-row b { color: var(--ink-soft); font-weight: 600; display: inline-block; min-width: 84px; }
+    .char-tags { margin-top: 6px; }
+    .char-tag {
+      display: inline-block;
+      font-size: 10.5px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      border-radius: 4px;
+      padding: 2px 6px;
+      margin-right: 4px;
+    }
+    .top-actions { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+    .top-actions input { flex: 1 1 200px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px; }
+    .palette-swatch {
+      display: inline-block;
+      width: 12px; height: 12px;
+      border-radius: 3px;
+      border: 1px solid rgba(0,0,0,.1);
+      vertical-align: middle;
+      margin-right: 4px;
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <a href="../" style="text-decoration:none;color:inherit" aria-label="대시보드로 돌아가기">
+          <span class="brand-mark">◆</span>
+        </a>
+        <div>
+          <h1>Mates 캐릭터 데이터베이스</h1>
+          <p class="brand-sub">24 종 Yogibo Mates 의 외형·팔레트·성격 사양</p>
+        </div>
+      </div>
+      <div>
+        <a href="../" style="font-size:13px;color:var(--accent)">← 대시보드</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="top-actions">
+      <input id="q" type="search" placeholder="이름 · 종류 · 태그 검색…" />
+      <a href="../../mates-generator/" class="chip" style="background:var(--accent);color:#fff;border-color:var(--accent)">🎨 프롬프트 생성기로</a>
+    </div>
+    <div id="grid" class="char-table-grid" aria-live="polite"></div>
+  </main>
+
+  <script>
+    const EMOJI = {
+      dog:"🐶", cat:"🐱", bear:"🐻", "polar-bear":"🐻‍❄️",
+      rabbit:"🐰", pig:"🐷", frog:"🐸", sheep:"🐑",
+      penguin:"🐧", whale:"🐳", shark:"🦈", turtle:"🐢",
+      elephant:"🐘", lion:"🦁", tiger:"🐯", octopus:"🐙",
+      unicorn:"🦄", cow:"🐮", dinosaur:"🦖", monkey:"🐵",
+      fox:"🦊", panda:"🐼", hippo:"🦛", duck:"🦆"
+    };
+
+    function escapeHtml(s){return String(s==null?"":s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
+
+    function extractHex(palette){
+      return (palette.match(/#[0-9A-Fa-f]{6}/g) || []).slice(0, 6);
+    }
+
+    let CHARS = [];
+    async function init(){
+      const r = await fetch("../../mates-generator/characters.json");
+      const d = await r.json();
+      CHARS = d.characters;
+      render("");
+      document.getElementById("q").addEventListener("input", e => render(e.target.value));
+    }
+    function render(q){
+      q = q.trim().toLowerCase();
+      const grid = document.getElementById("grid");
+      const items = CHARS.filter(c => {
+        if (!q) return true;
+        return [c.name_ko,c.name_en,c.name_ja,c.species,...(c.tags||[])].join(" ").toLowerCase().includes(q);
+      });
+      if (items.length === 0) { grid.innerHTML = '<p class="empty">결과 없음</p>'; return; }
+      grid.innerHTML = items.map(c => {
+        const swatches = extractHex(c.palette).map(h => `<span class="palette-swatch" style="background:${h}" title="${h}"></span>`).join("");
+        return `
+        <article class="char-entry">
+          <div class="char-head">
+            <div class="e" aria-hidden="true">${EMOJI[c.id]||"✨"}</div>
+            <div>
+              <h3>${escapeHtml(c.name_ko)} · ${escapeHtml(c.name_ja)}</h3>
+              <div class="en">${escapeHtml(c.name_en)} · ${escapeHtml(c.species)}</div>
+            </div>
+          </div>
+          <div class="char-row"><b>실루엣</b>${escapeHtml(c.silhouette)}</div>
+          <div class="char-row"><b>팔레트</b>${swatches}<br/><span style="color:var(--muted);font-size:11px">${escapeHtml(c.palette)}</span></div>
+          <div class="char-row"><b>디테일</b>${escapeHtml(c.features)}</div>
+          <div class="char-row"><b>성격</b>${escapeHtml(c.personality)}</div>
+          <div class="char-row"><b>기본 포즈</b>${escapeHtml(c.signature_pose)}</div>
+          <div class="char-tags">${(c.tags||[]).map(t=>`<span class="char-tag">${escapeHtml(t)}</span>`).join("")}</div>
+        </article>`;
+      }).join("");
+    }
+    init();
+  </script>
+</body>
+</html>

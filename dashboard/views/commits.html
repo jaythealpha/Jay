@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>세션 커밋 타임라인</title>
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    .wrap { max-width: 900px; margin: 0 auto; padding: 24px; }
+    .timeline { position: relative; padding-left: 28px; }
+    .timeline::before {
+      content: "";
+      position: absolute;
+      left: 8px; top: 6px; bottom: 6px;
+      width: 2px;
+      background: var(--line);
+    }
+    .commit {
+      position: relative;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+      box-shadow: var(--shadow);
+    }
+    .commit::before {
+      content: "";
+      position: absolute;
+      left: -27px; top: 18px;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 2px solid #fff;
+      box-shadow: 0 0 0 2px var(--accent);
+    }
+    .commit .hash { font-family: ui-monospace, Menlo, monospace; color: var(--muted); font-size: 12px; }
+    .commit .subject { font-size: 15px; font-weight: 600; margin: 2px 0 4px; }
+    .commit .meta { color: var(--muted); font-size: 12px; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <a href="../" style="text-decoration:none;color:inherit"><span class="brand-mark">◆</span></a>
+        <div>
+          <h1>세션 커밋 타임라인</h1>
+          <p class="brand-sub">이 브랜치(claude/character-image-generator-BRjA1)의 누적 커밋</p>
+        </div>
+      </div>
+      <div><a href="../" style="font-size:13px;color:var(--accent)">← 대시보드</a></div>
+    </div>
+  </header>
+  <main class="wrap">
+    <p style="color:var(--muted);font-size:12px">스냅샷 파일 <code>../commits.json</code> 을 보여줍니다. 최신 갱신은 리포지토리에서 <code>git log</code> 명령으로 재생성 후 커밋하세요.</p>
+    <div id="timeline" class="timeline" aria-live="polite"></div>
+  </main>
+  <script>
+    function escapeHtml(s){return String(s==null?"":s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
+    fetch("../commits.json").then(r=>r.json()).then(d => {
+      document.getElementById("timeline").innerHTML = d.commits.map(c => `
+        <div class="commit">
+          <div class="hash">${escapeHtml(c.hash)}</div>
+          <div class="subject">${escapeHtml(c.subject)}</div>
+          <div class="meta">${escapeHtml(c.date)} · ${escapeHtml(c.author)}</div>
+        </div>
+      `).join("");
+    });
+  </script>
+</body>
+</html>
