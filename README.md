@@ -10,11 +10,27 @@
 - 🎬 **[유튜브 렌즈](youtube-lens/)** — 유튜브 영상을 넣으면 인터뷰이의 노하우를 요약하고 **자동화 플레이북**으로 정리 ([노하우 예시](youtube-lens/sns-side-hustle-playbook.md))
 - 🏷️ **[프라이스 렌즈](price-lens/)** — 옷 라벨을 찍으면 최저가·가격 추이 비교
 - 🍷 **[와인 렌즈](wine-lens/)** — 주류 라벨을 찍으면 정보·페어링·시세 분석
+- 🦄 **[키캡 리사이저](keycap/)** — 3D 키캡 파일을 1u 크기로 리사이즈하고 Cherry MX 스템 생성 (3D 프린팅)
+- 🎨 **[메이츠 프롬프트 생성기](mates-generator/)** — 요기보 메이트 33종을 원하는 화풍으로 그리는 이미지 프롬프트 생성
 
 ## 🎮 플레이하기
 
 - **v1 (텍스트 어드벤처)** 👉 [https://jaythealpha.github.io/Jay/](https://jaythealpha.github.io/Jay/)
 - **v2 (16비트 아케이드 러너)** 👉 [https://jaythealpha.github.io/Jay/v2.html](https://jaythealpha.github.io/Jay/v2.html)
+- **🧩 블록 블라스트: 몬스터 배틀** 👉 [https://jaythealpha.github.io/Jay/blockblast.html](https://jaythealpha.github.io/Jay/blockblast.html)
+
+### 🧩 블록 블라스트 — 몬스터 배틀
+
+8×8 블록 퍼즐에 몬스터 수집과 속성 무기 스킬을 얹은 게임입니다 (외부 라이브러리 없는 단일 파일).
+
+- 조각 3개를 드래그해 가로/세로 줄을 채우면 클리어 — 🔥콤보 배율과 ⚡멀티라인 보너스가 붙습니다
+- 🐾 **오리지널 몬스터 24종** + 📖도감 수집, ⚔️속성별 무기 스킬(전기·불·물·풀·에스퍼·고스트·페어리 등)
+- 🧊얼음 블록 장애물, ✨골든 몬스터(점수 3배), 👑15줄마다 보스 웨이브
+- 💰코인으로 사는 파워업(폭탄·망치·새 조각), 📅연속출석, 🎯일일미션, 🏆업적
+- 🏅 **글로벌 랭킹** — Supabase 백엔드에 점수를 등록해 전 세계 순위를 겨룹니다 (서버 장애 시 자동으로 이 기기 랭킹으로 폴백, [설정 가이드](LEADERBOARD_SETUP.md))
+- 개발자용 인수인계 문서: [DEV_HANDOFF.md](DEV_HANDOFF.md)
+
+> 몬스터는 전부 오리지널 디자인이라 공개 배포에 문제가 없습니다.
 
 ### 🕹️ v2: 직장인 러너 — 출근 대작전
 

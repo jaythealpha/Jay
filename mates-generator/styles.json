@@ -1,0 +1,154 @@
+{
+  "_meta": {
+    "note": "이미지 스타일 프리셋. 각 항목의 prompt 필드는 캐릭터 설명 뒤에 결합되어 최종 프롬프트를 만듭니다. negative는 Stable Diffusion 등 negative prompt를 지원하는 도구용 보조 필드입니다.",
+    "schema": {
+      "id": "고유 슬러그",
+      "name_ko": "한국어 표시 이름",
+      "name_en": "영문 이름",
+      "prompt": "스타일을 묘사하는 영문 프롬프트 조각",
+      "negative": "선택적 negative prompt"
+    }
+  },
+  "styles": [
+    {
+      "id": "watercolor",
+      "name_ko": "수채화",
+      "name_en": "Watercolor",
+      "prompt": "soft watercolor painting, delicate wet-on-wet washes, gentle paper texture, pastel pigments bleeding into one another, light pencil underdrawing visible at edges, airy negative space, hand-painted illustration",
+      "negative": "harsh outlines, oversaturated colors, digital sharpness, photographic detail"
+    },
+    {
+      "id": "oil-painting",
+      "name_ko": "유화",
+      "name_en": "Oil Painting",
+      "prompt": "rich oil painting on textured canvas, visible thick impasto brushstrokes, layered glazes, warm chiaroscuro lighting, painterly edges, classical studio palette",
+      "negative": "flat digital shading, vector look, plastic surface, photographic"
+    },
+    {
+      "id": "pencil-sketch",
+      "name_ko": "연필 스케치",
+      "name_en": "Pencil Sketch",
+      "prompt": "graphite pencil sketch on off-white paper, soft hatching and cross-hatching for shadows, smudged shading, minimal color, expressive contour lines, sketchbook feel",
+      "negative": "color saturation, painterly textures, photo-realism"
+    },
+    {
+      "id": "ink-line",
+      "name_ko": "펜 라인 드로잉",
+      "name_en": "Ink Line Drawing",
+      "prompt": "clean black ink line drawing, varied line weight, minimal flat shading, lots of white space, picture-book illustration style",
+      "negative": "noisy textures, heavy gradients, photographic detail"
+    },
+    {
+      "id": "japanese-anime",
+      "name_ko": "일본 애니메이션",
+      "name_en": "Japanese Anime",
+      "prompt": "modern Japanese anime illustration, clean cel-shading, bold dark outlines, vibrant flat colors with soft gradient highlights, expressive cute eyes, soft anime lighting, Studio Ghibli–adjacent warmth",
+      "negative": "western cartoon style, photorealistic faces, gritty textures"
+    },
+    {
+      "id": "ghibli",
+      "name_ko": "지브리풍",
+      "name_en": "Studio Ghibli Style",
+      "prompt": "hand-painted Studio Ghibli style background and character art, soft pastel skies, detailed natural environment, gentle lighting, watercolor-like backgrounds, warm nostalgic atmosphere",
+      "negative": "harsh contrast, neon colors, 3D render look"
+    },
+    {
+      "id": "pixar-3d",
+      "name_ko": "Pixar 3D",
+      "name_en": "Pixar 3D Render",
+      "prompt": "high-quality 3D character render in Pixar / Disney CGI style, subsurface scattering on plush fur, cinematic studio lighting, soft global illumination, ultra-detailed material shaders, expressive friendly face",
+      "negative": "flat 2D look, hand-drawn lines, low-poly"
+    },
+    {
+      "id": "claymation",
+      "name_ko": "클레이메이션",
+      "name_en": "Claymation",
+      "prompt": "stop-motion claymation aesthetic, hand-shaped clay surfaces with visible thumbprints and tool marks, slightly uneven proportions, miniature diorama lighting, tactile matte finish",
+      "negative": "smooth digital shading, vector clean lines"
+    },
+    {
+      "id": "felt-craft",
+      "name_ko": "펠트 공예",
+      "name_en": "Felt / Needle-Felted Craft",
+      "prompt": "needle-felted wool craft photograph, fuzzy fiber texture, soft natural daylight, slight imperfections, miniature scale on a wooden table, cozy handcrafted feel",
+      "negative": "smooth plastic, digital art look"
+    },
+    {
+      "id": "pixel-art",
+      "name_ko": "픽셀 아트",
+      "name_en": "Pixel Art",
+      "prompt": "16-bit pixel art sprite, limited palette, crisp pixel edges, dithered shading, retro video-game vibe, transparent or solid color background",
+      "negative": "anti-aliasing, smooth gradients, photographic detail"
+    },
+    {
+      "id": "low-poly",
+      "name_ko": "로우폴리 3D",
+      "name_en": "Low-Poly 3D",
+      "prompt": "low-poly 3D illustration, faceted geometric surfaces, flat shaded triangles, pastel palette, soft ambient occlusion, isometric or three-quarter view",
+      "negative": "high-poly smooth surfaces, photorealism"
+    },
+    {
+      "id": "kawaii-chibi",
+      "name_ko": "카와이 치비",
+      "name_en": "Kawaii Chibi",
+      "prompt": "super-deformed kawaii chibi style, oversized head, tiny body, sparkly round eyes, blush cheeks, pastel colors, sticker-like clean outlines, sanrio-adjacent cuteness",
+      "negative": "realistic proportions, dark mood, gritty"
+    },
+    {
+      "id": "korean-webtoon",
+      "name_ko": "한국 웹툰",
+      "name_en": "Korean Webtoon",
+      "prompt": "modern Korean webtoon illustration style, soft cell shading, clean digital line art, pastel palette with one accent color, gentle ambient lighting, vertical-scroll friendly composition",
+      "negative": "messy lines, photoreal"
+    },
+    {
+      "id": "vintage-storybook",
+      "name_ko": "빈티지 동화책",
+      "name_en": "Vintage Storybook",
+      "prompt": "1950s vintage children's storybook illustration, slightly muted retro palette, warm cream paper texture, gouache-like flat colors with fine line details, gentle nostalgic mood",
+      "negative": "modern flat design, neon, digital sharpness"
+    },
+    {
+      "id": "flat-vector",
+      "name_ko": "플랫 벡터",
+      "name_en": "Flat Vector",
+      "prompt": "modern flat vector illustration, clean geometric shapes, no outlines, simple two-tone shading, bright friendly palette, sticker / branding-asset feel",
+      "negative": "photographic textures, painterly brushstrokes"
+    },
+    {
+      "id": "photoreal-plush",
+      "name_ko": "리얼 플러시 사진",
+      "name_en": "Photorealistic Plush",
+      "prompt": "photorealistic product photo of a plush toy, soft fuzzy fabric texture with visible fibers, studio softbox lighting, shallow depth of field, neutral seamless backdrop, premium e-commerce hero shot",
+      "negative": "illustration, painted look, cartoon outlines"
+    },
+    {
+      "id": "risograph",
+      "name_ko": "리소그래프",
+      "name_en": "Risograph Print",
+      "prompt": "risograph print illustration, two or three spot-color overlays with slight registration offset, grainy paper texture, limited palette of fluorescent pink, blue and yellow, retro indie zine vibe",
+      "negative": "photorealistic, smooth gradient"
+    },
+    {
+      "id": "ukiyoe",
+      "name_ko": "우키요에",
+      "name_en": "Ukiyo-e Woodblock",
+      "prompt": "Japanese ukiyo-e woodblock print, bold outlines, flat color planes, subtle wood-grain texture, traditional pigments, decorative cloud and wave motifs in the background",
+      "negative": "western shading, photorealism, neon"
+    },
+    {
+      "id": "minimal-line",
+      "name_ko": "미니멀 라인",
+      "name_en": "Minimal Line Art",
+      "prompt": "minimal single-weight line art, one continuous outline where possible, large amounts of negative space, optional single accent color fill, modern editorial feel",
+      "negative": "complex shading, busy background"
+    },
+    {
+      "id": "cyberpunk-neon",
+      "name_ko": "사이버펑크 네온",
+      "name_en": "Cyberpunk Neon",
+      "prompt": "cyberpunk neon illustration, magenta and cyan rim lighting, dark moody background, holographic reflections on plush surface, futuristic city bokeh, cinematic atmosphere",
+      "negative": "pastel daytime, soft cottagecore"
+    }
+  ]
+}
