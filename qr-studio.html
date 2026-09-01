@@ -250,8 +250,10 @@
   :root[data-theme="dark"] input[type=datetime-local]::-webkit-calendar-picker-indicator,
   :root[data-theme="dark"] input[type=date]::-webkit-calendar-picker-indicator{filter:invert(1)}
   /* content-type buttons: emoji + label together */
-  #ctypeSeg button{display:inline-flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap}
-  #ctypeSeg button .ct-em{font-size:13px;line-height:1}
+  #ctypeSeg button,#frameStyleSeg button{display:inline-flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap}
+  .ct-em{font-size:13px;line-height:1}
+  .ct-ic{display:inline-flex;width:15px;height:15px}
+  .ct-ic svg{width:15px;height:15px;display:block}
   .switch{display:flex;align-items:center;justify-content:space-between;gap:10px}
   .toggle{position:relative;width:44px;height:24px;flex:none}
   .toggle input{opacity:0;width:0;height:0}
@@ -849,16 +851,16 @@
               <label class="fld">
                 <div class="lbl" data-i18n="lbl.frameStyle">프레임 스타일</div>
                 <div class="seg wrap" id="frameStyleSeg">
-                  <button data-fstyle="card" class="on"><span data-i18n="seg.fstyle.card">카드</span></button>
-                  <button data-fstyle="wood"><span data-i18n="seg.fstyle.wood">우드</span></button>
-                  <button data-fstyle="gold"><span data-i18n="seg.fstyle.gold">골드 액자</span></button>
-                  <button data-fstyle="polaroid"><span data-i18n="seg.fstyle.polaroid">폴라로이드</span></button>
-                  <button data-fstyle="shadow"><span data-i18n="seg.fstyle.shadow">섀도우박스</span></button>
-                  <button data-fstyle="neon"><span data-i18n="seg.fstyle.neon">네온 사인</span></button>
-                  <button data-fstyle="stamp"><span data-i18n="seg.fstyle.stamp">우표</span></button>
-                  <button data-fstyle="shell"><span data-i18n="seg.fstyle.shell">조개 장식</span></button>
-                  <button data-fstyle="poster"><span data-i18n="seg.fstyle.poster">포스터</span></button>
-                  <button data-fstyle="circle"><span data-i18n="seg.fstyle.circle">서클아트</span></button>
+                  <button data-fstyle="card" class="on"><span class="ct-em">🟦</span><span data-i18n="seg.fstyle.card">카드</span></button>
+                  <button data-fstyle="wood"><span class="ct-em">🪵</span><span data-i18n="seg.fstyle.wood">우드</span></button>
+                  <button data-fstyle="gold"><span class="ct-em">🖼️</span><span data-i18n="seg.fstyle.gold">골드 액자</span></button>
+                  <button data-fstyle="polaroid"><span class="ct-em">📷</span><span data-i18n="seg.fstyle.polaroid">폴라로이드</span></button>
+                  <button data-fstyle="shadow"><span class="ct-em">🔲</span><span data-i18n="seg.fstyle.shadow">섀도우박스</span></button>
+                  <button data-fstyle="neon"><span class="ct-em">💡</span><span data-i18n="seg.fstyle.neon">네온 사인</span></button>
+                  <button data-fstyle="stamp"><span class="ct-em">📮</span><span data-i18n="seg.fstyle.stamp">우표</span></button>
+                  <button data-fstyle="shell"><span class="ct-em">🐚</span><span data-i18n="seg.fstyle.shell">조개 장식</span></button>
+                  <button data-fstyle="poster"><span class="ct-em">🪧</span><span data-i18n="seg.fstyle.poster">포스터</span></button>
+                  <button data-fstyle="circle"><span class="ct-em">⭕</span><span data-i18n="seg.fstyle.circle">서클아트</span></button>
                 </div>
               </label>
               <div id="frameBgFields">
@@ -1089,7 +1091,7 @@
   <footer>
     <div>Aesthetic QR Studio · 아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.09.02-c</b></div>
+    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.09.03-a</b></div>
   </footer>
 </div>
 
@@ -4781,7 +4783,9 @@ function selectCType(ct){
 $("ctypeSeg").addEventListener("click", function(e){
   var b=e.target.closest("button"); if(!b) return;
   selectCType(b.dataset.ct);
+  syncCenterToCType(b.dataset.ct);   // if a pictogram is centred, mirror the type's emoji
   buildContent();
+  rerender();
   try{ b.blur(); }catch(x){}  // don't leave the button focused (would keep its tooltip showing)
 });
 $("ppCurSeg").addEventListener("click", function(e){ var b=e.target.closest("button"); if(!b) return; Array.prototype.forEach.call(this.children,function(x){x.classList.toggle("on",x===b);}); buildContent(); });
@@ -5045,7 +5049,7 @@ $("frameBg1").addEventListener("input",function(e){ S.frameBg1=e.target.value; r
 $("frameBg2").addEventListener("input",function(e){ S.frameBg2=e.target.value; rerender(); });
 
 // pictogram source library — click a symbol to swap the centre pictogram
-var PICTOS=["🧯","🏥","🚑","📶","⭐","🎁","☕","🍔","🍕","🍺","📍","🎵","🎧","🏠","🌿","📷","🅿️","🚻","♿","🛗","🔋","💡","🛎️","🎬","🎟️","🛒","💳","📞","✉️","🌐","📅","🕐","🔑","🎯","🏆","❤️","👍","🔥","✨","🎉","🐶","🐱","🌸","🌊","⛰️","🏖️","🎨","💼"];
+var PICTOS=["🧯","🏥","🚑","📶","⭐","🎁","☕","🍔","🍕","🍺","🍷","🍸","🍜","🍣","🥐","🍰","🌮","📍","🎵","🎧","🏠","🌿","📷","📸","▶️","🅿️","🚻","♿","🛗","🔋","💡","🛎️","🎬","🎟️","🛒","💳","📞","✉️","🌐","📅","🕐","🔑","🎯","🏆","❤️","👍","🔥","✨","🎉","🐶","🐱","🐾","🌸","🌊","⛰️","🏖️","🎨","💼","💊","🏋️","🧘","💇","🚗","🔧","📚","🎮","🎤","👗","💍","🧴","🚀","🏨","🎂","🧾"];
 function buildPictoPicker(){
   var box=$("pictoPicker"); if(!box) return; box.innerHTML="";
   PICTOS.forEach(function(sym){
@@ -5056,6 +5060,41 @@ function buildPictoPicker(){
   });
 }
 function syncPictoSel(){ var box=$("pictoPicker"); if(!box) return; Array.prototype.forEach.call(box.children,function(x){x.classList.toggle("on",x.textContent===S.centerText);}); }
+
+// ---- content-type button icons: real brand marks (SVG) where they help recognition,
+//      closest emoji elsewhere. Brand-coloured icons stay visible on the black selected
+//      pill; the pure-dark marks (X, TikTok, GitHub) use currentColor so they flip. ----
+var CT_ICON={
+  instagram:'<svg viewBox="0 0 24 24" fill="none" stroke="#E1306C" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1.1" fill="#E1306C" stroke="none"/></svg>',
+  youtube:'<svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="4" fill="#FF0000"/><path d="M10 8.5l6 3.5-6 3.5z" fill="#fff"/></svg>',
+  tiktok:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 3c.3 2.2 1.7 3.8 3.9 4v2.6c-1.4 0-2.7-.4-3.9-1.1v5.9a5.3 5.3 0 1 1-5.3-5.3c.3 0 .6 0 .9.1v2.7a2.6 2.6 0 1 0 1.8 2.5V3H14z"/></svg>',
+  x:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 3h3l-6.6 7.5L21.8 21h-6l-4.3-5.6L6.5 21h-3l7-8L2.6 3h6.1l3.9 5.1L17.5 3zm-1 16h1.6L7.6 4.7H5.9L16.5 19z"/></svg>',
+  facebook:'<svg viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#1877F2"/><path d="M15.4 8.4h-1.6c-.5 0-.8.3-.8.9V11h2.4l-.4 2.6h-2V21h-2.7v-7.4H8.3V11h2v-1.8c0-2 1.2-3.2 3-3.2h2.1v2.4z" fill="#fff"/></svg>',
+  linkedin:'<svg viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#0A66C2"/><path d="M8 10v7H5.5v-7H8zM6.7 6.1a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM10 10h2.4v1c.4-.7 1.3-1.2 2.4-1.2 2 0 3.2 1.3 3.2 3.6V17h-2.5v-3.1c0-1-.4-1.7-1.3-1.7-.7 0-1.2.5-1.4 1-.1.2-.1.5-.1.8V17H10v-7z" fill="#fff"/></svg>',
+  telegram:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#229ED9"/><path d="M5.6 11.8l11-4.2c.5-.2 1 .1.8.9l-1.9 8.8c-.1.6-.5.7-1 .5l-2.7-2-1.3 1.3c-.2.2-.3.3-.6.3l.2-2.9 5.2-4.7c.2-.2 0-.3-.3-.1l-6.4 4-2.7-.9c-.6-.2-.6-.6.2-.9z" fill="#fff"/></svg>',
+  github:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 00-3.2 19.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.5-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.3 1.1 2.9.8.1-.6.3-1.1.6-1.3-2.2-.3-4.5-1.1-4.5-5 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.7 1a9.3 9.3 0 015 0c1.9-1.3 2.7-1 2.7-1 .5 1.4.2 2.4.1 2.7.6.7 1 1.6 1 2.7 0 3.9-2.3 4.7-4.5 5 .3.3.6.9.6 1.8v2.7c0 .3.2.6.7.5A10 10 0 0012 2z"/></svg>',
+  whatsapp:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#25D366"/><path d="M12 6a6 6 0 00-5.1 9.1L6 18l3-.8A6 6 0 1012 6zm-1.7 3.5c.1 0 .2 0 .3.2.1.3.5 1.2.5 1.3s.1.2 0 .3l-.3.4-.3.3c-.1.1-.2.2-.1.4.1.2.5.8.9 1.1.6.5 1.1.7 1.3.8.1 0 .2 0 .3-.1l.5-.6c.1-.2.2-.1.4-.1l1 .5.4.2v.7c-.1.4-.6.7-.9.7-.2 0-.5.1-1.7-.4-1.5-.5-2.4-2-2.5-2.1-.1-.1-.6-.8-.6-1.5s.4-1 .5-1.2c.1-.1.3-.2.4-.2z" fill="#fff"/></svg>',
+  spotify:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#1DB954"/><path d="M7 10.4c3-.8 6.6-.5 9.2 1.1M7.6 13.4c2.4-.6 5.1-.4 7.2 1M8.1 16.1c1.9-.5 3.9-.3 5.5.7" stroke="#fff" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>',
+  paypal:'<svg viewBox="0 0 24 24"><path d="M9.3 4h5.9c2.4 0 4 1.5 3.6 4-.4 2.6-2.3 4-4.9 4h-2.7l-.8 4H7.6L9.3 4z" fill="#002991"/><path d="M8 7h5.4c1.9 0 3 1.1 2.7 3-.4 2-2 3-4 3H9.9L9.2 20H6.5L8 7z" fill="#009CDE"/></svg>'
+};
+function applyCtIcons(){
+  var seg=$("ctypeSeg"); if(!seg) return;
+  Array.prototype.forEach.call(seg.children,function(b){
+    var ct=b.dataset.ct, svg=CT_ICON[ct]; if(!svg) return;
+    var em=b.querySelector(".ct-em"); if(!em) return;
+    em.className="ct-ic"; em.innerHTML=svg;
+  });
+}
+// each connection type maps to the emoji that best represents it for the CENTRE pictogram
+var CT_EMOJI={url:"🌐",text:"📝",wifi:"📶",vcard:"👤",tel:"📞",sms:"💬",email:"✉️",geo:"📍",event:"📅",
+  instagram:"📸",youtube:"▶️",tiktok:"🎵",x:"❌",facebook:"👍",linkedin:"💼",telegram:"✈️",github:"🐙",
+  whatsapp:"💬",appstore:"📱",spotify:"🎧",review:"⭐",video:"🎥",paypal:"💰",crypto:"₿"};
+// when a connection type is chosen and the centre is a pictogram, mirror the matching emoji
+function syncCenterToCType(ct){
+  if(S.centerMode!=="emoji") return;
+  var e=CT_EMOJI[ct]; if(!e) return;
+  S.centerText=e; var ci=$("centerText"); if(ci) ci.value=e; syncPictoSel();
+}
 function centerUIvis(){
   var m=S.centerMode, on=m!=="none", emoji=(m==="emoji"), mark=(m==="mark"), text=(m==="text");
   $("centerControls").style.display=on?"block":"none";
@@ -6084,7 +6123,27 @@ var CATS = {
     {name:"홈/부동산",tag:"부동산",s:{fill:"solid",fg1:"#0d9488",bg:"#ffffff",dot:"dots",eye:"square",centerMode:"emoji",centerText:"🏠",centerScale:32,frameOn:true,frameMode:"solid",frameBg1:"#0f766e"}},
     {name:"친환경",tag:"에코",s:{fill:"solid",fg1:"#22c55e",bg:"#ffffff",dot:"dots",eye:"square",centerMode:"emoji",centerText:"🌿",centerScale:32,frameOn:true,frameMode:"solid",frameBg1:"#15803d"}},
     {name:"포토/카메라",tag:"사진",s:{fill:"solid",fg1:"#8b5cf6",bg:"#ffffff",dot:"dots",eye:"square",centerMode:"emoji",centerText:"📷",centerScale:32,frameOn:true,frameMode:"linear",frameBg1:"#7c3aed",frameBg2:"#2e1065",frameAngle:120}},
-    {name:"주차",tag:"교통",s:{fill:"solid",fg1:"#2563eb",bg:"#ffffff",dot:"dots",eye:"square",centerMode:"emoji",centerText:"🅿️",centerScale:32,frameOn:true,frameMode:"solid",frameBg1:"#1e40af"}}
+    {name:"주차",tag:"교통",s:{fill:"solid",fg1:"#2563eb",bg:"#ffffff",dot:"dots",eye:"square",centerMode:"emoji",centerText:"🅿️",centerScale:32,frameOn:true,frameMode:"solid",frameBg1:"#1e40af"}},
+    {name:"레스토랑",tag:"F&B",s:{fill:"solid",fg1:"#b91c1c",bg:"#fffaf7",dot:"dots",eye:"square",centerMode:"emoji",centerText:"🍽️",centerScale:32,frameOn:true,frameMode:"linear",frameBg1:"#dc2626",frameBg2:"#7c2d12",frameAngle:135}},
+    {name:"베이커리",tag:"F&B",s:{fill:"solid",fg1:"#b45309",bg:"#fffdf5",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"🥐",centerScale:32,frameOn:true,frameStyle:"wood"}},
+    {name:"와인바",tag:"주점",s:{fill:"solid",fg1:"#7f1d3a",bg:"#ffffff",dot:"classy",eye:"leaf",centerMode:"emoji",centerText:"🍷",centerScale:32,frameOn:true,frameStyle:"gold"}},
+    {name:"칵테일바",tag:"주점",s:{fill:"solid",fg1:"#0f766e",bg:"#06121a",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"🍸",centerScale:32,frameOn:true,frameStyle:"neon",frameBg1:"#2dd4bf"}},
+    {name:"헬스장",tag:"피트니스",s:{fill:"linear",fg1:"#1d4ed8",fg2:"#0b2a6b",angle:120,bg:"#ffffff",dot:"square",eye:"square",centerMode:"emoji",centerText:"🏋️",centerScale:32,frameOn:true,frameMode:"linear",frameBg1:"#1d4ed8",frameBg2:"#0b2a6b",frameAngle:120}},
+    {name:"요가·필라테스",tag:"피트니스",s:{fill:"solid",fg1:"#15803d",bg:"#f5fbf6",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"🧘",centerScale:32,frameOn:true,frameStyle:"circle",frameBg1:"#22c55e"}},
+    {name:"헤어살롱",tag:"뷰티",s:{fill:"solid",fg1:"#be185d",bg:"#ffffff",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"💇",centerScale:32,frameOn:true,frameMode:"linear",frameBg1:"#db2777",frameBg2:"#500724",frameAngle:120}},
+    {name:"코스메틱",tag:"뷰티",s:{fill:"solid",fg1:"#9d174d",bg:"#fff5f8",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"🧴",centerScale:32,frameOn:true,frameStyle:"polaroid"}},
+    {name:"약국",tag:"의료",s:{fill:"solid",fg1:"#047857",bg:"#ffffff",dot:"dots",eye:"square",centerMode:"emoji",centerText:"💊",centerScale:32,frameOn:true,frameMode:"solid",frameBg1:"#065f46"}},
+    {name:"반려동물",tag:"펫",s:{fill:"solid",fg1:"#0e7490",bg:"#f2fbfd",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"🐾",centerScale:32,frameOn:true,frameStyle:"card",frameMode:"linear",frameBg1:"#06b6d4",frameBg2:"#0e7490",frameAngle:135}},
+    {name:"자동차·정비",tag:"오토",s:{fill:"solid",fg1:"#334155",bg:"#ffffff",dot:"square",eye:"square",centerMode:"emoji",centerText:"🚗",centerScale:32,frameOn:true,frameStyle:"shadow",frameMode:"linear",frameBg1:"#475569",frameBg2:"#1e293b",frameAngle:135}},
+    {name:"서점·도서관",tag:"문화",s:{fill:"solid",fg1:"#3730a3",bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"📚",centerScale:32,frameOn:true,frameMode:"linear",frameBg1:"#4338ca",frameBg2:"#1e1b4b",frameAngle:120}},
+    {name:"게임·PC방",tag:"엔터",s:{fill:"linear",fg1:"#7c3aed",fg2:"#22d3ee",angle:120,bg:"#0b0d12",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"🎮",centerScale:32,frameOn:true,frameStyle:"neon",frameBg1:"#7c3aed"}},
+    {name:"공연·티켓",tag:"엔터",s:{fill:"solid",fg1:"#a21caf",bg:"#ffffff",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"🎟️",centerScale:32,frameOn:true,frameStyle:"stamp"}},
+    {name:"호텔·숙박",tag:"여행",s:{fill:"solid",fg1:"#7c5a12",bg:"#fffdf5",dot:"classy",eye:"leaf",centerMode:"emoji",centerText:"🏨",centerScale:32,frameOn:true,frameStyle:"gold"}},
+    {name:"플라워샵",tag:"리테일",s:{fill:"solid",fg1:"#db2777",bg:"#fff5fa",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"🌸",centerScale:32,frameOn:true,frameStyle:"shell"}},
+    {name:"디저트 카페",tag:"F&B",s:{fill:"solid",fg1:"#9a3412",bg:"#fffaf3",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"🍰",centerScale:32,frameOn:true,frameStyle:"polaroid"}},
+    {name:"노래방",tag:"엔터",s:{fill:"linear",fg1:"#c026d3",fg2:"#6d28d9",angle:120,bg:"#0b0712",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"🎤",centerScale:32,frameOn:true,frameStyle:"neon",frameBg1:"#e879f9"}},
+    {name:"패션·의류",tag:"리테일",s:{fill:"solid",fg1:"#111111",bg:"#ffffff",dot:"square",eye:"square",centerMode:"emoji",centerText:"👗",centerScale:32,frameOn:true,frameStyle:"poster",frameMode:"solid",frameBg1:"#111111"}},
+    {name:"주얼리",tag:"리테일",s:{fill:"solid",fg1:"#8a6d1e",bg:"#fffdf5",dot:"classy",eye:"leaf",centerMode:"emoji",centerText:"💍",centerScale:32,frameOn:true,frameStyle:"gold"}}
   ],
   frame:[
     {name:"골드 액자",tag:"미술관 액자",s:{fill:"solid",fg1:"#3a2a06",bg:"#fffdf5",dot:"classy",eye:"leaf",frameOn:true,frameStyle:"gold"}},
@@ -6100,7 +6159,17 @@ var CATS = {
     {name:"선셋 카드",tag:"컬러 카드",s:{fill:"solid",fg1:"#7c2d12",bg:"#ffffff",dot:"rounded",eye:"rounded",frameOn:true,frameStyle:"card",frameMode:"linear",frameBg1:"#fb7185",frameBg2:"#f97316",frameAngle:120}},
     {name:"모노 카드",tag:"컬러 카드",s:{fill:"solid",fg1:"#111111",bg:"#ffffff",dot:"square",eye:"square",frameOn:true,frameStyle:"card",frameMode:"solid",frameBg1:"#111111"}},
     {name:"서클아트 그린",tag:"도트 링 배지",s:{fill:"linear",fg1:"#2fb56f",fg2:"#1a8a52",angle:120,bg:"#ffffff",dot:"rounded",eye:"rounded",frameOn:true,frameStyle:"circle",frameMode:"solid",frameBg1:"#1fae63"}},
-    {name:"서클아트 바이올렛",tag:"도트 링 배지",s:{fill:"linear",fg1:"#7c5cff",fg2:"#5b3adb",angle:120,bg:"#ffffff",dot:"hexagon",eye:"rounded",frameOn:true,frameStyle:"circle",frameMode:"solid",frameBg1:"#7c5cff"}}
+    {name:"서클아트 바이올렛",tag:"도트 링 배지",s:{fill:"linear",fg1:"#7c5cff",fg2:"#5b3adb",angle:120,bg:"#ffffff",dot:"hexagon",eye:"rounded",frameOn:true,frameStyle:"circle",frameMode:"solid",frameBg1:"#7c5cff"}},
+    {name:"우표 · 에어메일",tag:"빈티지 우표",s:{fill:"solid",fg1:"#1e3a8a",bg:"#fffdf7",dot:"dots",eye:"square",frameOn:true,frameStyle:"stamp",labelOn:true,labelText:"AIR MAIL"}},
+    {name:"우표 · 로즈",tag:"빈티지 우표",s:{fill:"solid",fg1:"#9d174d",bg:"#fffaf7",dot:"dots",eye:"square",frameOn:true,frameStyle:"stamp"}},
+    {name:"조개 도일리",tag:"레이스 프레임",s:{fill:"solid",fg1:"#0e7490",bg:"#f4fbfd",dot:"rounded",eye:"rounded",frameOn:true,frameStyle:"shell"}},
+    {name:"포스터 · 스캔미",tag:"헤드라인 포스터",s:{fill:"solid",fg1:"#111111",bg:"#ffffff",dot:"square",eye:"square",frameOn:true,frameStyle:"poster",frameMode:"linear",frameBg1:"#111111",frameBg2:"#3f3f46",frameAngle:135,labelOn:true,labelText:"SCAN ME"}},
+    {name:"포스터 · 선셋",tag:"헤드라인 포스터",s:{fill:"solid",fg1:"#7c2d12",bg:"#ffffff",dot:"rounded",eye:"rounded",frameOn:true,frameStyle:"poster",frameMode:"linear",frameBg1:"#fb7185",frameBg2:"#f97316",frameAngle:120,labelOn:true,labelText:"OPEN ME"}},
+    {name:"폴라로이드 · 메모",tag:"손글씨 감성",s:{fill:"solid",fg1:"#1f2937",bg:"#ffffff",dot:"rounded",eye:"rounded",frameOn:true,frameStyle:"polaroid",labelOn:true,labelText:"Hello :)"}},
+    {name:"네온 · 그린",tag:"글로우 액자",s:{fill:"linear",fg1:"#4ade80",fg2:"#22d3ee",angle:120,bg:"#06120b",dot:"dots",eye:"circle",frameOn:true,frameStyle:"neon",frameBg1:"#4ade80"}},
+    {name:"우드 · 다크월넛",tag:"원목 액자",s:{fill:"solid",fg1:"#3b2412",bg:"#fdf8f0",dot:"rounded",eye:"rounded",frameOn:true,frameStyle:"wood"}},
+    {name:"서클아트 골드",tag:"도트 링 배지",s:{fill:"linear",fg1:"#d4af37",fg2:"#8a6d1e",angle:120,bg:"#ffffff",dot:"classy",eye:"leaf",frameOn:true,frameStyle:"circle",frameMode:"solid",frameBg1:"#c9a227"}},
+    {name:"모노 카드 · 라이트",tag:"컬러 카드",s:{fill:"solid",fg1:"#0f172a",bg:"#ffffff",dot:"square",eye:"square",frameOn:true,frameStyle:"card",frameMode:"linear",frameBg1:"#e5e7eb",frameBg2:"#94a3b8",frameAngle:135}}
   ],
   usecase:[
     {name:"카페 Wi-Fi",tag:"스캔 → 와이파이 자동 접속",s:{fill:"solid",fg1:"#5b3a1a",bg:"#fffaf2",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"☕",centerScale:26,frameOn:true,frameStyle:"wood"},ct:"wifi",fields:{wifiSsid:"MyCafe_WiFi",wifiPass:"cafe1234"}},
@@ -6110,7 +6179,17 @@ var CATS = {
     {name:"이메일 문의",tag:"스캔 → 메일 작성",s:{fill:"solid",fg1:"#0e7490",bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"✉️",centerScale:28},ct:"email",fields:{emTo:"contact@company.com",emSubj:"문의드립니다"}},
     {name:"매장 위치",tag:"스캔 → 지도 열기",s:{fill:"solid",fg1:"#b91c1c",bg:"#ffffff",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"📍",centerScale:28,frameOn:true,frameStyle:"card",frameMode:"solid",frameBg1:"#b91c1c"},ct:"geo",fields:{geoLat:"37.5665",geoLng:"126.9780"}},
     {name:"쿠폰 텍스트",tag:"스캔 → 쿠폰 코드 표시",s:{fill:"linear",fg1:"#db2777",fg2:"#f97316",angle:120,dot:"rounded",eye:"rounded",bg:"#ffffff",centerMode:"emoji",centerText:"🎁",centerScale:26},ct:"text",fields:{content:"10% 할인 쿠폰: WELCOME10"}},
-    {name:"리뷰 남기기",tag:"스캔 → 리뷰 페이지",s:{fill:"solid",fg1:"#d97706",bg:"#ffffff",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"⭐",centerScale:28,labelOn:true,labelText:"리뷰 남기기"},ct:"url",fields:{content:"https://jay-inky.vercel.app"}}
+    {name:"리뷰 남기기",tag:"스캔 → 리뷰 페이지",s:{fill:"solid",fg1:"#d97706",bg:"#ffffff",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"⭐",centerScale:28,labelOn:true,labelText:"리뷰 남기기"},ct:"url",fields:{content:"https://jay-inky.vercel.app"}},
+    {name:"인스타 프로필",tag:"스캔 → 인스타그램",s:{fill:"linear",fg1:"#e1306c",fg2:"#f77737",angle:120,bg:"#ffffff",dot:"rounded",eye:"circle",centerMode:"emoji",centerText:"📸",centerScale:28,labelOn:true,labelText:"@FOLLOW"},ct:"instagram",fields:{socialUser:"my.brand"}},
+    {name:"유튜브 채널",tag:"스캔 → 채널 구독",s:{fill:"solid",fg1:"#c1121f",bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"▶️",centerScale:28,frameOn:true,frameStyle:"card",frameMode:"solid",frameBg1:"#c1121f",labelOn:true,labelText:"SUBSCRIBE"},ct:"youtube",fields:{socialUser:"mychannel"}},
+    {name:"틱톡",tag:"스캔 → 틱톡 프로필",s:{fill:"linear",fg1:"#25f4ee",fg2:"#fe2c55",angle:120,bg:"#0b0d12",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"🎵",centerScale:28},ct:"tiktok",fields:{socialUser:"mybrand"}},
+    {name:"링크드인",tag:"스캔 → 프로필",s:{fill:"solid",fg1:"#0a66c2",bg:"#ffffff",dot:"square",eye:"square",centerMode:"emoji",centerText:"💼",centerScale:28,frameOn:true,frameStyle:"shadow",frameMode:"linear",frameBg1:"#0a66c2",frameBg2:"#0b2a6b",frameAngle:120},ct:"linkedin",fields:{socialUser:"myname"}},
+    {name:"텔레그램 채널",tag:"스캔 → 대화 열기",s:{fill:"solid",fg1:"#229ed9",bg:"#ffffff",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"✈️",centerScale:28},ct:"telegram",fields:{socialUser:"mychannel"}},
+    {name:"앱 다운로드",tag:"스캔 → 스토어 열기",s:{fill:"linear",fg1:"#334155",fg2:"#0f172a",angle:120,bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"📱",centerScale:28,labelOn:true,labelText:"GET THE APP"},ct:"appstore",fields:{linkUrl:"https://apps.apple.com/app/id000000000"}},
+    {name:"화상회의 참가",tag:"스캔 → 회의 입장",s:{fill:"solid",fg1:"#1d4ed8",bg:"#ffffff",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"🎥",centerScale:28,frameOn:true,frameStyle:"card",frameMode:"solid",frameBg1:"#1d4ed8"},ct:"video",fields:{linkUrl:"https://meet.google.com/abc-defg-hij"}},
+    {name:"스포티파이",tag:"스캔 → 플레이리스트",s:{fill:"solid",fg1:"#1db954",bg:"#0b0d12",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"🎧",centerScale:28},ct:"spotify",fields:{linkUrl:"https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M"}},
+    {name:"PayPal 결제",tag:"스캔 → 결제·송금",s:{fill:"solid",fg1:"#003087",bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"💰",centerScale:28,frameOn:true,frameStyle:"card",frameMode:"linear",frameBg1:"#009cde",frameBg2:"#003087",frameAngle:120},ct:"paypal",fields:{ppUser:"myshop",ppAmt:"10.00"}},
+    {name:"일정 등록",tag:"스캔 → 캘린더 추가",s:{fill:"solid",fg1:"#7c3aed",bg:"#ffffff",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"📅",centerScale:28,frameOn:true,frameStyle:"stamp"},ct:"event",fields:{evTitle:"제품 출시 행사",evLoc:"서울 강남"}}
   ]
 };
 var curCat="standard";
@@ -6735,6 +6814,7 @@ if (typeof qrcode === "undefined"){
 } else {
   render(ctx, EXPORT);
   updateMeta();
+  applyCtIcons();
   buildPictoPicker();
   buildMarkPicker();
   buildGallery();
