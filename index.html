@@ -4,7 +4,31 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Aesthetic QR Studio — 평범함을 특별하게</title>
-<meta name="description" content="스캔되는 예술. 색상·그라디언트·모듈 형태·로고·애니메이션까지 커스터마이즈하는 미적 QR 코드 생성기." />
+<meta name="description" content="스캔되는 예술. 색상·그라디언트·모듈 형태·로고·애니메이션까지 커스터마이즈하는 미적 QR 코드 생성기. 서버·로그인 없이 브라우저에서 100% 동작." />
+<meta name="keywords" content="QR코드, QR코드 생성기, 디자인 QR, 아트 QR, 로고 QR, 애니메이션 QR, WiFi QR, vCard, qr code generator" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)" />
+<!-- ▼ 커스텀 도메인 연결 시, 아래 canonical/og:url/og:image 의 도메인만 교체하세요. -->
+<link rel="canonical" href="https://jay-inky.vercel.app/" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Aesthetic QR Studio" />
+<meta property="og:title" content="Aesthetic QR Studio — 평범한 QR을 브랜드가 되는 아트로" />
+<meta property="og:description" content="색상·그라디언트·모듈·로고·애니메이션까지. 실제로 스캔되는 미적 QR을 브라우저에서 무료로 디자인하세요." />
+<meta property="og:url" content="https://jay-inky.vercel.app/" />
+<meta property="og:image" content="https://jay-inky.vercel.app/assets/cover.png" />
+<meta property="og:locale" content="ko_KR" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Aesthetic QR Studio — 스캔되는 QR 아트" />
+<meta name="twitter:description" content="색상·로고·애니메이션까지 커스터마이즈하는 미적 QR 코드 생성기. 브라우저에서 100% 동작." />
+<meta name="twitter:image" content="https://jay-inky.vercel.app/assets/cover.png" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"Aesthetic QR Studio",
+"url":"https://jay-inky.vercel.app/","applicationCategory":"DesignApplication","operatingSystem":"Any (web browser)",
+"description":"색상·그라디언트·모듈 형태·로고·애니메이션까지 커스터마이즈하는 미적 QR 코드 생성기. 서버·로그인 없이 브라우저에서 동작합니다.",
+"offers":{"@type":"Offer","price":"0","priceCurrency":"KRW"},
+"featureList":["디자인 QR 코드","로고/픽토그램 중앙 배치","애니메이션 QR(WebM)","24종 콘텐츠 유형","고해상도 내보내기","다국어(한/영/일/중)"]}
+</script>
 <!-- Ollama-style type system: Nunito (SF Pro Rounded substitute for display) + JetBrains Mono (code).
      Body falls back to the OS default sans (system-ui) exactly as the reference design intends. -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -379,6 +403,23 @@
   .guide-card ol,.guide-card ul{margin:6px 0 0;padding-left:18px;font-size:12.5px;color:var(--mut);line-height:1.7}
   .guide-card .tag2{display:inline-block;font-size:10px;font-weight:600;color:var(--txt);background:var(--bg2);
     border:1px solid var(--line);border-radius:var(--pill);padding:2px 9px;margin-bottom:10px}
+
+  /* ---- footer legal links + info modal ---- */
+  .foot-links{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-items:center;margin-bottom:2px}
+  .foot-link{background:transparent;border:0;color:var(--mut);font-family:inherit;font-size:12px;font-weight:500;
+    cursor:pointer;padding:2px 4px;border-radius:6px;transition:.12s}
+  .foot-link:hover{color:var(--txt);text-decoration:underline}
+  .foot-sep{color:var(--mut2);font-size:11px}
+  .info-card{max-width:600px;text-align:left}
+  .info-body{margin-top:12px;font-size:13.5px;line-height:1.7;color:var(--mut)}
+  .info-body h4{color:var(--txt);font-size:14px;font-weight:600;margin:16px 0 6px}
+  .info-body h4:first-child{margin-top:0}
+  .info-body p{margin:0 0 9px}
+  .info-body ul{margin:0 0 9px;padding-left:18px}
+  .info-body li{margin:3px 0}
+  .info-body a{color:var(--txt);text-decoration:underline}
+  .info-body b{color:var(--txt)}
+  .info-body code{font-family:var(--font-mono);font-size:12px;background:var(--bg2);border:1px solid var(--line);border-radius:5px;padding:1px 6px}
 </style>
 <script>
   /* set the theme before first paint to avoid a flash. stored choice wins,
@@ -1089,9 +1130,18 @@
   </section>
 
   <footer>
-    <div>Aesthetic QR Studio · 아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)</div>
+    <nav class="foot-links">
+      <button type="button" class="foot-link" data-info="about" data-i18n="foot.about">소개</button>
+      <span class="foot-sep">·</span>
+      <button type="button" class="foot-link" data-info="privacy" data-i18n="foot.privacy">개인정보처리방침</button>
+      <span class="foot-sep">·</span>
+      <button type="button" class="foot-link" data-info="terms" data-i18n="foot.terms">이용약관</button>
+      <span class="foot-sep">·</span>
+      <button type="button" class="foot-link" data-info="contact" data-i18n="foot.contact">문의</button>
+    </nav>
+    <div style="margin-top:10px">Aesthetic QR Studio · <span data-i18n="foot.tag">아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)</span></div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">빌드 <b id="verTag">2026.09.03-b</b></div>
+    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · 빌드 <b id="verTag">2026.09.03-c</b></div>
   </footer>
 </div>
 
@@ -1135,6 +1185,15 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- ===== info modal (About / Privacy / Terms / Contact) ===== -->
+<div class="ob-mask" id="infoMask">
+  <div class="ob-card info-card">
+    <button class="pro-close" id="infoClose" type="button" aria-label="close">✕</button>
+    <h2 id="infoTitle">소개</h2>
+    <div id="infoBody" class="info-body"></div>
+  </div>
+</div>
 
 <!-- ===== QR encoder library (qrcode-generator, MIT) injected below ===== -->
 <script>
@@ -4663,6 +4722,53 @@ window.addEventListener("scroll", _tipHide, true);
 window.addEventListener("blur", _tipHide);
 document.addEventListener("pointerdown", _tipHide, true);
 
+// ---------- footer info pages (About / Privacy / Terms / Contact) ----------
+// ⚠️ 배포 전: 아래 CONTACT_EMAIL 과 각 문서의 [회사/서비스명·도메인·연락처] 를 실제 값으로 교체하세요.
+var CONTACT_EMAIL = "contact@your-domain.com"; // ← 실제 이메일로 교체
+var INFO_PAGES = {
+  about:{ title:"소개", html:
+    "<p><b>Aesthetic QR Studio</b> 는 평범한 흑백 QR을 브랜드가 되는 아트로 바꿔주는 웹 기반 QR 디자인 스튜디오입니다. 색상·그라디언트·모듈 형태·중앙 로고/픽토그램·프레임·애니메이션까지 조정하면서도 <b>실제로 스캔되는</b> QR을 만들 수 있습니다.</p>"+
+    "<h4>핵심 특징</h4><ul>"+
+    "<li><b>프라이버시 우선</b> — 대부분의 처리가 브라우저에서만 이뤄지며, 입력한 QR 데이터는 서버로 전송되지 않습니다.</li>"+
+    "<li><b>24종 콘텐츠 유형</b> — URL·Wi-Fi·연락처·전화·문자·이메일·위치·일정·소셜(인스타/유튜브/틱톡/X 등)·결제·암호화폐 등.</li>"+
+    "<li><b>디자인 도구</b> — 로고/픽토그램 중앙 배치, 데코 프레임, 애니메이션(WebM), 고해상도 내보내기, 대량 생성.</li>"+
+    "<li><b>다국어</b> — 한국어·영어·일본어·중국어.</li></ul>"+
+    "<h4>기술</h4><p>단일 HTML 앱으로 동작하며 오픈소스 인코더 <code>qrcode-generator</code>(MIT)를 사용합니다. QR Code® 는 DENSO WAVE의 등록상표입니다.</p>" },
+  privacy:{ title:"개인정보처리방침", html:
+    "<p>본 서비스는 이용자의 개인정보를 최소한으로만 처리하며, 광고·트래킹 목적의 개인정보 수집을 하지 않습니다. 최종 수정일: 2026-09-03.</p>"+
+    "<h4>1. 수집·전송하지 않는 정보</h4><p>QR에 입력하는 내용(URL·연락처·Wi-Fi 비밀번호 등)과 업로드하는 이미지는 <b>브라우저 내에서만</b> 처리되며 서버로 전송·저장되지 않습니다.</p>"+
+    "<h4>2. 로컬 저장(localStorage)</h4><p>테마 설정, 온보딩 표시 여부, 'My QR' 저장 항목, Pro 라이선스 상태 등은 이용자 <b>브라우저에만</b> 저장되며 외부로 전송되지 않습니다. 브라우저 데이터를 지우면 함께 삭제됩니다.</p>"+
+    "<h4>3. AI 아트 QR(선택 기능)</h4><p>AI 아트 QR 생성을 사용할 경우, 해당 기능에 한해 입력값이 이미지 생성 처리를 위해 서버 함수로 전송될 수 있습니다. 사용하지 않으면 전송은 발생하지 않습니다.</p>"+
+    "<h4>4. 결제(해당 시)</h4><p>Pro 결제는 외부 결제대행(Merchant of Record)을 통해 처리되며, 카드정보는 본 서비스가 보관하지 않습니다. 결제 처리 관련 개인정보는 해당 결제사의 정책을 따릅니다.</p>"+
+    "<h4>5. 문의</h4><p>개인정보 관련 문의: <a href=\"mailto:"+CONTACT_EMAIL+"\">"+CONTACT_EMAIL+"</a></p>" },
+  terms:{ title:"이용약관", html:
+    "<p>본 약관은 Aesthetic QR Studio(이하 '서비스') 이용에 적용됩니다. 서비스를 사용함으로써 본 약관에 동의하는 것으로 간주됩니다. 최종 수정일: 2026-09-03.</p>"+
+    "<h4>1. 서비스</h4><p>기본 기능은 무료로 제공되며, 일부 고급 기능은 유료(Pro)로 제공될 수 있습니다. 서비스는 사전 고지 없이 변경·중단될 수 있습니다.</p>"+
+    "<h4>2. 이용자 책임</h4><ul><li>생성한 QR의 콘텐츠와 그 사용에 대한 책임은 이용자에게 있습니다.</li>"+
+    "<li>타인의 상표·저작권·초상권을 침해하는 이미지·로고를 업로드하거나 사용하지 않아야 합니다.</li>"+
+    "<li>불법·기만·악성 링크를 QR에 담아 사용하지 않아야 합니다.</li></ul>"+
+    "<h4>3. 지식재산권</h4><p>서비스에 내장된 갤러리 그래픽·프리셋은 모두 오리지널 제작물이며, 예시로 표시되는 브랜드명은 가상의 것입니다. 실제 상표는 사용하지 않습니다.</p>"+
+    "<h4>4. 보증의 부인</h4><p>서비스는 '있는 그대로(as-is)' 제공됩니다. 모든 기기·리더기에서의 스캔 성공을 보장하지 않으며, 인쇄·사용 전 반드시 실제 기기로 테스트할 것을 권장합니다.</p>"+
+    "<h4>5. 책임의 제한</h4><p>법이 허용하는 범위에서, 서비스 이용으로 발생한 직·간접 손해에 대해 책임을 지지 않습니다.</p>"+
+    "<h4>6. 문의</h4><p><a href=\"mailto:"+CONTACT_EMAIL+"\">"+CONTACT_EMAIL+"</a></p>" },
+  contact:{ title:"문의", html:
+    "<p>서비스 관련 문의·제휴·버그 제보는 아래로 연락 주세요.</p>"+
+    "<h4>이메일</h4><p><a href=\"mailto:"+CONTACT_EMAIL+"\">"+CONTACT_EMAIL+"</a></p>"+
+    "<p style=\"opacity:.7;font-size:12px\">※ 배포 전 실제 연락 이메일로 교체하세요(코드의 <code>CONTACT_EMAIL</code>).</p>" }
+};
+function openInfo(key){
+  var pg=INFO_PAGES[key]; if(!pg) return;
+  var tk=(typeof t==="function")?t("foot."+key):null;
+  $("infoTitle").textContent = tk || pg.title;
+  $("infoBody").innerHTML = pg.html;
+  $("infoMask").classList.add("show");
+}
+function closeInfo(){ $("infoMask").classList.remove("show"); }
+document.querySelectorAll(".foot-link").forEach(function(b){ b.addEventListener("click",function(){ openInfo(b.dataset.info); }); });
+$("infoClose").addEventListener("click", closeInfo);
+$("infoMask").addEventListener("click", function(e){ if(e.target===this) closeInfo(); });
+document.addEventListener("keydown", function(e){ if(e.key==="Escape") closeInfo(); });
+
 // ---------- bind UI ----------
 // While an AI art QR is applied, the generated image IS the QR — vector design options
 // (module shape, colours, gradient, eyes…) can't affect it. Tell the user instead of
@@ -6346,6 +6452,11 @@ $("saveMyQr").addEventListener("click",saveCurrentQr);
 var I18N = {
   "nav.gallery":{ko:"갤러리",en:"Gallery",zh:"图库",ja:"ギャラリー"},
   "tip.theme":{ko:"라이트 / 다크 테마 전환",en:"Toggle light / dark theme",zh:"切换浅色 / 深色主题",ja:"ライト / ダークテーマ切替"},
+  "foot.about":{ko:"소개",en:"About",zh:"关于",ja:"紹介"},
+  "foot.privacy":{ko:"개인정보처리방침",en:"Privacy Policy",zh:"隐私政策",ja:"プライバシー"},
+  "foot.terms":{ko:"이용약관",en:"Terms of Use",zh:"使用条款",ja:"利用規約"},
+  "foot.contact":{ko:"문의",en:"Contact",zh:"联系",ja:"お問い合わせ"},
+  "foot.tag":{ko:"아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)",en:"A studio for beautiful, scannable QR codes · everything runs in your browser (no data sent)",zh:"打造美观且可扫描二维码的工作室 · 全部在浏览器中处理（不发送数据）",ja:"美しくスキャン可能なQRを作るスタジオ · すべてブラウザで処理（データ送信なし）"},
   "ct.appstore":{ko:"앱 설치",en:"App",zh:"应用",ja:"アプリ"},
   "ct.review":{ko:"리뷰",en:"Review",zh:"评价",ja:"レビュー"},
   "ct.video":{ko:"화상회의",en:"Meeting",zh:"视频会议",ja:"会議"},
