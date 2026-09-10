@@ -708,6 +708,11 @@
                 <div class="lbl" data-i18n="lbl.artInvert" style="margin:0">어두운 그림용 반전</div>
                 <label class="toggle"><input type="checkbox" id="artInvert" /><span></span></label>
               </div>
+              <div class="switch" style="margin-top:12px">
+                <div class="lbl" data-i18n="lbl.poster" style="margin:0">포스터 모드 (사진 배경 + 선명한 QR)</div>
+                <label class="toggle"><input type="checkbox" id="posterOn" /><span></span></label>
+              </div>
+              <div class="hint" data-i18n="hint.poster">켜면 사진이 배경으로 깔리고 QR은 흰 카드 위에 또렷하게 올라갑니다(카페·무신사 포스터 감성). 끄면 이미지에 QR을 녹여넣는 아트 모드로 돌아갑니다.</div>
               <button class="btn sec" id="artClear" style="margin-top:12px;flex:none;width:100%" data-i18n="btn.artClear">아트 제거</button>
             </div>
             <div class="hint" id="artHint" data-i18n-html="hint.art"><b>즉시·무료</b> 아트 QR 모드입니다. 이미지가 QR 전체에 깔리고, 이미지의 <b>밝기를 모듈별로 조절</b>해 QR을 이미지에 녹여넣습니다. <b>영상·GIF</b>를 올리거나 <b>정적 이미지+애니메이션</b>을 켜면 움직이는 아트 QR이 됩니다. 최고 품질이 필요하면 아래 <b>AI 생성(서버)</b>을 사용하세요.</div>
@@ -1175,7 +1180,7 @@
     </nav>
     <div style="margin-top:10px">Aesthetic QR Studio · <span data-i18n="foot.tag">아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)</span></div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · 빌드 <b id="verTag">2026.09.10-b</b></div>
+    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · 빌드 <b id="verTag">2026.09.10-c</b></div>
   </footer>
 </div>
 
@@ -3568,6 +3573,7 @@ var S = {
   labelPos: "bottom",  // bottom | top
   labelOffset: 0,      // -100..100 fine vertical nudge (negative = up)
   // ---- full-image "art QR" (media covers the whole code) ----
+  posterOn: false,     // poster mode: art image as dim backdrop + crisp QR on a white card
   artImg: null,        // HTMLImageElement or HTMLVideoElement used as full background
   aiArt: null,         // server-generated (SD+ControlNet) art QR image — the image IS the QR
   artIsVideo: false,   // true when the uploaded media is a video → animated QR
@@ -4092,10 +4098,12 @@ function render(g2, exportSize){
   // tight label band: font is driven directly by size%, band hugs the text (~1.7× font)
   var labelFont = S.labelOn ? Math.max(8, Math.round(size*(S.labelSize/100)*0.050)) : 0;
   var labelSpace = S.labelOn ? Math.round(labelFont*1.7) : 0;
+  // poster mode: art image as dim backdrop + crisp QR on a white card (needs an inset so the photo shows around the card)
+  var posterActive = S.artImg && S.posterOn && !S.aiArt;
   // framed background (backdrop + white card) reserves an outer inset
   // decorative frames get a MUCH wider band so the design reads at a glance (not a thin ring)
   var FRAME_INSET={circle:0.20,poster:0.20,shell:0.185,neon:0.15,wood:0.15,stamp:0.15,gold:0.145,polaroid:0.11,shadow:0.11};
-  var frameInset = S.frameOn ? Math.round(size*(FRAME_INSET[S.frameStyle]||0.07)) : 0;
+  var frameInset = S.frameOn ? Math.round(size*(FRAME_INSET[S.frameStyle]||0.07)) : (posterActive ? Math.round(size*0.15) : 0);
   var region = size - frameInset*2;               // area the QR block lives in
   // polaroid reserves a big white bottom margin (the caption) → QR sits high like a real instant photo
   var polaBottom = (S.frameOn && S.frameStyle==="polaroid") ? Math.round(region*0.18) : 0;
@@ -4108,7 +4116,15 @@ function render(g2, exportSize){
 
   // background
   g.clearRect(0,0,size,size);
-  if (S.frameOn){
+  if (posterActive){
+    var pw=S.artImg.naturalWidth||S.artImg.videoWidth||S.artImg.width||1, ph=S.artImg.naturalHeight||S.artImg.videoHeight||S.artImg.height||1;
+    var psc=Math.max(size/pw, size/ph), pdw=pw*psc, pdh=ph*psc;
+    try{ g.drawImage(S.artImg, (size-pdw)/2, (size-pdh)/2, pdw, pdh); }catch(e){}
+    g.fillStyle="rgba(10,12,20,0.30)"; g.fillRect(0,0,size,size);        // dim so the card pops
+    var ppad=Math.round(avail*0.055), pr=Math.round(avail*0.05);
+    g.save(); g.shadowColor="rgba(0,0,0,0.28)"; g.shadowBlur=avail*0.045; g.shadowOffsetY=avail*0.012;
+    g.fillStyle="#ffffff"; roundRect(g, xoff-ppad, topPad-ppad, avail+ppad*2, avail+ppad*2, pr); g.fill(); g.restore();
+  } else if (S.frameOn){
     drawFrameBackground(g, size, frameInset, region);
   } else if (!S.transparent){ g.fillStyle = S.bg; g.fillRect(0,0,size,size); }
 
@@ -4117,7 +4133,7 @@ function render(g2, exportSize){
     g.save(); g.beginPath(); g.rect(xoff, topPad, avail, avail); g.clip();
     try { g.drawImage(S.aiArt, xoff, topPad, avail, avail); } catch(e){}
     g.restore();
-  } else if (S.artImg){
+  } else if (S.artImg && !posterActive){
     // ===== art QR: artwork fills the canvas, QR zone centred =====
     drawArtLayer(g, size, n, m);
   } else {
@@ -4607,7 +4623,7 @@ function escapeXml(s){ return s.replace(/[<>&"']/g,function(c){return {'<':'&lt;
 function scanScore(){
   var s=100;
   if(S.aiArt) return 82;                                   // server-generated, tuned for scan
-  if(S.artImg){
+  if(S.artImg && !S.posterOn){                             // poster keeps a crisp QR → score like vector
     s = 100 - Math.max(0, (S.artVisibility-45))*0.9;       // more image = riskier
     if(S.ecc!=="H") s-=15;
     return Math.max(0,Math.min(100,Math.round(s)));
@@ -4637,6 +4653,7 @@ function updateMeta(){
     $("metaScan").style.color="var(--txt)";
     return;
   }
+  if (S.artImg && S.posterOn){ $("metaScan").textContent="✓ "+(t("dyn.poster")||"포스터 모드 · 선명한 QR"); $("metaScan").style.color="var(--mut)"; return; }
   if (S.artImg){
     var msg = (S.artIsVideo?t("dyn.vidArt"):t("dyn.imgArt"));
     if (S.artVisibility > 70) { $("metaScan").textContent="⚠ "+msg+" · "+t("dyn.expHigh"); $("metaScan").style.color="var(--txt)"; }
@@ -5145,7 +5162,7 @@ var _artGif=null;  // current uploaded animated-GIF <img> (kept live so frames a
 function removeArtVid(){ if(_artVid){ try{_artVid.pause();}catch(e){} try{_artVid.remove();}catch(e){} _artVid=null; } if(_artGif){ try{_artGif.remove();}catch(e){} _artGif=null; } }
 function clearArt(){
   removeArtVid();
-  S.artImg=null; S.artIsVideo=false; S.artIsGif=false; $("artFile").value="";
+  S.artImg=null; S.artIsVideo=false; S.artIsGif=false; S.posterOn=false; if($("posterOn")) $("posterOn").checked=false; $("artFile").value="";
   $("artControls").style.display="none";
   $("artLabel").textContent=t("btn.artUpload");
   rerender();
@@ -5219,6 +5236,11 @@ $("artFile").addEventListener("change",function(e){
 $("artVis").addEventListener("input",function(e){ S.artVisibility=+e.target.value; $("artVisOut").textContent=e.target.value+"%"; rerender(); });
 $("artDensity").addEventListener("input",function(e){ S.artDensity=+e.target.value; $("artDensityOut").textContent=t("dens."+e.target.value)||t("dens.6"); rerender(); });
 $("artInvert").addEventListener("change",function(e){ S.artInvert=e.target.checked; rerender(); });
+$("posterOn").addEventListener("change",function(e){
+  S.posterOn=e.target.checked;
+  if(S.posterOn){ S.transparent=false; $("transparent").checked=false; $("bgWrap").style.display="block"; if(S.bg==="") S.bg="#ffffff"; }
+  rerender();
+});
 $("artClear").addEventListener("click",clearArt);
 
 // ---- AI art QR (server: Stable Diffusion + ControlNet via /api/art-qr) ----
@@ -6089,8 +6111,8 @@ $("featureChips").addEventListener("click",function(e){
 });
 
 // ---------- gallery: categorised presets ----------
-var DKEYS=["fill","fg1","fg2","angle","transparent","bg","dot","eye","eyeColorOn","eyeColor","margin","ecc","anim","animKind","animSpeed","frameOn","frameStyle","frameMode","frameBg1","frameBg2","frameAngle","centerMode","centerText","centerColor","centerScale","centerBadge","centerMark","artVisibility","artDensity","artInvert","labelOn","labelText","labelSize","labelPos","labelOffset"];
-var DDEF={fill:"solid",fg1:"#111111",fg2:"#111111",angle:45,transparent:false,bg:"#ffffff",dot:"square",eye:"square",eyeColorOn:false,eyeColor:"#e11d48",margin:4,ecc:"H",anim:false,animKind:"shine",animSpeed:1,frameOn:false,frameStyle:"card",frameMode:"solid",frameBg1:"#0e7a3b",frameBg2:"#0b3d22",frameAngle:135,centerMode:"none",centerText:"",centerColor:"#111111",centerScale:24,centerBadge:"pill",centerMark:"monogram",artVisibility:70,artDensity:6,artInvert:false,labelOn:false,labelText:"SCAN ME",labelSize:100,labelPos:"bottom",labelOffset:0};
+var DKEYS=["fill","fg1","fg2","angle","transparent","bg","dot","eye","eyeColorOn","eyeColor","margin","ecc","anim","animKind","animSpeed","frameOn","frameStyle","frameMode","frameBg1","frameBg2","frameAngle","centerMode","centerText","centerColor","centerScale","centerBadge","centerMark","artVisibility","artDensity","artInvert","posterOn","labelOn","labelText","labelSize","labelPos","labelOffset"];
+var DDEF={fill:"solid",fg1:"#111111",fg2:"#111111",angle:45,transparent:false,bg:"#ffffff",dot:"square",eye:"square",eyeColorOn:false,eyeColor:"#e11d48",margin:4,ecc:"H",anim:false,animKind:"shine",animSpeed:1,frameOn:false,frameStyle:"card",frameMode:"solid",frameBg1:"#0e7a3b",frameBg2:"#0b3d22",frameAngle:135,centerMode:"none",centerText:"",centerColor:"#111111",centerScale:24,centerBadge:"pill",centerMark:"monogram",artVisibility:70,artDensity:6,artInvert:false,posterOn:false,labelOn:false,labelText:"SCAN ME",labelSize:100,labelPos:"bottom",labelOffset:0};
 function resetDesign(fullArt){ for(var k in DDEF) S[k]=DDEF[k]; S.logo=null; S.artImg=null; S.artIsVideo=false; S.artIsGif=false; S.aiArt=null; if(fullArt && typeof removeArtVid==="function") removeArtVid(); }
 // load real web images (CORS-enabled host) for image-based gallery presets
 var IMGCACHE={};
@@ -6632,6 +6654,8 @@ var I18N = {
   "tip.theme":{ko:"라이트 / 다크 테마 전환",en:"Toggle light / dark theme",zh:"切换浅色 / 深色主题",ja:"ライト / ダークテーマ切替"},
   "seg.eye.target":{ko:"타겟",en:"Target",zh:"靶心",ja:"ターゲット"},
   "seg.dot.liquid":{ko:"리퀴드",en:"Liquid",zh:"液态",ja:"リキッド"},
+  "lbl.poster":{ko:"포스터 모드 (사진 배경 + 선명한 QR)",en:"Poster mode (photo backdrop + crisp QR)",zh:"海报模式（照片背景 + 清晰二维码）",ja:"ポスターモード（写真背景 + くっきりQR）"},
+  "hint.poster":{ko:"켜면 사진이 배경으로 깔리고 QR은 흰 카드 위에 또렷하게 올라갑니다(카페·무신사 포스터 감성). 끄면 이미지에 QR을 녹여넣는 아트 모드로 돌아갑니다.",en:"On: the photo becomes a backdrop and the QR sits crisply on a white card (poster look). Off: back to art mode that melts the QR into the image.",zh:"开启后照片作为背景，二维码清晰地置于白卡上（海报风格）。关闭则回到将二维码融入图像的艺术模式。",ja:"オンにすると写真が背景になり、QRは白いカードの上にくっきり乗ります（ポスター風）。オフでQRを画像に溶け込ませるアートモードに戻ります。"},
   "lbl.eyeColorOn":{ko:"눈 색 강조 (브랜드 포인트)",en:"Accent eye color (brand)",zh:"定位点强调色（品牌）",ja:"目の色を強調（ブランド）"},
   "lbl.eyeColor":{ko:"눈 색",en:"Eye color",zh:"定位点颜色",ja:"目の色"},
   "lbl.ctaPreset":{ko:"스캔 유도 문구 (클릭해서 적용)",en:"Scan CTA (click to apply)",zh:"扫描引导文案（点击应用）",ja:"スキャン誘導コピー（クリックで適用）"},
@@ -6944,6 +6968,7 @@ var I18N = {
   "dyn.scanGood":{ko:'스캔 양호',en:'Good to scan',zh:'扫描良好',ja:'スキャン良好'},
   "dyn.aiApplied":{ko:'🤖 AI 아트 QR 적용 중 — 디자인 옵션은 반영되지 않습니다 (\'AI 아트 제거\' 후 편집)',en:'🤖 AI art QR active — design options don\'t apply (click \'Remove AI art\' to edit)',zh:'🤖 正在应用 AI 艺术二维码 — 设计选项不生效（点击“移除 AI 艺术”后编辑）',ja:'🤖 AIアートQR適用中 — デザイン設定は反映されません（『AIアートを削除』後に編集）'},
   "dyn.imgArt":{ko:'🖼️ 이미지 아트 QR',en:'🖼️ Image art QR',zh:'🖼️ 图片艺术二维码',ja:'🖼️ 画像アートQR'},
+  "dyn.poster":{ko:'🪧 포스터 모드 · 선명한 QR',en:'🪧 Poster mode · crisp QR',zh:'🪧 海报模式 · 清晰二维码',ja:'🪧 ポスターモード · くっきりQR'},
   "dyn.vidArt":{ko:'🎬 영상 아트 QR',en:'🎬 Video art QR',zh:'🎬 视频艺术二维码',ja:'🎬 動画アートQR'},
   "dyn.expHigh":{ko:'노출도 높음(스캔 테스트 권장)',en:'high visibility (test the scan)',zh:'显示度高（建议测试扫描）',ja:'表示度が高い（スキャンテスト推奨）'},
   "dyn.eccHRec":{ko:'ECC-H 권장',en:'ECC-H recommended',zh:'建议 ECC-H',ja:'ECC-H 推奨'},
