@@ -765,6 +765,7 @@
                 <button data-eye="rounded"><span data-i18n="seg.eye.rounded">둥근</span></button>
                 <button data-eye="circle"><span data-i18n="seg.eye.circle">원형</span></button>
                 <button data-eye="leaf"><span data-i18n="seg.eye.leaf">잎사귀</span></button>
+                <button data-eye="target"><span data-i18n="seg.eye.target">타겟</span></button>
               </div>
             </label>
             <label class="fld">
@@ -815,9 +816,20 @@
           <div class="body">
             <label class="file-btn" for="logoFile" id="logoLabel" data-i18n="btn.logoUpload">＋ 로고 이미지 업로드 (PNG·JPG·SVG)</label>
             <input type="file" id="logoFile" accept="image/*" />
+            <div class="fld" id="brandQrWrap" style="display:none;margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:var(--r);background:var(--bg2)">
+              <div class="lbl" data-i18n="lbl.brandQr" style="font-weight:600;color:var(--txt)">✨ 브랜드 QR 최적화</div>
+              <select id="brandQrStyle" style="margin-top:8px">
+                <option value="badge" data-i18n="brand.opt.badge">빅 로고 배지 (넷플릭스·버거킹 스타일)</option>
+                <option value="ring" data-i18n="brand.opt.ring">링 프레임 배지 (Fiverr 스타일)</option>
+                <option value="mono" data-i18n="brand.opt.mono">브랜드 컬러 미니멀</option>
+                <option value="pattern" data-i18n="brand.opt.pattern">로고를 패턴으로 (고급)</option>
+              </select>
+              <button class="btn sec" id="brandQrApply" type="button" style="margin-top:10px;width:100%;flex:none" data-i18n="btn.brandQr">✨ 브랜드 QR로 최적화</button>
+              <div class="hint" data-i18n="hint.brandQr">로고에서 대표 색을 뽑아 모듈·눈 색에 적용하고, 크기·오류정정(H)·타겟 눈 모양을 브랜드 QR 느낌으로 자동 세팅합니다. 적용 후에도 아래 옵션으로 자유롭게 미세조정하세요.</div>
+            </div>
             <label class="fld" id="logoSizeWrap" style="display:none">
               <div class="lbl"><span data-i18n="lbl.logoSize">로고 크기</span> <b id="logoSizeOut">22%</b></div>
-              <input type="range" id="logoSize" min="10" max="35" step="1" value="22" />
+              <input type="range" id="logoSize" min="10" max="45" step="1" value="22" />
             </label>
             <div class="switch" id="logoBgWrap" style="margin-top:14px;display:none">
               <div class="lbl" data-i18n="lbl.logoPad" style="margin:0">로고 뒤 배경 패딩</div>
@@ -1141,7 +1153,7 @@
     </nav>
     <div style="margin-top:10px">Aesthetic QR Studio · <span data-i18n="foot.tag">아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)</span></div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · 빌드 <b id="verTag">2026.09.03-c</b></div>
+    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · 빌드 <b id="verTag">2026.09.10-a</b></div>
   </footer>
 </div>
 
@@ -4114,7 +4126,7 @@ function render(g2, exportSize){
   // logo / centre object — sits cleanly in the QR centre (aspect-ratio preserved) on top of any
   // art background. Over art we always lay a white quiet-zone card so the object reads crisply and
   // the centre still scans (relies on ECC-H); otherwise the card honours the logoPad toggle.
-  if (S.logo && !S.aiArt){
+  if (S.logo && !S.aiArt && S.artImg!==S.logo){   // skip centred draw when the logo IS the art pattern
     var ls = (S.logoSize/100) * (n*unit);
     var liw = S.logo.naturalWidth||S.logo.width||1, lih = S.logo.naturalHeight||S.logo.height||1;
     var lscale = Math.min(ls/liw, ls/lih);
@@ -4415,6 +4427,18 @@ function drawArtLayer(g, size, n, m){
 function drawEyeWithHole(g, px, py, unit, style, fillStyle){
   var outer = unit*7;
   var bg = S.transparent ? null : S.bg;
+  // "target": bullseye finder (thin outer ring + centred dot) — the look used by most
+  // brand/logo QRs (Netflix, Burger King, Fiverr-style). Distinct from "circle".
+  if (style==="target"){
+    var cx=px+outer/2, cy=py+outer/2;
+    g.save();
+    g.fillStyle=fillStyle; g.beginPath(); g.arc(cx,cy,outer*0.50,0,Math.PI*2); g.fill();      // outer disc
+    if(bg){ g.fillStyle=bg; } else { g.globalCompositeOperation="destination-out"; g.fillStyle="#000"; }
+    g.beginPath(); g.arc(cx,cy,outer*0.395,0,Math.PI*2); g.fill();                             // ring gap (thin ring)
+    g.globalCompositeOperation="source-over";
+    g.fillStyle=fillStyle; g.beginPath(); g.arc(cx,cy,outer*0.215,0,Math.PI*2); g.fill();      // centre dot
+    g.restore(); return;
+  }
   // outer solid block in fill color, then bg ring hole, then fill inner block
   g.save();
   // outer
@@ -4436,6 +4460,7 @@ function pathEyeShape(g, x, y, s, style, level){
   g.beginPath();
   switch(style){
     case "circle":
+    case "target":
       g.arc(x+s/2,y+s/2,s/2,0,Math.PI*2); break;
     case "rounded":
       roundRect(g,x,y,s,s, s*(level===2?0.28:0.30)); break;
@@ -4949,17 +4974,85 @@ $("logoFile").addEventListener("change",function(e){
     $("logoSizeWrap").style.display="block";
     $("logoBgWrap").style.display="flex";
     $("logoClear").style.display="block";
+    $("brandQrWrap").style.display="block";
     $("logoLabel").textContent="✓ 로고 업로드됨 — 변경하려면 클릭";
     if(S.ecc!=="H"){ /* suggest */ toast("로고 사용 시 ECC-H 권장"); }
     rerender();
   };
   img.src=URL.createObjectURL(f);
 });
+
+// ---- Brand-QR optimizer: turn an uploaded logo into a Netflix/Burger-King/Fiverr-style QR ----
+// pulls the dominant brand colour from the logo and applies a curated "brand QR" combination
+// (big centred badge, target eyes, dense dots, ECC-H) in one click.
+function dominantColor(img){
+  try{
+    var c=document.createElement("canvas"), N=44; c.width=N; c.height=N;
+    var g=c.getContext("2d"); g.drawImage(img,0,0,N,N);
+    var d=g.getImageData(0,0,N,N).data, buckets={};
+    for(var i=0;i<d.length;i+=4){
+      var r=d[i],gg=d[i+1],b=d[i+2],a=d[i+3];
+      if(a<130) continue;                                   // skip transparent
+      var mx=Math.max(r,gg,b), mn=Math.min(r,gg,b);
+      if(mx>238 && mn>238) continue;                        // skip near-white
+      if(mx<26) continue;                                   // skip near-black
+      if(mx-mn<28) continue;                                // skip greys (low saturation)
+      var key=(r>>5)+","+(gg>>5)+","+(b>>5);                // quantise to 3-bit buckets
+      var e=buckets[key]||(buckets[key]={n:0,r:0,g:0,b:0});
+      e.n++; e.r+=r; e.g+=gg; e.b+=b;
+    }
+    var best=null; for(var k in buckets){ if(!best||buckets[k].n>best.n) best=buckets[k]; }
+    if(!best) return null;
+    var R=Math.round(best.r/best.n),G=Math.round(best.g/best.n),B=Math.round(best.b/best.n);
+    return "#"+[R,G,B].map(function(v){return ("0"+v.toString(16)).slice(-2);}).join("");
+  }catch(e){ return null; }
+}
+// darken a brand colour just enough that QR modules keep strong contrast on white — a light
+// brand colour (yellow, sky blue…) would otherwise render an unscannable code.
+function darkenForScan(hex){
+  var m=/^#?([0-9a-fA-F]{6})$/.exec(hex||""); if(!m) return "#111111";
+  var v=parseInt(m[1],16), r=(v>>16)&255, g=(v>>8)&255, b=v&255;
+  var L=0.2126*r+0.7152*g+0.0722*b, T=72;   // target max luminance for modules
+  if(L>T){ var f=T/L; r=Math.round(r*f); g=Math.round(g*f); b=Math.round(b*f); }
+  return "#"+[r,g,b].map(function(x){return ("0"+x.toString(16)).slice(-2);}).join("");
+}
+function applyBrandQr(){
+  if(!S.logo){ toast(t("brand.needLogo")||"먼저 로고를 업로드하세요"); return; }
+  var style=$("brandQrStyle").value;
+  var col=dominantColor(S.logo)||"#111111";   // true brand colour (for the ring/frame)
+  var mod=darkenForScan(col);                  // scan-safe module colour
+  setEcc("H");
+  S.fill="solid"; S.fg1=mod; S.fg2=mod;
+  S.transparent=false; if(!S.bg) S.bg="#ffffff";
+  S.frameOn=false;
+  if(style==="pattern"){
+    // route the logo into the art layer → the QR dots form the logo (Netflix/FedEx wordmark look)
+    S.artImg=S.logo; S.artIsVideo=false; S.artIsGif=false; S.artInvert=false;
+    S.artVisibility=58; S.artDensity=6; S.dot="dots"; S.eye="target";
+  } else {
+    S.artImg=null; S.dot="dots"; S.eye="target"; S.logoPad=true;
+    if(style==="badge"){ S.logoSize=30; }
+    else if(style==="ring"){ S.logoSize=30; S.frameOn=true; S.frameStyle="circle"; S.frameMode="solid"; S.frameBg1=col; }  // ring shows the true brand colour
+    else if(style==="mono"){ S.logoSize=22; }
+  }
+  // refresh the affected controls (without hiding the logo panel like syncStudioUI would)
+  $("fg1").value=S.fg1; $("fg2").value=S.fg2; $("bg").value=S.bg;
+  $("transparent").checked=false; $("bgWrap").style.display="block";
+  setSeg("fillSeg","fill",S.fill); setSeg("dotSeg","dot",S.dot); setSeg("eyeSeg","eye",S.eye);
+  $("fg2Wrap").style.display=S.fill!=="solid"?"block":"none";
+  $("logoSize").value=S.logoSize; $("logoSizeOut").textContent=S.logoSize+"%"; $("logoPad").checked=S.logoPad;
+  $("frameOn").checked=S.frameOn; $("frameControls").style.display=S.frameOn?"block":"none";
+  if(typeof frameStyleVis==="function"){ setSeg("frameStyleSeg","fstyle",S.frameStyle); frameStyleVis(); }
+  rerender();
+  toast(t("brand.applied")||"브랜드 QR 최적화 적용됨 — 실기기로 스캔 테스트 권장");
+}
+$("brandQrApply").addEventListener("click", applyBrandQr);
 $("logoSize").addEventListener("input",function(e){S.logoSize=+e.target.value;$("logoSizeOut").textContent=e.target.value+"%";rerender();});
 $("logoPad").addEventListener("change",function(e){S.logoPad=e.target.checked;rerender();});
 $("logoClear").addEventListener("click",function(){
+  if(S.artImg===S.logo) S.artImg=null;   // if the logo was used as the art pattern, clear that too
   S.logo=null; $("logoFile").value="";
-  $("logoSizeWrap").style.display="none"; $("logoBgWrap").style.display="none"; $("logoClear").style.display="none";
+  $("logoSizeWrap").style.display="none"; $("logoBgWrap").style.display="none"; $("logoClear").style.display="none"; $("brandQrWrap").style.display="none";
   $("logoLabel").textContent="＋ 로고 이미지 업로드 (PNG·JPG·SVG)";
   rerender();
 });
@@ -6452,6 +6545,16 @@ $("saveMyQr").addEventListener("click",saveCurrentQr);
 var I18N = {
   "nav.gallery":{ko:"갤러리",en:"Gallery",zh:"图库",ja:"ギャラリー"},
   "tip.theme":{ko:"라이트 / 다크 테마 전환",en:"Toggle light / dark theme",zh:"切换浅色 / 深色主题",ja:"ライト / ダークテーマ切替"},
+  "seg.eye.target":{ko:"타겟",en:"Target",zh:"靶心",ja:"ターゲット"},
+  "lbl.brandQr":{ko:"✨ 브랜드 QR 최적화",en:"✨ Brand QR optimizer",zh:"✨ 品牌二维码优化",ja:"✨ ブランドQR最適化"},
+  "btn.brandQr":{ko:"✨ 브랜드 QR로 최적화",en:"✨ Optimize as brand QR",zh:"✨ 优化为品牌二维码",ja:"✨ ブランドQRに最適化"},
+  "brand.opt.badge":{ko:"빅 로고 배지 (넷플릭스·버거킹 스타일)",en:"Big logo badge (Netflix / Burger King style)",zh:"大徽标（Netflix / 汉堡王风格）",ja:"ビッグロゴバッジ（Netflix / バーガーキング風）"},
+  "brand.opt.ring":{ko:"링 프레임 배지 (Fiverr 스타일)",en:"Ring-frame badge (Fiverr style)",zh:"环形边框徽标（Fiverr 风格）",ja:"リングフレームバッジ（Fiverr風）"},
+  "brand.opt.mono":{ko:"브랜드 컬러 미니멀",en:"Brand-color minimal",zh:"品牌色极简",ja:"ブランドカラー ミニマル"},
+  "brand.opt.pattern":{ko:"로고를 패턴으로 (고급)",en:"Logo as pattern (advanced)",zh:"徽标作为图案（高级）",ja:"ロゴをパターンに（上級）"},
+  "hint.brandQr":{ko:"로고에서 대표 색을 뽑아 모듈·눈 색에 적용하고, 크기·오류정정(H)·타겟 눈 모양을 브랜드 QR 느낌으로 자동 세팅합니다. 적용 후에도 아래 옵션으로 자유롭게 미세조정하세요.",en:"Pulls the dominant color from your logo, applies it to the modules & eyes, and auto-sets size, ECC-H and target eyes for a brand-QR look. Fine-tune afterwards with the options below.",zh:"从徽标中提取主色应用到模块和定位点，并自动设置尺寸、纠错(H)和靶心定位点，营造品牌二维码效果。之后可用下方选项微调。",ja:"ロゴから主要色を抽出してモジュール・目に適用し、サイズ・誤り訂正(H)・ターゲット目をブランドQR風に自動設定します。適用後は下のオプションで微調整できます。"},
+  "brand.needLogo":{ko:"먼저 로고를 업로드하세요",en:"Upload a logo first",zh:"请先上传徽标",ja:"先にロゴをアップロードしてください"},
+  "brand.applied":{ko:"브랜드 QR 최적화 적용됨 — 실기기로 스캔 테스트 권장",en:"Brand QR applied — test-scan on a real device",zh:"已应用品牌二维码 — 建议用真机扫描测试",ja:"ブランドQRを適用 — 実機でスキャンテスト推奨"},
   "foot.about":{ko:"소개",en:"About",zh:"关于",ja:"紹介"},
   "foot.privacy":{ko:"개인정보처리방침",en:"Privacy Policy",zh:"隐私政策",ja:"プライバシー"},
   "foot.terms":{ko:"이용약관",en:"Terms of Use",zh:"使用条款",ja:"利用規約"},
