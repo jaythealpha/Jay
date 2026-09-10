@@ -751,6 +751,7 @@
               <div class="seg" id="dotSeg">
                 <button data-dot="square" class="on"><span data-i18n="seg.dot.square">사각</span></button>
                 <button data-dot="rounded"><span data-i18n="seg.dot.rounded">둥근</span></button>
+                <button data-dot="liquid"><span data-i18n="seg.dot.liquid">리퀴드</span></button>
                 <button data-dot="dots"><span data-i18n="seg.dot.dots">점</span></button>
                 <button data-dot="classy"><span data-i18n="seg.dot.classy">클래시</span></button>
                 <button data-dot="diamond"><span data-i18n="seg.dot.diamond">다이아</span></button>
@@ -767,6 +768,14 @@
                 <button data-eye="leaf"><span data-i18n="seg.eye.leaf">잎사귀</span></button>
                 <button data-eye="target"><span data-i18n="seg.eye.target">타겟</span></button>
               </div>
+            </label>
+            <div class="switch" style="margin-top:12px">
+              <div class="lbl" data-i18n="lbl.eyeColorOn" style="margin:0">눈 색 강조 (브랜드 포인트)</div>
+              <label class="toggle"><input type="checkbox" id="eyeColorOn" /><span></span></label>
+            </div>
+            <label class="fld" id="eyeColorWrap" style="display:none;margin-top:10px">
+              <div class="lbl" data-i18n="lbl.eyeColor">눈 색</div>
+              <input type="color" id="eyeColor" value="#e11d48" />
             </label>
             <label class="fld">
               <div class="lbl"><span data-i18n="lbl.margin">여백(Quiet zone)</span> <b id="marginOut">4</b></div>
@@ -820,6 +829,7 @@
               <div class="lbl" data-i18n="lbl.brandQr" style="font-weight:600;color:var(--txt)">✨ 브랜드 QR 최적화</div>
               <select id="brandQrStyle" style="margin-top:8px">
                 <option value="badge" data-i18n="brand.opt.badge">빅 로고 배지 (넷플릭스·버거킹 스타일)</option>
+                <option value="gradient" data-i18n="brand.opt.gradient">브랜드 듀오톤 그라디언트</option>
                 <option value="ring" data-i18n="brand.opt.ring">링 프레임 배지 (Fiverr 스타일)</option>
                 <option value="mono" data-i18n="brand.opt.mono">브랜드 컬러 미니멀</option>
                 <option value="pattern" data-i18n="brand.opt.pattern">로고를 패턴으로 (고급)</option>
@@ -874,6 +884,18 @@
               <div class="lbl" data-i18n="lbl.labelText">라벨 텍스트</div>
               <input type="text" id="labelText" value="SCAN ME" maxlength="24" />
             </label>
+            <div class="fld">
+              <div class="lbl" data-i18n="lbl.ctaPreset">스캔 유도 문구 (클릭해서 적용)</div>
+              <div class="chips" id="ctaChips">
+                <button type="button" class="chip" data-cta="SCAN ME">SCAN ME</button>
+                <button type="button" class="chip" data-cta="스캔하세요">스캔하세요</button>
+                <button type="button" class="chip" data-cta="👆 지금 스캔">👆 지금 스캔</button>
+                <button type="button" class="chip" data-cta="MENU ▸ 스캔">MENU ▸ 스캔</button>
+                <button type="button" class="chip" data-cta="이벤트 참여 ▸">이벤트 참여 ▸</button>
+                <button type="button" class="chip" data-cta="＠ FOLLOW">＠ FOLLOW</button>
+                <button type="button" class="chip" data-cta="SCAN TO WIN 🎁">SCAN TO WIN 🎁</button>
+              </div>
+            </div>
             <label class="fld">
               <div class="lbl"><span data-i18n="lbl.labelSize">글자 크기</span> <b id="labelSizeOut">100%</b></div>
               <input type="range" id="labelSize" min="40" max="180" step="5" value="100" />
@@ -1153,7 +1175,7 @@
     </nav>
     <div style="margin-top:10px">Aesthetic QR Studio · <span data-i18n="foot.tag">아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)</span></div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · 빌드 <b id="verTag">2026.09.10-a</b></div>
+    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · 빌드 <b id="verTag">2026.09.10-b</b></div>
   </footer>
 </div>
 
@@ -3525,6 +3547,8 @@ var S = {
   ecc: "H",
   dot: "square",
   eye: "square",
+  eyeColorOn: false,
+  eyeColor: "#e11d48",
   margin: 4,
   fill: "solid",
   fg1: "#7c5cff",
@@ -3623,7 +3647,7 @@ function hexToRgb(h){
   h=h.replace('#',''); if(h.length===3) h=h.split('').map(function(x){return x+x;}).join('');
   return [parseInt(h.substr(0,2),16),parseInt(h.substr(2,2),16),parseInt(h.substr(4,2),16)];
 }
-function luminance(h){ var c=hexToRgb(h); return (0.2126*c[0]+0.7152*c[1]+0.4152*c[2]); }
+function luminance(h){ var c=hexToRgb(h); return (0.2126*c[0]+0.7152*c[1]+0.0722*c[2]); }  // Rec.709 luma (blue coeff was mistyped 0.4152)
 function contrastRatio(a,b){
   var la=luminance(a)/255, lb=luminance(b)/255;
   var hi=Math.max(la,lb), lo=Math.min(la,lb);
@@ -3852,6 +3876,10 @@ function drawModule(g, x, y, s, style, nb){
       g.beginPath(); g.arc(x+s/2, y+s/2, s*0.5, 0, Math.PI*2); g.fill(); break;
     case "rounded":
       drawConnected(g, x, y, s, nb, s*0.35); break;
+    case "liquid":
+      // fully-rounded connected blobs — a pronounced organic/liquid look (stays scan-safe:
+      // adjacent cells still merge, isolated cells become circles)
+      drawConnected(g, x, y, s, nb, s*0.5); break;
     case "classy":
       // leaf-style: two opposite corners rounded, two sharp — distinct from dots/rounded
       classyRect(g, x, y, s+0.4, s+0.4, s*0.55); g.fill(); break;
@@ -4427,6 +4455,7 @@ function drawArtLayer(g, size, n, m){
 function drawEyeWithHole(g, px, py, unit, style, fillStyle){
   var outer = unit*7;
   var bg = S.transparent ? null : S.bg;
+  if (S.eyeColorOn && S.eyeColor) fillStyle = S.eyeColor;   // brand accent on the finder eyes
   // "target": bullseye finder (thin outer ring + centred dot) — the look used by most
   // brand/logo QRs (Netflix, Burger King, Fiverr-style). Distinct from "circle".
   if (style==="target"){
@@ -4561,6 +4590,7 @@ function svgEye(px,py,U,style,fill){
     return '<rect x="'+x+'" y="'+y+'" width="'+s+'" height="'+s+'"';
   }
   var bg = S.transparent ? "none" : S.bg;
+  if (S.eyeColorOn && S.eyeColor) fill = S.eyeColor;   // brand accent on eyes (SVG export)
   var out = shape(px,py,outer,style)+' fill="'+fill+'"/>';
   var mid = shape(px+U,py+U,outer-2*U,style)+' fill="'+bg+'"/>';
   var inn = shape(px+2*U,py+2*U,outer-4*U,style)+' fill="'+fill+'"/>';
@@ -4571,12 +4601,37 @@ function leafPath(x,y,w,h,r){
 }
 function escapeXml(s){ return s.replace(/[<>&"']/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c];}); }
 
+// ---------- scannability score (0-100) ----------
+// A single confidence number derived from the same risk signals we warn on: contrast,
+// logo coverage vs ECC headroom, decorative modules, ECC level, and art visibility.
+function scanScore(){
+  var s=100;
+  if(S.aiArt) return 82;                                   // server-generated, tuned for scan
+  if(S.artImg){
+    s = 100 - Math.max(0, (S.artVisibility-45))*0.9;       // more image = riskier
+    if(S.ecc!=="H") s-=15;
+    return Math.max(0,Math.min(100,Math.round(s)));
+  }
+  var cr1 = S.transparent ? 6 : contrastRatio(S.fg1,S.bg);
+  var cr = (S.fill==="solid") ? cr1 : Math.min(cr1, S.transparent?6:contrastRatio(S.fg2,S.bg));  // fg2 only matters for gradients
+  if(cr<1.8) s-=55; else if(cr<2.6) s-=24; else if(cr<3.2) s-=10; else if(cr<4.5) s-=3;
+  if(S.logo){ var maxLogo=({L:14,M:18,Q:24,H:30})[S.ecc], ratio=S.logoSize/maxLogo;
+    if(ratio>1.05) s-=32; else if(ratio>0.9) s-=16; else if(ratio>0.75) s-=6; }
+  if(S.dot==="diamond"||S.dot==="classy"||S.dot==="star") s-=8;
+  if(S.eyeColorOn && S.eyeColor){ var ce=contrastRatio(S.eyeColor,S.bg); if(ce<2.6) s-=18; else if(ce<3.5) s-=6; }
+  s -= ({H:0,Q:4,M:11,L:20})[S.ecc]||0;
+  if(S.transparent) s-=4;
+  return Math.max(0,Math.min(100,Math.round(s)));
+}
+function scoreBand(v){ return v>=85?{k:"우수",c:"var(--mut)"}:v>=70?{k:"양호",c:"var(--mut)"}:v>=50?{k:"주의",c:"var(--txt)"}:{k:"위험",c:"var(--term-red)"}; }
+
 // ---------- scannability meter ----------
 function updateMeta(){
   var data = getMatrix();
-  if(!data){ $("metaVer").textContent="—"; $("metaScan").textContent=t("dyn.overflow"); $("metaScan").style.color="#ff5c8a"; return; }
+  if(!data){ $("metaVer").textContent="—"; $("metaScan").textContent=t("dyn.overflow"); $("metaScan").style.color="var(--term-red)"; return; }
   $("metaVer").textContent = t("dyn.ver")+" "+data.version+" · "+data.n+"×"+data.n;
-  $("metaEcc").textContent = "ECC "+S.ecc;
+  var sc=scanScore(), band=scoreBand(sc);
+  $("metaEcc").innerHTML = "ECC "+S.ecc+" · <b style=\"color:"+band.c+"\">스캔 "+sc+"</b>";
   if (S.aiArt){
     $("metaScan").textContent=t("dyn.aiApplied");
     $("metaScan").style.color="var(--txt)";
@@ -4591,7 +4646,7 @@ function updateMeta(){
   }
   var warn=[];
   var cr = S.transparent ? 5 : contrastRatio(S.fg1, S.bg);
-  var cr2 = S.transparent ? 5 : contrastRatio(S.fg2, S.bg);
+  var cr2 = (S.fill==="solid"||S.transparent) ? cr : contrastRatio(S.fg2, S.bg);  // fg2 only affects gradients
   if (Math.min(cr,cr2) < 2.6) warn.push(t("dyn.contrastLow"));
   var maxLogo = ({L:14,M:18,Q:24,H:30})[S.ecc];
   if (S.logo && S.logoSize > maxLogo-4) warn.push(t("dyn.logoBig"));
@@ -4964,6 +5019,8 @@ $("transparent").addEventListener("change",function(e){
   $("bgWrap").style.display=e.target.checked?"none":"block";
   rerender();
 });
+$("eyeColorOn").addEventListener("change",function(e){ S.eyeColorOn=e.target.checked; $("eyeColorWrap").style.display=e.target.checked?"block":"none"; rerender(); });
+$("eyeColor").addEventListener("input",function(e){ S.eyeColor=e.target.value; rerender(); });
 
 // logo
 $("logoFile").addEventListener("change",function(e){
@@ -5009,12 +5066,32 @@ function dominantColor(img){
 }
 // darken a brand colour just enough that QR modules keep strong contrast on white — a light
 // brand colour (yellow, sky blue…) would otherwise render an unscannable code.
-function darkenForScan(hex){
+function darkenForScan(hex,T){
+  T=T||72;   // target max luminance for modules (lower = safer contrast)
   var m=/^#?([0-9a-fA-F]{6})$/.exec(hex||""); if(!m) return "#111111";
   var v=parseInt(m[1],16), r=(v>>16)&255, g=(v>>8)&255, b=v&255;
-  var L=0.2126*r+0.7152*g+0.0722*b, T=72;   // target max luminance for modules
+  var L=0.2126*r+0.7152*g+0.0722*b;
   if(L>T){ var f=T/L; r=Math.round(r*f); g=Math.round(g*f); b=Math.round(b*f); }
   return "#"+[r,g,b].map(function(x){return ("0"+x.toString(16)).slice(-2);}).join("");
+}
+// top-K distinct brand colours from a logo (falls back to shades of the dominant one)
+function dominantColors(img,k){
+  var first=dominantColor(img)||"#111111";
+  try{
+    var c=document.createElement("canvas"), N=44; c.width=N; c.height=N;
+    var g=c.getContext("2d"); g.drawImage(img,0,0,N,N);
+    var d=g.getImageData(0,0,N,N).data, buckets={};
+    for(var i=0;i<d.length;i+=4){ var r=d[i],gg=d[i+1],b=d[i+2],a=d[i+3];
+      if(a<130) continue; var mx=Math.max(r,gg,b), mn=Math.min(r,gg,b);
+      if(mx>238&&mn>238) continue; if(mx<26) continue; if(mx-mn<28) continue;
+      var key=(r>>5)+","+(gg>>5)+","+(b>>5); var e=buckets[key]||(buckets[key]={n:0,r:0,g:0,b:0});
+      e.n++; e.r+=r; e.g+=gg; e.b+=b; }
+    var arr=Object.keys(buckets).map(function(kk){var e=buckets[kk];return {n:e.n,hex:"#"+[e.r,e.g,e.b].map(function(v){return ("0"+Math.round(v/e.n).toString(16)).slice(-2);}).join("")};});
+    arr.sort(function(a,b){return b.n-a.n;});
+    var out=[]; for(var j=0;j<arr.length && out.length<k;j++){ if(out.indexOf(arr[j].hex)<0) out.push(arr[j].hex); }
+    while(out.length<k) out.push(first);
+    return out;
+  }catch(e){ var o=[]; while(o.length<k) o.push(first); return o; }
 }
 function applyBrandQr(){
   if(!S.logo){ toast(t("brand.needLogo")||"먼저 로고를 업로드하세요"); return; }
@@ -5025,7 +5102,11 @@ function applyBrandQr(){
   S.fill="solid"; S.fg1=mod; S.fg2=mod;
   S.transparent=false; if(!S.bg) S.bg="#ffffff";
   S.frameOn=false;
-  if(style==="pattern"){
+  if(style==="gradient"){
+    var cs=dominantColors(S.logo,2);
+    S.artImg=null; S.fill="linear"; S.fg1=darkenForScan(cs[0],54); S.fg2=darkenForScan(cs[1],54); S.angle=120;
+    S.dot="dots"; S.eye="target"; S.logoPad=true; S.logoSize=25;
+  } else if(style==="pattern"){
     // route the logo into the art layer → the QR dots form the logo (Netflix/FedEx wordmark look)
     S.artImg=S.logo; S.artIsVideo=false; S.artIsGif=false; S.artInvert=false;
     S.artVisibility=58; S.artDensity=6; S.dot="dots"; S.eye="target";
@@ -5040,6 +5121,7 @@ function applyBrandQr(){
   $("transparent").checked=false; $("bgWrap").style.display="block";
   setSeg("fillSeg","fill",S.fill); setSeg("dotSeg","dot",S.dot); setSeg("eyeSeg","eye",S.eye);
   $("fg2Wrap").style.display=S.fill!=="solid"?"block":"none";
+  $("angleWrap").style.display=S.fill==="linear"?"block":"none"; $("angle").value=S.angle; $("angleOut").textContent=S.angle+"°";
   $("logoSize").value=S.logoSize; $("logoSizeOut").textContent=S.logoSize+"%"; $("logoPad").checked=S.logoPad;
   $("frameOn").checked=S.frameOn; $("frameControls").style.display=S.frameOn?"block":"none";
   if(typeof frameStyleVis==="function"){ setSeg("frameStyleSeg","fstyle",S.frameStyle); frameStyleVis(); }
@@ -5231,6 +5313,8 @@ $("animSpeed").addEventListener("input",function(e){S.animSpeed=+e.target.value;
 // label
 $("labelOn").addEventListener("change",function(e){S.labelOn=e.target.checked;rerender();});
 $("labelText").addEventListener("input",function(e){S.labelText=e.target.value;rerender();});
+$("ctaChips").addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return;
+  S.labelOn=true; S.labelText=b.dataset.cta; $("labelOn").checked=true; $("labelText").value=b.dataset.cta; rerender(); });
 $("labelSize").addEventListener("input",function(e){S.labelSize=+e.target.value;$("labelSizeOut").textContent=e.target.value+"%";rerender();});
 $("labelOffset").addEventListener("input",function(e){S.labelOffset=+e.target.value;$("labelOffsetOut").textContent=e.target.value;rerender();});
 
@@ -6005,8 +6089,8 @@ $("featureChips").addEventListener("click",function(e){
 });
 
 // ---------- gallery: categorised presets ----------
-var DKEYS=["fill","fg1","fg2","angle","transparent","bg","dot","eye","margin","ecc","anim","animKind","animSpeed","frameOn","frameStyle","frameMode","frameBg1","frameBg2","frameAngle","centerMode","centerText","centerColor","centerScale","centerBadge","centerMark","artVisibility","artDensity","artInvert","labelOn","labelText","labelSize","labelPos","labelOffset"];
-var DDEF={fill:"solid",fg1:"#111111",fg2:"#111111",angle:45,transparent:false,bg:"#ffffff",dot:"square",eye:"square",margin:4,ecc:"H",anim:false,animKind:"shine",animSpeed:1,frameOn:false,frameStyle:"card",frameMode:"solid",frameBg1:"#0e7a3b",frameBg2:"#0b3d22",frameAngle:135,centerMode:"none",centerText:"",centerColor:"#111111",centerScale:24,centerBadge:"pill",centerMark:"monogram",artVisibility:70,artDensity:6,artInvert:false,labelOn:false,labelText:"SCAN ME",labelSize:100,labelPos:"bottom",labelOffset:0};
+var DKEYS=["fill","fg1","fg2","angle","transparent","bg","dot","eye","eyeColorOn","eyeColor","margin","ecc","anim","animKind","animSpeed","frameOn","frameStyle","frameMode","frameBg1","frameBg2","frameAngle","centerMode","centerText","centerColor","centerScale","centerBadge","centerMark","artVisibility","artDensity","artInvert","labelOn","labelText","labelSize","labelPos","labelOffset"];
+var DDEF={fill:"solid",fg1:"#111111",fg2:"#111111",angle:45,transparent:false,bg:"#ffffff",dot:"square",eye:"square",eyeColorOn:false,eyeColor:"#e11d48",margin:4,ecc:"H",anim:false,animKind:"shine",animSpeed:1,frameOn:false,frameStyle:"card",frameMode:"solid",frameBg1:"#0e7a3b",frameBg2:"#0b3d22",frameAngle:135,centerMode:"none",centerText:"",centerColor:"#111111",centerScale:24,centerBadge:"pill",centerMark:"monogram",artVisibility:70,artDensity:6,artInvert:false,labelOn:false,labelText:"SCAN ME",labelSize:100,labelPos:"bottom",labelOffset:0};
 function resetDesign(fullArt){ for(var k in DDEF) S[k]=DDEF[k]; S.logo=null; S.artImg=null; S.artIsVideo=false; S.artIsGif=false; S.aiArt=null; if(fullArt && typeof removeArtVid==="function") removeArtVid(); }
 // load real web images (CORS-enabled host) for image-based gallery presets
 var IMGCACHE={};
@@ -6442,6 +6526,7 @@ function syncStudioUI(){
   $("angleOut").textContent=S.angle+"°";
   $("transparent").checked=S.transparent; $("bgWrap").style.display=S.transparent?"none":"block";
   setSeg("fillSeg","fill",S.fill); setSeg("dotSeg","dot",S.dot); setSeg("eyeSeg","eye",S.eye);
+  $("eyeColorOn").checked=!!S.eyeColorOn; $("eyeColor").value=S.eyeColor||"#e11d48"; $("eyeColorWrap").style.display=S.eyeColorOn?"block":"none";
   $("fg2Wrap").style.display = S.fill!=="solid"?"block":"none";
   $("angleWrap").style.display = S.fill==="linear"?"block":"none";
   var eccMap={L:"7%",M:"15%",Q:"25%",H:"30%"};
@@ -6546,6 +6631,11 @@ var I18N = {
   "nav.gallery":{ko:"갤러리",en:"Gallery",zh:"图库",ja:"ギャラリー"},
   "tip.theme":{ko:"라이트 / 다크 테마 전환",en:"Toggle light / dark theme",zh:"切换浅色 / 深色主题",ja:"ライト / ダークテーマ切替"},
   "seg.eye.target":{ko:"타겟",en:"Target",zh:"靶心",ja:"ターゲット"},
+  "seg.dot.liquid":{ko:"리퀴드",en:"Liquid",zh:"液态",ja:"リキッド"},
+  "lbl.eyeColorOn":{ko:"눈 색 강조 (브랜드 포인트)",en:"Accent eye color (brand)",zh:"定位点强调色（品牌）",ja:"目の色を強調（ブランド）"},
+  "lbl.eyeColor":{ko:"눈 색",en:"Eye color",zh:"定位点颜色",ja:"目の色"},
+  "lbl.ctaPreset":{ko:"스캔 유도 문구 (클릭해서 적용)",en:"Scan CTA (click to apply)",zh:"扫描引导文案（点击应用）",ja:"スキャン誘導コピー（クリックで適用）"},
+  "brand.opt.gradient":{ko:"브랜드 듀오톤 그라디언트",en:"Brand duotone gradient",zh:"品牌双色渐变",ja:"ブランド デュオトーン グラデーション"},
   "lbl.brandQr":{ko:"✨ 브랜드 QR 최적화",en:"✨ Brand QR optimizer",zh:"✨ 品牌二维码优化",ja:"✨ ブランドQR最適化"},
   "btn.brandQr":{ko:"✨ 브랜드 QR로 최적화",en:"✨ Optimize as brand QR",zh:"✨ 优化为品牌二维码",ja:"✨ ブランドQRに最適化"},
   "brand.opt.badge":{ko:"빅 로고 배지 (넷플릭스·버거킹 스타일)",en:"Big logo badge (Netflix / Burger King style)",zh:"大徽标（Netflix / 汉堡王风格）",ja:"ビッグロゴバッジ（Netflix / バーガーキング風）"},
