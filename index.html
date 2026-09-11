@@ -740,6 +740,7 @@
                 <button data-p="fantasy castle floating among clouds, epic scale, dramatic lighting, concept art, highly detailed"><span data-i18n="sty.fantasy">판타지</span></button>
               </div>
             </label>
+            <div id="aiTrialInfo" style="margin-top:10px;font-size:12px;font-weight:600;color:var(--mut);text-align:center"></div>
             <div class="row2" style="margin-top:8px">
               <button class="btn" id="aiGo" data-i18n="btn.aiGo">✨ AI로 생성 (5~30초)</button>
               <button class="btn sec" id="aiClear" style="display:none" data-i18n="btn.aiClear">AI 아트 제거</button>
@@ -1180,7 +1181,7 @@
     </nav>
     <div style="margin-top:10px">Aesthetic QR Studio · <span data-i18n="foot.tag">아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)</span></div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · 빌드 <b id="verTag">2026.09.10-c</b></div>
+    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · 빌드 <b id="verTag">2026.09.11-a</b></div>
   </footer>
 </div>
 
@@ -5247,7 +5248,7 @@ $("artClear").addEventListener("click",clearArt);
 // create → poll → client-side jsQR scan verification → auto-retry with higher
 // conditioning scale on failure. The token stays server-side; the browser only
 // talks to our own /api endpoint.
-var AI = { busy:false, tries:0 };
+var AI = { busy:false, tries:0, counted:false };
 function aiStatus(t){ $("aiStatus").innerHTML=t; }
 function aiFail(d){
   AI.busy=false; $("aiGo").disabled=false;
@@ -5299,6 +5300,7 @@ function aiVerify(url, prompt, scale){
       return;
     }
     S.aiArt=img; AI.busy=false; $("aiGo").disabled=false; $("aiClear").style.display="block";
+    if(!AI.counted){ AI.counted=true; aiBumpTrial(); }   // one successful user generation = one free trial used (retries don't re-count)
     aiStatus(okScan===true ? "✅ 완료 — 스캔 검증 통과! PNG로 저장하세요."
            : okScan===false ? "✅ 생성 완료 — 자동 검증은 실패했지만 휴대폰 스캔은 될 수 있어요. 안 되면 다시 생성하세요."
            : "✅ 생성 완료 — 휴대폰으로 스캔 확인을 권장합니다.");
@@ -5310,9 +5312,14 @@ function aiVerify(url, prompt, scale){
 }
 $("aiGo").addEventListener("click",function(){
   if(AI.busy) return;
+  // AI art is the only feature with a real per-use server cost → gate it: free trials, then Pro.
+  if(!isPro() && aiTrialsLeft()<=0){
+    openPro("aiArt", (t("pro.aiUsedUp")||"AI 아트 무료 체험 {n}회를 모두 사용했습니다. Pro로 무제한 이용하세요.").replace("{n}", PRO.aiFreeTrials));
+    return;
+  }
   var prompt=($("aiPrompt").value||"").trim();
   if(!prompt){ toast("프롬프트를 입력하거나 스타일 프리셋을 클릭하세요"); $("aiPrompt").focus(); return; }
-  AI.busy=true; AI.tries=0; $("aiGo").disabled=true;
+  AI.busy=true; AI.tries=0; AI.counted=false; $("aiGo").disabled=true;
   if(S.ecc!=="H") setEcc("H");
   aiCreate(prompt, 1.1);
 });
@@ -5590,15 +5597,29 @@ var PRO = {
   price:"₩12,900",     // one-time — set to match your MoR product price
   checkoutUrl:"",      // MoR checkout link (empty → "구매 준비 중" toast)
   validateUrl:"",      // MoR license-validate API (empty → DEV offline format check)
-  gate:{ hiresExport:true }   // features requiring Pro. Add more later, e.g. aiArt:true, cleanAnim:true
+  gate:{ hiresExport:true, aiArt:true },  // Pro-gated features. aiArt = Pro required AFTER the free trials below
+  aiFreeTrials:3       // AI art generations a non-Pro visitor gets free (the ONLY feature with a real per-use server cost)
 };
 var PROKEY="aqr_pro_license_v1";
+var AITRIALKEY="aqr_ai_trials_v1";
 function isPro(){ return !!PRO.active; }
 function proGated(f){ return !!PRO.gate[f] && !PRO.active; }
+// ---- AI-art free-trial counter (per browser, localStorage) ----
+function aiTrialsUsed(){ try{ return Math.max(0, parseInt(localStorage.getItem(AITRIALKEY)||"0",10)||0); }catch(e){ return 0; } }
+function aiTrialsLeft(){ return isPro() ? Infinity : Math.max(0, PRO.aiFreeTrials - aiTrialsUsed()); }
+function aiBumpTrial(){ if(isPro()) return; try{ localStorage.setItem(AITRIALKEY, String(aiTrialsUsed()+1)); }catch(e){} refreshAiTrialUI(); }
+function refreshAiTrialUI(){
+  var el=$("aiTrialInfo"); if(!el) return;
+  if(isPro()){ el.innerHTML = t("ai.trialPro")||"✅ Pro · AI 아트 무제한"; el.style.color="var(--txt)"; return; }
+  var l=aiTrialsLeft();
+  if(l>0){ el.innerHTML = (t("ai.trialLeft")||"AI 아트 무료 체험 {n}회 남음").replace("{n}", l); el.style.color="var(--mut)"; }
+  else { el.innerHTML = t("ai.trialOut")||"무료 체험 종료 — Pro로 무제한 이용"; el.style.color="var(--txt)"; }
+}
 function refreshProUI(){
   var eo=document.querySelector(".export-opts"); if(eo) eo.classList.toggle("free", !PRO.active);
   var pb=$("proBtn"); if(pb){ pb.classList.toggle("on", PRO.active); pb.querySelector("span").textContent = PRO.active ? t("pro.badgeOn") : t("pro.badge"); }
   var pp=$("proPrice"); if(pp) pp.textContent=PRO.price;
+  refreshAiTrialUI();
 }
 function validateLicense(key, cb){
   key=(key||"").trim().toUpperCase();
@@ -5621,7 +5642,7 @@ function loadPro(){
   if(!k) return;
   validateLicense(k, function(ok){ if(ok){ PRO.active=true; refreshProUI(); } else { try{ localStorage.removeItem(PROKEY); }catch(e){} } });
 }
-function openPro(feature){ var m=$("proMsg"); if(m){ m.textContent=""; m.className="pro-msg"; } $("proMask").classList.add("show"); }
+function openPro(feature, reason){ var m=$("proMsg"); if(m){ m.textContent=reason||""; m.className="pro-msg"; } $("proMask").classList.add("show"); }
 function closePro(){ $("proMask").classList.remove("show"); }
 $("proBtn").addEventListener("click",function(){ if(PRO.active){ toast(t("pro.thanks")); } else openPro(); });
 $("proClose").addEventListener("click",closePro);
@@ -6969,6 +6990,10 @@ var I18N = {
   "dyn.aiApplied":{ko:'🤖 AI 아트 QR 적용 중 — 디자인 옵션은 반영되지 않습니다 (\'AI 아트 제거\' 후 편집)',en:'🤖 AI art QR active — design options don\'t apply (click \'Remove AI art\' to edit)',zh:'🤖 正在应用 AI 艺术二维码 — 设计选项不生效（点击“移除 AI 艺术”后编辑）',ja:'🤖 AIアートQR適用中 — デザイン設定は反映されません（『AIアートを削除』後に編集）'},
   "dyn.imgArt":{ko:'🖼️ 이미지 아트 QR',en:'🖼️ Image art QR',zh:'🖼️ 图片艺术二维码',ja:'🖼️ 画像アートQR'},
   "dyn.poster":{ko:'🪧 포스터 모드 · 선명한 QR',en:'🪧 Poster mode · crisp QR',zh:'🪧 海报模式 · 清晰二维码',ja:'🪧 ポスターモード · くっきりQR'},
+  "ai.trialPro":{ko:'✅ Pro · AI 아트 무제한',en:'✅ Pro · unlimited AI art',zh:'✅ Pro · AI 艺术无限制',ja:'✅ Pro · AIアート無制限'},
+  "ai.trialLeft":{ko:'AI 아트 무료 체험 <b>{n}회</b> 남음',en:'AI art — <b>{n}</b> free trial(s) left',zh:'AI 艺术 — 剩余 <b>{n}</b> 次免费试用',ja:'AIアート — 無料体験 残り<b>{n}</b>回'},
+  "ai.trialOut":{ko:'무료 체험 종료 — <b>Pro</b>로 무제한 이용',en:'Free trials used — go <b>Pro</b> for unlimited',zh:'免费试用已用完 — 升级 <b>Pro</b> 无限使用',ja:'無料体験終了 — <b>Pro</b>で無制限'},
+  "pro.aiUsedUp":{ko:'AI 아트 무료 체험 {n}회를 모두 사용했습니다. Pro로 무제한 이용하세요.',en:'You have used all {n} free AI-art generations. Go Pro for unlimited.',zh:'您已用完 {n} 次免费 AI 艺术生成。升级 Pro 无限使用。',ja:'AIアートの無料体験{n}回をすべて使用しました。Proで無制限に。'},
   "dyn.vidArt":{ko:'🎬 영상 아트 QR',en:'🎬 Video art QR',zh:'🎬 视频艺术二维码',ja:'🎬 動画アートQR'},
   "dyn.expHigh":{ko:'노출도 높음(스캔 테스트 권장)',en:'high visibility (test the scan)',zh:'显示度高（建议测试扫描）',ja:'表示度が高い（スキャンテスト推奨）'},
   "dyn.eccHRec":{ko:'ECC-H 권장',en:'ECC-H recommended',zh:'建议 ECC-H',ja:'ECC-H 推奨'},
