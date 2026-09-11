@@ -1181,7 +1181,7 @@
     </nav>
     <div style="margin-top:10px">Aesthetic QR Studio · <span data-i18n="foot.tag">아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)</span></div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · 빌드 <b id="verTag">2026.09.11-a</b></div>
+    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · 빌드 <b id="verTag">2026.09.11-b</b></div>
   </footer>
 </div>
 
@@ -5252,6 +5252,14 @@ var AI = { busy:false, tries:0, counted:false };
 function aiStatus(t){ $("aiStatus").innerHTML=t; }
 function aiFail(d){
   AI.busy=false; $("aiGo").disabled=false;
+  // server-side trial limit reached → align the client counter and show the Pro upsell
+  if(d && d.error==="trial_exhausted"){
+    try{ localStorage.setItem(AITRIALKEY, String(PRO.aiFreeTrials)); }catch(e){}
+    refreshAiTrialUI();
+    aiStatus(t("ai.trialOut")||"무료 체험 종료 — Pro로 무제한 이용");
+    openPro("aiArt", (d.detail || (t("pro.aiUsedUp")||"AI 아트 무료 체험을 모두 사용했습니다. Pro로 무제한 이용하세요.").replace("{n}", PRO.aiFreeTrials)));
+    return;
+  }
   var msg;
   if(d && d.error==="no_token") msg="서버에 <b>REPLICATE_API_TOKEN</b>이 없습니다 — Vercel → Settings → Environment Variables에 등록 후 <b>재배포</b>하세요.";
   else if(d && d.error==="network") msg="네트워크 오류 — 배포된 사이트(https)에서만 작동합니다. 잠시 후 다시 시도하세요.";
@@ -5262,7 +5270,8 @@ function aiFail(d){
 }
 function aiCreate(prompt, scale){
   aiStatus("생성 요청 중… (대비 "+scale.toFixed(2)+")");
-  fetch("/api/art-qr",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({content:S.content,prompt:prompt,scale:scale})})
+  var lic=""; try{ lic=localStorage.getItem(PROKEY)||""; }catch(e){}
+  fetch("/api/art-qr",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({content:S.content,prompt:prompt,scale:scale,license:lic})})
     .then(function(r){ return r.json(); })
     .then(function(d){ if(d.error){ aiFail(d); return; } aiPoll(d.id, prompt, scale, Date.now()); })
     .catch(function(){ aiFail({error:"network"}); });
