@@ -450,6 +450,7 @@
       <nav class="tabs" id="tabs">
         <button data-view="gallery" class="active" data-i18n="nav.gallery">갤러리</button>
         <button data-view="studio" data-i18n="nav.studio">스튜디오</button>
+        <button data-view="card" data-i18n="nav.card">명함</button>
         <button data-view="ar" data-i18n="nav.ar">AR</button>
         <button data-view="about" data-i18n="nav.guide">사용법</button>
       </nav>
@@ -1028,6 +1029,87 @@
     </div>
   </section>
 
+  <!-- ============ 명함 (Business Card → vCard QR) ============ -->
+  <section class="view" id="view-card">
+    <div class="hero" style="padding:26px 0 20px">
+      <h2 data-i18n-html="card.h">사진 한 장으로 <span class="g">QR 디지털 명함</span></h2>
+      <p data-i18n="card.p">명함 사진을 올리면 정보를 읽어 <b>vCard QR</b>을 만들고, QR이 들어간 명함 디자인으로 완성해 PNG·SVG·PDF로 저장합니다. 스캔하면 상대 폰의 연락처에 바로 저장돼요.</p>
+    </div>
+    <div class="studio">
+      <div class="stage">
+        <div class="canvas-hold" style="min-height:300px;padding:20px">
+          <canvas id="cardPreview" style="width:100%;max-width:460px;height:auto;border-radius:10px;box-shadow:0 0 0 1px var(--line)"></canvas>
+        </div>
+        <div class="actions">
+          <button class="btn" id="cardPng" data-i18n="card.png">PNG 저장</button>
+          <button class="btn sec" id="cardSvg" data-i18n="card.svg">SVG</button>
+          <button class="btn sec" id="cardPdf" data-i18n="card.pdf">PDF</button>
+          <button class="btn sec" id="cardShare" data-i18n="card.share">공유</button>
+        </div>
+        <button class="btn sec" id="cardSave" style="width:100%;margin-top:9px;flex:none" data-i18n="card.save">＋ 디지털 명함 폴더에 저장 (명함 + QR 동시)</button>
+        <div class="stage-tips" id="cardFolderWrap" style="display:none">
+          <h4><span class="sp"></span><span data-i18n="card.folder">디지털 명함 폴더</span></h4>
+          <div id="cardFolder" class="gal-grid" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <details class="grp" open id="grpCardPhoto">
+          <summary><svg class="ic" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"/><circle cx="8.5" cy="10.5" r="1.5" fill="currentColor"/><path d="M4 17l5-4 4 3 3-2 4 3" stroke="currentColor" stroke-width="2"/></svg><span data-i18n="card.grp.photo">명함 사진 (앞 / 뒤)</span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
+          <div class="body">
+            <div class="row2">
+              <label class="file-btn" for="cardFront" id="cardFrontLabel" data-i18n="card.front">＋ 앞면 촬영/업로드</label>
+              <label class="file-btn" for="cardBack" id="cardBackLabel" data-i18n="card.back">＋ 뒷면 (선택)</label>
+            </div>
+            <input type="file" id="cardFront" accept="image/*" capture="environment" />
+            <input type="file" id="cardBack" accept="image/*" capture="environment" />
+            <div id="cardPhotoThumbs" class="logo-examples" style="grid-template-columns:repeat(2,1fr)"></div>
+            <div class="row2" style="margin-top:10px">
+              <button class="btn sec" id="cardOcr" type="button" style="flex:1" data-i18n="card.ocr">📷 자동 인식 (무료)</button>
+              <button class="btn sec" id="cardOcrAi" type="button" style="flex:1" data-i18n="card.ocrAi">✨ 고정밀 (AI)</button>
+            </div>
+            <div class="hint" id="cardOcrStatus" data-i18n="card.ocrHint">사진을 올린 뒤 <b>자동 인식</b>을 누르면 브라우저에서 글자를 읽어 아래 항목을 채웁니다(무료·기기 내 처리). 정확도가 필요하면 <b>고정밀(AI)</b>을 쓰세요. 인식 후 언제든 직접 수정 가능합니다.</div>
+          </div>
+        </details>
+        <details class="grp" open id="grpCardInfo">
+          <summary><svg class="ic" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6" stroke="currentColor" stroke-width="2"/></svg><span data-i18n="card.grp.info">명함 정보</span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
+          <div class="body">
+            <label class="fld"><div class="lbl" data-i18n="card.f.name">이름 *</div><input type="text" id="cdName" maxlength="60" placeholder="홍길동" /></label>
+            <div class="row2">
+              <label class="fld"><div class="lbl" data-i18n="card.f.title">직함</div><input type="text" id="cdTitle" maxlength="60" placeholder="대표 / Manager" /></label>
+              <label class="fld"><div class="lbl" data-i18n="card.f.org">회사/조직</div><input type="text" id="cdOrg" maxlength="60" /></label>
+            </div>
+            <div class="row2">
+              <label class="fld"><div class="lbl" data-i18n="card.f.tel">전화</div><input type="text" id="cdTel" maxlength="30" placeholder="010-1234-5678" /></label>
+              <label class="fld"><div class="lbl" data-i18n="card.f.email">이메일</div><input type="text" id="cdEmail" maxlength="80" /></label>
+            </div>
+            <label class="fld"><div class="lbl" data-i18n="card.f.url">웹사이트</div><input type="text" id="cdUrl" maxlength="120" placeholder="https://" /></label>
+            <label class="fld"><div class="lbl" data-i18n="card.f.addr">주소 (선택)</div><input type="text" id="cdAddr" maxlength="120" /></label>
+          </div>
+        </details>
+        <details class="grp" id="grpCardDesign">
+          <summary><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M12 3l7 4v10l-7 4-7-4V7l7-4z" stroke="currentColor" stroke-width="2"/></svg><span data-i18n="card.grp.design">명함 디자인</span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
+          <div class="body">
+            <label class="fld">
+              <div class="lbl" data-i18n="card.d.template">템플릿</div>
+              <div class="seg wrap" id="cardTplSeg">
+                <button data-tpl="light" class="on"><span data-i18n="card.tpl.light">라이트</span></button>
+                <button data-tpl="dark"><span data-i18n="card.tpl.dark">다크</span></button>
+                <button data-tpl="bar"><span data-i18n="card.tpl.bar">컬러바</span></button>
+                <button data-tpl="gradient"><span data-i18n="card.tpl.gradient">그라디언트</span></button>
+                <button data-tpl="minimal"><span data-i18n="card.tpl.minimal">미니멀</span></button>
+              </div>
+            </label>
+            <div class="row2">
+              <label class="fld"><div class="lbl" data-i18n="card.d.accent">포인트 색</div><input type="color" id="cardAccent" value="#111111" /></label>
+              <label class="fld"><div class="lbl" data-i18n="card.d.qrColor">QR 색</div><input type="color" id="cardQrColor" value="#111111" /></label>
+            </div>
+            <div class="hint" data-i18n="card.d.hint">QR은 vCard(연락처) 규격이라 스캔하면 이름·전화·이메일이 그대로 연락처 추가 화면에 뜹니다. 색을 너무 밝게 하면 스캔이 안 될 수 있어요(자동으로 어둡게 보정).</div>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
   <!-- ============ AR (marker-based) ============ -->
   <section class="view" id="view-ar">
     <div class="hero" style="padding:6px 0 16px">
@@ -1157,6 +1239,10 @@
         <div class="guide-card"><div data-i18n-html="gd.f6"><span class="tag2">AR</span>
           <div class="ic-badge">🕶️</div><h4>증강현실(AR)</h4>
           <p><b>AR</b> 탭에서 카메라로 QR을 비추면 실시간 인식해 그 위에 3D·정보 카드를 얹어 보여줍니다. 100% 브라우저에서 처리되고 영상은 전송되지 않습니다.</p></div></div>
+        <div class="guide-card"><div data-i18n-html="gd.f7"><span class="tag2">명함</span>
+          <div class="ic-badge">💳</div><h4>QR 디지털 명함</h4>
+          <p><b>명함</b> 탭에서 종이 명함 사진을 올리면 <b>자동 인식(무료·기기 내)</b>으로 정보를 읽어 채웁니다 — 정확도가 필요하면 <b>고정밀(AI)</b>도 선택할 수 있어요. 정보로 <b>vCard QR</b>을 만들고 QR이 들어간 명함 디자인(라이트·다크·컬러바·그라디언트·미니멀)으로 완성합니다.</p>
+          <ul><li><b>PNG·SVG·PDF</b>로 저장하거나 바로 <b>공유</b></li><li><b>디지털 명함 폴더</b>에 명함+QR을 함께 보관·재편집</li><li>스캔하면 상대 폰의 <b>연락처 추가 화면</b>이 이름·전화·이메일과 함께 바로 떠요</li></ul></div></div>
       </div>
 
       <h3 style="margin-top:26px" data-i18n="gd.h3">알아두면 좋은 팁</h3>
@@ -1181,7 +1267,7 @@
     </nav>
     <div style="margin-top:10px">Aesthetic QR Studio · <span data-i18n="foot.tag">아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)</span></div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · 빌드 <b id="verTag">2026.09.11-b</b></div>
+    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · 빌드 <b id="verTag">2026.09.21-card</b></div>
   </footer>
 </div>
 
@@ -5566,15 +5652,17 @@ $("tabs").addEventListener("click",function(e){
   var b=e.target.closest("button"); if(!b) return;
   Array.prototype.forEach.call(this.children,function(x){x.classList.remove("active");});
   b.classList.add("active");
-  ["gallery","studio","ar","about"].forEach(function(v){ $("view-"+v).classList.toggle("active", v===b.dataset.view); });
+  ["gallery","studio","card","ar","about"].forEach(function(v){ $("view-"+v).classList.toggle("active", v===b.dataset.view); });
   if(b.dataset.view==="studio") rerender();
+  if(b.dataset.view==="card" && typeof CARD!=="undefined"){ CARD.enter(); }
   if(b.dataset.view==="ar") AR.refresh(); else AR.leave();
   if(b.dataset.view==="gallery"){ if(curCat==="animation" && typeof startGalAnim==="function") startGalAnim(); } else if(typeof stopGalAnim==="function"){ stopGalAnim(); }
 });
 function gotoView(v){
   Array.prototype.forEach.call($("tabs").children,function(x){x.classList.toggle("active", x.dataset.view===v);});
-  ["gallery","studio","ar","about"].forEach(function(k){ $("view-"+k).classList.toggle("active", k===v); });
+  ["gallery","studio","card","ar","about"].forEach(function(k){ $("view-"+k).classList.toggle("active", k===v); });
   if(v==="studio") rerender();
+  if(v==="card" && typeof CARD!=="undefined"){ CARD.enter(); }
   if(v==="ar") AR.refresh(); else AR.leave();
   if(typeof stopGalAnim==="function" && v!=="gallery") stopGalAnim();
   window.scrollTo(0,0);
@@ -6719,6 +6807,49 @@ var I18N = {
   "nav.studio":{ko:"스튜디오",en:"Studio",zh:"工作室",ja:"スタジオ"},
   "nav.ar":{ko:"AR",en:"AR",zh:"AR",ja:"AR"},
   "nav.guide":{ko:"사용법",en:"Guide",zh:"使用指南",ja:"使い方"},
+  "nav.card":{ko:"명함",en:"Card",zh:"名片",ja:"名刺"},
+  "card.h":{ko:'사진 한 장으로 <span class="g">QR 디지털 명함</span>',en:'One photo → a <span class="g">QR digital business card</span>',zh:'一张照片生成<span class="g">二维码电子名片</span>',ja:'写真1枚で<span class="g">QRデジタル名刺</span>'},
+  "card.p":{ko:"명함 사진을 올리면 정보를 읽어 <b>vCard QR</b>을 만들고, QR이 들어간 명함 디자인으로 완성해 PNG·SVG·PDF로 저장합니다. 스캔하면 상대 폰의 연락처에 바로 저장돼요.",en:"Upload a business-card photo — we read the details, build a <b>vCard QR</b>, and finish a card design with the QR baked in (PNG·SVG·PDF). Scan it and the contact drops straight into the phone.",zh:"上传名片照片，自动读取信息生成 <b>vCard 二维码</b>，并完成含二维码的名片设计，支持 PNG·SVG·PDF 导出。扫码即可直接存入手机通讯录。",ja:"名刺の写真をアップすると情報を読み取り <b>vCard QR</b> を作成、QR入りの名刺デザインに仕上げてPNG·SVG·PDFで保存。スキャンすれば相手の連絡先にそのまま登録されます。"},
+  "card.png":{ko:"PNG 저장",en:"Save PNG",zh:"保存 PNG",ja:"PNG保存"},
+  "card.svg":{ko:"SVG",en:"SVG",zh:"SVG",ja:"SVG"},
+  "card.pdf":{ko:"PDF",en:"PDF",zh:"PDF",ja:"PDF"},
+  "card.share":{ko:"공유",en:"Share",zh:"分享",ja:"共有"},
+  "card.save":{ko:"＋ 디지털 명함 폴더에 저장 (명함 + QR 동시)",en:"＋ Save to digital-card folder (card + QR together)",zh:"＋ 保存到电子名片文件夹（名片 + 二维码）",ja:"＋ デジタル名刺フォルダに保存（名刺＋QR同時）"},
+  "card.folder":{ko:"디지털 명함 폴더",en:"Digital-card folder",zh:"电子名片文件夹",ja:"デジタル名刺フォルダ"},
+  "card.grp.photo":{ko:"명함 사진 (앞 / 뒤)",en:"Card photo (front / back)",zh:"名片照片（正面 / 背面）",ja:"名刺写真（表 / 裏）"},
+  "card.front":{ko:"＋ 앞면 촬영/업로드",en:"＋ Front photo",zh:"＋ 正面拍摄/上传",ja:"＋ 表面を撮影/アップ"},
+  "card.back":{ko:"＋ 뒷면 (선택)",en:"＋ Back (optional)",zh:"＋ 背面（可选）",ja:"＋ 裏面（任意）"},
+  "card.ocr":{ko:"📷 자동 인식 (무료)",en:"📷 Auto-read (free)",zh:"📷 自动识别（免费）",ja:"📷 自動認識（無料）"},
+  "card.ocrAi":{ko:"✨ 고정밀 (AI)",en:"✨ Precision (AI)",zh:"✨ 高精度（AI）",ja:"✨ 高精度（AI）"},
+  "card.ocrHint":{ko:"사진을 올린 뒤 <b>자동 인식</b>을 누르면 브라우저에서 글자를 읽어 아래 항목을 채웁니다(무료·기기 내 처리). 정확도가 필요하면 <b>고정밀(AI)</b>을 쓰세요. 인식 후 언제든 직접 수정 가능합니다.",en:"After uploading, tap <b>Auto-read</b> to extract text in your browser and fill the fields below (free, on-device). Need higher accuracy? Use <b>Precision (AI)</b>. You can always edit the result by hand.",zh:"上传后点击<b>自动识别</b>，浏览器会读取文字并填入下方字段（免费·本地处理）。需要更高准确度请用<b>高精度（AI）</b>。识别后可随时手动修改。",ja:"アップ後に<b>自動認識</b>を押すとブラウザで文字を読み取り下の項目を埋めます（無料・端末内処理）。精度が必要なら<b>高精度（AI）</b>を。認識後はいつでも手動修正できます。"},
+  "card.grp.info":{ko:"명함 정보",en:"Card details",zh:"名片信息",ja:"名刺情報"},
+  "card.f.name":{ko:"이름 *",en:"Name *",zh:"姓名 *",ja:"氏名 *"},
+  "card.f.title":{ko:"직함",en:"Title",zh:"职位",ja:"肩書き"},
+  "card.f.org":{ko:"회사/조직",en:"Company/Org",zh:"公司/组织",ja:"会社/組織"},
+  "card.f.tel":{ko:"전화",en:"Phone",zh:"电话",ja:"電話"},
+  "card.f.email":{ko:"이메일",en:"Email",zh:"邮箱",ja:"メール"},
+  "card.f.url":{ko:"웹사이트",en:"Website",zh:"网站",ja:"ウェブサイト"},
+  "card.f.addr":{ko:"주소 (선택)",en:"Address (optional)",zh:"地址（可选）",ja:"住所（任意）"},
+  "card.grp.design":{ko:"명함 디자인",en:"Card design",zh:"名片设计",ja:"名刺デザイン"},
+  "card.d.template":{ko:"템플릿",en:"Template",zh:"模板",ja:"テンプレート"},
+  "card.tpl.light":{ko:"라이트",en:"Light",zh:"浅色",ja:"ライト"},
+  "card.tpl.dark":{ko:"다크",en:"Dark",zh:"深色",ja:"ダーク"},
+  "card.tpl.bar":{ko:"컬러바",en:"Color bar",zh:"色条",ja:"カラーバー"},
+  "card.tpl.gradient":{ko:"그라디언트",en:"Gradient",zh:"渐变",ja:"グラデ"},
+  "card.tpl.minimal":{ko:"미니멀",en:"Minimal",zh:"极简",ja:"ミニマル"},
+  "card.d.accent":{ko:"포인트 색",en:"Accent color",zh:"主题色",ja:"アクセント色"},
+  "card.d.qrColor":{ko:"QR 색",en:"QR color",zh:"二维码颜色",ja:"QR色"},
+  "card.d.hint":{ko:"QR은 vCard(연락처) 규격이라 스캔하면 이름·전화·이메일이 그대로 연락처 추가 화면에 뜹니다. 색을 너무 밝게 하면 스캔이 안 될 수 있어요(자동으로 어둡게 보정).",en:"The QR uses the vCard (contact) format, so scanning it opens the phone's add-contact screen prefilled with name/phone/email. Very light colors may not scan (auto-darkened for you).",zh:"二维码采用 vCard（联系人）格式，扫描后会直接打开手机的添加联系人界面并预填姓名·电话·邮箱。颜色过浅可能无法扫描（已自动加深）。",ja:"QRはvCard（連絡先）規格なので、スキャンすると名前·電話·メール入りの連絡先追加画面が開きます。色が明るすぎると読み取れないことがあります（自動で暗く補正）。"},
+  "card.scanCap":{ko:"스캔 → 연락처 저장",en:"Scan → save contact",zh:"扫码 → 保存联系人",ja:"スキャン → 連絡先保存"},
+  "card.needPhoto":{ko:"먼저 앞면 사진을 올리세요",en:"Upload the front photo first",zh:"请先上传正面照片",ja:"先に表面の写真をアップしてください"},
+  "card.needName":{ko:"이름을 입력하세요",en:"Enter a name first",zh:"请先输入姓名",ja:"氏名を入力してください"},
+  "card.ocrRun":{ko:"글자 인식 중… (처음엔 라이브러리 로딩으로 수십 초 걸릴 수 있어요)",en:"Reading text… (the first run may take a while to load the library)",zh:"正在识别文字…（首次运行需加载库，可能需数十秒）",ja:"文字認識中…（初回はライブラリ読込で数十秒かかる場合があります）"},
+  "card.ocrDone":{ko:"인식 완료 — 항목을 확인·수정하세요.",en:"Done — review and edit the fields.",zh:"识别完成 — 请核对并修改字段。",ja:"認識完了 — 項目を確認·修正してください。"},
+  "card.ocrFail":{ko:"인식 실패 — 배포된(온라인) 사이트에서만 동작합니다. 직접 입력해 주세요.",en:"Recognition failed — this runs only on the deployed (online) site. Please enter the details manually.",zh:"识别失败 — 仅在已部署（在线）站点可用。请手动输入。",ja:"認識失敗 — 公開（オンライン）サイトでのみ動作します。手動で入力してください。"},
+  "card.aiRun":{ko:"AI 고정밀 인식 중…",en:"AI precision reading…",zh:"AI 高精度识别中…",ja:"AI高精度認識中…"},
+  "card.aiOff":{ko:"고정밀(AI) 인식은 서버에 비전 API를 설정한 뒤 사용할 수 있어요. 지금은 무료 인식 또는 직접 입력을 이용하세요.",en:"Precision (AI) reading needs a vision API configured on the server. For now use free auto-read or manual entry.",zh:"高精度（AI）识别需在服务器配置视觉 API 后使用。目前请用免费识别或手动输入。",ja:"高精度（AI）認識はサーバーにビジョンAPIを設定後に利用できます。今は無料認識または手動入力をご利用ください。"},
+  "card.saved":{ko:"디지털 명함 폴더에 저장됨 (명함 + QR)",en:"Saved to digital-card folder (card + QR)",zh:"已保存到电子名片文件夹（名片 + 二维码）",ja:"デジタル名刺フォルダに保存（名刺＋QR）"},
+  "card.pdfOff":{ko:"PDF는 배포된(온라인) 사이트에서만 동작합니다.",en:"PDF export works only on the deployed (online) site.",zh:"PDF 导出仅在已部署（在线）站点可用。",ja:"PDF出力は公開（オンライン）サイトでのみ動作します。"},
   "hdr.sub":{ko:"아름답고 스캔되는 QR을 만드는 스튜디오",en:"A studio for beautiful, scannable QR codes",zh:"打造美观且可扫描的二维码工作室",ja:"美しくスキャン可能なQRを作るスタジオ"},
   "hero.eyebrow":{ko:'스캔되는 브랜드 아트 · 움직이는 QR · 서버 없이 브라우저에서',en:'Scannable brand art · animated QR · runs in your browser',zh:'可扫描的品牌艺术 · 动态二维码 · 浏览器内处理',ja:'スキャンできるブランドアート · 動くQR · ブラウザで処理'},
   "tips.title":{ko:'스캔이 잘 되는 QR 팁',en:'Tips for a scannable QR',zh:'易于扫描的二维码技巧',ja:'スキャンしやすいQRのコツ'},
@@ -6869,6 +7000,11 @@ var I18N = {
     en:'<span class="tag2">AR</span><div class="ic-badge">🕶️</div><h4>Augmented reality</h4><p>In the <b>AR</b> tab, point your camera at a QR and it\'s recognized live, overlaying a 3D / info card on top. All in the browser — the video is never sent anywhere.</p>',
     zh:'<span class="tag2">AR</span><div class="ic-badge">🕶️</div><h4>增强现实（AR）</h4><p>在 <b>AR</b> 标签用相机对准二维码，实时识别并在其上叠加 3D / 信息卡。全程在浏览器处理，视频不会上传。</p>',
     ja:'<span class="tag2">AR</span><div class="ic-badge">🕶️</div><h4>拡張現実（AR）</h4><p><b>AR</b> タブでカメラをQRに向けるとリアルタイム認識し、その上に3D・情報カードを重ねて表示。すべてブラウザ内で処理し、映像は送信されません。</p>'},
+  "gd.f7":{
+    ko:'<span class="tag2">명함</span><div class="ic-badge">💳</div><h4>QR 디지털 명함</h4><p><b>명함</b> 탭에서 종이 명함 사진을 올리면 <b>자동 인식(무료·기기 내)</b>으로 정보를 읽어 채웁니다 — 정확도가 필요하면 <b>고정밀(AI)</b>도 선택할 수 있어요. 정보로 <b>vCard QR</b>을 만들고 QR이 들어간 명함 디자인(라이트·다크·컬러바·그라디언트·미니멀)으로 완성합니다.</p><ul><li><b>PNG·SVG·PDF</b>로 저장하거나 바로 <b>공유</b></li><li><b>디지털 명함 폴더</b>에 명함+QR을 함께 보관·재편집</li><li>스캔하면 상대 폰의 <b>연락처 추가 화면</b>이 이름·전화·이메일과 함께 바로 떠요</li></ul>',
+    en:'<span class="tag2">Card</span><div class="ic-badge">💳</div><h4>QR digital business card</h4><p>In the <b>Card</b> tab, upload a photo of a paper card and <b>Auto-read (free, on-device)</b> fills the fields — or pick <b>Precision (AI)</b> when you need it. It builds a <b>vCard QR</b> and finishes a card design (light · dark · color-bar · gradient · minimal) with the QR baked in.</p><ul><li>Save as <b>PNG·SVG·PDF</b> or <b>Share</b> instantly</li><li>Keep card + QR together in the <b>digital-card folder</b>, re-editable</li><li>Scanning it opens the phone\'s <b>add-contact</b> screen prefilled with name/phone/email</li></ul>',
+    zh:'<span class="tag2">名片</span><div class="ic-badge">💳</div><h4>QR 电子名片</h4><p>在<b>名片</b>标签上传纸质名片照片，<b>自动识别（免费·本地）</b>读取信息填入——需要更准可选<b>高精度（AI）</b>。据此生成 <b>vCard 二维码</b>，并完成含二维码的名片设计（浅色·深色·色条·渐变·极简）。</p><ul><li>导出 <b>PNG·SVG·PDF</b> 或直接<b>分享</b></li><li>名片+二维码一起存入<b>电子名片文件夹</b>，可再次编辑</li><li>扫码即打开手机<b>添加联系人</b>界面，预填姓名·电话·邮箱</li></ul>',
+    ja:'<span class="tag2">名刺</span><div class="ic-badge">💳</div><h4>QRデジタル名刺</h4><p><b>名刺</b>タブで紙の名刺の写真をアップすると<b>自動認識（無料·端末内）</b>で情報を読み取り入力 — 精度が必要なら<b>高精度（AI）</b>も選べます。情報から <b>vCard QR</b> を作り、QR入りの名刺デザイン（ライト·ダーク·カラーバー·グラデ·ミニマル）に仕上げます。</p><ul><li><b>PNG·SVG·PDF</b> で保存、またはすぐ<b>共有</b></li><li><b>デジタル名刺フォルダ</b>に名刺＋QRをまとめて保管·再編集</li><li>スキャンすると相手の<b>連絡先追加</b>画面が名前·電話·メール入りで開きます</li></ul>'},
   "gd.tips":{
     ko:'<li>로고·아트·픽토그램을 넣을 땐 <b>오류정정 H</b>가 자동 권장됩니다(복원력 30%).</li><li>미리보기 아래 <b>상태줄</b>에 예상 스캔성이 표시돼요 — 경고가 뜨면 대비를 높이거나 노출도를 낮추세요.</li><li>모든 처리는 <b>브라우저 안에서만</b> 이뤄집니다(AI 생성 제외). 사진·데이터가 기기를 떠나지 않아요.</li><li>인쇄하거나 화면에 띄운 뒤 <b>실제로 휴대폰으로 스캔</b>해 최종 확인하는 것을 권장합니다.</li>',
     en:'<li>When adding a logo/art/pictogram, <b>error-correction H</b> is auto-recommended (30% recovery).</li><li>The <b>status line</b> under the preview shows expected scannability — if it warns, raise contrast or lower art visibility.</li><li>Everything runs <b>in your browser only</b> (except AI generation). Photos & data never leave your device.</li><li>Print it or show it on screen and <b>scan it with a real phone</b> for a final check.</li>',
@@ -7138,6 +7274,248 @@ function applyLang(lang){
   try{ localStorage.setItem("aqr_lang", lang); }catch(e){}
   document.querySelectorAll(".lang-switch").forEach(function(sw){ Array.prototype.forEach.call(sw.children,function(x){ x.classList.toggle("on", x.dataset.lang===lang); }); });
 }
+
+// ================= 명함 (Business Card → vCard QR) =================
+var CARD = (function(){
+  var CARDKEY="aqr_cards_v1";
+  var FD="'Nunito','SF Pro Rounded',system-ui,-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif";
+  var FB="system-ui,-apple-system,'Apple SD Gothic Neo','Noto Sans KR',Pretendard,sans-serif";
+  var st={ tpl:"light", frontImg:null, backImg:null, hi:null, entered:false };
+  function $id(x){ return document.getElementById(x); }
+  function shade(hex,amt){ var m=/^#?([0-9a-fA-F]{6})$/.exec(hex||"#111111"); if(!m) return hex; var v=parseInt(m[1],16),r=(v>>16)&255,g=(v>>8)&255,b=v&255;
+    r=Math.max(0,Math.min(255,r+amt)); g=Math.max(0,Math.min(255,g+amt)); b=Math.max(0,Math.min(255,b+amt));
+    return "#"+[r,g,b].map(function(x){return ("0"+x.toString(16)).slice(-2);}).join(""); }
+  function rrect(g,x,y,w,h,r){ r=Math.min(r,w/2,h/2); g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath(); }
+  function downscale(src,w){ var h=Math.round(src.height*(w/src.width)); var c=document.createElement("canvas"); c.width=w;c.height=h; c.getContext("2d").drawImage(src,0,0,w,h); return c; }
+
+  function vcard(){
+    function g(id){ return ($id(id).value||"").trim(); }
+    var nm=g("cdName"),ti=g("cdTitle"),org=g("cdOrg"),tel=g("cdTel"),em=g("cdEmail"),url=g("cdUrl"),addr=g("cdAddr");
+    return "BEGIN:VCARD\nVERSION:3.0\nN:"+nm+"\nFN:"+nm
+      +(org?"\nORG:"+org:"")+(ti?"\nTITLE:"+ti:"")
+      +(tel?"\nTEL;TYPE=CELL:"+tel:"")+(em?"\nEMAIL;TYPE=INTERNET:"+em:"")
+      +(url?"\nURL:"+url:"")+(addr?"\nADR;TYPE=WORK:;;"+addr.replace(/,/g," ")+";;;":"")+"\nEND:VCARD";
+  }
+  // render the vCard QR to an offscreen canvas by snapshotting the studio state S
+  function qrCanvas(px, color){
+    var keys=["content","fill","fg1","fg2","angle","bg","transparent","dot","eye","eyeColorOn","ecc","margin","frameOn","labelOn","anim","artImg","aiArt","posterOn","centerMode","logo"];
+    var snap={}; keys.forEach(function(k){ snap[k]=S[k]; });
+    S.content=vcard(); S.fill="solid"; S.fg1=(typeof darkenForScan==="function")?darkenForScan(color||"#111111"):"#111111"; S.fg2=S.fg1;
+    S.bg="#ffffff"; S.transparent=false; S.dot="square"; S.eye="square"; S.eyeColorOn=false; S.ecc="H"; S.margin=2;
+    S.frameOn=false; S.labelOn=false; S.anim=false; S.artImg=null; S.aiArt=null; S.posterOn=false; S.centerMode="none"; S.logo=null;
+    var cv=document.createElement("canvas"); cv.width=px; cv.height=px;
+    try{ render(cv.getContext("2d"), px); }catch(e){}
+    keys.forEach(function(k){ S[k]=snap[k]; });
+    return cv;
+  }
+  function draw(){
+    var W=1050,H=600; st.hi=st.hi||document.createElement("canvas"); st.hi.width=W; st.hi.height=H;
+    var g=st.hi.getContext("2d"); g.clearRect(0,0,W,H);
+    var tpl=st.tpl, acc=$id("cardAccent").value||"#111111", qcol=$id("cardQrColor").value||"#111111";
+    var bg="#ffffff",ink="#111111",sub="#5b6472",accent=acc,onDark=false;
+    if(tpl==="dark"){ bg="#171717"; ink="#ffffff"; sub="rgba(255,255,255,.72)"; onDark=true; }
+    g.fillStyle=bg; g.fillRect(0,0,W,H);
+    if(tpl==="gradient"){ var gr=g.createLinearGradient(0,0,W,H); gr.addColorStop(0,acc); gr.addColorStop(1,shade(acc,-38)); g.fillStyle=gr; g.fillRect(0,0,W,H); ink="#ffffff"; sub="rgba(255,255,255,.85)"; onDark=true; }
+    if(tpl==="bar"){ g.fillStyle=acc; g.fillRect(0,0,28,H); }
+    if(tpl==="minimal"){ g.strokeStyle="#e5e5e5"; g.lineWidth=2; g.strokeRect(1,1,W-2,H-2); }
+    // QR block (white card behind on dark/gradient for scannability)
+    var qs=330, qx=W-qs-56, qy=Math.round((H-qs)/2)-6;
+    if(onDark){ g.fillStyle="#ffffff"; rrect(g,qx-16,qy-16,qs+32,qs+52,18); g.fill(); }
+    var qcv=qrCanvas(qs,qcol); try{ g.drawImage(qcv,qx,qy,qs,qs); }catch(e){}
+    g.textAlign="center"; g.fillStyle=onDark?"#333":sub; g.font="600 18px "+FB;
+    g.fillText((typeof t==="function"&&t("card.scanCap"))||"스캔 → 연락처 저장", qx+qs/2, qy+qs+30);
+    g.textAlign="left";
+    // text block
+    var tx=(tpl==="bar")?62:60, ty=150;
+    var nm=($id("cdName").value||"").trim()||"이름", ti=($id("cdTitle").value||"").trim(), org=($id("cdOrg").value||"").trim();
+    g.fillStyle=ink; g.font="700 56px "+FD; g.fillText(nm, tx, ty);
+    g.fillStyle=onDark?(tpl==="dark"?acc:"#ffffff"):accent; g.fillRect(tx, ty+20, 66, 6);
+    var y=ty+66;
+    if(ti){ g.fillStyle=onDark?ink:accent; g.font="600 27px "+FB; g.fillText(ti, tx, y); y+=40; }
+    if(org){ g.fillStyle=sub; g.font="400 25px "+FB; g.fillText(org, tx, y); y+=54; } else { y+=16; }
+    g.font="400 24px "+FB;
+    [["📞","cdTel"],["✉️","cdEmail"],["🌐","cdUrl"],["📍","cdAddr"]].forEach(function(p){
+      var val=($id(p[1]).value||"").trim(); if(!val) return;
+      g.fillStyle=sub; g.fillText(p[0]+"  "+val, tx, y); y+=38;
+    });
+    var pv=$id("cardPreview"); if(pv){ pv.width=W; pv.height=H; pv.getContext("2d").drawImage(st.hi,0,0); }
+  }
+
+  // ---- OCR (free, client-side Tesseract.js loaded on demand) ----
+  function loadScript(src){ return new Promise(function(res,rej){ if(document.querySelector('script[src="'+src+'"]')){res();return;} var s=document.createElement("script"); s.src=src; s.onload=function(){res();}; s.onerror=function(){rej(new Error("load "+src));}; document.head.appendChild(s); }); }
+  function parseCard(text){
+    var out={}; var lines=(text||"").split(/\n+/).map(function(l){return l.trim();}).filter(Boolean);
+    var joined=lines.join(" ");
+    var em=joined.match(/[\w.\-+]+@[\w.\-]+\.[a-z]{2,}/i); if(em) out.email=em[0];
+    var tel=joined.match(/(\+?\d[\d\-\s().]{7,}\d)/); if(tel) out.tel=tel[0].replace(/\s+/g," ").trim();
+    var url=joined.match(/((https?:\/\/)?(www\.)?[\w\-]+\.(com|net|io|co|kr|org|dev|me)(\/[\w\-./?%&=]*)?)/i); if(url && !(em&&url[0].indexOf("@")>-1)) out.url=url[0];
+    // name = first line that has no digits/@ and is short (<=20 chars), prefer Hangul or 2 words
+    for(var i=0;i<lines.length;i++){ var l=lines[i]; if(/[@\d]/.test(l)) continue; if(l.length>24) continue; if(/^[가-힣]{2,5}$/.test(l)||/^[A-Za-z][A-Za-z.\-]+\s+[A-Za-z][A-Za-z.\-]+$/.test(l)){ out.name=l; break; } }
+    if(!out.name){ for(var j=0;j<lines.length;j++){ if(!/[@\d]/.test(lines[j]) && lines[j].length<=24){ out.name=lines[j]; break; } } }
+    // title / org guesses (line containing common keywords)
+    var titleKw=/(대표|이사|부장|과장|팀장|매니저|Manager|Director|CEO|CTO|Designer|Engineer|대리|사원|Lead|Head)/i;
+    var orgKw=/(주식회사|㈜|Inc\.?|Corp\.?|LLC|Ltd\.?|Co\.?|스튜디오|Studio|Lab|컴퍼니|Company)/i;
+    lines.forEach(function(l){ if(!out.title && titleKw.test(l) && l.length<=30) out.title=l; if(!out.org && orgKw.test(l) && l.length<=40) out.org=l; });
+    return out;
+  }
+  function applyParsed(o){
+    var map={name:"cdName",title:"cdTitle",org:"cdOrg",tel:"cdTel",email:"cdEmail",url:"cdUrl",addr:"cdAddr"};
+    var any=false; for(var k in o){ if(o[k] && map[k]){ var el=$id(map[k]); if(el && !el.value.trim()){ el.value=o[k]; any=true; } } }
+    if(!any){ for(var k2 in o){ if(o[k2]&&map[k2]) $id(map[k2]).value=o[k2]; } }
+    if(!$id("grpCardDesign").open){} draw();
+  }
+  function ocrStatus(html){ var el=$id("cardOcrStatus"); if(el) el.innerHTML=html; }
+  function runOcr(){
+    if(!st.frontImg){ toast((typeof t==="function"&&t("card.needPhoto"))||"먼저 앞면 사진을 올리세요"); return; }
+    ocrStatus((typeof t==="function"&&t("card.ocrRun"))||"글자 인식 중… (처음엔 라이브러리 로딩으로 수십 초 걸릴 수 있어요)");
+    loadScript("https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.1/tesseract.min.js")
+      .then(function(){ return Tesseract.recognize(st.frontImg, "eng+kor"); })
+      .then(function(r){ applyParsed(parseCard(r.data && r.data.text)); ocrStatus((typeof t==="function"&&t("card.ocrDone"))||"인식 완료 — 항목을 확인·수정하세요."); })
+      .catch(function(){ ocrStatus((typeof t==="function"&&t("card.ocrFail"))||"인식 실패 — 배포된(온라인) 사이트에서만 동작합니다. 직접 입력해 주세요."); });
+  }
+  // ---- AI precision OCR (gated like AI art; needs a server vision endpoint) ----
+  function runOcrAi(){
+    if(typeof isPro==="function" && !isPro() && typeof aiTrialsLeft==="function" && aiTrialsLeft()<=0){
+      if(typeof openPro==="function") openPro("cardAi", (typeof t==="function"&&t("pro.aiUsedUp"))||"AI 무료 체험을 모두 사용했습니다. Pro로 무제한 이용하세요."); return;
+    }
+    if(!st.frontImg){ toast((typeof t==="function"&&t("card.needPhoto"))||"먼저 앞면 사진을 올리세요"); return; }
+    ocrStatus((typeof t==="function"&&t("card.aiRun"))||"AI 고정밀 인식 중…");
+    var lic=""; try{ lic=localStorage.getItem(PROKEY)||""; }catch(e){}
+    var payload={ image: dataUrl(st.frontImg), back: st.backImg?dataUrl(st.backImg):null, license:lic };
+    fetch("/api/card-ocr",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)})
+      .then(function(r){ return r.json().then(function(d){ return {ok:r.ok,status:r.status,d:d}; }); })
+      .then(function(res){
+        var d=res.d||{};
+        if(res.status===402 || d.error==="trial_exhausted"){ try{ localStorage.setItem(AITRIALKEY,String(PRO.aiFreeTrials)); }catch(e){} if(typeof refreshAiTrialUI==="function") refreshAiTrialUI(); if(typeof openPro==="function") openPro("cardAi", d.detail||""); ocrStatus((typeof t==="function"&&t("ai.trialOut"))||"무료 체험 종료 — Pro로 무제한"); return; }
+        if(d.error==="not_configured" || res.status===503){ ocrStatus((typeof t==="function"&&t("card.aiOff"))||"고정밀(AI) 인식은 서버에 비전 API를 설정한 뒤 사용할 수 있어요. 지금은 무료 인식 또는 직접 입력을 이용하세요."); return; }
+        if(d.error){ ocrStatus("AI 인식 실패: "+(d.detail||d.error)); return; }
+        applyParsed({name:d.name,title:d.title,org:d.org,tel:d.tel||d.phone,email:d.email,url:d.url||d.website,addr:d.address});
+        if(typeof aiBumpTrial==="function") aiBumpTrial();
+        ocrStatus((typeof t==="function"&&t("card.ocrDone"))||"인식 완료 — 항목을 확인·수정하세요.");
+      })
+      .catch(function(){ ocrStatus((typeof t==="function"&&t("card.aiOff"))||"고정밀(AI)은 배포된 사이트 + 서버 설정 후 동작합니다."); });
+  }
+  function dataUrl(img){ try{ var c=document.createElement("canvas"); var w=Math.min(1000,img.naturalWidth||img.width); var h=Math.round((img.naturalHeight||img.height)*(w/(img.naturalWidth||img.width))); c.width=w;c.height=h; c.getContext("2d").drawImage(img,0,0,w,h); return c.toDataURL("image/jpeg",0.82); }catch(e){ return null; } }
+
+  // ---- downloads ----
+  function fname(){ return (($id("cdName").value||"card").trim().replace(/[^\w가-힣.-]+/g,"_")||"card"); }
+  function dlPng(){ draw(); download(st.hi.toDataURL("image/png"), "명함_"+fname()+".png"); toast("PNG 저장됨"); }
+  function dlSvg(){
+    draw(); var W=1050,H=600; var qs=330, qx=W-qs-56, qy=Math.round((H-qs)/2)-6;
+    var qpng=qrCanvas(600, $id("cardQrColor").value).toDataURL("image/png");   // crisp QR embedded
+    var tpl=st.tpl, acc=$id("cardAccent").value, onDark=(tpl==="dark"||tpl==="gradient");
+    function esc(s){ return String(s||"").replace(/[<>&]/g,function(c){return {"<":"&lt;",">":"&gt;","&":"&amp;"}[c];}); }
+    var bg = tpl==="dark"?"#171717":"#ffffff";
+    var ink = onDark?"#ffffff":"#111111", sub=onDark?"rgba(255,255,255,.8)":"#5b6472";
+    var s='<svg xmlns="http://www.w3.org/2000/svg" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'">';
+    if(tpl==="gradient"){ s+='<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="'+acc+'"/><stop offset="1" stop-color="'+shade(acc,-38)+'"/></linearGradient></defs><rect width="'+W+'" height="'+H+'" fill="url(#g)"/>'; }
+    else { s+='<rect width="'+W+'" height="'+H+'" fill="'+bg+'"/>'; }
+    if(tpl==="bar") s+='<rect width="28" height="'+H+'" fill="'+acc+'"/>';
+    if(tpl==="minimal") s+='<rect x="1" y="1" width="'+(W-2)+'" height="'+(H-2)+'" fill="none" stroke="#e5e5e5" stroke-width="2"/>';
+    if(onDark) s+='<rect x="'+(qx-16)+'" y="'+(qy-16)+'" width="'+(qs+32)+'" height="'+(qs+52)+'" rx="18" fill="#fff"/>';
+    s+='<image x="'+qx+'" y="'+qy+'" width="'+qs+'" height="'+qs+'" href="'+qpng+'"/>';
+    var tx=60, ty=150;
+    s+='<text x="'+tx+'" y="'+ty+'" font-family="'+esc(FD)+'" font-size="56" font-weight="700" fill="'+ink+'">'+esc(($id("cdName").value||"이름").trim())+'</text>';
+    s+='<rect x="'+tx+'" y="'+(ty+20)+'" width="66" height="6" fill="'+(onDark?(tpl==="dark"?acc:"#fff"):acc)+'"/>';
+    var y=ty+66; var ti=($id("cdTitle").value||"").trim(), org=($id("cdOrg").value||"").trim();
+    if(ti){ s+='<text x="'+tx+'" y="'+y+'" font-family="'+esc(FB)+'" font-size="27" font-weight="600" fill="'+(onDark?ink:acc)+'">'+esc(ti)+'</text>'; y+=40; }
+    if(org){ s+='<text x="'+tx+'" y="'+y+'" font-family="'+esc(FB)+'" font-size="25" fill="'+sub+'">'+esc(org)+'</text>'; y+=54; } else y+=16;
+    [["📞","cdTel"],["✉","cdEmail"],["🌐","cdUrl"],["📍","cdAddr"]].forEach(function(p){ var v=($id(p[1]).value||"").trim(); if(!v) return; s+='<text x="'+tx+'" y="'+y+'" font-family="'+esc(FB)+'" font-size="24" fill="'+sub+'">'+esc(p[0]+"  "+v)+'</text>'; y+=38; });
+    s+='<text x="'+(qx+qs/2)+'" y="'+(qy+qs+30)+'" text-anchor="middle" font-family="'+esc(FB)+'" font-size="18" font-weight="600" fill="'+(onDark?"#333":sub)+'">스캔 → 연락처 저장</text>';
+    s+='</svg>';
+    download("data:image/svg+xml;charset=utf-8,"+encodeURIComponent(s), "명함_"+fname()+".svg"); toast("SVG 저장됨");
+  }
+  function dlPdf(){
+    draw(); var png=st.hi.toDataURL("image/png");
+    loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js").then(function(){
+      var J=(window.jspdf&&window.jspdf.jsPDF)||window.jsPDF; if(!J){ toast("PDF 라이브러리 로드 실패"); return; }
+      var doc=new J({orientation:"landscape",unit:"mm",format:[90,50]});
+      doc.addImage(png,"PNG",0,0,90,50); doc.save("명함_"+fname()+".pdf"); toast("PDF 저장됨");
+    }).catch(function(){ toast((typeof t==="function"&&t("card.pdfOff"))||"PDF는 배포된(온라인) 사이트에서만 동작합니다."); });
+  }
+  function share(){
+    draw();
+    if(navigator.canShare && st.hi.toBlob){
+      st.hi.toBlob(function(b){
+        var f=new File([b],"명함_"+fname()+".png",{type:"image/png"});
+        if(navigator.canShare({files:[f]})){ navigator.share({files:[f],title:"디지털 명함"}).catch(function(){}); }
+        else { dlPng(); }
+      },"image/png");
+    } else { dlPng(); }
+  }
+
+  // ---- digital-card folder (localStorage) ----
+  function load(){ try{ return JSON.parse(localStorage.getItem(CARDKEY)||"[]"); }catch(e){ return []; } }
+  function store(a){ try{ localStorage.setItem(CARDKEY, JSON.stringify(a)); }catch(e){ toast("저장 공간이 부족합니다"); } }
+  function saveFolder(){
+    if(!($id("cdName").value||"").trim()){ toast((typeof t==="function"&&t("card.needName"))||"이름을 입력하세요"); return; }
+    draw();
+    var card=downscale(st.hi,760).toDataURL("image/jpeg",0.85);
+    var qr=qrCanvas(420,$id("cardQrColor").value).toDataURL("image/png");
+    var arr=load(); arr.unshift({id:Date.now(),name:fname(),ts:Date.now(),card:card,qr:qr,vcard:vcard()});
+    store(arr.slice(0,24)); renderFolder(); toast((typeof t==="function"&&t("card.saved"))||"디지털 명함 폴더에 저장됨 (명함 + QR)");
+  }
+  function renderFolder(){
+    var box=$id("cardFolder"), wrap=$id("cardFolderWrap"); if(!box) return;
+    var arr=load(); wrap.style.display = arr.length?"block":"none"; box.innerHTML="";
+    arr.forEach(function(it){
+      var c=document.createElement("div"); c.className="gal-card"; c.style.padding="10px";
+      c.innerHTML='<img src="'+it.card+'" style="width:100%;border-radius:8px;display:block;box-shadow:0 0 0 1px var(--line)"/>'
+        +'<div class="name" style="margin-top:8px">'+ (it.name||"명함") +'</div>'
+        +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">'
+        +'<button class="chip" data-act="card">명함</button><button class="chip" data-act="qr">QR</button>'
+        +'<button class="chip" data-act="load">불러오기</button><button class="chip" data-act="del">삭제</button></div>';
+      c.querySelector('[data-act="card"]').onclick=function(){ download(it.card,"명함_"+(it.name||"card")+".jpg"); };
+      c.querySelector('[data-act="qr"]').onclick=function(){ download(it.qr,"QR_"+(it.name||"card")+".png"); };
+      c.querySelector('[data-act="load"]').onclick=function(){ loadFromVcard(it.vcard); toast("불러왔습니다 — 편집 후 다시 저장하세요"); };
+      c.querySelector('[data-act="del"]').onclick=function(){ var a2=load().filter(function(x){return x.id!==it.id;}); store(a2); renderFolder(); };
+      box.appendChild(c);
+    });
+  }
+  function loadFromVcard(v){
+    function pick(re){ var m=(v||"").match(re); return m?m[1].trim():""; }
+    $id("cdName").value=pick(/FN:(.+)/); $id("cdTitle").value=pick(/TITLE:(.+)/); $id("cdOrg").value=pick(/ORG:(.+)/);
+    $id("cdTel").value=pick(/TEL[^:]*:(.+)/); $id("cdEmail").value=pick(/EMAIL[^:]*:(.+)/); $id("cdUrl").value=pick(/URL:(.+)/);
+    $id("cdAddr").value=(function(){ var m=(v||"").match(/ADR[^:]*:(.+)/); if(!m)return ""; return m[1].replace(/^;;/,"").replace(/;+$/,"").replace(/;/g," ").trim(); })();
+    draw();
+  }
+
+  function photo(inputId, which, labelId){
+    $id(inputId).addEventListener("change", function(e){
+      var f=e.target.files[0]; if(!f) return; var img=new Image();
+      img.onload=function(){ st[which]=img; thumbs(); $id(labelId).textContent="✓ "+(which==="frontImg"?"앞면":"뒷면")+" 업로드됨"; };
+      img.src=URL.createObjectURL(f);
+    });
+  }
+  function thumbs(){
+    var box=$id("cardPhotoThumbs"); if(!box) return; box.innerHTML="";
+    [["frontImg","앞"],["backImg","뒤"]].forEach(function(p){ if(!st[p[0]]) return;
+      var cv=document.createElement("canvas"); cv.width=200; cv.height=Math.round(200*(st[p[0]].height/st[p[0]].width)); cv.getContext("2d").drawImage(st[p[0]],0,0,cv.width,cv.height); cv.title=p[1]; box.appendChild(cv); });
+  }
+
+  function bind(){
+    ["cdName","cdTitle","cdOrg","cdTel","cdEmail","cdUrl","cdAddr","cardAccent","cardQrColor"].forEach(function(id){ var el=$id(id); if(el) el.addEventListener("input", draw); });
+    var seg=$id("cardTplSeg"); if(seg) seg.addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b)return; Array.prototype.forEach.call(this.children,function(x){x.classList.remove("on");}); b.classList.add("on"); st.tpl=b.dataset.tpl; draw(); });
+    photo("cardFront","frontImg","cardFrontLabel"); photo("cardBack","backImg","cardBackLabel");
+    var b;
+    if(b=$id("cardOcr")) b.addEventListener("click",runOcr);
+    if(b=$id("cardOcrAi")) b.addEventListener("click",runOcrAi);
+    if(b=$id("cardPng")) b.addEventListener("click",dlPng);
+    if(b=$id("cardSvg")) b.addEventListener("click",dlSvg);
+    if(b=$id("cardPdf")) b.addEventListener("click",dlPdf);
+    if(b=$id("cardShare")) b.addEventListener("click",share);
+    if(b=$id("cardSave")) b.addEventListener("click",saveFolder);
+  }
+  return {
+    enter:function(){ if(!st.entered){ st.entered=true; bind();
+        if(!($id("cdName").value||"").trim()){ $id("cdName").value="홍길동"; $id("cdTitle").value="대표"; $id("cdOrg").value="아름다운 컴퍼니"; $id("cdTel").value="010-1234-5678"; $id("cdEmail").value="hello@company.com"; }
+        renderFolder();
+      }
+      if(typeof refreshAiTrialUI==="function") refreshAiTrialUI();
+      draw();
+    }
+  };
+})();
 (function initLang(){
   var saved=null; try{ saved=localStorage.getItem("aqr_lang"); }catch(e){}
   var nav=(navigator.language||"ko").toLowerCase();

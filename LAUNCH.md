@@ -97,6 +97,18 @@ LICENSE_VALIDATE_URL=https://…/validate# (선택) Pro 라이선스 서버검�
 ### 6) 정직한 한계
 - 정적 앱이라 클라이언트 카운트는 우회 가능하지만, 위 **서버측 IP 카운트 + 라이선스 검증**을 켜면 실제 비용 지출을 하드 상한선으로 막을 수 있습니다.
 
+### 7) 명함 고정밀(AI) OCR — 선택 기능 (`api/card-ocr.js`)
+명함 탭의 **자동 인식(무료)** 은 브라우저에서 Tesseract.js로 처리돼 **비용 0**입니다. **고정밀(AI)** 버튼만 서버 비전 API를 씁니다(선택).
+- **미설정 시 자동 비활성**: 비전 키가 없으면 엔드포인트가 503 `not_configured`를 반환하고, 앱은 "무료 인식/직접 입력을 쓰세요" 안내를 띄웁니다. 즉 **키를 안 넣으면 비용 0**이고 무료 OCR·수동 입력은 항상 동작.
+- **켜는 법**: Vercel 환경변수에 아래 중 **하나**만 넣으면 그 공급자로 동작합니다.
+  ```
+  OPENAI_API_KEY       # 모델: OPENAI_VISION_MODEL (기본 gpt-4o-mini)
+  ANTHROPIC_API_KEY    # 모델: ANTHROPIC_VISION_MODEL (기본 claude-haiku-4-5)
+  GEMINI_API_KEY       # 모델: GEMINI_VISION_MODEL (기본 gemini-2.0-flash)
+  ```
+- **비용 상한**: AI 아트와 **동일한 IP 무료 카운트(KV)** 를 공유합니다(`AI_FREE_LIMIT`/`AI_LIMIT_WINDOW_SEC`, Pro 라이선스는 무제한 통과). 명함 1장 인식 비용은 비전 모델 기준 약 $0.001~0.003.
+- 응답은 `{name,title,org,tel,email,url,address}` JSON → 앱이 빈 칸만 자동으로 채웁니다(직접 수정 가능).
+
 ---
 
 ## Phase 2 — 확장 (Phase 1 매출 검증 후 택1)
