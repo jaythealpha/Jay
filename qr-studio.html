@@ -257,6 +257,24 @@
   input[type=color]{-webkit-appearance:none;appearance:none;width:100%;height:40px;border:1px solid var(--line);border-radius:var(--rs);background:var(--card);cursor:pointer;padding:4px}
   input[type=color]::-webkit-color-swatch-wrapper{padding:0}
   input[type=color]::-webkit-color-swatch{border:0;border-radius:5px}
+  input[type=color]::-moz-color-swatch{border:0;border-radius:5px}
+  /* compact color field: fixed swatch + hex readout (fixes oversized/misaligned native pickers) */
+  .color-pick{display:flex;align-items:center;gap:9px;background:var(--card);border:1px solid var(--line);border-radius:var(--pill);padding:5px 12px 5px 6px;height:44px;box-sizing:border-box}
+  .color-pick input[type=color]{width:32px;height:32px;flex:none;border:1px solid var(--line);border-radius:50%;padding:2px;background:transparent}
+  .color-pick input[type=color]::-webkit-color-swatch{border-radius:50%}
+  .color-pick input[type=color]::-moz-color-swatch{border-radius:50%}
+  .color-pick .hex{font-family:var(--font-mono),monospace;font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.3px}
+  /* template / QR-style thumbnail picker grids */
+  .tpl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:8px;margin-top:2px}
+  .tpl-grid .tpl{cursor:pointer;border:1.5px solid var(--line);border-radius:10px;overflow:hidden;background:var(--card);transition:.12s;padding:0;display:flex;flex-direction:column}
+  .tpl-grid .tpl:hover{border-color:var(--line2)}
+  .tpl-grid .tpl.on{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc) inset}
+  .tpl-grid .tpl canvas{display:block;width:100%;height:auto;border-radius:8px 8px 0 0}
+  .tpl-grid .tpl .nm{font-size:10px;color:var(--mut);text-align:center;padding:4px 2px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tpl-grid .tpl.on .nm{color:var(--txt);font-weight:600}
+  .card-drag-hint{font-size:11px;color:var(--mut);margin-top:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  #cardPreview{touch-action:none;cursor:grab}
+  #cardPreview.dragging{cursor:grabbing}
 
   .seg{display:flex;gap:6px;flex-wrap:wrap}
   .seg button{flex:1;min-width:60px;background:var(--bg2);border:1px solid var(--line);color:var(--mut);border-radius:var(--pill);padding:9px 8px;font-size:12px;font-weight:500;cursor:pointer;transition:.12s}
@@ -1084,24 +1102,46 @@
             </div>
             <label class="fld"><div class="lbl" data-i18n="card.f.url">웹사이트</div><input type="text" id="cdUrl" maxlength="120" placeholder="https://" /></label>
             <label class="fld"><div class="lbl" data-i18n="card.f.addr">주소 (선택)</div><input type="text" id="cdAddr" maxlength="120" /></label>
+            <details class="grp" id="grpCardSocial" style="margin:14px 0 0;border-radius:12px">
+              <summary style="padding:11px 14px"><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M18 8a3 3 0 10-2.83-4M6 12a3 3 0 100-6 3 3 0 000 6zm12 6a3 3 0 10-2.83-4M8.6 13.5l6.8 3M15.4 7.5l-6.8 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span data-i18n="card.grp.social">프로필 · 소셜 (선택)</span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
+              <div class="body">
+                <div class="hint" data-i18n="card.social.hint" style="margin-top:0">아이디(@핸들) 또는 전체 URL 어느 쪽이든 좋아요. 명함 하단에 아이콘으로 표시되고, 스캔한 연락처에도 링크로 저장됩니다.</div>
+                <div class="row2">
+                  <label class="fld"><div class="lbl">📷 Instagram</div><input type="text" id="cdInsta" maxlength="120" placeholder="@handle" /></label>
+                  <label class="fld"><div class="lbl">▶️ YouTube</div><input type="text" id="cdYt" maxlength="120" placeholder="@channel" /></label>
+                </div>
+                <div class="row2">
+                  <label class="fld"><div class="lbl">in LinkedIn</div><input type="text" id="cdLi" maxlength="120" placeholder="in/name" /></label>
+                  <label class="fld"><div class="lbl">✖ X (Twitter)</div><input type="text" id="cdX" maxlength="120" placeholder="@handle" /></label>
+                </div>
+                <div class="row2">
+                  <label class="fld"><div class="lbl">🎵 TikTok</div><input type="text" id="cdTk" maxlength="120" placeholder="@handle" /></label>
+                  <label class="fld"><div class="lbl">🐙 GitHub</div><input type="text" id="cdGh" maxlength="120" placeholder="username" /></label>
+                </div>
+              </div>
+            </details>
           </div>
         </details>
         <details class="grp" id="grpCardDesign">
           <summary><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M12 3l7 4v10l-7 4-7-4V7l7-4z" stroke="currentColor" stroke-width="2"/></svg><span data-i18n="card.grp.design">명함 디자인</span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
           <div class="body">
-            <label class="fld">
-              <div class="lbl" data-i18n="card.d.template">템플릿</div>
-              <div class="seg wrap" id="cardTplSeg">
-                <button data-tpl="light" class="on"><span data-i18n="card.tpl.light">라이트</span></button>
-                <button data-tpl="dark"><span data-i18n="card.tpl.dark">다크</span></button>
-                <button data-tpl="bar"><span data-i18n="card.tpl.bar">컬러바</span></button>
-                <button data-tpl="gradient"><span data-i18n="card.tpl.gradient">그라디언트</span></button>
-                <button data-tpl="minimal"><span data-i18n="card.tpl.minimal">미니멀</span></button>
-              </div>
+            <label class="fld" style="margin-top:6px">
+              <div class="lbl"><span data-i18n="card.d.template">명함 템플릿</span><b id="cardTplName"></b></div>
+              <div class="tpl-grid" id="cardTplGrid"></div>
             </label>
             <div class="row2">
-              <label class="fld"><div class="lbl" data-i18n="card.d.accent">포인트 색</div><input type="color" id="cardAccent" value="#111111" /></label>
-              <label class="fld"><div class="lbl" data-i18n="card.d.qrColor">QR 색</div><input type="color" id="cardQrColor" value="#111111" /></label>
+              <label class="fld"><div class="lbl" data-i18n="card.d.accent">포인트 색</div>
+                <div class="color-pick"><input type="color" id="cardAccent" value="#111111" /><span class="hex" id="cardAccentHex">#111111</span></div></label>
+              <label class="fld"><div class="lbl" data-i18n="card.d.qrColor">QR 색</div>
+                <div class="color-pick"><input type="color" id="cardQrColor" value="#111111" /><span class="hex" id="cardQrColorHex">#111111</span></div></label>
+            </div>
+            <label class="fld">
+              <div class="lbl"><span data-i18n="card.d.qrStyle">QR 스타일</span><b id="cardQrTplName"></b></div>
+              <div class="tpl-grid" id="cardQrGrid"></div>
+            </label>
+            <div class="card-drag-hint">
+              <span data-i18n="card.d.dragHint">✋ 왼쪽 미리보기에서 <b>이름·정보·QR을 드래그</b>해 위치를 옮길 수 있어요.</span>
+              <button class="btn sec" id="cardResetPos" type="button" style="flex:none;padding:5px 12px;font-size:11px" data-i18n="card.d.resetPos">위치 초기화</button>
             </div>
             <div class="hint" data-i18n="card.d.hint">QR은 vCard(연락처) 규격이라 스캔하면 이름·전화·이메일이 그대로 연락처 추가 화면에 뜹니다. 색을 너무 밝게 하면 스캔이 안 될 수 있어요(자동으로 어둡게 보정).</div>
           </div>
@@ -1241,8 +1281,8 @@
           <p><b>AR</b> 탭에서 카메라로 QR을 비추면 실시간 인식해 그 위에 3D·정보 카드를 얹어 보여줍니다. 100% 브라우저에서 처리되고 영상은 전송되지 않습니다.</p></div></div>
         <div class="guide-card"><div data-i18n-html="gd.f7"><span class="tag2">명함</span>
           <div class="ic-badge">💳</div><h4>QR 디지털 명함</h4>
-          <p><b>명함</b> 탭에서 종이 명함 사진을 올리면 <b>자동 인식(무료·기기 내)</b>으로 정보를 읽어 채웁니다 — 정확도가 필요하면 <b>고정밀(AI)</b>도 선택할 수 있어요. 정보로 <b>vCard QR</b>을 만들고 QR이 들어간 명함 디자인(라이트·다크·컬러바·그라디언트·미니멀)으로 완성합니다.</p>
-          <ul><li><b>PNG·SVG·PDF</b>로 저장하거나 바로 <b>공유</b></li><li><b>디지털 명함 폴더</b>에 명함+QR을 함께 보관·재편집</li><li>스캔하면 상대 폰의 <b>연락처 추가 화면</b>이 이름·전화·이메일과 함께 바로 떠요</li></ul></div></div>
+          <p><b>명함</b> 탭에서 종이 명함 사진을 올리면 <b>자동 인식(무료·기기 내)</b>으로 정보를 읽어 채웁니다 — 정확도가 필요하면 <b>고정밀(AI)</b>도 선택할 수 있어요. 정보로 <b>vCard QR</b>을 만들고 QR이 들어간 명함 디자인으로 완성합니다. 인스타·유튜브·링크드인 등 <b>소셜 프로필</b>도 추가돼요.</p>
+          <ul><li><b>명함 템플릿 24종 · QR 스타일 24종</b> — 클릭 한 번으로 교체</li><li>미리보기에서 <b>이름·정보·QR을 드래그</b>해 위치 조정</li><li><b>PNG·SVG·PDF</b> 저장/공유, <b>디지털 명함 폴더</b>에 명함+QR 함께 보관</li><li>스캔하면 상대 폰의 <b>연락처 추가 화면</b>이 바로 떠요</li></ul></div></div>
       </div>
 
       <h3 style="margin-top:26px" data-i18n="gd.h3">알아두면 좋은 팁</h3>
@@ -1267,7 +1307,7 @@
     </nav>
     <div style="margin-top:10px">Aesthetic QR Studio · <span data-i18n="foot.tag">아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)</span></div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · 빌드 <b id="verTag">2026.09.21-card</b></div>
+    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · 빌드 <b id="verTag">2026.09.21-card2</b></div>
   </footer>
 </div>
 
@@ -6850,6 +6890,16 @@ var I18N = {
   "card.aiOff":{ko:"고정밀(AI) 인식은 서버에 비전 API를 설정한 뒤 사용할 수 있어요. 지금은 무료 인식 또는 직접 입력을 이용하세요.",en:"Precision (AI) reading needs a vision API configured on the server. For now use free auto-read or manual entry.",zh:"高精度（AI）识别需在服务器配置视觉 API 后使用。目前请用免费识别或手动输入。",ja:"高精度（AI）認識はサーバーにビジョンAPIを設定後に利用できます。今は無料認識または手動入力をご利用ください。"},
   "card.saved":{ko:"디지털 명함 폴더에 저장됨 (명함 + QR)",en:"Saved to digital-card folder (card + QR)",zh:"已保存到电子名片文件夹（名片 + 二维码）",ja:"デジタル名刺フォルダに保存（名刺＋QR）"},
   "card.pdfOff":{ko:"PDF는 배포된(온라인) 사이트에서만 동작합니다.",en:"PDF export works only on the deployed (online) site.",zh:"PDF 导出仅在已部署（在线）站点可用。",ja:"PDF出力は公開（オンライン）サイトでのみ動作します。"},
+  "card.grp.social":{ko:"프로필 · 소셜 (선택)",en:"Profiles · Social (optional)",zh:"主页 · 社交（可选）",ja:"プロフィール · SNS（任意）"},
+  "card.social.hint":{ko:"아이디(@핸들) 또는 전체 URL 어느 쪽이든 좋아요. 명함 하단에 아이콘으로 표시되고, 스캔한 연락처에도 링크로 저장됩니다.",en:"Enter a @handle or a full URL — either works. Shown as icons at the bottom of the card and saved as links in the scanned contact.",zh:"填 @账号 或完整网址均可。会以图标显示在名片底部，并作为链接存入扫描后的联系人。",ja:"@ハンドルでもフルURLでもOK。名刺下部にアイコン表示され、スキャンした連絡先にもリンクとして保存されます。"},
+  "card.d.qrStyle":{ko:"QR 스타일",en:"QR style",zh:"二维码样式",ja:"QRスタイル"},
+  "card.d.dragHint":{ko:"✋ 왼쪽 미리보기에서 <b>이름·정보·QR을 드래그</b>해 위치를 옮길 수 있어요.",en:"✋ Drag the <b>name, details, or QR</b> in the preview to reposition them.",zh:"✋ 在左侧预览中<b>拖动姓名·信息·二维码</b>即可调整位置。",ja:"✋ 左のプレビューで<b>名前·情報·QRをドラッグ</b>して位置を変えられます。"},
+  "card.d.resetPos":{ko:"위치 초기화",en:"Reset layout",zh:"重置位置",ja:"位置をリセット"},
+  "card.posReset":{ko:"위치를 초기화했어요",en:"Layout reset",zh:"已重置位置",ja:"位置をリセットしました"},
+  "card.dlPng":{ko:"PNG 저장됨",en:"PNG saved",zh:"已保存 PNG",ja:"PNGを保存"},
+  "card.dlSvg":{ko:"SVG 저장됨",en:"SVG saved",zh:"已保存 SVG",ja:"SVGを保存"},
+  "card.dlPdf":{ko:"PDF 저장됨",en:"PDF saved",zh:"已保存 PDF",ja:"PDFを保存"},
+  "card.loaded":{ko:"불러왔습니다 — 편집 후 다시 저장하세요",en:"Loaded — edit and save again",zh:"已载入 — 编辑后重新保存",ja:"読み込みました — 編集して再保存を"},
   "hdr.sub":{ko:"아름답고 스캔되는 QR을 만드는 스튜디오",en:"A studio for beautiful, scannable QR codes",zh:"打造美观且可扫描的二维码工作室",ja:"美しくスキャン可能なQRを作るスタジオ"},
   "hero.eyebrow":{ko:'스캔되는 브랜드 아트 · 움직이는 QR · 서버 없이 브라우저에서',en:'Scannable brand art · animated QR · runs in your browser',zh:'可扫描的品牌艺术 · 动态二维码 · 浏览器内处理',ja:'スキャンできるブランドアート · 動くQR · ブラウザで処理'},
   "tips.title":{ko:'스캔이 잘 되는 QR 팁',en:'Tips for a scannable QR',zh:'易于扫描的二维码技巧',ja:'スキャンしやすいQRのコツ'},
@@ -7001,10 +7051,10 @@ var I18N = {
     zh:'<span class="tag2">AR</span><div class="ic-badge">🕶️</div><h4>增强现实（AR）</h4><p>在 <b>AR</b> 标签用相机对准二维码，实时识别并在其上叠加 3D / 信息卡。全程在浏览器处理，视频不会上传。</p>',
     ja:'<span class="tag2">AR</span><div class="ic-badge">🕶️</div><h4>拡張現実（AR）</h4><p><b>AR</b> タブでカメラをQRに向けるとリアルタイム認識し、その上に3D・情報カードを重ねて表示。すべてブラウザ内で処理し、映像は送信されません。</p>'},
   "gd.f7":{
-    ko:'<span class="tag2">명함</span><div class="ic-badge">💳</div><h4>QR 디지털 명함</h4><p><b>명함</b> 탭에서 종이 명함 사진을 올리면 <b>자동 인식(무료·기기 내)</b>으로 정보를 읽어 채웁니다 — 정확도가 필요하면 <b>고정밀(AI)</b>도 선택할 수 있어요. 정보로 <b>vCard QR</b>을 만들고 QR이 들어간 명함 디자인(라이트·다크·컬러바·그라디언트·미니멀)으로 완성합니다.</p><ul><li><b>PNG·SVG·PDF</b>로 저장하거나 바로 <b>공유</b></li><li><b>디지털 명함 폴더</b>에 명함+QR을 함께 보관·재편집</li><li>스캔하면 상대 폰의 <b>연락처 추가 화면</b>이 이름·전화·이메일과 함께 바로 떠요</li></ul>',
-    en:'<span class="tag2">Card</span><div class="ic-badge">💳</div><h4>QR digital business card</h4><p>In the <b>Card</b> tab, upload a photo of a paper card and <b>Auto-read (free, on-device)</b> fills the fields — or pick <b>Precision (AI)</b> when you need it. It builds a <b>vCard QR</b> and finishes a card design (light · dark · color-bar · gradient · minimal) with the QR baked in.</p><ul><li>Save as <b>PNG·SVG·PDF</b> or <b>Share</b> instantly</li><li>Keep card + QR together in the <b>digital-card folder</b>, re-editable</li><li>Scanning it opens the phone\'s <b>add-contact</b> screen prefilled with name/phone/email</li></ul>',
-    zh:'<span class="tag2">名片</span><div class="ic-badge">💳</div><h4>QR 电子名片</h4><p>在<b>名片</b>标签上传纸质名片照片，<b>自动识别（免费·本地）</b>读取信息填入——需要更准可选<b>高精度（AI）</b>。据此生成 <b>vCard 二维码</b>，并完成含二维码的名片设计（浅色·深色·色条·渐变·极简）。</p><ul><li>导出 <b>PNG·SVG·PDF</b> 或直接<b>分享</b></li><li>名片+二维码一起存入<b>电子名片文件夹</b>，可再次编辑</li><li>扫码即打开手机<b>添加联系人</b>界面，预填姓名·电话·邮箱</li></ul>',
-    ja:'<span class="tag2">名刺</span><div class="ic-badge">💳</div><h4>QRデジタル名刺</h4><p><b>名刺</b>タブで紙の名刺の写真をアップすると<b>自動認識（無料·端末内）</b>で情報を読み取り入力 — 精度が必要なら<b>高精度（AI）</b>も選べます。情報から <b>vCard QR</b> を作り、QR入りの名刺デザイン（ライト·ダーク·カラーバー·グラデ·ミニマル）に仕上げます。</p><ul><li><b>PNG·SVG·PDF</b> で保存、またはすぐ<b>共有</b></li><li><b>デジタル名刺フォルダ</b>に名刺＋QRをまとめて保管·再編集</li><li>スキャンすると相手の<b>連絡先追加</b>画面が名前·電話·メール入りで開きます</li></ul>'},
+    ko:'<span class="tag2">명함</span><div class="ic-badge">💳</div><h4>QR 디지털 명함</h4><p><b>명함</b> 탭에서 종이 명함 사진을 올리면 <b>자동 인식(무료·기기 내)</b>으로 정보를 읽어 채웁니다 — 정확도가 필요하면 <b>고정밀(AI)</b>도 선택할 수 있어요. 정보로 <b>vCard QR</b>을 만들고 QR이 들어간 명함 디자인으로 완성합니다. 인스타·유튜브·링크드인 등 <b>소셜 프로필</b>도 추가돼요.</p><ul><li><b>명함 템플릿 24종 · QR 스타일 24종</b> — 클릭 한 번으로 교체</li><li>미리보기에서 <b>이름·정보·QR을 드래그</b>해 위치 조정</li><li><b>PNG·SVG·PDF</b> 저장/공유, <b>디지털 명함 폴더</b>에 명함+QR 함께 보관</li><li>스캔하면 상대 폰의 <b>연락처 추가 화면</b>이 바로 떠요</li></ul>',
+    en:'<span class="tag2">Card</span><div class="ic-badge">💳</div><h4>QR digital business card</h4><p>In the <b>Card</b> tab, upload a photo of a paper card and <b>Auto-read (free, on-device)</b> fills the fields — or pick <b>Precision (AI)</b> when you need it. It builds a <b>vCard QR</b> and finishes a card design with the QR baked in. <b>Social profiles</b> (Instagram, YouTube, LinkedIn…) can be added too.</p><ul><li><b>24 card templates · 24 QR styles</b> — swap with one click</li><li><b>Drag the name, details, or QR</b> in the preview to reposition</li><li>Save/Share as <b>PNG·SVG·PDF</b>; keep card + QR in the <b>digital-card folder</b></li><li>Scanning opens the phone\'s <b>add-contact</b> screen instantly</li></ul>',
+    zh:'<span class="tag2">名片</span><div class="ic-badge">💳</div><h4>QR 电子名片</h4><p>在<b>名片</b>标签上传纸质名片照片，<b>自动识别（免费·本地）</b>读取信息填入——需要更准可选<b>高精度（AI）</b>。据此生成 <b>vCard 二维码</b>，并完成含二维码的名片设计。还可添加 Instagram·YouTube·LinkedIn 等<b>社交主页</b>。</p><ul><li><b>名片模板 24 款 · 二维码样式 24 款</b>——一键切换</li><li>在预览中<b>拖动姓名·信息·二维码</b>调整位置</li><li><b>PNG·SVG·PDF</b> 保存/分享，名片+二维码存入<b>电子名片文件夹</b></li><li>扫码即打开手机<b>添加联系人</b>界面</li></ul>',
+    ja:'<span class="tag2">名刺</span><div class="ic-badge">💳</div><h4>QRデジタル名刺</h4><p><b>名刺</b>タブで紙の名刺の写真をアップすると<b>自動認識（無料·端末内）</b>で情報を読み取り入力 — 精度が必要なら<b>高精度（AI）</b>も選べます。情報から <b>vCard QR</b> を作り、QR入りの名刺デザインに仕上げます。Instagram·YouTube·LinkedIn などの<b>SNSプロフィール</b>も追加できます。</p><ul><li><b>名刺テンプレート24種 · QRスタイル24種</b> — ワンクリックで切替</li><li>プレビューで<b>名前·情報·QRをドラッグ</b>して位置調整</li><li><b>PNG·SVG·PDF</b> 保存/共有、<b>デジタル名刺フォルダ</b>に名刺＋QR保管</li><li>スキャンで相手の<b>連絡先追加</b>画面がすぐ開きます</li></ul>'},
   "gd.tips":{
     ko:'<li>로고·아트·픽토그램을 넣을 땐 <b>오류정정 H</b>가 자동 권장됩니다(복원력 30%).</li><li>미리보기 아래 <b>상태줄</b>에 예상 스캔성이 표시돼요 — 경고가 뜨면 대비를 높이거나 노출도를 낮추세요.</li><li>모든 처리는 <b>브라우저 안에서만</b> 이뤄집니다(AI 생성 제외). 사진·데이터가 기기를 떠나지 않아요.</li><li>인쇄하거나 화면에 띄운 뒤 <b>실제로 휴대폰으로 스캔</b>해 최종 확인하는 것을 권장합니다.</li>',
     en:'<li>When adding a logo/art/pictogram, <b>error-correction H</b> is auto-recommended (30% recovery).</li><li>The <b>status line</b> under the preview shows expected scannability — if it warns, raise contrast or lower art visibility.</li><li>Everything runs <b>in your browser only</b> (except AI generation). Photos & data never leave your device.</li><li>Print it or show it on screen and <b>scan it with a real phone</b> for a final check.</li>',
@@ -7280,100 +7330,303 @@ var CARD = (function(){
   var CARDKEY="aqr_cards_v1";
   var FD="'Nunito','SF Pro Rounded',system-ui,-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif";
   var FB="system-ui,-apple-system,'Apple SD Gothic Neo','Noto Sans KR',Pretendard,sans-serif";
-  var st={ tpl:"light", frontImg:null, backImg:null, hi:null, entered:false };
+  var st={ tpl:"classic", qrTpl:"classic", frontImg:null, backImg:null, hi:null, entered:false, pos:{}, box:{}, drag:null };
   function $id(x){ return document.getElementById(x); }
-  function shade(hex,amt){ var m=/^#?([0-9a-fA-F]{6})$/.exec(hex||"#111111"); if(!m) return hex; var v=parseInt(m[1],16),r=(v>>16)&255,g=(v>>8)&255,b=v&255;
-    r=Math.max(0,Math.min(255,r+amt)); g=Math.max(0,Math.min(255,g+amt)); b=Math.max(0,Math.min(255,b+amt));
-    return "#"+[r,g,b].map(function(x){return ("0"+x.toString(16)).slice(-2);}).join(""); }
+  function hx2(x){ return ("0"+Math.max(0,Math.min(255,Math.round(x))).toString(16)).slice(-2); }
+  function parseHex(hex){ var m=/^#?([0-9a-fA-F]{6})$/.exec(hex||""); if(!m) return [17,17,17]; var v=parseInt(m[1],16); return [(v>>16)&255,(v>>8)&255,v&255]; }
+  function shade(hex,amt){ var c=parseHex(hex); return "#"+hx2(c[0]+amt)+hx2(c[1]+amt)+hx2(c[2]+amt); }
+  function mix(h1,h2,t){ var a=parseHex(h1),b=parseHex(h2); return "#"+hx2(a[0]+(b[0]-a[0])*t)+hx2(a[1]+(b[1]-a[1])*t)+hx2(a[2]+(b[2]-a[2])*t); }
+  function lum(hex){ var c=parseHex(hex); return 0.2126*c[0]+0.7152*c[1]+0.0722*c[2]; }
+  function dsafe(hex,T){ return (typeof darkenForScan==="function")?darkenForScan(hex,T):hex; }
   function rrect(g,x,y,w,h,r){ r=Math.min(r,w/2,h/2); g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath(); }
   function downscale(src,w){ var h=Math.round(src.height*(w/src.width)); var c=document.createElement("canvas"); c.width=w;c.height=h; c.getContext("2d").drawImage(src,0,0,w,h); return c; }
 
+  // ===================== TEMPLATE REGISTRY (24 card styles) =====================
+  // base: light|paper|tint|dark|ink|slate|accent|grad|gradSoft ; deco: bar|border|hair|leftband|topline|corner|dots|ribbon|badge|glow|none ; qr: right|left
+  var TPL=[
+    {id:"classic",  nm:"클래식",   base:"light",   deco:"bar",      qr:"right"},
+    {id:"minimal",  nm:"미니멀",   base:"light",   deco:"border",   qr:"right"},
+    {id:"line",     nm:"라인",     base:"light",   deco:"hair",     qr:"right"},
+    {id:"paper",    nm:"페이퍼",   base:"paper",   deco:"bar",      qr:"right"},
+    {id:"tintcard", nm:"틴트",     base:"tint",    deco:"none",     qr:"right"},
+    {id:"leftbar",  nm:"레프트바", base:"light",   deco:"leftband", qr:"right"},
+    {id:"topline",  nm:"탑라인",   base:"light",   deco:"topline",  qr:"right"},
+    {id:"corner",   nm:"코너",     base:"light",   deco:"corner",   qr:"right"},
+    {id:"framed",   nm:"프레임",   base:"paper",   deco:"border",   qr:"right"},
+    {id:"ribbon",   nm:"리본",     base:"light",   deco:"ribbon",   qr:"right"},
+    {id:"badge",    nm:"배지",     base:"tint",    deco:"badge",    qr:"right"},
+    {id:"dots",     nm:"도트",     base:"light",   deco:"dots",     qr:"right"},
+    {id:"dark",     nm:"다크",     base:"dark",    deco:"bar",      qr:"right"},
+    {id:"ink",      nm:"잉크",     base:"ink",     deco:"glow",     qr:"right"},
+    {id:"slate",    nm:"슬레이트", base:"slate",   deco:"leftband", qr:"right"},
+    {id:"darkline", nm:"다크라인", base:"dark",    deco:"topline",  qr:"right"},
+    {id:"neon",     nm:"네온",     base:"ink",     deco:"ribbon",   qr:"right"},
+    {id:"accent",   nm:"솔리드",   base:"accent",  deco:"none",     qr:"right"},
+    {id:"grad",     nm:"그라디언트",base:"grad",   deco:"none",     qr:"right"},
+    {id:"gradbar",  nm:"그라드바", base:"grad",    deco:"bar",      qr:"left"},
+    {id:"gradsoft", nm:"소프트",   base:"gradSoft",deco:"bar",      qr:"right"},
+    {id:"mono",     nm:"모노",     base:"tint",    deco:"leftband", qr:"left"},
+    {id:"classicL", nm:"클래식 L", base:"light",   deco:"bar",      qr:"left"},
+    {id:"darkL",    nm:"다크 L",   base:"dark",    deco:"bar",      qr:"left"}
+  ];
+  function tpl(){ for(var i=0;i<TPL.length;i++){ if(TPL[i].id===st.tpl) return TPL[i]; } return TPL[0]; }
+
+  // paint background + decoration; returns text palette
+  function paintCard(g,W,H,T,acc){
+    var ink="#111111",sub="#5b6472",onDark=false,name="#111111",nameOnRibbon=false;
+    var base=T.base;
+    if(base==="light"){ g.fillStyle="#ffffff"; g.fillRect(0,0,W,H); }
+    else if(base==="paper"){ g.fillStyle="#faf7f1"; g.fillRect(0,0,W,H); }
+    else if(base==="tint"){ g.fillStyle=mix(acc,"#ffffff",0.90); g.fillRect(0,0,W,H); }
+    else if(base==="dark"){ g.fillStyle="#191919"; g.fillRect(0,0,W,H); onDark=true; }
+    else if(base==="ink"){ g.fillStyle="#0b0d14"; g.fillRect(0,0,W,H); onDark=true; }
+    else if(base==="slate"){ g.fillStyle="#1e293b"; g.fillRect(0,0,W,H); onDark=true; }
+    else if(base==="accent"){ g.fillStyle=acc; g.fillRect(0,0,W,H); onDark=lum(acc)<150; }
+    else if(base==="grad"){ var gr=g.createLinearGradient(0,0,W,H); gr.addColorStop(0,acc); gr.addColorStop(1,shade(acc,-46)); g.fillStyle=gr; g.fillRect(0,0,W,H); onDark=lum(acc)<170; }
+    else if(base==="gradSoft"){ var g2=g.createLinearGradient(0,0,0,H); g2.addColorStop(0,mix(acc,"#ffffff",0.80)); g2.addColorStop(1,"#ffffff"); g2=g2; g.fillStyle=g2; g.fillRect(0,0,W,H); }
+    if(onDark){ ink="#ffffff"; sub="rgba(255,255,255,.72)"; name="#ffffff"; }
+    // accent contrast for text/decor on this bg
+    var accTx = onDark ? (base==="dark"||base==="ink"||base==="slate"? acc : "#ffffff") : acc;
+    // decorations
+    var d=T.deco;
+    if(d==="border"){ g.strokeStyle=onDark?"rgba(255,255,255,.18)":"#e5e5e5"; g.lineWidth=2; g.strokeRect(14,14,W-28,H-28); }
+    else if(d==="topline"){ g.fillStyle=accTx; g.fillRect(0,0,W,14); }
+    else if(d==="leftband"){ g.fillStyle=accTx; g.fillRect(0,0,34,H); }
+    else if(d==="corner"){ g.fillStyle=accTx; g.beginPath(); g.moveTo(W,0); g.lineTo(W,150); g.lineTo(W-150,0); g.closePath(); g.fill(); }
+    else if(d==="dots"){ g.fillStyle=onDark?"rgba(255,255,255,.10)":mix(acc,"#ffffff",0.72); for(var yy=40;yy<H-20;yy+=34){ for(var xx=W-40;xx>W-190;xx-=34){ g.beginPath(); g.arc(xx,yy,3.2,0,7); g.fill(); } } }
+    return {ink:ink,sub:sub,onDark:onDark,accTx:accTx,name:name,deco:d};
+  }
+
+  // ===================== QR STYLE REGISTRY (24 QR looks) =====================
+  // shape presets follow the QR-color; theme presets carry their own colors.
+  var QTPL=[
+    {id:"classic", nm:"클래식",  dot:"square",  eye:"square"},
+    {id:"round",   nm:"라운드",  dot:"rounded", eye:"rounded"},
+    {id:"dotscl",  nm:"도트",    dot:"dots",    eye:"circle"},
+    {id:"leaf",    nm:"리프",    dot:"rounded", eye:"leaf"},
+    {id:"classy",  nm:"클래시",  dot:"classy",  eye:"leaf"},
+    {id:"diamond", nm:"다이아",  dot:"diamond", eye:"square"},
+    {id:"hexa",    nm:"헥사",    dot:"hexagon", eye:"circle"},
+    {id:"star",    nm:"스타",    dot:"star",    eye:"rounded"},
+    {id:"liquid",  nm:"리퀴드",  dot:"liquid",  eye:"rounded"},
+    {id:"dotround",nm:"소프트",  dot:"dots",    eye:"rounded"},
+    {id:"target",  nm:"타겟",    dot:"rounded", eye:"target"},
+    {id:"sqcircle",nm:"믹스",    dot:"square",  eye:"circle"},
+    {id:"gradR",   nm:"그라드",  dot:"rounded", eye:"rounded", grad:true},
+    {id:"gradD",   nm:"그라드 점",dot:"dots",   eye:"circle",  grad:true},
+    {id:"gradC",   nm:"그라드 C",dot:"classy",  eye:"leaf",    grad:true},
+    {id:"gradL",   nm:"그라드 L",dot:"liquid",  eye:"rounded", grad:true},
+    {id:"eyeR",    nm:"포인트눈",dot:"rounded", eye:"rounded", eyeAcc:true},
+    {id:"eyeD",    nm:"포인트 점",dot:"dots",   eye:"circle",  eyeAcc:true},
+    {id:"eyeS",    nm:"포인트 각",dot:"square",  eye:"square",  eyeAcc:true},
+    {id:"ocean",   nm:"오션",    dot:"dots",    eye:"circle",  grad:true, c1:"#0ea5e9", c2:"#1d4ed8"},
+    {id:"sunset",  nm:"선셋",    dot:"rounded", eye:"rounded", grad:true, c1:"#f43f5e", c2:"#b45309"},
+    {id:"forest",  nm:"포레스트",dot:"classy",  eye:"leaf",    grad:true, c1:"#059669", c2:"#064e3b"},
+    {id:"midnight",nm:"미드나잇",dot:"rounded", eye:"rounded", c1:"#0b1020"},
+    {id:"rose",    nm:"로즈",    dot:"dots",    eye:"circle",  c1:"#e11d48"}
+  ];
+  function qtpl(){ for(var i=0;i<QTPL.length;i++){ if(QTPL[i].id===st.qrTpl) return QTPL[i]; } return QTPL[0]; }
+  function qStyle(p,color,accent){
+    var c1 = p.c1 ? dsafe(p.c1,84) : dsafe(color,84);
+    var c2 = p.c2 ? dsafe(p.c2,84) : (p.grad ? mix(c1,"#000000",0.34) : c1);
+    return { dot:p.dot, eye:p.eye, fill:p.grad?"linear":"solid", fg1:c1, fg2:c2, angle:45,
+             eyeColorOn: !!p.eyeAcc, eyeColor: dsafe(accent||color,84) };
+  }
+
+  // ===================== vCard (with socials) =====================
+  function gval(id){ var el=$id(id); return el?(el.value||"").trim():""; }
+  function socialUrl(kind,v){
+    v=(v||"").trim(); if(!v) return "";
+    if(/^https?:\/\//i.test(v)) return v;
+    var h=v.replace(/^@+/,"");
+    switch(kind){
+      case "insta": return "https://instagram.com/"+h;
+      case "yt":    return "https://youtube.com/@"+h;
+      case "li":    return "https://linkedin.com/"+(/\//.test(h)?h:"in/"+h);
+      case "x":     return "https://x.com/"+h;
+      case "tk":    return "https://tiktok.com/@"+h;
+      case "gh":    return "https://github.com/"+h;
+    }
+    return v;
+  }
+  function socials(){
+    var defs=[["insta","cdInsta","instagram","📷"],["yt","cdYt","youtube","▶"],["li","cdLi","linkedin","in"],
+              ["x","cdX","twitter","✖"],["tk","cdTk","tiktok","♪"],["gh","cdGh","github","⌥"]];
+    var out=[]; defs.forEach(function(d){ var raw=gval(d[1]); if(!raw) return;
+      var lab=raw.replace(/^https?:\/\/(www\.)?/,"").replace(/\/$/,"");
+      if(d[0]==="li") lab=lab.replace(/^(linkedin\.com\/)?in\//i,"").replace(/^@/,"");   // "in/name" → "name"
+      else if(d[0]==="gh") lab=lab.replace(/^github\.com\//i,"");
+      else lab=lab.replace(/^[a-z.]+\.com\//i,"");
+      if(!/^@/.test(lab) && (d[0]==="insta"||d[0]==="yt"||d[0]==="x"||d[0]==="tk")) lab="@"+lab.replace(/^@/,"");
+      out.push({kind:d[0],svc:d[2],icon:d[3],url:socialUrl(d[0],raw),label:lab});
+    });
+    return out;
+  }
   function vcard(){
-    function g(id){ return ($id(id).value||"").trim(); }
-    var nm=g("cdName"),ti=g("cdTitle"),org=g("cdOrg"),tel=g("cdTel"),em=g("cdEmail"),url=g("cdUrl"),addr=g("cdAddr");
-    return "BEGIN:VCARD\nVERSION:3.0\nN:"+nm+"\nFN:"+nm
+    var nm=gval("cdName"),ti=gval("cdTitle"),org=gval("cdOrg"),tel=gval("cdTel"),em=gval("cdEmail"),url=gval("cdUrl"),addr=gval("cdAddr");
+    var v="BEGIN:VCARD\nVERSION:3.0\nN:"+nm+"\nFN:"+nm
       +(org?"\nORG:"+org:"")+(ti?"\nTITLE:"+ti:"")
       +(tel?"\nTEL;TYPE=CELL:"+tel:"")+(em?"\nEMAIL;TYPE=INTERNET:"+em:"")
-      +(url?"\nURL:"+url:"")+(addr?"\nADR;TYPE=WORK:;;"+addr.replace(/,/g," ")+";;;":"")+"\nEND:VCARD";
+      +(url?"\nURL:"+url:"")+(addr?"\nADR;TYPE=WORK:;;"+addr.replace(/,/g," ")+";;;":"");
+    socials().forEach(function(s){ v+="\nX-SOCIALPROFILE;TYPE="+s.svc+":"+s.url; });
+    return v+"\nEND:VCARD";
   }
-  // render the vCard QR to an offscreen canvas by snapshotting the studio state S
-  function qrCanvas(px, color){
-    var keys=["content","fill","fg1","fg2","angle","bg","transparent","dot","eye","eyeColorOn","ecc","margin","frameOn","labelOn","anim","artImg","aiArt","posterOn","centerMode","logo"];
+
+  // ===================== QR render (offscreen, snapshots studio state S) =====================
+  function qrCanvas(px, color, accent, styleId){
+    var keys=["content","fill","fg1","fg2","angle","bg","transparent","dot","eye","eyeColorOn","eyeColor","ecc","margin","frameOn","labelOn","anim","artImg","aiArt","posterOn","centerMode","logo"];
     var snap={}; keys.forEach(function(k){ snap[k]=S[k]; });
-    S.content=vcard(); S.fill="solid"; S.fg1=(typeof darkenForScan==="function")?darkenForScan(color||"#111111"):"#111111"; S.fg2=S.fg1;
-    S.bg="#ffffff"; S.transparent=false; S.dot="square"; S.eye="square"; S.eyeColorOn=false; S.ecc="H"; S.margin=2;
-    S.frameOn=false; S.labelOn=false; S.anim=false; S.artImg=null; S.aiArt=null; S.posterOn=false; S.centerMode="none"; S.logo=null;
+    var p=null; for(var i=0;i<QTPL.length;i++){ if(QTPL[i].id===styleId){ p=QTPL[i]; break; } } p=p||QTPL[0];
+    var sp=qStyle(p, color||"#111111", accent||color||"#111111");
+    S.content=vcard(); S.fill=sp.fill; S.fg1=sp.fg1; S.fg2=sp.fg2; S.angle=sp.angle;
+    S.bg="#ffffff"; S.transparent=false; S.dot=sp.dot; S.eye=sp.eye; S.eyeColorOn=sp.eyeColorOn; S.eyeColor=sp.eyeColor;
+    S.ecc="H"; S.margin=2; S.frameOn=false; S.labelOn=false; S.anim=false; S.artImg=null; S.aiArt=null; S.posterOn=false; S.centerMode="none"; S.logo=null;
     var cv=document.createElement("canvas"); cv.width=px; cv.height=px;
     try{ render(cv.getContext("2d"), px); }catch(e){}
     keys.forEach(function(k){ S[k]=snap[k]; });
     return cv;
   }
+
+  // ===================== layout + draw =====================
+  function P(key,bx,by){ var o=st.pos[key]||{dx:0,dy:0}; return {x:bx+o.dx, y:by+o.dy}; }
   function draw(){
     var W=1050,H=600; st.hi=st.hi||document.createElement("canvas"); st.hi.width=W; st.hi.height=H;
     var g=st.hi.getContext("2d"); g.clearRect(0,0,W,H);
-    var tpl=st.tpl, acc=$id("cardAccent").value||"#111111", qcol=$id("cardQrColor").value||"#111111";
-    var bg="#ffffff",ink="#111111",sub="#5b6472",accent=acc,onDark=false;
-    if(tpl==="dark"){ bg="#171717"; ink="#ffffff"; sub="rgba(255,255,255,.72)"; onDark=true; }
-    g.fillStyle=bg; g.fillRect(0,0,W,H);
-    if(tpl==="gradient"){ var gr=g.createLinearGradient(0,0,W,H); gr.addColorStop(0,acc); gr.addColorStop(1,shade(acc,-38)); g.fillStyle=gr; g.fillRect(0,0,W,H); ink="#ffffff"; sub="rgba(255,255,255,.85)"; onDark=true; }
-    if(tpl==="bar"){ g.fillStyle=acc; g.fillRect(0,0,28,H); }
-    if(tpl==="minimal"){ g.strokeStyle="#e5e5e5"; g.lineWidth=2; g.strokeRect(1,1,W-2,H-2); }
-    // QR block (white card behind on dark/gradient for scannability)
-    var qs=330, qx=W-qs-56, qy=Math.round((H-qs)/2)-6;
-    if(onDark){ g.fillStyle="#ffffff"; rrect(g,qx-16,qy-16,qs+32,qs+52,18); g.fill(); }
-    var qcv=qrCanvas(qs,qcol); try{ g.drawImage(qcv,qx,qy,qs,qs); }catch(e){}
-    g.textAlign="center"; g.fillStyle=onDark?"#333":sub; g.font="600 18px "+FB;
+    var T=tpl(), acc=gval("cardAccent")||"#111111", qcol=gval("cardQrColor")||"#111111";
+    var pal=paintCard(g,W,H,T,acc);
+    var onDark=pal.onDark, ink=pal.ink, sub=pal.sub, accTx=pal.accTx;
+    var qs=298, qrLeft=(T.qr==="left");
+    // base anchors
+    var leftPad = (T.deco==="leftband")?96:64;
+    var qx0 = qrLeft? 60 : (W-qs-60), qy0=Math.round((H-qs)/2)-40;
+    var textX = qrLeft? (qx0+qs+52) : leftPad;
+    var qp=P("qr",qx0,qy0); var qx=qp.x, qy=qp.y;
+    // white plate behind QR on dark/colored bg
+    if(onDark || T.base==="accent" || T.base==="grad"){ g.fillStyle="#ffffff"; rrect(g,qx-16,qy-16,qs+32,qs+56,18); g.fill(); }
+    var qcv=qrCanvas(qs,qcol,acc,st.qrTpl); try{ g.drawImage(qcv,qx,qy,qs,qs); }catch(e){}
+    g.textAlign="center"; g.fillStyle=(onDark||T.base==="accent"||T.base==="grad")?"#444":sub; g.font="600 17px "+FB;
     g.fillText((typeof t==="function"&&t("card.scanCap"))||"스캔 → 연락처 저장", qx+qs/2, qy+qs+30);
     g.textAlign="left";
-    // text block
-    var tx=(tpl==="bar")?62:60, ty=150;
-    var nm=($id("cdName").value||"").trim()||"이름", ti=($id("cdTitle").value||"").trim(), org=($id("cdOrg").value||"").trim();
-    g.fillStyle=ink; g.font="700 56px "+FD; g.fillText(nm, tx, ty);
-    g.fillStyle=onDark?(tpl==="dark"?acc:"#ffffff"):accent; g.fillRect(tx, ty+20, 66, 6);
-    var y=ty+66;
-    if(ti){ g.fillStyle=onDark?ink:accent; g.font="600 27px "+FB; g.fillText(ti, tx, y); y+=40; }
-    if(org){ g.fillStyle=sub; g.font="400 25px "+FB; g.fillText(org, tx, y); y+=54; } else { y+=16; }
-    g.font="400 24px "+FB;
-    [["📞","cdTel"],["✉️","cdEmail"],["🌐","cdUrl"],["📍","cdAddr"]].forEach(function(p){
-      var val=($id(p[1]).value||"").trim(); if(!val) return;
-      g.fillStyle=sub; g.fillText(p[0]+"  "+val, tx, y); y+=38;
+    st.box.qr={x:qx-16,y:qy-16,w:qs+32,h:qs+56};
+
+    // ---- HEAD block: name + underline + title + org ----
+    var hp=P("head",textX,120);
+    var nm=gval("cdName")||"이름", ti=gval("cdTitle"), org=gval("cdOrg");
+    var nameColor=ink;
+    if(pal.deco==="ribbon"){ g.font="700 52px "+FD; var nw=g.measureText(nm).width; g.fillStyle=accTx; rrect(g,hp.x-16,hp.y-46,nw+32,64,12); g.fill(); nameColor= (lum(accTx)<150?"#ffffff":"#111111"); }
+    else if(pal.deco==="badge"){ g.fillStyle=accTx; g.beginPath(); g.arc(hp.x+18,hp.y-12,34,0,7); g.fill(); g.fillStyle=(lum(accTx)<150?"#fff":"#111"); g.font="700 34px "+FD; g.textAlign="center"; g.fillText((nm[0]||"·"),hp.x+18,hp.y-1); g.textAlign="left"; }
+    if(pal.deco==="glow"){ g.shadowColor=accTx; g.shadowBlur=26; }
+    var nameX = (pal.deco==="badge")? hp.x+66 : hp.x;
+    g.fillStyle=nameColor; g.font="700 52px "+FD; g.fillText(nm, nameX, hp.y);
+    g.shadowBlur=0;
+    if(pal.deco!=="ribbon" && pal.deco!=="badge"){ g.fillStyle=accTx; g.fillRect(hp.x, hp.y+18, 62, 6); }
+    var y=hp.y+ (pal.deco==="ribbon"?58:60);
+    if(ti){ g.fillStyle=onDark?ink:accTx; g.font="600 26px "+FB; g.fillText(ti, hp.x, y); y+=38; }
+    if(org){ g.fillStyle=sub; g.font="400 24px "+FB; g.fillText(org, hp.x, y); y+=10; }
+    st.box.head={x:hp.x-18,y:hp.y-54,w:430,h:(y-hp.y)+70};
+
+    // ---- CONTACT block ----
+    var cp=P("contact",textX,278);
+    var cy=cp.y; g.font="400 23px "+FB;
+    [["📞","cdTel"],["✉","cdEmail"],["🌐","cdUrl"],["📍","cdAddr"]].forEach(function(pr){
+      var val=gval(pr[1]); if(!val) return; g.fillStyle=sub; g.fillText(pr[0]+"  "+val, cp.x, cy); cy+=37;
     });
+    st.box.contact={x:cp.x-16,y:cp.y-28,w:430,h:(cy-cp.y)+30};
+
+    // ---- SOCIAL block ----
+    var socs=socials();
+    if(socs.length){
+      var sp2=P("social",textX,H-70); var sx=sp2.x, sy=sp2.y; g.font="600 20px "+FB;
+      socs.forEach(function(s){
+        var chip=s.icon+" "+s.label; var w=g.measureText(chip).width+22;
+        g.fillStyle=onDark?"rgba(255,255,255,.10)":mix(acc,"#ffffff",0.86); rrect(g,sx,sy-24,w,34,17); g.fill();
+        g.fillStyle=onDark?ink:shade(acc,-10); g.fillText(chip, sx+11, sy);
+        sx+=w+8; if(sx>textX+420){ sx=sp2.x; sy+=42; }
+      });
+      st.box.social={x:sp2.x-6,y:sp2.y-30,w:440,h:(sy-sp2.y)+46};
+    } else { st.box.social=null; }
+
     var pv=$id("cardPreview"); if(pv){ pv.width=W; pv.height=H; pv.getContext("2d").drawImage(st.hi,0,0); }
   }
 
-  // ---- OCR (free, client-side Tesseract.js loaded on demand) ----
+  // ---- drag to reposition blocks ----
+  function evtPt(e){ var pv=$id("cardPreview"); var r=pv.getBoundingClientRect(); var cx=(e.touches?e.touches[0].clientX:e.clientX), cy=(e.touches?e.touches[0].clientY:e.clientY);
+    return { x:(cx-r.left)*(1050/r.width), y:(cy-r.top)*(600/r.height) }; }
+  function hitBlock(pt){ var order=["head","contact","social","qr"]; for(var i=0;i<order.length;i++){ var b=st.box[order[i]]; if(b && pt.x>=b.x && pt.x<=b.x+b.w && pt.y>=b.y && pt.y<=b.y+b.h) return order[i]; } return null; }
+  function dragStart(e){ var pt=evtPt(e); var k=hitBlock(pt); if(!k) return; var o=st.pos[k]||{dx:0,dy:0}; st.drag={k:k,sx:pt.x,sy:pt.y,ox:o.dx,oy:o.dy}; $id("cardPreview").classList.add("dragging"); e.preventDefault(); }
+  function dragMove(e){ if(!st.drag) return; var pt=evtPt(e); st.pos[st.drag.k]={dx:st.drag.ox+(pt.x-st.drag.sx), dy:st.drag.oy+(pt.y-st.drag.sy)}; draw(); e.preventDefault(); }
+  function dragEnd(){ if(st.drag){ st.drag=null; $id("cardPreview").classList.remove("dragging"); } }
+
+  // ===================== thumbnail pickers =====================
+  function fakeQr(g,x,y,s,col){ g.fillStyle="#fff"; g.fillRect(x,y,s,s); g.fillStyle=col; var n=6,u=s/n; for(var i=0;i<n;i++)for(var j=0;j<n;j++){ if((i*7+j*3)%3===0) g.fillRect(x+i*u+1,y+j*u+1,u-2,u-2); } g.fillRect(x+2,y+2,u*1.6,u*1.6); g.fillRect(x+s-u*1.6-2,y+2,u*1.6,u*1.6); g.fillRect(x+2,y+s-u*1.6-2,u*1.6,u*1.6); }
+  function drawThumb(cv,T,acc){
+    var W=cv.width,H=cv.height,g=cv.getContext("2d"); var pal=paintCard(g,W,H,T,acc);
+    var qs=Math.round(H*0.52), qrLeft=(T.qr==="left"); var qx=qrLeft?8:W-qs-8, qy=Math.round((H-qs)/2);
+    if(pal.onDark||T.base==="accent"||T.base==="grad"){ g.fillStyle="#fff"; rrect(g,qx-3,qy-3,qs+6,qs+6,4); g.fill(); }
+    fakeQr(g,qx,qy,qs, pal.onDark? "#111":"#111");
+    var tx=qrLeft?(qx+qs+8):(T.deco==="leftband"?16:10);
+    if(pal.deco==="ribbon"){ g.fillStyle=pal.accTx; rrect(g,tx-2,10,44,11,3); g.fill(); g.fillStyle=(lum(pal.accTx)<150?"#fff":"#111"); }
+    else g.fillStyle=pal.ink;
+    g.fillRect(tx,12,36,7);
+    if(pal.deco!=="ribbon"){ g.fillStyle=pal.accTx; g.fillRect(tx,23,16,3); }
+    g.fillStyle=pal.sub; g.fillRect(tx,32,30,4); g.fillRect(tx,40,24,4);
+  }
+  function buildTplGrid(){
+    var box=$id("cardTplGrid"); if(!box) return; box.innerHTML=""; var acc=gval("cardAccent")||"#111111";
+    TPL.forEach(function(T){
+      var el=document.createElement("div"); el.className="tpl"+(T.id===st.tpl?" on":""); el.dataset.tpl=T.id;
+      var cv=document.createElement("canvas"); cv.width=148; cv.height=84; drawThumb(cv,T,acc);
+      el.appendChild(cv); var nm=document.createElement("div"); nm.className="nm"; nm.textContent=T.nm; el.appendChild(nm);
+      el.onclick=function(){ st.tpl=T.id; markGrid("cardTplGrid",T.id); setName("cardTplName",T.nm); draw(); };
+      box.appendChild(el);
+    });
+    setName("cardTplName",tpl().nm);
+  }
+  function buildQrGrid(){
+    var box=$id("cardQrGrid"); if(!box) return; box.innerHTML=""; var qcol=gval("cardQrColor")||"#111111", acc=gval("cardAccent")||"#111111";
+    QTPL.forEach(function(p){
+      var el=document.createElement("div"); el.className="tpl"+(p.id===st.qrTpl?" on":""); el.dataset.qtpl=p.id;
+      var cv=document.createElement("canvas"); cv.width=72; cv.height=72;
+      try{ var q=qrCanvas(72,qcol,acc,p.id); cv.getContext("2d").drawImage(q,0,0); }catch(e){}
+      el.appendChild(cv); var nm=document.createElement("div"); nm.className="nm"; nm.textContent=p.nm; el.appendChild(nm);
+      el.onclick=function(){ st.qrTpl=p.id; markGrid("cardQrGrid",p.id,"qtpl"); setName("cardQrTplName",p.nm); draw(); };
+      box.appendChild(el);
+    });
+    setName("cardQrTplName",qtpl().nm);
+  }
+  function markGrid(gridId,id,attr){ attr=attr||"tpl"; var box=$id(gridId); if(!box) return; Array.prototype.forEach.call(box.children,function(c){ c.classList.toggle("on", c.dataset[attr]===id); }); }
+  function setName(id,txt){ var el=$id(id); if(el) el.textContent=txt; }
+
+  // ===================== OCR (free, client-side Tesseract.js) =====================
   function loadScript(src){ return new Promise(function(res,rej){ if(document.querySelector('script[src="'+src+'"]')){res();return;} var s=document.createElement("script"); s.src=src; s.onload=function(){res();}; s.onerror=function(){rej(new Error("load "+src));}; document.head.appendChild(s); }); }
   function parseCard(text){
-    var out={}; var lines=(text||"").split(/\n+/).map(function(l){return l.trim();}).filter(Boolean);
-    var joined=lines.join(" ");
+    var out={}; var lines=(text||"").split(/\n+/).map(function(l){return l.trim();}).filter(Boolean); var joined=lines.join(" ");
     var em=joined.match(/[\w.\-+]+@[\w.\-]+\.[a-z]{2,}/i); if(em) out.email=em[0];
     var tel=joined.match(/(\+?\d[\d\-\s().]{7,}\d)/); if(tel) out.tel=tel[0].replace(/\s+/g," ").trim();
     var url=joined.match(/((https?:\/\/)?(www\.)?[\w\-]+\.(com|net|io|co|kr|org|dev|me)(\/[\w\-./?%&=]*)?)/i); if(url && !(em&&url[0].indexOf("@")>-1)) out.url=url[0];
-    // name = first line that has no digits/@ and is short (<=20 chars), prefer Hangul or 2 words
+    var ig=joined.match(/(?:instagram\.com\/|@)([A-Za-z0-9._]{3,30})/i); if(ig && /instagram/i.test(joined)) out.insta=ig[1];
     for(var i=0;i<lines.length;i++){ var l=lines[i]; if(/[@\d]/.test(l)) continue; if(l.length>24) continue; if(/^[가-힣]{2,5}$/.test(l)||/^[A-Za-z][A-Za-z.\-]+\s+[A-Za-z][A-Za-z.\-]+$/.test(l)){ out.name=l; break; } }
     if(!out.name){ for(var j=0;j<lines.length;j++){ if(!/[@\d]/.test(lines[j]) && lines[j].length<=24){ out.name=lines[j]; break; } } }
-    // title / org guesses (line containing common keywords)
     var titleKw=/(대표|이사|부장|과장|팀장|매니저|Manager|Director|CEO|CTO|Designer|Engineer|대리|사원|Lead|Head)/i;
     var orgKw=/(주식회사|㈜|Inc\.?|Corp\.?|LLC|Ltd\.?|Co\.?|스튜디오|Studio|Lab|컴퍼니|Company)/i;
     lines.forEach(function(l){ if(!out.title && titleKw.test(l) && l.length<=30) out.title=l; if(!out.org && orgKw.test(l) && l.length<=40) out.org=l; });
     return out;
   }
   function applyParsed(o){
-    var map={name:"cdName",title:"cdTitle",org:"cdOrg",tel:"cdTel",email:"cdEmail",url:"cdUrl",addr:"cdAddr"};
+    var map={name:"cdName",title:"cdTitle",org:"cdOrg",tel:"cdTel",email:"cdEmail",url:"cdUrl",addr:"cdAddr",insta:"cdInsta",yt:"cdYt",li:"cdLi",x:"cdX",tk:"cdTk",gh:"cdGh"};
     var any=false; for(var k in o){ if(o[k] && map[k]){ var el=$id(map[k]); if(el && !el.value.trim()){ el.value=o[k]; any=true; } } }
-    if(!any){ for(var k2 in o){ if(o[k2]&&map[k2]) $id(map[k2]).value=o[k2]; } }
-    if(!$id("grpCardDesign").open){} draw();
+    if(!any){ for(var k2 in o){ if(o[k2]&&map[k2]&&$id(map[k2])) $id(map[k2]).value=o[k2]; } }
+    draw();
   }
   function ocrStatus(html){ var el=$id("cardOcrStatus"); if(el) el.innerHTML=html; }
   function runOcr(){
     if(!st.frontImg){ toast((typeof t==="function"&&t("card.needPhoto"))||"먼저 앞면 사진을 올리세요"); return; }
-    ocrStatus((typeof t==="function"&&t("card.ocrRun"))||"글자 인식 중… (처음엔 라이브러리 로딩으로 수십 초 걸릴 수 있어요)");
+    ocrStatus((typeof t==="function"&&t("card.ocrRun"))||"글자 인식 중…");
     loadScript("https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.1/tesseract.min.js")
       .then(function(){ return Tesseract.recognize(st.frontImg, "eng+kor"); })
       .then(function(r){ applyParsed(parseCard(r.data && r.data.text)); ocrStatus((typeof t==="function"&&t("card.ocrDone"))||"인식 완료 — 항목을 확인·수정하세요."); })
       .catch(function(){ ocrStatus((typeof t==="function"&&t("card.ocrFail"))||"인식 실패 — 배포된(온라인) 사이트에서만 동작합니다. 직접 입력해 주세요."); });
   }
-  // ---- AI precision OCR (gated like AI art; needs a server vision endpoint) ----
   function runOcrAi(){
     if(typeof isPro==="function" && !isPro() && typeof aiTrialsLeft==="function" && aiTrialsLeft()<=0){
       if(typeof openPro==="function") openPro("cardAi", (typeof t==="function"&&t("pro.aiUsedUp"))||"AI 무료 체험을 모두 사용했습니다. Pro로 무제한 이용하세요."); return;
@@ -7387,7 +7640,7 @@ var CARD = (function(){
       .then(function(res){
         var d=res.d||{};
         if(res.status===402 || d.error==="trial_exhausted"){ try{ localStorage.setItem(AITRIALKEY,String(PRO.aiFreeTrials)); }catch(e){} if(typeof refreshAiTrialUI==="function") refreshAiTrialUI(); if(typeof openPro==="function") openPro("cardAi", d.detail||""); ocrStatus((typeof t==="function"&&t("ai.trialOut"))||"무료 체험 종료 — Pro로 무제한"); return; }
-        if(d.error==="not_configured" || res.status===503){ ocrStatus((typeof t==="function"&&t("card.aiOff"))||"고정밀(AI) 인식은 서버에 비전 API를 설정한 뒤 사용할 수 있어요. 지금은 무료 인식 또는 직접 입력을 이용하세요."); return; }
+        if(d.error==="not_configured" || res.status===503){ ocrStatus((typeof t==="function"&&t("card.aiOff"))||"고정밀(AI) 인식은 서버에 비전 API를 설정한 뒤 사용할 수 있어요."); return; }
         if(d.error){ ocrStatus("AI 인식 실패: "+(d.detail||d.error)); return; }
         applyParsed({name:d.name,title:d.title,org:d.org,tel:d.tel||d.phone,email:d.email,url:d.url||d.website,addr:d.address});
         if(typeof aiBumpTrial==="function") aiBumpTrial();
@@ -7397,61 +7650,44 @@ var CARD = (function(){
   }
   function dataUrl(img){ try{ var c=document.createElement("canvas"); var w=Math.min(1000,img.naturalWidth||img.width); var h=Math.round((img.naturalHeight||img.height)*(w/(img.naturalWidth||img.width))); c.width=w;c.height=h; c.getContext("2d").drawImage(img,0,0,w,h); return c.toDataURL("image/jpeg",0.82); }catch(e){ return null; } }
 
-  // ---- downloads ----
-  function fname(){ return (($id("cdName").value||"card").trim().replace(/[^\w가-힣.-]+/g,"_")||"card"); }
-  function dlPng(){ draw(); download(st.hi.toDataURL("image/png"), "명함_"+fname()+".png"); toast("PNG 저장됨"); }
+  // ===================== downloads =====================
+  function fname(){ return ((gval("cdName")||"card").replace(/[^\w가-힣.-]+/g,"_")||"card"); }
+  function dlPng(){ draw(); download(st.hi.toDataURL("image/png"), "명함_"+fname()+".png"); toast((typeof t==="function"&&t("card.dlPng"))||"PNG 저장됨"); }
   function dlSvg(){
-    draw(); var W=1050,H=600; var qs=330, qx=W-qs-56, qy=Math.round((H-qs)/2)-6;
-    var qpng=qrCanvas(600, $id("cardQrColor").value).toDataURL("image/png");   // crisp QR embedded
-    var tpl=st.tpl, acc=$id("cardAccent").value, onDark=(tpl==="dark"||tpl==="gradient");
-    function esc(s){ return String(s||"").replace(/[<>&]/g,function(c){return {"<":"&lt;",">":"&gt;","&":"&amp;"}[c];}); }
-    var bg = tpl==="dark"?"#171717":"#ffffff";
-    var ink = onDark?"#ffffff":"#111111", sub=onDark?"rgba(255,255,255,.8)":"#5b6472";
-    var s='<svg xmlns="http://www.w3.org/2000/svg" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'">';
-    if(tpl==="gradient"){ s+='<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="'+acc+'"/><stop offset="1" stop-color="'+shade(acc,-38)+'"/></linearGradient></defs><rect width="'+W+'" height="'+H+'" fill="url(#g)"/>'; }
-    else { s+='<rect width="'+W+'" height="'+H+'" fill="'+bg+'"/>'; }
-    if(tpl==="bar") s+='<rect width="28" height="'+H+'" fill="'+acc+'"/>';
-    if(tpl==="minimal") s+='<rect x="1" y="1" width="'+(W-2)+'" height="'+(H-2)+'" fill="none" stroke="#e5e5e5" stroke-width="2"/>';
-    if(onDark) s+='<rect x="'+(qx-16)+'" y="'+(qy-16)+'" width="'+(qs+32)+'" height="'+(qs+52)+'" rx="18" fill="#fff"/>';
-    s+='<image x="'+qx+'" y="'+qy+'" width="'+qs+'" height="'+qs+'" href="'+qpng+'"/>';
-    var tx=60, ty=150;
-    s+='<text x="'+tx+'" y="'+ty+'" font-family="'+esc(FD)+'" font-size="56" font-weight="700" fill="'+ink+'">'+esc(($id("cdName").value||"이름").trim())+'</text>';
-    s+='<rect x="'+tx+'" y="'+(ty+20)+'" width="66" height="6" fill="'+(onDark?(tpl==="dark"?acc:"#fff"):acc)+'"/>';
-    var y=ty+66; var ti=($id("cdTitle").value||"").trim(), org=($id("cdOrg").value||"").trim();
-    if(ti){ s+='<text x="'+tx+'" y="'+y+'" font-family="'+esc(FB)+'" font-size="27" font-weight="600" fill="'+(onDark?ink:acc)+'">'+esc(ti)+'</text>'; y+=40; }
-    if(org){ s+='<text x="'+tx+'" y="'+y+'" font-family="'+esc(FB)+'" font-size="25" fill="'+sub+'">'+esc(org)+'</text>'; y+=54; } else y+=16;
-    [["📞","cdTel"],["✉","cdEmail"],["🌐","cdUrl"],["📍","cdAddr"]].forEach(function(p){ var v=($id(p[1]).value||"").trim(); if(!v) return; s+='<text x="'+tx+'" y="'+y+'" font-family="'+esc(FB)+'" font-size="24" fill="'+sub+'">'+esc(p[0]+"  "+v)+'</text>'; y+=38; });
-    s+='<text x="'+(qx+qs/2)+'" y="'+(qy+qs+30)+'" text-anchor="middle" font-family="'+esc(FB)+'" font-size="18" font-weight="600" fill="'+(onDark?"#333":sub)+'">스캔 → 연락처 저장</text>';
-    s+='</svg>';
-    download("data:image/svg+xml;charset=utf-8,"+encodeURIComponent(s), "명함_"+fname()+".svg"); toast("SVG 저장됨");
+    draw(); var W=1050,H=600; var T=tpl(); var qs=298, qrLeft=(T.qr==="left");
+    var qx0=qrLeft?60:(W-qs-60), qy0=Math.round((H-qs)/2)-40; var qp=P("qr",qx0,qy0), qx=qp.x, qy=qp.y;
+    var qpng=qrCanvas(620,gval("cardQrColor"),gval("cardAccent"),st.qrTpl).toDataURL("image/png");
+    // rasterize the full card for a faithful vector-embedded SVG (keeps every template exact)
+    var cardPng=st.hi.toDataURL("image/png");
+    var s='<svg xmlns="http://www.w3.org/2000/svg" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'">'
+      +'<image width="'+W+'" height="'+H+'" href="'+cardPng+'"/>'
+      +'<image x="'+qx+'" y="'+qy+'" width="'+qs+'" height="'+qs+'" href="'+qpng+'"/></svg>';
+    download("data:image/svg+xml;charset=utf-8,"+encodeURIComponent(s), "명함_"+fname()+".svg"); toast((typeof t==="function"&&t("card.dlSvg"))||"SVG 저장됨");
   }
   function dlPdf(){
     draw(); var png=st.hi.toDataURL("image/png");
     loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js").then(function(){
       var J=(window.jspdf&&window.jspdf.jsPDF)||window.jsPDF; if(!J){ toast("PDF 라이브러리 로드 실패"); return; }
       var doc=new J({orientation:"landscape",unit:"mm",format:[90,50]});
-      doc.addImage(png,"PNG",0,0,90,50); doc.save("명함_"+fname()+".pdf"); toast("PDF 저장됨");
+      doc.addImage(png,"PNG",0,0,90,50); doc.save("명함_"+fname()+".pdf"); toast((typeof t==="function"&&t("card.dlPdf"))||"PDF 저장됨");
     }).catch(function(){ toast((typeof t==="function"&&t("card.pdfOff"))||"PDF는 배포된(온라인) 사이트에서만 동작합니다."); });
   }
   function share(){
     draw();
     if(navigator.canShare && st.hi.toBlob){
-      st.hi.toBlob(function(b){
-        var f=new File([b],"명함_"+fname()+".png",{type:"image/png"});
-        if(navigator.canShare({files:[f]})){ navigator.share({files:[f],title:"디지털 명함"}).catch(function(){}); }
-        else { dlPng(); }
-      },"image/png");
+      st.hi.toBlob(function(b){ var f=new File([b],"명함_"+fname()+".png",{type:"image/png"});
+        if(navigator.canShare({files:[f]})){ navigator.share({files:[f],title:"디지털 명함"}).catch(function(){}); } else { dlPng(); } },"image/png");
     } else { dlPng(); }
   }
 
-  // ---- digital-card folder (localStorage) ----
+  // ===================== digital-card folder =====================
   function load(){ try{ return JSON.parse(localStorage.getItem(CARDKEY)||"[]"); }catch(e){ return []; } }
   function store(a){ try{ localStorage.setItem(CARDKEY, JSON.stringify(a)); }catch(e){ toast("저장 공간이 부족합니다"); } }
   function saveFolder(){
-    if(!($id("cdName").value||"").trim()){ toast((typeof t==="function"&&t("card.needName"))||"이름을 입력하세요"); return; }
+    if(!gval("cdName")){ toast((typeof t==="function"&&t("card.needName"))||"이름을 입력하세요"); return; }
     draw();
     var card=downscale(st.hi,760).toDataURL("image/jpeg",0.85);
-    var qr=qrCanvas(420,$id("cardQrColor").value).toDataURL("image/png");
+    var qr=qrCanvas(420,gval("cardQrColor"),gval("cardAccent"),st.qrTpl).toDataURL("image/png");
     var arr=load(); arr.unshift({id:Date.now(),name:fname(),ts:Date.now(),card:card,qr:qr,vcard:vcard()});
     store(arr.slice(0,24)); renderFolder(); toast((typeof t==="function"&&t("card.saved"))||"디지털 명함 폴더에 저장됨 (명함 + QR)");
   }
@@ -7467,7 +7703,7 @@ var CARD = (function(){
         +'<button class="chip" data-act="load">불러오기</button><button class="chip" data-act="del">삭제</button></div>';
       c.querySelector('[data-act="card"]').onclick=function(){ download(it.card,"명함_"+(it.name||"card")+".jpg"); };
       c.querySelector('[data-act="qr"]').onclick=function(){ download(it.qr,"QR_"+(it.name||"card")+".png"); };
-      c.querySelector('[data-act="load"]').onclick=function(){ loadFromVcard(it.vcard); toast("불러왔습니다 — 편집 후 다시 저장하세요"); };
+      c.querySelector('[data-act="load"]').onclick=function(){ loadFromVcard(it.vcard); toast((typeof t==="function"&&t("card.loaded"))||"불러왔습니다 — 편집 후 다시 저장하세요"); };
       c.querySelector('[data-act="del"]').onclick=function(){ var a2=load().filter(function(x){return x.id!==it.id;}); store(a2); renderFolder(); };
       box.appendChild(c);
     });
@@ -7477,9 +7713,12 @@ var CARD = (function(){
     $id("cdName").value=pick(/FN:(.+)/); $id("cdTitle").value=pick(/TITLE:(.+)/); $id("cdOrg").value=pick(/ORG:(.+)/);
     $id("cdTel").value=pick(/TEL[^:]*:(.+)/); $id("cdEmail").value=pick(/EMAIL[^:]*:(.+)/); $id("cdUrl").value=pick(/URL:(.+)/);
     $id("cdAddr").value=(function(){ var m=(v||"").match(/ADR[^:]*:(.+)/); if(!m)return ""; return m[1].replace(/^;;/,"").replace(/;+$/,"").replace(/;/g," ").trim(); })();
+    var smap={instagram:"cdInsta",youtube:"cdYt",linkedin:"cdLi",twitter:"cdX",tiktok:"cdTk",github:"cdGh"};
+    for(var k in smap){ var m=(v||"").match(new RegExp("X-SOCIALPROFILE;TYPE="+k+":(.+)","i")); if(m&&$id(smap[k])) $id(smap[k]).value=m[1].trim(); }
     draw();
   }
 
+  // ===================== photo upload =====================
   function photo(inputId, which, labelId){
     $id(inputId).addEventListener("change", function(e){
       var f=e.target.files[0]; if(!f) return; var img=new Image();
@@ -7494,8 +7733,9 @@ var CARD = (function(){
   }
 
   function bind(){
-    ["cdName","cdTitle","cdOrg","cdTel","cdEmail","cdUrl","cdAddr","cardAccent","cardQrColor"].forEach(function(id){ var el=$id(id); if(el) el.addEventListener("input", draw); });
-    var seg=$id("cardTplSeg"); if(seg) seg.addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b)return; Array.prototype.forEach.call(this.children,function(x){x.classList.remove("on");}); b.classList.add("on"); st.tpl=b.dataset.tpl; draw(); });
+    ["cdName","cdTitle","cdOrg","cdTel","cdEmail","cdUrl","cdAddr","cdInsta","cdYt","cdLi","cdX","cdTk","cdGh"].forEach(function(id){ var el=$id(id); if(el) el.addEventListener("input", draw); });
+    var ac=$id("cardAccent"); if(ac) ac.addEventListener("input",function(){ setName("cardAccentHex",ac.value); buildTplGrid(); buildQrGrid(); draw(); });
+    var qc=$id("cardQrColor"); if(qc) qc.addEventListener("input",function(){ setName("cardQrColorHex",qc.value); buildQrGrid(); draw(); });
     photo("cardFront","frontImg","cardFrontLabel"); photo("cardBack","backImg","cardBackLabel");
     var b;
     if(b=$id("cardOcr")) b.addEventListener("click",runOcr);
@@ -7505,11 +7745,16 @@ var CARD = (function(){
     if(b=$id("cardPdf")) b.addEventListener("click",dlPdf);
     if(b=$id("cardShare")) b.addEventListener("click",share);
     if(b=$id("cardSave")) b.addEventListener("click",saveFolder);
+    if(b=$id("cardResetPos")) b.addEventListener("click",function(){ st.pos={}; draw(); toast((typeof t==="function"&&t("card.posReset"))||"위치를 초기화했어요"); });
+    var pv=$id("cardPreview");
+    if(pv){ pv.addEventListener("mousedown",dragStart); window.addEventListener("mousemove",dragMove); window.addEventListener("mouseup",dragEnd);
+            pv.addEventListener("touchstart",dragStart,{passive:false}); window.addEventListener("touchmove",dragMove,{passive:false}); window.addEventListener("touchend",dragEnd); }
   }
   return {
     enter:function(){ if(!st.entered){ st.entered=true; bind();
-        if(!($id("cdName").value||"").trim()){ $id("cdName").value="홍길동"; $id("cdTitle").value="대표"; $id("cdOrg").value="아름다운 컴퍼니"; $id("cdTel").value="010-1234-5678"; $id("cdEmail").value="hello@company.com"; }
-        renderFolder();
+        if(!gval("cdName")){ $id("cdName").value="홍길동"; $id("cdTitle").value="대표"; $id("cdOrg").value="아름다운 컴퍼니"; $id("cdTel").value="010-1234-5678"; $id("cdEmail").value="hello@company.com"; }
+        setName("cardAccentHex",gval("cardAccent")); setName("cardQrColorHex",gval("cardQrColor"));
+        buildTplGrid(); buildQrGrid(); renderFolder();
       }
       if(typeof refreshAiTrialUI==="function") refreshAiTrialUI();
       draw();
