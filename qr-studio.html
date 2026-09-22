@@ -1305,9 +1305,9 @@
       <span class="foot-sep">·</span>
       <button type="button" class="foot-link" data-info="contact" data-i18n="foot.contact">문의</button>
     </nav>
-    <div style="margin-top:10px">Aesthetic QR Studio · <span data-i18n="foot.tag">아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)</span></div>
+    <div style="margin-top:10px">Aesthetic QR Studio · <span data-i18n="foot.tag">아름답고 스캔되는 QR을 만드는 스튜디오 · QR 생성·디자인은 브라우저에서 처리 (AI 기능만 서버 전송·저장 안 함)</span></div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · 빌드 <b id="verTag">2026.09.21-card2</b></div>
+    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · 빌드 <b id="verTag">2026.09.22-sell</b></div>
   </footer>
 </div>
 
@@ -1333,9 +1333,10 @@
     <h2 data-i18n="pro.title">✨ Pro로 업그레이드</h2>
     <div class="sub" data-i18n="pro.sub">한 번 결제로 프리미엄 기능을 영구히 사용하세요. 계정·구독 없이 라이선스 키 하나로 잠금 해제됩니다.</div>
     <ul class="pro-feats">
-      <li><span class="pf-ic">🖨️</span><div><b data-i18n="pro.f1h">고해상도 인쇄 내보내기</b><span data-i18n="pro.f1p">2048 · 4096px — 포스터·메뉴판·현수막 인쇄 품질</span></div></li>
-      <li><span class="pf-ic">🎬</span><div><b data-i18n="pro.f2h">워터마크 없는 애니메이션</b><span data-i18n="pro.f2p">움직이는 QR(WebM)을 워터마크 없이 저장 · 예정</span></div></li>
-      <li><span class="pf-ic">🎨</span><div><b data-i18n="pro.f3h">AI 아트 QR·프리미엄 팩</b><span data-i18n="pro.f3p">AI 생성 아트 QR과 프리미엄 로고·템플릿 팩 · 예정</span></div></li>
+      <li><span class="pf-ic">💧</span><div><b data-i18n="pro.f1h">워터마크 없는 내보내기</b><span data-i18n="pro.f1p">QR·명함 PNG·SVG를 브랜드 표시 없이 깨끗하게 저장</span></div></li>
+      <li><span class="pf-ic">🖨️</span><div><b data-i18n="pro.f2h">고해상도 인쇄 품질</b><span data-i18n="pro.f2p">2048 · 4096px — 포스터·메뉴판·현수막·명함 인쇄</span></div></li>
+      <li><span class="pf-ic">📇</span><div><b data-i18n="pro.f3h">상업용·명함 무제한</b><span data-i18n="pro.f3p">디지털 명함·상업적 사용 + 대량 생성</span></div></li>
+      <li><span class="pf-ic">🎨</span><div><b data-i18n="pro.f4h">AI 아트 QR·AI 명함 인식</b><span data-i18n="pro.f4p">AI 생성 아트 QR과 고정밀 명함 인식을 무제한</span></div></li>
     </ul>
     <div class="pro-price"><b id="proPrice">₩12,900</b> <span data-i18n="pro.once">1회 결제 · 영구 사용</span></div>
     <button class="btn" id="proBuy" data-i18n="pro.buy">구매하기</button>
@@ -1346,6 +1347,7 @@
         <button class="btn sec" id="proApply" style="flex:none" data-i18n="pro.apply">적용</button>
       </div>
       <div class="pro-msg" id="proMsg"></div>
+      <div class="pro-recover" data-i18n-html="pro.recover" style="font-size:12px;color:var(--mut2);margin-top:8px;line-height:1.5">키를 잃어버리셨나요? 구매 시 받은 <b>이메일</b>에서 라이선스 키를 다시 확인하거나, <button type="button" class="foot-link" data-info="contact" style="font-size:12px">문의</button>로 재발송을 요청하세요. 키는 기기에 저장되므로 브라우저 데이터를 지우면 다시 입력해야 합니다.</div>
     </div>
   </div>
 </div>
@@ -4660,8 +4662,11 @@ function toSVG(){
   var labelH = S.labelOn ? Math.round(labelFontS*1.7) : 0;
   var topPadS = (S.labelOn && S.labelPos==="top") ? labelH : 0;
   var totalH = W + labelH;
+  var wmOn = !(typeof isPro==="function" && isPro());   // free export → brand footer
+  var wmH = wmOn ? Math.round(W*0.062) : 0;
+  var svgH = totalH + wmH;
   var svg=[];
-  svg.push('<svg xmlns="http://www.w3.org/2000/svg" width="'+W+'" height="'+totalH+'" viewBox="0 0 '+W+' '+totalH+'">');
+  svg.push('<svg xmlns="http://www.w3.org/2000/svg" width="'+W+'" height="'+svgH+'" viewBox="0 0 '+W+' '+svgH+'">');
   // defs gradient
   var fillRef;
   if (S.fill==="solid"){ fillRef=S.fg1; }
@@ -4674,7 +4679,7 @@ function toSVG(){
     svg.push('<defs><radialGradient id="g"><stop offset="0" stop-color="'+S.fg1+'"/><stop offset="1" stop-color="'+S.fg2+'"/></radialGradient></defs>');
     fillRef="url(#g)";
   }
-  if(!S.transparent) svg.push('<rect width="'+W+'" height="'+totalH+'" fill="'+S.bg+'"/>');
+  if(!S.transparent) svg.push('<rect width="'+W+'" height="'+svgH+'" fill="'+S.bg+'"/>');
   svg.push('<g fill="'+fillRef+'" transform="translate(0,'+topPadS+')">');
   for(var r=0;r<n;r++)for(var c=0;c<n;c++){
     if(!m[r][c]) continue;
@@ -4696,6 +4701,8 @@ function toSVG(){
     var col=(luminance(S.bg)>140||S.transparent)?"#111":"#fff";
     svg.push('<text x="'+(W/2)+'" y="'+ty+'" font-family="sans-serif" font-weight="700" font-size="'+labelFontS+'" fill="'+col+'" dominant-baseline="middle" text-anchor="middle">'+escapeXml(S.labelText)+'</text>');
   }
+  if(wmOn){ var wmCol=_wmInk(S.bg); if(S.transparent) wmCol="rgba(90,90,90,.9)";
+    svg.push('<text x="'+(W/2)+'" y="'+(totalH+wmH*0.58)+'" font-family="sans-serif" font-weight="600" font-size="'+Math.round(wmH*0.46)+'" fill="'+wmCol+'" dominant-baseline="middle" text-anchor="middle">aesthetic-qr.studio</text>'); }
   svg.push('</svg>');
   return svg.join("");
 }
@@ -4825,6 +4832,24 @@ function rerender(){
 function download(url, name){
   var a=document.createElement("a"); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
 }
+// Free exports carry a small brand footer BELOW the QR (never over modules → scannability
+// is never affected). Pro exports are clean. This is the free/paid boundary + a viral loop.
+function _wmInk(bg){ var m=/^#?([0-9a-fA-F]{6})$/.exec(bg||"#ffffff"); if(!m) return "rgba(70,70,70,.8)";
+  var v=parseInt(m[1],16), L=0.2126*((v>>16)&255)+0.7152*((v>>8)&255)+0.0722*(v&255);
+  return L>140?"rgba(60,60,60,.78)":"rgba(235,235,235,.8)"; }
+function stampFooter(src, size){
+  if(typeof isPro==="function" && isPro()) return src;   // Pro → clean export
+  var fh=Math.max(22, Math.round(size*0.062));
+  var out=document.createElement("canvas"); out.width=src.width; out.height=src.height+fh;
+  var g=out.getContext("2d");
+  if(!S.transparent){ g.fillStyle=S.bg||"#ffffff"; g.fillRect(0,0,out.width,out.height); }
+  g.drawImage(src,0,0);
+  g.fillStyle=S.transparent?"rgba(90,90,90,.9)":_wmInk(S.bg);
+  g.textAlign="center"; g.textBaseline="middle";
+  g.font="600 "+Math.round(fh*0.46)+"px system-ui,-apple-system,'Apple SD Gothic Neo',sans-serif";
+  g.fillText("aesthetic-qr.studio", out.width/2, src.height+fh/2);
+  return out;
+}
 function exportPNG(){
   var was=isAnimating() && !S.artIsVideo; if(was){ stopAnim(); }
   var res=S.exportRes||EXPORT, jpg=(S.exportFmt==="jpg");
@@ -4836,7 +4861,8 @@ function exportPNG(){
   // would be wiped; destination-over fills only the transparent pixels) so it never flattens to black
   if(jpg){ g.globalCompositeOperation="destination-over"; g.fillStyle="#ffffff"; g.fillRect(0,0,res,res); g.globalCompositeOperation="source-over"; }
   var mime=jpg?"image/jpeg":"image/png", ext=jpg?"jpg":"png", q=jpg?0.95:undefined;
-  off.toBlob(function(b){ download(URL.createObjectURL(b), "aesthetic-qr-"+res+"."+ext); toast(ext.toUpperCase()+" 저장됨 · "+res+"px"); if(was) startAnim(); }, mime, q);
+  var out=stampFooter(off, res);   // free = brand footer below QR; Pro = clean
+  out.toBlob(function(b){ download(URL.createObjectURL(b), "aesthetic-qr-"+res+"."+ext); toast(ext.toUpperCase()+" 저장됨 · "+res+"px"); if(was) startAnim(); }, mime, q);
 }
 function exportSVG(){
   if(S.aiArt){ toast("AI 아트 QR은 PNG로 저장하세요 (SVG는 벡터 전용)"); return; }
@@ -4849,7 +4875,8 @@ function copyPNG(){
   var off=document.createElement("canvas"); off.width=res; off.height=res;
   var was=S.anim; if(was) stopAnim();
   render(off.getContext("2d"), res);
-  off.toBlob(function(b){
+  var out=stampFooter(off, res);   // keep the boundary consistent (copy is also a share vector)
+  out.toBlob(function(b){
     if(navigator.clipboard && window.ClipboardItem){
       navigator.clipboard.write([new ClipboardItem({"image/png":b})]).then(function(){toast("클립보드에 복사됨");},function(){toast("복사 실패");});
     } else { toast("이 브라우저는 복사 미지원"); }
@@ -4953,16 +4980,16 @@ var INFO_PAGES = {
   about:{ title:"소개", html:
     "<p><b>Aesthetic QR Studio</b> 는 평범한 흑백 QR을 브랜드가 되는 아트로 바꿔주는 웹 기반 QR 디자인 스튜디오입니다. 색상·그라디언트·모듈 형태·중앙 로고/픽토그램·프레임·애니메이션까지 조정하면서도 <b>실제로 스캔되는</b> QR을 만들 수 있습니다.</p>"+
     "<h4>핵심 특징</h4><ul>"+
-    "<li><b>프라이버시 우선</b> — 대부분의 처리가 브라우저에서만 이뤄지며, 입력한 QR 데이터는 서버로 전송되지 않습니다.</li>"+
+    "<li><b>프라이버시 우선</b> — QR 생성·디자인·명함 자동 인식(무료)은 브라우저 안에서만 처리됩니다. <b>AI 아트·AI 고정밀 명함 인식</b>을 쓸 때만 해당 입력이 서버로 전송되며(생성·인식 후 저장하지 않음), 그 외 QR 데이터는 전송되지 않습니다.</li>"+
     "<li><b>24종 콘텐츠 유형</b> — URL·Wi-Fi·연락처·전화·문자·이메일·위치·일정·소셜(인스타/유튜브/틱톡/X 등)·결제·암호화폐 등.</li>"+
     "<li><b>디자인 도구</b> — 로고/픽토그램 중앙 배치, 데코 프레임, 애니메이션(WebM), 고해상도 내보내기, 대량 생성.</li>"+
     "<li><b>다국어</b> — 한국어·영어·일본어·중국어.</li></ul>"+
     "<h4>기술</h4><p>단일 HTML 앱으로 동작하며 오픈소스 인코더 <code>qrcode-generator</code>(MIT)를 사용합니다. QR Code® 는 DENSO WAVE의 등록상표입니다.</p>" },
   privacy:{ title:"개인정보처리방침", html:
-    "<p>본 서비스는 이용자의 개인정보를 최소한으로만 처리하며, 광고·트래킹 목적의 개인정보 수집을 하지 않습니다. 최종 수정일: 2026-09-03.</p>"+
-    "<h4>1. 수집·전송하지 않는 정보</h4><p>QR에 입력하는 내용(URL·연락처·Wi-Fi 비밀번호 등)과 업로드하는 이미지는 <b>브라우저 내에서만</b> 처리되며 서버로 전송·저장되지 않습니다.</p>"+
-    "<h4>2. 로컬 저장(localStorage)</h4><p>테마 설정, 온보딩 표시 여부, 'My QR' 저장 항목, Pro 라이선스 상태 등은 이용자 <b>브라우저에만</b> 저장되며 외부로 전송되지 않습니다. 브라우저 데이터를 지우면 함께 삭제됩니다.</p>"+
-    "<h4>3. AI 아트 QR(선택 기능)</h4><p>AI 아트 QR 생성을 사용할 경우, 해당 기능에 한해 입력값이 이미지 생성 처리를 위해 서버 함수로 전송될 수 있습니다. 사용하지 않으면 전송은 발생하지 않습니다.</p>"+
+    "<p>본 서비스는 이용자의 개인정보를 최소한으로만 처리하며, 광고·트래킹 목적의 개인정보 수집을 하지 않습니다. 최종 수정일: 2026-09-22.</p>"+
+    "<h4>1. 기본 원칙 — 브라우저 내 처리</h4><p>QR에 입력하는 내용(URL·연락처·Wi-Fi 비밀번호 등), 업로드하는 이미지, 명함 <b>무료 자동 인식</b>은 <b>브라우저 안에서만</b> 처리되며 서버로 전송·저장되지 않습니다. <b>단, 아래 3항의 AI 기능은 예외</b>입니다.</p>"+
+    "<h4>2. 로컬 저장(localStorage)</h4><p>테마 설정, 온보딩 표시 여부, 'My QR'·'디지털 명함' 저장 항목, Pro 라이선스 상태 등은 이용자 <b>브라우저에만</b> 저장되며 외부로 전송되지 않습니다. 브라우저 데이터를 지우면 함께 삭제됩니다.</p>"+
+    "<h4>3. AI 기능(선택) — 서버 전송</h4><p><b>AI 아트 QR</b>과 <b>AI 고정밀 명함 인식</b>을 사용할 경우, 그 기능에 한해 입력값(프롬프트/QR 내용 또는 명함 사진)이 처리를 위해 서버 함수 및 해당 AI 제공사로 전송됩니다. 결과 생성·인식 후 본 서비스는 이를 저장하지 않습니다. 두 기능을 사용하지 않으면 전송은 발생하지 않습니다.</p>"+
     "<h4>4. 결제(해당 시)</h4><p>Pro 결제는 외부 결제대행(Merchant of Record)을 통해 처리되며, 카드정보는 본 서비스가 보관하지 않습니다. 결제 처리 관련 개인정보는 해당 결제사의 정책을 따릅니다.</p>"+
     "<h4>5. 문의</h4><p>개인정보 관련 문의: <a href=\"mailto:"+CONTACT_EMAIL+"\">"+CONTACT_EMAIL+"</a></p>" },
   terms:{ title:"이용약관", html:
@@ -6831,7 +6858,7 @@ var I18N = {
   "foot.privacy":{ko:"개인정보처리방침",en:"Privacy Policy",zh:"隐私政策",ja:"プライバシー"},
   "foot.terms":{ko:"이용약관",en:"Terms of Use",zh:"使用条款",ja:"利用規約"},
   "foot.contact":{ko:"문의",en:"Contact",zh:"联系",ja:"お問い合わせ"},
-  "foot.tag":{ko:"아름답고 스캔되는 QR을 만드는 스튜디오 · 모든 처리는 브라우저에서 (데이터 전송 없음)",en:"A studio for beautiful, scannable QR codes · everything runs in your browser (no data sent)",zh:"打造美观且可扫描二维码的工作室 · 全部在浏览器中处理（不发送数据）",ja:"美しくスキャン可能なQRを作るスタジオ · すべてブラウザで処理（データ送信なし）"},
+  "foot.tag":{ko:"아름답고 스캔되는 QR을 만드는 스튜디오 · QR 생성·디자인은 브라우저에서 처리 (AI 기능만 서버 전송·저장 안 함)",en:"A studio for beautiful, scannable QR codes · QR building & design run in your browser (only AI features send to a server, and aren't stored)",zh:"打造美观且可扫描二维码的工作室 · 二维码生成与设计在浏览器中处理（仅 AI 功能会发送到服务器，且不存储）",ja:"美しくスキャン可能なQRを作るスタジオ · QR生成・デザインはブラウザで処理（AI機能のみサーバー送信・保存なし）"},
   "ct.appstore":{ko:"앱 설치",en:"App",zh:"应用",ja:"アプリ"},
   "ct.review":{ko:"리뷰",en:"Review",zh:"评价",ja:"レビュー"},
   "ct.video":{ko:"화상회의",en:"Meeting",zh:"视频会议",ja:"会議"},
@@ -6933,12 +6960,15 @@ var I18N = {
   "pro.badgeOn":{ko:"✨ Pro ✓",en:"✨ Pro ✓",zh:"✨ Pro ✓",ja:"✨ Pro ✓"},
   "pro.title":{ko:"✨ Pro로 업그레이드",en:"✨ Upgrade to Pro",zh:"✨ 升级到 Pro",ja:"✨ Proにアップグレード"},
   "pro.sub":{ko:"한 번 결제로 프리미엄 기능을 영구히 사용하세요. 계정·구독 없이 라이선스 키 하나로 잠금 해제됩니다.",en:"One payment, premium features forever. No account or subscription — unlock with a single license key.",zh:"一次付款，永久使用高级功能。无需账户或订阅，用一个许可密钥即可解锁。",ja:"一度の支払いでプレミアム機能を永久に。アカウントや定期購入は不要、ライセンスキー1つで解除。"},
-  "pro.f1h":{ko:"고해상도 인쇄 내보내기",en:"High-resolution print export",zh:"高分辨率打印导出",ja:"高解像度の印刷用書き出し"},
-  "pro.f1p":{ko:"2048 · 4096px — 포스터·메뉴판·현수막 인쇄 품질",en:"2048 · 4096px — poster, menu & banner print quality",zh:"2048 · 4096px — 海报、菜单、横幅打印质量",ja:"2048・4096px — ポスター・メニュー・バナーの印刷品質"},
-  "pro.f2h":{ko:"워터마크 없는 애니메이션",en:"Watermark-free animation",zh:"无水印动画",ja:"透かしなしアニメーション"},
-  "pro.f2p":{ko:"움직이는 QR(WebM)을 워터마크 없이 저장 · 예정",en:"Save animated QR (WebM) without a watermark · coming soon",zh:"无水印保存动态二维码（WebM）· 即将推出",ja:"動くQR(WebM)を透かしなしで保存 · 近日"},
-  "pro.f3h":{ko:"AI 아트 QR·프리미엄 팩",en:"AI art QR & premium packs",zh:"AI 艺术二维码和高级包",ja:"AIアートQR・プレミアムパック"},
-  "pro.f3p":{ko:"AI 생성 아트 QR과 프리미엄 로고·템플릿 팩 · 예정",en:"AI-generated art QR and premium logo/template packs · coming soon",zh:"AI 生成的艺术二维码和高级徽标/模板包 · 即将推出",ja:"AI生成アートQRとプレミアムロゴ・テンプレートパック · 近日"},
+  "pro.f1h":{ko:"워터마크 없는 내보내기",en:"Watermark-free exports",zh:"无水印导出",ja:"透かしなしの書き出し"},
+  "pro.f1p":{ko:"QR·명함 PNG·SVG를 브랜드 표시 없이 깨끗하게 저장",en:"Save QR & card PNG/SVG clean, with no brand mark",zh:"二维码·名片 PNG/SVG 无品牌标识干净导出",ja:"QR・名刺のPNG/SVGをブランド表示なしで保存"},
+  "pro.f2h":{ko:"고해상도 인쇄 품질",en:"High-resolution print quality",zh:"高分辨率打印质量",ja:"高解像度の印刷品質"},
+  "pro.f2p":{ko:"2048 · 4096px — 포스터·메뉴판·현수막·명함 인쇄",en:"2048 · 4096px — poster, menu, banner & card printing",zh:"2048 · 4096px — 海报、菜单、横幅、名片打印",ja:"2048・4096px — ポスター・メニュー・バナー・名刺印刷"},
+  "pro.f3h":{ko:"상업용·명함 무제한",en:"Commercial & card, unlimited",zh:"商用·名片 无限",ja:"商用・名刺 無制限"},
+  "pro.f3p":{ko:"디지털 명함·상업적 사용 + 대량 생성",en:"Digital cards, commercial use + bulk generation",zh:"电子名片·商业用途 + 批量生成",ja:"デジタル名刺・商用利用＋一括生成"},
+  "pro.f4h":{ko:"AI 아트 QR·AI 명함 인식",en:"AI art QR & AI card OCR",zh:"AI 艺术二维码·AI 名片识别",ja:"AIアートQR・AI名刺認識"},
+  "pro.f4p":{ko:"AI 생성 아트 QR과 고정밀 명함 인식을 무제한",en:"Unlimited AI-generated art QR and precision card OCR",zh:"无限 AI 生成艺术二维码与高精度名片识别",ja:"AI生成アートQRと高精度名刺認識を無制限"},
+  "pro.recover":{ko:"키를 잃어버리셨나요? 구매 시 받은 <b>이메일</b>에서 라이선스 키를 다시 확인하거나, 문의로 재발송을 요청하세요. 키는 기기에 저장되므로 브라우저 데이터를 지우면 다시 입력해야 합니다.",en:"Lost your key? Re-check the <b>email</b> from your purchase for the license key, or ask support to resend it. The key is stored on your device, so clearing browser data means re-entering it.",zh:"丢失密钥？请在购买时收到的<b>邮件</b>中重新查看许可密钥，或联系客服重新发送。密钥保存在本机，清除浏览器数据后需重新输入。",ja:"キーを紛失しましたか？購入時の<b>メール</b>でライセンスキーを再確認するか、お問い合わせで再送を依頼してください。キーは端末に保存されるため、ブラウザデータを消すと再入力が必要です。"},
   "pro.once":{ko:"1회 결제 · 영구 사용",en:"one-time · lifetime",zh:"一次性 · 永久",ja:"一度きり · 永久"},
   "pro.buy":{ko:"구매하기",en:"Get Pro",zh:"购买",ja:"購入する"},
   "pro.buySoon":{ko:"결제 링크 준비 중입니다",en:"Checkout link coming soon",zh:"结账链接即将上线",ja:"決済リンクは準備中です"},
@@ -7546,6 +7576,12 @@ var CARD = (function(){
       st.box.social={x:sp2.x-6,y:sp2.y-30,w:440,h:(sy-sp2.y)+46};
     } else { st.box.social=null; }
 
+    // free = subtle brand mark in the empty bottom-right corner (never over the QR); Pro = clean
+    if(typeof isPro!=="function" || !isPro()){
+      g.textAlign="right"; g.textBaseline="alphabetic"; g.font="600 15px "+FB;
+      g.fillStyle=onDark?"rgba(255,255,255,.45)":"rgba(0,0,0,.30)";
+      g.fillText("aesthetic-qr.studio", W-22, H-18); g.textAlign="left";
+    }
     var pv=$id("cardPreview"); if(pv){ pv.width=W; pv.height=H; pv.getContext("2d").drawImage(st.hi,0,0); }
   }
 
