@@ -1348,7 +1348,7 @@
     </nav>
     <div style="margin-top:10px">Aesthetic QR Studio · <span data-i18n="foot.tag">아름답고 스캔되는 QR을 만드는 스튜디오 · QR 생성·디자인은 브라우저에서 처리 (AI 기능만 서버 전송·저장 안 함)</span></div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · 빌드 <b id="verTag">2026.09.22-card5</b></div>
+    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · 빌드 <b id="verTag">2026.09.22-card6</b></div>
   </footer>
 </div>
 
@@ -4903,13 +4903,13 @@ function exportPNG(){
   if(jpg){ g.globalCompositeOperation="destination-over"; g.fillStyle="#ffffff"; g.fillRect(0,0,res,res); g.globalCompositeOperation="source-over"; }
   var mime=jpg?"image/jpeg":"image/png", ext=jpg?"jpg":"png", q=jpg?0.95:undefined;
   var out=stampFooter(off, res);   // free = brand footer below QR; Pro = clean
-  out.toBlob(function(b){ download(URL.createObjectURL(b), "aesthetic-qr-"+res+"."+ext); toast(ext.toUpperCase()+" 저장됨 · "+res+"px"); if(was) startAnim(); }, mime, q);
+  out.toBlob(function(b){ download(URL.createObjectURL(b), "aesthetic-qr-"+res+"."+ext); toast(ext.toUpperCase()+" 저장됨 · "+res+"px"); track("qr_download",{fmt:ext,res:res,pro:isPro()}); if(was) startAnim(); }, mime, q);
 }
 function exportSVG(){
   if(S.aiArt){ toast("AI 아트 QR은 PNG로 저장하세요 (SVG는 벡터 전용)"); return; }
   var svg=toSVG(); if(!svg){toast("생성 실패");return;}
   var blob=new Blob([svg],{type:"image/svg+xml"});
-  download(URL.createObjectURL(blob), "aesthetic-qr.svg"); toast("SVG 저장됨");
+  download(URL.createObjectURL(blob), "aesthetic-qr.svg"); toast("SVG 저장됨"); track("qr_download",{fmt:"svg",pro:isPro()});
 }
 function copyPNG(){
   var res=S.exportRes||EXPORT;
@@ -4942,6 +4942,8 @@ function exportWebM(){
 // ---------- toast ----------
 var _tt=null;
 function toast(msg){ var t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(_tt); _tt=setTimeout(function(){t.classList.remove("show");},1900); }
+// Conversion tracking → Vercel Web Analytics custom events (no-op if analytics/script absent).
+function track(name, data){ try{ if(window.va) window.va("event", { name:name, data:data||{} }); }catch(e){} }
 
 // ---------- dark / light theme toggle ----------
 // The early inline <head> script already applied the stored/OS theme before paint;
@@ -5515,6 +5517,7 @@ function aiVerify(url, prompt, scale){
 }
 $("aiGo").addEventListener("click",function(){
   if(AI.busy) return;
+  track("ai_generate",{pro:isPro(),trialsLeft:aiTrialsLeft()});
   // AI art is the only feature with a real per-use server cost → gate it: free trials, then Pro.
   if(!isPro() && aiTrialsLeft()<=0){
     openPro("aiArt", (t("pro.aiUsedUp")||"AI 아트 무료 체험 {n}회를 모두 사용했습니다. Pro로 무제한 이용하세요.").replace("{n}", PRO.aiFreeTrials));
@@ -5800,8 +5803,8 @@ try{ if(!localStorage.getItem(OBKEY)) setTimeout(showOnboard, 600); }catch(e){}
 var PRO = {
   active:false,
   price:"₩12,900",     // one-time — set to match your MoR product price
-  checkoutUrl:"",      // MoR checkout link (empty → "구매 준비 중" toast)
-  validateUrl:"",      // MoR license-validate API (empty → DEV offline format check)
+  checkoutUrl:"",      // MoR checkout link (empty → "구매 준비 중" toast) — paste your Polar/LS checkout URL
+  validateUrl:"/api/validate",  // server license check (api/validate.js); falls back to DEV format if unreachable
   gate:{ hiresExport:true, aiArt:true },  // Pro-gated features. aiArt = Pro required AFTER the free trials below
   aiFreeTrials:3       // AI art generations a non-Pro visitor gets free (the ONLY feature with a real per-use server cost)
 };
@@ -5834,25 +5837,26 @@ function validateLicense(key, cb){
     fetch(PRO.validateUrl,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({license_key:key})})
       .then(function(r){ return r.json(); })
       .then(function(d){ var ok=!!(d && (d.valid===true || d.activated===true || (d.license_key && d.license_key.status==="active"))); cb(ok, ok?null:t("pro.errInvalid")); })
-      .catch(function(){ cb(false, t("pro.errNet")); });
+      .catch(function(){ /* endpoint unreachable (e.g. local file://) → fall back to DEV format */
+        var ok=/^QRPRO-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(key); cb(ok, ok?null:t("pro.errNet")); });
     return;
   }
   // DEV fallback (no server configured yet) — accept a fixed format so the unlock flow is testable.
   var ok=/^QRPRO-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(key);
   cb(ok, ok?null:t("pro.errFormat"));
 }
-function activatePro(key){ PRO.active=true; try{ localStorage.setItem(PROKEY,(key||"").trim().toUpperCase()); }catch(e){} refreshProUI(); }
+function activatePro(key){ PRO.active=true; try{ localStorage.setItem(PROKEY,(key||"").trim().toUpperCase()); }catch(e){} refreshProUI(); track("pro_unlock"); }
 function loadPro(){
   var k=null; try{ k=localStorage.getItem(PROKEY); }catch(e){}
   if(!k) return;
   validateLicense(k, function(ok){ if(ok){ PRO.active=true; refreshProUI(); } else { try{ localStorage.removeItem(PROKEY); }catch(e){} } });
 }
-function openPro(feature, reason){ var m=$("proMsg"); if(m){ m.textContent=reason||""; m.className="pro-msg"; } $("proMask").classList.add("show"); }
+function openPro(feature, reason){ var m=$("proMsg"); if(m){ m.textContent=reason||""; m.className="pro-msg"; } $("proMask").classList.add("show"); track("pro_view",{feature:feature||""}); }
 function closePro(){ $("proMask").classList.remove("show"); }
 $("proBtn").addEventListener("click",function(){ if(PRO.active){ toast(t("pro.thanks")); } else openPro(); });
 $("proClose").addEventListener("click",closePro);
 $("proMask").addEventListener("click",function(e){ if(e.target===this) closePro(); });
-$("proBuy").addEventListener("click",function(){ if(PRO.checkoutUrl){ window.open(PRO.checkoutUrl,"_blank","noopener"); } else { toast(t("pro.buySoon")); } });
+$("proBuy").addEventListener("click",function(){ track("pro_checkout_click",{configured:!!PRO.checkoutUrl}); if(PRO.checkoutUrl){ window.open(PRO.checkoutUrl,"_blank","noopener"); } else { toast(t("pro.buySoon")); } });
 $("proApply").addEventListener("click",function(){
   var m=$("proMsg"); m.textContent=t("pro.checking"); m.className="pro-msg";
   validateLicense($("proKey").value, function(ok, err){
@@ -7896,7 +7900,7 @@ var CARD = (function(){
 
   // ===================== downloads =====================
   function fname(){ return ((gval("cdName")||"card").replace(/[^\w가-힣.-]+/g,"_")||"card"); }
-  function dlPng(){ draw(); download(st.hi.toDataURL("image/png"), "명함_"+fname()+".png"); toast((typeof t==="function"&&t("card.dlPng"))||"PNG 저장됨"); }
+  function dlPng(){ draw(); download(st.hi.toDataURL("image/png"), "명함_"+fname()+".png"); toast((typeof t==="function"&&t("card.dlPng"))||"PNG 저장됨"); if(typeof track==="function")track("card_download",{fmt:"png"}); }
   function dlSvg(){
     draw(); var W=st.hi.width, H=st.hi.height;
     var b=st.box.qr||{x:0,y:0,w:0,h:0}; var qx=b.x+16, qy=b.y+16, qsz=Math.max(0,b.w-32);
@@ -7907,7 +7911,7 @@ var CARD = (function(){
     var s='<svg xmlns="http://www.w3.org/2000/svg" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'">'
       +'<image width="'+W+'" height="'+H+'" href="'+cardPng+'"/>'
       +(qsz>0?'<image x="'+qx+'" y="'+qy+'" width="'+qsz+'" height="'+qsz+'" href="'+qpng+'"/>':'')+'</svg>';
-    download("data:image/svg+xml;charset=utf-8,"+encodeURIComponent(s), "명함_"+fname()+".svg"); toast((typeof t==="function"&&t("card.dlSvg"))||"SVG 저장됨");
+    download("data:image/svg+xml;charset=utf-8,"+encodeURIComponent(s), "명함_"+fname()+".svg"); toast((typeof t==="function"&&t("card.dlSvg"))||"SVG 저장됨"); if(typeof track==="function")track("card_download",{fmt:"svg"});
   }
   function dlPdf(){
     draw(); var png=st.hi.toDataURL("image/png"); var pw=st.hi.width, ph=st.hi.height;
@@ -7915,7 +7919,7 @@ var CARD = (function(){
     loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js").then(function(){
       var J=(window.jspdf&&window.jspdf.jsPDF)||window.jsPDF; if(!J){ toast("PDF 라이브러리 로드 실패"); return; }
       var doc=new J({orientation:(mmH>mmW?"portrait":"landscape"),unit:"mm",format:[mmW,mmH]});
-      doc.addImage(png,"PNG",0,0,mmW,mmH); doc.save("명함_"+fname()+".pdf"); toast((typeof t==="function"&&t("card.dlPdf"))||"PDF 저장됨");
+      doc.addImage(png,"PNG",0,0,mmW,mmH); doc.save("명함_"+fname()+".pdf"); toast((typeof t==="function"&&t("card.dlPdf"))||"PDF 저장됨"); if(typeof track==="function")track("card_download",{fmt:"pdf"});
     }).catch(function(){ toast((typeof t==="function"&&t("card.pdfOff"))||"PDF는 배포된(온라인) 사이트에서만 동작합니다."); });
   }
   function share(){
@@ -7936,6 +7940,7 @@ var CARD = (function(){
     var qr=qrCanvas(420,gval("cardQrColor"),gval("cardAccent"),st.qrTpl).toDataURL("image/png");
     var arr=load(); arr.unshift({id:Date.now(),name:fname(),ts:Date.now(),card:card,qr:qr,vcard:vcard()});
     store(arr.slice(0,24)); renderFolder(); toast((typeof t==="function"&&t("card.saved"))||"디지털 명함 폴더에 저장됨 (명함 + QR)");
+    if(typeof track==="function")track("card_save",{tpl:st.tpl,orient:st.orient});
   }
   function renderFolder(){
     var box=$id("cardFolder"), wrap=$id("cardFolderWrap"); if(!box) return;

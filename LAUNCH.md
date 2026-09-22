@@ -25,6 +25,15 @@
 - **라이선스 분실 대비 안내.** Pro 모달에 "구매 이메일에서 키 재확인 / 문의로 재발송, 브라우저 데이터 삭제 시 재입력 필요" 문구 추가(4개 언어). → 환불·컴플레인 1순위 요인 완화.
 - **프라이버시 문구 정정(법적 리스크).** 푸터·소개·개인정보처리방침의 "데이터 전송 없음" 단언을 **"QR 생성·디자인·무료 명함 인식은 브라우저 처리, AI 아트·AI 명함 인식만 서버 전송·저장 안 함"**으로 정확히 수정.
 
+### 결제·분석 배선 — 코드로 이미 준비됨 (빌드 2026.09.22-card6)
+- **라이선스 검증 엔드포인트 `api/validate.js` 완성.** `PRO.validateUrl="/api/validate"`로 이미 연결됨. 동작:
+  - `POLAR_ACCESS_TOKEN`(+선택 `POLAR_ORGANIZATION_ID`) 설정 → **Polar** 검증
+  - `LEMONSQUEEZY_API_KEY` 설정 → **Lemon Squeezy** 검증
+  - `LICENSE_VALIDATE_URL` 설정 → 임의 MoR 패스스루
+  - 아무것도 없으면 → DEV 포맷(`QRPRO-XXXX-XXXX`) 통과(테스트용). 즉 **env만 넣으면 실검증 켜짐.**
+  - 남은 건 `PRO.checkoutUrl`에 MoR 체크아웃 링크 한 줄 붙이기 → 판매 시작.
+- **전환 추적(Vercel Web Analytics 커스텀 이벤트) 심음:** `qr_download`, `card_download`, `card_save`, `ai_generate`, `pro_view`, `pro_checkout_click`, `pro_unlock`. Vercel Analytics 켜면 퍼널이 대시보드에 집계됨(다운로드→Pro조회→구매클릭→언락).
+
 ### 아직 소유자(운영) 작업 — 이게 안 되면 매출 0 🔴
 1. **결제 연결(최우선).** `PRO.checkoutUrl`가 비어 있어 지금은 **판매 자체가 불가**. MoR(Polar 권장) 상품 생성 → `checkoutUrl`·`validateUrl`·`price` 입력(§1 참고).
 2. **커스텀 도메인.** `jay-inky.vercel.app`에는 카드번호를 안 넣음. 도메인 연결 + canonical/og/robots/sitemap 치환(§Phase 0).
