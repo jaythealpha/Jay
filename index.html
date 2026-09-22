@@ -252,6 +252,8 @@
     border-radius:var(--rs);padding:10px 14px;font-size:14px;font-family:inherit;outline:none;transition:.15s}
   textarea:focus,input[type=text]:focus,select:focus{border-color:var(--txt);box-shadow:0 0 0 3px var(--focus)}
   textarea{resize:vertical;min-height:64px;line-height:1.4;border-radius:var(--r)}
+  /* unified 44px control height so text fields, color pills and photo buttons align crisply across rows/columns */
+  input[type=text],select{height:44px;padding:0 14px;line-height:normal}
   input[type=text]{border-radius:var(--pill)}
   input[type=range]{width:100%;accent-color:var(--acc)}
   input[type=color]{-webkit-appearance:none;appearance:none;width:100%;height:40px;border:1px solid var(--line);border-radius:var(--rs);background:var(--card);cursor:pointer;padding:4px}
@@ -320,7 +322,7 @@
   .logo-examples:empty{display:none}
   .logo-examples canvas{width:100%;aspect-ratio:1;border-radius:var(--rs);border:1px solid var(--line);cursor:pointer;background:#fff;transition:.15s}
   .logo-examples canvas:hover{border-color:var(--txt)}
-  .file-btn{display:block;text-align:center;background:var(--bg2);border:1px dashed var(--line2);border-radius:var(--r);padding:12px;font-size:12.5px;color:var(--mut);cursor:pointer;transition:.15s}
+  .file-btn{display:flex;align-items:center;justify-content:center;min-height:44px;text-align:center;background:var(--bg2);border:1px dashed var(--line2);border-radius:var(--r);padding:8px 12px;font-size:12.5px;color:var(--mut);cursor:pointer;transition:.15s}
   .file-btn:hover{border-color:var(--txt);color:var(--txt)}
   input[type=file]{display:none}
 
@@ -1074,18 +1076,26 @@
         <details class="grp" open id="grpCardPhoto">
           <summary><svg class="ic" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"/><circle cx="8.5" cy="10.5" r="1.5" fill="currentColor"/><path d="M4 17l5-4 4 3 3-2 4 3" stroke="currentColor" stroke-width="2"/></svg><span data-i18n="card.grp.photo">명함 사진 (앞 / 뒤)</span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
           <div class="body">
+            <div class="lbl" style="font-size:12px;color:var(--mut);margin:2px 0 6px" data-i18n="card.cap.h">📷 촬영 (앞 → 뒤 순서)</div>
             <div class="row2">
-              <label class="file-btn" for="cardFront" id="cardFrontLabel" data-i18n="card.front">＋ 앞면 촬영/업로드</label>
-              <label class="file-btn" for="cardBack" id="cardBackLabel" data-i18n="card.back">＋ 뒷면 (선택)</label>
+              <label class="file-btn" for="capFront" id="capFrontLabel" data-i18n="card.cap.front">📷 앞면 촬영</label>
+              <label class="file-btn" for="capBack" id="capBackLabel" data-i18n="card.cap.back">📷 뒷면 촬영</label>
             </div>
-            <input type="file" id="cardFront" accept="image/*" capture="environment" />
-            <input type="file" id="cardBack" accept="image/*" capture="environment" />
-            <div id="cardPhotoThumbs" class="logo-examples" style="grid-template-columns:repeat(2,1fr)"></div>
+            <div class="lbl" style="font-size:12px;color:var(--mut);margin:12px 0 6px" data-i18n="card.up.h">🖼️ 갤러리에서 업로드</div>
+            <div class="row2">
+              <label class="file-btn" for="upFront" id="upFrontLabel" data-i18n="card.up.front">＋ 앞면 업로드</label>
+              <label class="file-btn" for="upBack" id="upBackLabel" data-i18n="card.up.back">＋ 뒷면 업로드</label>
+            </div>
+            <input type="file" id="capFront" accept="image/*" capture="environment" />
+            <input type="file" id="capBack" accept="image/*" capture="environment" />
+            <input type="file" id="upFront" accept="image/*" />
+            <input type="file" id="upBack" accept="image/*" />
+            <div id="cardPhotoThumbs" class="logo-examples" style="grid-template-columns:repeat(2,1fr);margin-top:10px"></div>
             <div class="row2" style="margin-top:10px">
               <button class="btn sec" id="cardOcr" type="button" style="flex:1" data-i18n="card.ocr">📷 자동 인식 (무료)</button>
               <button class="btn sec" id="cardOcrAi" type="button" style="flex:1" data-i18n="card.ocrAi">✨ 고정밀 (AI)</button>
             </div>
-            <div class="hint" id="cardOcrStatus" data-i18n="card.ocrHint">사진을 올린 뒤 <b>자동 인식</b>을 누르면 브라우저에서 글자를 읽어 아래 항목을 채웁니다(무료·기기 내 처리). 정확도가 필요하면 <b>고정밀(AI)</b>을 쓰세요. 인식 후 언제든 직접 수정 가능합니다.</div>
+            <div class="hint" id="cardOcrStatus" data-i18n-html="card.ocrHint">사진을 올린 뒤 <b>자동 인식</b>을 누르면 브라우저에서 글자를 읽어 아래 항목을 채웁니다(무료·기기 내 처리). 정확도가 필요하면 <b>고정밀(AI)</b>을 쓰세요. 인식 후 언제든 직접 수정 가능합니다.</div>
           </div>
         </details>
         <details class="grp" open id="grpCardInfo">
@@ -1129,6 +1139,11 @@
               <div class="lbl"><span data-i18n="card.d.template">명함 템플릿</span><b id="cardTplName"></b></div>
               <div class="tpl-grid" id="cardTplGrid"></div>
             </label>
+            <div class="row2" style="margin-top:2px">
+              <label class="file-btn" for="cardBg" id="cardBgLabel" data-i18n="card.bg.up">🖼️ 배경 사진 (포토 템플릿)</label>
+              <button class="btn sec" id="cardBgClear" type="button" style="display:none" data-i18n="card.bg.clear">배경 제거</button>
+            </div>
+            <input type="file" id="cardBg" accept="image/*" />
             <div class="row2">
               <label class="fld"><div class="lbl" data-i18n="card.d.accent">포인트 색</div>
                 <div class="color-pick"><input type="color" id="cardAccent" value="#111111" /><span class="hex" id="cardAccentHex">#111111</span></div></label>
@@ -1140,8 +1155,16 @@
               <div class="tpl-grid" id="cardQrGrid"></div>
             </label>
             <div class="card-drag-hint">
-              <span data-i18n="card.d.dragHint">✋ 왼쪽 미리보기에서 <b>이름·정보·QR을 드래그</b>해 위치를 옮길 수 있어요.</span>
-              <button class="btn sec" id="cardResetPos" type="button" style="flex:none;padding:5px 12px;font-size:11px" data-i18n="card.d.resetPos">위치 초기화</button>
+              <span data-i18n-html="card.d.dragHint">✋ 미리보기에서 <b>항목을 클릭해 선택</b> → 드래그로 이동, 아래 슬라이더로 크기 조절.</span>
+              <button class="btn sec" id="cardResetPos" type="button" style="flex:none;padding:5px 12px;font-size:11px" data-i18n="card.d.resetPos">위치·크기 초기화</button>
+            </div>
+            <div id="cardElBar" style="display:none;margin-top:10px;padding:11px 13px;background:var(--bg2);border:1px solid var(--line2);border-radius:12px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                <span style="font-size:12.5px;color:var(--txt)"><b data-i18n="card.el.sel">선택된 항목</b>: <b id="cardElName" style="color:var(--acc)"></b></span>
+                <button class="btn sec" id="cardElDone" type="button" style="flex:none;padding:4px 12px;font-size:11px" data-i18n="card.el.done">선택 해제</button>
+              </div>
+              <div class="lbl" style="font-size:11px;color:var(--mut);margin-bottom:4px" data-i18n="card.el.size">크기</div>
+              <input type="range" id="cardElSize" min="40" max="240" value="100" />
             </div>
             <div class="hint" data-i18n="card.d.hint">QR은 vCard(연락처) 규격이라 스캔하면 이름·전화·이메일이 그대로 연락처 추가 화면에 뜹니다. 색을 너무 밝게 하면 스캔이 안 될 수 있어요(자동으로 어둡게 보정).</div>
           </div>
@@ -1307,7 +1330,7 @@
     </nav>
     <div style="margin-top:10px">Aesthetic QR Studio · <span data-i18n="foot.tag">아름답고 스캔되는 QR을 만드는 스튜디오 · QR 생성·디자인은 브라우저에서 처리 (AI 기능만 서버 전송·저장 안 함)</span></div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · 빌드 <b id="verTag">2026.09.22-sell</b></div>
+    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · 빌드 <b id="verTag">2026.09.22-card3</b></div>
   </footer>
 </div>
 
@@ -6886,6 +6909,15 @@ var I18N = {
   "card.grp.photo":{ko:"명함 사진 (앞 / 뒤)",en:"Card photo (front / back)",zh:"名片照片（正面 / 背面）",ja:"名刺写真（表 / 裏）"},
   "card.front":{ko:"＋ 앞면 촬영/업로드",en:"＋ Front photo",zh:"＋ 正面拍摄/上传",ja:"＋ 表面を撮影/アップ"},
   "card.back":{ko:"＋ 뒷면 (선택)",en:"＋ Back (optional)",zh:"＋ 背面（可选）",ja:"＋ 裏面（任意）"},
+  "card.cap.h":{ko:"📷 촬영 (앞 → 뒤 순서)",en:"📷 Take photo (front → back)",zh:"📷 拍摄（正面 → 背面）",ja:"📷 撮影（表 → 裏の順）"},
+  "card.cap.front":{ko:"📷 앞면 촬영",en:"📷 Shoot front",zh:"📷 拍摄正面",ja:"📷 表面を撮影"},
+  "card.cap.back":{ko:"📷 뒷면 촬영",en:"📷 Shoot back",zh:"📷 拍摄背面",ja:"📷 裏面を撮影"},
+  "card.up.h":{ko:"🖼️ 갤러리에서 업로드",en:"🖼️ Upload from gallery",zh:"🖼️ 从相册上传",ja:"🖼️ ギャラリーからアップ"},
+  "card.up.front":{ko:"＋ 앞면 업로드",en:"＋ Upload front",zh:"＋ 上传正面",ja:"＋ 表面をアップ"},
+  "card.up.back":{ko:"＋ 뒷면 업로드",en:"＋ Upload back",zh:"＋ 上传背面",ja:"＋ 裏面をアップ"},
+  "card.doneFront":{ko:"✓ 앞면 완료",en:"✓ Front added",zh:"✓ 正面完成",ja:"✓ 表面完了"},
+  "card.doneBack":{ko:"✓ 뒷면 완료",en:"✓ Back added",zh:"✓ 背面完成",ja:"✓ 裏面完了"},
+  "card.frontOk":{ko:"앞면 등록됨 — 뒷면도 촬영/업로드하세요",en:"Front added — now the back",zh:"正面已添加 — 请再添加背面",ja:"表面を登録 — 裏面もどうぞ"},
   "card.ocr":{ko:"📷 자동 인식 (무료)",en:"📷 Auto-read (free)",zh:"📷 自动识别（免费）",ja:"📷 自動認識（無料）"},
   "card.ocrAi":{ko:"✨ 고정밀 (AI)",en:"✨ Precision (AI)",zh:"✨ 高精度（AI）",ja:"✨ 高精度（AI）"},
   "card.ocrHint":{ko:"사진을 올린 뒤 <b>자동 인식</b>을 누르면 브라우저에서 글자를 읽어 아래 항목을 채웁니다(무료·기기 내 처리). 정확도가 필요하면 <b>고정밀(AI)</b>을 쓰세요. 인식 후 언제든 직접 수정 가능합니다.",en:"After uploading, tap <b>Auto-read</b> to extract text in your browser and fill the fields below (free, on-device). Need higher accuracy? Use <b>Precision (AI)</b>. You can always edit the result by hand.",zh:"上传后点击<b>自动识别</b>，浏览器会读取文字并填入下方字段（免费·本地处理）。需要更高准确度请用<b>高精度（AI）</b>。识别后可随时手动修改。",ja:"アップ後に<b>自動認識</b>を押すとブラウザで文字を読み取り下の項目を埋めます（無料・端末内処理）。精度が必要なら<b>高精度（AI）</b>を。認識後はいつでも手動修正できます。"},
@@ -6920,9 +6952,24 @@ var I18N = {
   "card.grp.social":{ko:"프로필 · 소셜 (선택)",en:"Profiles · Social (optional)",zh:"主页 · 社交（可选）",ja:"プロフィール · SNS（任意）"},
   "card.social.hint":{ko:"아이디(@핸들) 또는 전체 URL 어느 쪽이든 좋아요. 명함 하단에 아이콘으로 표시되고, 스캔한 연락처에도 링크로 저장됩니다.",en:"Enter a @handle or a full URL — either works. Shown as icons at the bottom of the card and saved as links in the scanned contact.",zh:"填 @账号 或完整网址均可。会以图标显示在名片底部，并作为链接存入扫描后的联系人。",ja:"@ハンドルでもフルURLでもOK。名刺下部にアイコン表示され、スキャンした連絡先にもリンクとして保存されます。"},
   "card.d.qrStyle":{ko:"QR 스타일",en:"QR style",zh:"二维码样式",ja:"QRスタイル"},
-  "card.d.dragHint":{ko:"✋ 왼쪽 미리보기에서 <b>이름·정보·QR을 드래그</b>해 위치를 옮길 수 있어요.",en:"✋ Drag the <b>name, details, or QR</b> in the preview to reposition them.",zh:"✋ 在左侧预览中<b>拖动姓名·信息·二维码</b>即可调整位置。",ja:"✋ 左のプレビューで<b>名前·情報·QRをドラッグ</b>して位置を変えられます。"},
-  "card.d.resetPos":{ko:"위치 초기화",en:"Reset layout",zh:"重置位置",ja:"位置をリセット"},
-  "card.posReset":{ko:"위치를 초기화했어요",en:"Layout reset",zh:"已重置位置",ja:"位置をリセットしました"},
+  "card.d.dragHint":{ko:"✋ 미리보기에서 <b>항목을 클릭해 선택</b> → 드래그로 이동, 아래 슬라이더로 크기 조절.",en:"✋ <b>Click an item</b> in the preview to select → drag to move, resize with the slider below.",zh:"✋ 在预览中<b>点击项目</b>选中 → 拖动移动，用下方滑块调整大小。",ja:"✋ プレビューで<b>項目をクリックして選択</b> → ドラッグで移動、下のスライダーでサイズ調整。"},
+  "card.d.resetPos":{ko:"위치·크기 초기화",en:"Reset layout",zh:"重置位置·大小",ja:"位置·サイズをリセット"},
+  "card.posReset":{ko:"위치·크기를 초기화했어요",en:"Layout reset",zh:"已重置位置与大小",ja:"位置·サイズをリセットしました"},
+  "card.el.sel":{ko:"선택된 항목",en:"Selected",zh:"已选项目",ja:"選択中"},
+  "card.el.done":{ko:"선택 해제",en:"Deselect",zh:"取消选择",ja:"選択解除"},
+  "card.el.size":{ko:"크기",en:"Size",zh:"大小",ja:"サイズ"},
+  "card.el.name":{ko:"이름",en:"Name",zh:"姓名",ja:"氏名"},
+  "card.el.title":{ko:"직함",en:"Title",zh:"职位",ja:"肩書き"},
+  "card.el.org":{ko:"회사/조직",en:"Company",zh:"公司",ja:"会社"},
+  "card.el.tel":{ko:"전화",en:"Phone",zh:"电话",ja:"電話"},
+  "card.el.email":{ko:"이메일",en:"Email",zh:"邮箱",ja:"メール"},
+  "card.el.url":{ko:"웹사이트",en:"Website",zh:"网站",ja:"サイト"},
+  "card.el.addr":{ko:"주소",en:"Address",zh:"地址",ja:"住所"},
+  "card.el.qr":{ko:"QR",en:"QR",zh:"二维码",ja:"QR"},
+  "card.bg.up":{ko:"🖼️ 배경 사진 (포토 템플릿)",en:"🖼️ Background photo (photo templates)",zh:"🖼️ 背景照片（照片模板）",ja:"🖼️ 背景写真（フォトテンプレ）"},
+  "card.bg.clear":{ko:"배경 제거",en:"Remove bg",zh:"移除背景",ja:"背景を削除"},
+  "card.bg.done":{ko:"배경 사진 적용됨",en:"Background applied",zh:"背景已应用",ja:"背景を適用"},
+  "card.bg.hint":{ko:"＋ 배경 사진을 업로드하세요",en:"＋ Upload a background photo",zh:"＋ 请上传背景照片",ja:"＋ 背景写真をアップ"},
   "card.dlPng":{ko:"PNG 저장됨",en:"PNG saved",zh:"已保存 PNG",ja:"PNGを保存"},
   "card.dlSvg":{ko:"SVG 저장됨",en:"SVG saved",zh:"已保存 SVG",ja:"SVGを保存"},
   "card.dlPdf":{ko:"PDF 저장됨",en:"PDF saved",zh:"已保存 PDF",ja:"PDFを保存"},
@@ -7360,7 +7407,7 @@ var CARD = (function(){
   var CARDKEY="aqr_cards_v1";
   var FD="'Nunito','SF Pro Rounded',system-ui,-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif";
   var FB="system-ui,-apple-system,'Apple SD Gothic Neo','Noto Sans KR',Pretendard,sans-serif";
-  var st={ tpl:"classic", qrTpl:"classic", frontImg:null, backImg:null, hi:null, entered:false, pos:{}, box:{}, drag:null };
+  var st={ tpl:"classic", qrTpl:"classic", frontImg:null, backImg:null, bgImg:null, hi:null, entered:false, el:{}, sel:null, box:{}, drag:null };
   function $id(x){ return document.getElementById(x); }
   function hx2(x){ return ("0"+Math.max(0,Math.min(255,Math.round(x))).toString(16)).slice(-2); }
   function parseHex(hex){ var m=/^#?([0-9a-fA-F]{6})$/.exec(hex||""); if(!m) return [17,17,17]; var v=parseInt(m[1],16); return [(v>>16)&255,(v>>8)&255,v&255]; }
@@ -7397,7 +7444,13 @@ var CARD = (function(){
     {id:"gradsoft", nm:"소프트",   base:"gradSoft",deco:"bar",      qr:"right"},
     {id:"mono",     nm:"모노",     base:"tint",    deco:"leftband", qr:"left"},
     {id:"classicL", nm:"클래식 L", base:"light",   deco:"bar",      qr:"left"},
-    {id:"darkL",    nm:"다크 L",   base:"dark",    deco:"bar",      qr:"left"}
+    {id:"darkL",    nm:"다크 L",   base:"dark",    deco:"bar",      qr:"left"},
+    {id:"photo",    nm:"포토",     base:"dark",    deco:"none",     qr:"right", photo:true},
+    {id:"photoL",   nm:"포토 L",   base:"dark",    deco:"none",     qr:"left",  photo:true},
+    {id:"luxe",     nm:"럭스",     base:"ink",     deco:"doubleline",qr:"right", accent:"#c9a24a"},
+    {id:"champagne",nm:"샴페인",   base:"paper",   deco:"topline",  qr:"right", accent:"#b08d2e"},
+    {id:"outline",  nm:"아웃라인", base:"light",   deco:"outline",  qr:"right"},
+    {id:"diag",     nm:"다이애그", base:"light",   deco:"diag",     qr:"right"}
   ];
   function tpl(){ for(var i=0;i<TPL.length;i++){ if(TPL[i].id===st.tpl) return TPL[i]; } return TPL[0]; }
 
@@ -7405,6 +7458,22 @@ var CARD = (function(){
   function paintCard(g,W,H,T,acc){
     var ink="#111111",sub="#5b6472",onDark=false,name="#111111",nameOnRibbon=false;
     var base=T.base;
+    // ---- photo-background templates ----
+    if(T.photo){
+      if(st.bgImg){ var iw=st.bgImg.width||1, ih=st.bgImg.height||1, r=Math.max(W/iw,H/ih), dw=iw*r, dh=ih*r;
+        g.drawImage(st.bgImg,(W-dw)/2,(H-dh)/2,dw,dh);
+      } else { var gp=g.createLinearGradient(0,0,W,H); gp.addColorStop(0,acc); gp.addColorStop(1,shade(acc,-52)); g.fillStyle=gp; g.fillRect(0,0,W,H); }
+      // legibility scrim (stronger on the text side)
+      var textRight=(T.qr==="left");
+      var sh=g.createLinearGradient(0,0,W,0);
+      if(textRight){ sh.addColorStop(0,"rgba(0,0,0,.05)"); sh.addColorStop(0.5,"rgba(0,0,0,.3)"); sh.addColorStop(1,"rgba(0,0,0,.62)"); }
+      else { sh.addColorStop(0,"rgba(0,0,0,.64)"); sh.addColorStop(0.55,"rgba(0,0,0,.3)"); sh.addColorStop(1,"rgba(0,0,0,.06)"); }
+      g.fillStyle=sh; g.fillRect(0,0,W,H);
+      var sv=g.createLinearGradient(0,0,0,H); sv.addColorStop(0,"rgba(0,0,0,.12)"); sv.addColorStop(1,"rgba(0,0,0,.42)"); g.fillStyle=sv; g.fillRect(0,0,W,H);
+      if(!st.bgImg && W>300){ g.fillStyle="rgba(255,255,255,.9)"; g.textAlign="center"; g.font="600 24px "+FB;
+        g.fillText((typeof t==="function"&&t("card.bg.hint"))||"＋ 배경 사진을 업로드하세요", W/2, H/2); g.textAlign="left"; }
+      return {ink:"#ffffff",sub:"rgba(255,255,255,.85)",onDark:true,accTx:"#ffffff",name:"#ffffff",deco:"none",photo:true};
+    }
     if(base==="light"){ g.fillStyle="#ffffff"; g.fillRect(0,0,W,H); }
     else if(base==="paper"){ g.fillStyle="#faf7f1"; g.fillRect(0,0,W,H); }
     else if(base==="tint"){ g.fillStyle=mix(acc,"#ffffff",0.90); g.fillRect(0,0,W,H); }
@@ -7424,11 +7493,16 @@ var CARD = (function(){
     else if(d==="leftband"){ g.fillStyle=accTx; g.fillRect(0,0,34,H); }
     else if(d==="corner"){ g.fillStyle=accTx; g.beginPath(); g.moveTo(W,0); g.lineTo(W,150); g.lineTo(W-150,0); g.closePath(); g.fill(); }
     else if(d==="dots"){ g.fillStyle=onDark?"rgba(255,255,255,.10)":mix(acc,"#ffffff",0.72); for(var yy=40;yy<H-20;yy+=34){ for(var xx=W-40;xx>W-190;xx-=34){ g.beginPath(); g.arc(xx,yy,3.2,0,7); g.fill(); } } }
+    else if(d==="doubleline"){ g.fillStyle=accTx; g.fillRect(0,0,W,7); g.fillRect(0,13,W,3); }
+    else if(d==="outline"){ g.strokeStyle=accTx; g.lineWidth=7; g.strokeRect(16,16,W-32,H-32); }
+    else if(d==="diag"){ g.save(); g.fillStyle=accTx; g.globalAlpha=onDark?0.9:1; g.beginPath(); g.moveTo(W,0); g.lineTo(W,190); g.lineTo(W-330,0); g.closePath(); g.fill(); g.globalAlpha=onDark?0.5:0.5; g.beginPath(); g.moveTo(W,0); g.lineTo(W,110); g.lineTo(W-190,0); g.closePath(); g.fill(); g.restore(); }
     return {ink:ink,sub:sub,onDark:onDark,accTx:accTx,name:name,deco:d};
   }
 
   // ===================== QR STYLE REGISTRY (24 QR looks) =====================
   // shape presets follow the QR-color; theme presets carry their own colors.
+  // 12 geometry presets (mono — follow the QR color; distinct by SHAPE) +
+  // 12 fixed-color themes (always distinct by COLOR). No color-dependent duplicates.
   var QTPL=[
     {id:"classic", nm:"클래식",  dot:"square",  eye:"square"},
     {id:"round",   nm:"라운드",  dot:"rounded", eye:"rounded"},
@@ -7442,18 +7516,18 @@ var CARD = (function(){
     {id:"dotround",nm:"소프트",  dot:"dots",    eye:"rounded"},
     {id:"target",  nm:"타겟",    dot:"rounded", eye:"target"},
     {id:"sqcircle",nm:"믹스",    dot:"square",  eye:"circle"},
-    {id:"gradR",   nm:"그라드",  dot:"rounded", eye:"rounded", grad:true},
-    {id:"gradD",   nm:"그라드 점",dot:"dots",   eye:"circle",  grad:true},
-    {id:"gradC",   nm:"그라드 C",dot:"classy",  eye:"leaf",    grad:true},
-    {id:"gradL",   nm:"그라드 L",dot:"liquid",  eye:"rounded", grad:true},
-    {id:"eyeR",    nm:"포인트눈",dot:"rounded", eye:"rounded", eyeAcc:true},
-    {id:"eyeD",    nm:"포인트 점",dot:"dots",   eye:"circle",  eyeAcc:true},
-    {id:"eyeS",    nm:"포인트 각",dot:"square",  eye:"square",  eyeAcc:true},
     {id:"ocean",   nm:"오션",    dot:"dots",    eye:"circle",  grad:true, c1:"#0ea5e9", c2:"#1d4ed8"},
     {id:"sunset",  nm:"선셋",    dot:"rounded", eye:"rounded", grad:true, c1:"#f43f5e", c2:"#b45309"},
     {id:"forest",  nm:"포레스트",dot:"classy",  eye:"leaf",    grad:true, c1:"#059669", c2:"#064e3b"},
-    {id:"midnight",nm:"미드나잇",dot:"rounded", eye:"rounded", c1:"#0b1020"},
-    {id:"rose",    nm:"로즈",    dot:"dots",    eye:"circle",  c1:"#e11d48"}
+    {id:"grape",   nm:"그레이프",dot:"rounded", eye:"rounded", grad:true, c1:"#7c3aed", c2:"#4c1d95"},
+    {id:"sky",     nm:"스카이",  dot:"dots",    eye:"rounded", grad:true, c1:"#38bdf8", c2:"#4f46e5"},
+    {id:"coral",   nm:"코랄",    dot:"rounded", eye:"leaf",    grad:true, c1:"#fb7185", c2:"#c2410c"},
+    {id:"mint",    nm:"민트",    dot:"dots",    eye:"circle",  grad:true, c1:"#10b981", c2:"#0f766e"},
+    {id:"gold",    nm:"골드",    dot:"classy",  eye:"leaf",    c1:"#a16207"},
+    {id:"rose",    nm:"로즈",    dot:"dots",    eye:"circle",  c1:"#e11d48"},
+    {id:"midnight",nm:"미드나잇",dot:"rounded", eye:"rounded", c1:"#1e293b"},
+    {id:"plum",    nm:"플럼",    dot:"rounded", eye:"rounded", c1:"#6d28d9"},
+    {id:"crimson", nm:"크림슨",  dot:"square",  eye:"square",  c1:"#b91c1c"}
   ];
   function qtpl(){ for(var i=0;i<QTPL.length;i++){ if(QTPL[i].id===st.qrTpl) return QTPL[i]; } return QTPL[0]; }
   function qStyle(p,color,accent){
@@ -7518,79 +7592,135 @@ var CARD = (function(){
   }
 
   // ===================== layout + draw =====================
-  function P(key,bx,by){ var o=st.pos[key]||{dx:0,dy:0}; return {x:bx+o.dx, y:by+o.dy}; }
+  // ===================== per-element layout (individual move + resize) =====================
+  var FMAP={name:"cdName",title:"cdTitle",org:"cdOrg",tel:"cdTel",email:"cdEmail",url:"cdUrl",addr:"cdAddr"};
+  function elGet(k){ return st.el[k]||{dx:0,dy:0,scale:1}; }
+  function elOff(k){ var e=st.el[k]; return {dx:(e&&e.dx)||0, dy:(e&&e.dy)||0}; }
+  function elScale(k){ var e=st.el[k]; return (e&&e.scale)||1; }
+  function setOff(k,dx,dy){ var e=st.el[k]||{scale:1}; e.dx=dx; e.dy=dy; if(e.scale==null)e.scale=1; st.el[k]=e; }
+  function setScale(k,s){ var e=st.el[k]||{dx:0,dy:0}; e.scale=Math.max(0.4,Math.min(2.4,s)); if(e.dx==null){e.dx=0;e.dy=0;} st.el[k]=e; }
+  function elLabel(k){
+    var m={name:"이름",title:"직함",org:"회사/조직",tel:"전화",email:"이메일",url:"웹사이트",addr:"주소",qr:"QR"};
+    if(m[k]) return (typeof t==="function"&&t("card.el."+k))||m[k];
+    if(k.indexOf("s_")===0) return (k.slice(2)).toUpperCase();
+    return k;
+  }
+
   function draw(){
     var W=1050,H=600; st.hi=st.hi||document.createElement("canvas"); st.hi.width=W; st.hi.height=H;
     var g=st.hi.getContext("2d"); g.clearRect(0,0,W,H);
-    var T=tpl(), acc=gval("cardAccent")||"#111111", qcol=gval("cardQrColor")||"#111111";
+    var T=tpl(), acc=T.accent||gval("cardAccent")||"#111111", qcol=gval("cardQrColor")||"#111111";
     var pal=paintCard(g,W,H,T,acc);
     var onDark=pal.onDark, ink=pal.ink, sub=pal.sub, accTx=pal.accTx;
-    var qs=298, qrLeft=(T.qr==="left");
-    // base anchors
-    var leftPad = (T.deco==="leftband")?96:64;
-    var qx0 = qrLeft? 60 : (W-qs-60), qy0=Math.round((H-qs)/2)-40;
-    var textX = qrLeft? (qx0+qs+52) : leftPad;
-    var qp=P("qr",qx0,qy0); var qx=qp.x, qy=qp.y;
-    // white plate behind QR on dark/colored bg
-    if(onDark || T.base==="accent" || T.base==="grad"){ g.fillStyle="#ffffff"; rrect(g,qx-16,qy-16,qs+32,qs+56,18); g.fill(); }
+    st.box={};
+    g.textBaseline="alphabetic"; g.textAlign="left";
+
+    // ---- QR (resizable) ----
+    var qbase=298, qs=Math.round(qbase*elScale("qr"));
+    var qrLeft=(T.qr==="left");
+    var qx0=qrLeft?60:(W-qs-60), qy0=Math.round((H-qs)/2)-40;
+    var oq=elOff("qr"); var qx=qx0+oq.dx, qy=qy0+oq.dy;
+    if(onDark || T.base==="accent" || T.base==="grad" || T.photo){ g.fillStyle="#ffffff"; rrect(g,qx-16,qy-16,qs+32,qs+56,18); g.fill(); }
     var qcv=qrCanvas(qs,qcol,acc,st.qrTpl); try{ g.drawImage(qcv,qx,qy,qs,qs); }catch(e){}
-    g.textAlign="center"; g.fillStyle=(onDark||T.base==="accent"||T.base==="grad")?"#444":sub; g.font="600 17px "+FB;
+    g.textAlign="center"; g.fillStyle=(onDark||T.base==="accent"||T.base==="grad"||T.photo)?"#444":sub; g.font="600 "+Math.round(17*Math.max(0.75,elScale("qr")))+"px "+FB;
     g.fillText((typeof t==="function"&&t("card.scanCap"))||"스캔 → 연락처 저장", qx+qs/2, qy+qs+30);
     g.textAlign="left";
     st.box.qr={x:qx-16,y:qy-16,w:qs+32,h:qs+56};
 
-    // ---- HEAD block: name + underline + title + org ----
-    var hp=P("head",textX,120);
-    var nm=gval("cdName")||"이름", ti=gval("cdTitle"), org=gval("cdOrg");
-    var nameColor=ink;
-    if(pal.deco==="ribbon"){ g.font="700 52px "+FD; var nw=g.measureText(nm).width; g.fillStyle=accTx; rrect(g,hp.x-16,hp.y-46,nw+32,64,12); g.fill(); nameColor= (lum(accTx)<150?"#ffffff":"#111111"); }
-    else if(pal.deco==="badge"){ g.fillStyle=accTx; g.beginPath(); g.arc(hp.x+18,hp.y-12,34,0,7); g.fill(); g.fillStyle=(lum(accTx)<150?"#fff":"#111"); g.font="700 34px "+FD; g.textAlign="center"; g.fillText((nm[0]||"·"),hp.x+18,hp.y-1); g.textAlign="left"; }
-    if(pal.deco==="glow"){ g.shadowColor=accTx; g.shadowBlur=26; }
-    var nameX = (pal.deco==="badge")? hp.x+66 : hp.x;
-    g.fillStyle=nameColor; g.font="700 52px "+FD; g.fillText(nm, nameX, hp.y);
-    g.shadowBlur=0;
-    if(pal.deco!=="ribbon" && pal.deco!=="badge"){ g.fillStyle=accTx; g.fillRect(hp.x, hp.y+18, 62, 6); }
-    var y=hp.y+ (pal.deco==="ribbon"?58:60);
-    if(ti){ g.fillStyle=onDark?ink:accTx; g.font="600 26px "+FB; g.fillText(ti, hp.x, y); y+=38; }
-    if(org){ g.fillStyle=sub; g.font="400 24px "+FB; g.fillText(org, hp.x, y); y+=10; }
-    st.box.head={x:hp.x-18,y:hp.y-54,w:430,h:(y-hp.y)+70};
+    var leftPad=(T.deco==="leftband")?96:64;
+    var tx=qrLeft?(qx0+qs+52):leftPad;
 
-    // ---- CONTACT block ----
-    var cp=P("contact",textX,278);
-    var cy=cp.y; g.font="400 23px "+FB;
-    [["📞","cdTel"],["✉","cdEmail"],["🌐","cdUrl"],["📍","cdAddr"]].forEach(function(pr){
-      var val=gval(pr[1]); if(!val) return; g.fillStyle=sub; g.fillText(pr[0]+"  "+val, cp.x, cy); cy+=37;
+    // ---- NAME (deco + underline) ----
+    (function(){
+      var o=elOff("name"), sc=elScale("name"), fs=52*sc, x=tx+o.dx, y=118+o.dy;
+      var nm=gval("cdName")||"이름";
+      g.font="700 "+Math.round(fs)+"px "+FD; g.textAlign="left";
+      var nw=g.measureText(nm).width, nameColor=ink, nameX=x, boxW=nw;
+      if(pal.deco==="ribbon"){ g.fillStyle=accTx; rrect(g,x-16,y-fs*0.9,nw+32,fs*1.25,12); g.fill(); nameColor=(lum(accTx)<150?"#ffffff":"#111111"); }
+      else if(pal.deco==="badge"){ g.fillStyle=accTx; g.beginPath(); g.arc(x+fs*0.35,y-fs*0.24,fs*0.62,0,7); g.fill();
+        g.fillStyle=(lum(accTx)<150?"#fff":"#111"); g.font="700 "+Math.round(fs*0.62)+"px "+FD; g.textAlign="center"; g.fillText(nm[0]||"·",x+fs*0.35,y-fs*0.02);
+        g.textAlign="left"; g.font="700 "+Math.round(fs)+"px "+FD; nameX=x+fs*1.25; boxW=nw+fs*1.25; }
+      if(pal.deco==="glow"){ g.shadowColor=accTx; g.shadowBlur=26; }
+      g.fillStyle=nameColor; g.fillText(nm,nameX,y); g.shadowBlur=0;
+      if(pal.deco!=="ribbon" && pal.deco!=="badge"){ g.fillStyle=accTx; g.fillRect(x,y+fs*0.36,Math.round(62*sc),Math.round(6*sc)); }
+      st.box.name={x:x-16,y:y-fs*0.95,w:boxW+40,h:fs*1.4};
+    })();
+
+    // ---- simple text fields ----
+    function field(k,by,size,weight,color,ic){
+      var v=gval(FMAP[k]); if(!v) return;
+      var o=elOff(k), sc=elScale(k), fs=size*sc, x=tx+o.dx, y=by+o.dy;
+      var label=(ic?ic+"  ":"")+v;
+      g.font=weight+" "+Math.round(fs)+"px "+FB; g.textAlign="left"; g.fillStyle=color;
+      g.fillText(label,x,y);
+      var w=g.measureText(label).width;
+      st.box[k]={x:x-8,y:y-fs*0.9,w:w+16,h:fs*1.3};
+    }
+    field("title",182,27,"600",onDark?ink:accTx);
+    field("org",  218,24,"400",sub);
+    field("tel",  280,23,"400",sub,"📞");
+    field("email",318,23,"400",sub,"✉");
+    field("url",  356,23,"400",sub,"🌐");
+    field("addr", 394,23,"400",sub,"📍");
+
+    // ---- socials (each chip is its own element) ----
+    var socs=socials(); var flowX=tx, baseY=H-58;
+    socs.forEach(function(s){
+      var k="s_"+s.kind, o=elOff(k), sc=elScale(k), fs=20*sc;
+      g.font="600 "+Math.round(fs)+"px "+FB; g.textAlign="left";
+      var chip=s.icon+" "+s.label, w=g.measureText(chip).width+22;
+      var x=flowX+o.dx, y=baseY+o.dy;
+      g.fillStyle=onDark?"rgba(255,255,255,.12)":mix(acc,"#ffffff",0.86); rrect(g,x,y-fs*1.2,w,fs*1.75,fs*0.9); g.fill();
+      g.fillStyle=onDark?ink:shade(acc,-10); g.fillText(chip,x+11,y);
+      st.box[k]={x:x,y:y-fs*1.2,w:w,h:fs*1.75};
+      flowX+=w+8; if(flowX>tx+430){ flowX=tx; baseY+=42; }
     });
-    st.box.contact={x:cp.x-16,y:cp.y-28,w:430,h:(cy-cp.y)+30};
 
-    // ---- SOCIAL block ----
-    var socs=socials();
-    if(socs.length){
-      var sp2=P("social",textX,H-70); var sx=sp2.x, sy=sp2.y; g.font="600 20px "+FB;
-      socs.forEach(function(s){
-        var chip=s.icon+" "+s.label; var w=g.measureText(chip).width+22;
-        g.fillStyle=onDark?"rgba(255,255,255,.10)":mix(acc,"#ffffff",0.86); rrect(g,sx,sy-24,w,34,17); g.fill();
-        g.fillStyle=onDark?ink:shade(acc,-10); g.fillText(chip, sx+11, sy);
-        sx+=w+8; if(sx>textX+420){ sx=sp2.x; sy+=42; }
-      });
-      st.box.social={x:sp2.x-6,y:sp2.y-30,w:440,h:(sy-sp2.y)+46};
-    } else { st.box.social=null; }
-
-    // free = subtle brand mark in the empty bottom-right corner (never over the QR); Pro = clean
+    // ---- free brand mark (into export) ----
     if(typeof isPro!=="function" || !isPro()){
       g.textAlign="right"; g.textBaseline="alphabetic"; g.font="600 15px "+FB;
       g.fillStyle=onDark?"rgba(255,255,255,.45)":"rgba(0,0,0,.30)";
       g.fillText("aesthetic-qr.studio", W-22, H-18); g.textAlign="left";
     }
-    var pv=$id("cardPreview"); if(pv){ pv.width=W; pv.height=H; pv.getContext("2d").drawImage(st.hi,0,0); }
+
+    var pv=$id("cardPreview");
+    if(pv){ pv.width=W; pv.height=H; var pc=pv.getContext("2d"); pc.drawImage(st.hi,0,0);
+      // selection outline is drawn on the PREVIEW ONLY (never in exports)
+      if(st.sel && st.box[st.sel]){ var b=st.box[st.sel];
+        pc.save(); pc.strokeStyle="#2f6bff"; pc.setLineDash([7,5]); pc.lineWidth=2.5;
+        pc.strokeRect(b.x,b.y,b.w,b.h);
+        pc.setLineDash([]); pc.fillStyle="#2f6bff"; pc.fillRect(b.x+b.w-9,b.y+b.h-9,10,10); pc.restore(); }
+    }
   }
 
-  // ---- drag to reposition blocks ----
-  function evtPt(e){ var pv=$id("cardPreview"); var r=pv.getBoundingClientRect(); var cx=(e.touches?e.touches[0].clientX:e.clientX), cy=(e.touches?e.touches[0].clientY:e.clientY);
+  // ---- selection + drag + resize ----
+  function evtPt(e){ var pv=$id("cardPreview"); var r=pv.getBoundingClientRect();
+    var cx=(e.touches?e.touches[0].clientX:e.clientX), cy=(e.touches?e.touches[0].clientY:e.clientY);
     return { x:(cx-r.left)*(1050/r.width), y:(cy-r.top)*(600/r.height) }; }
-  function hitBlock(pt){ var order=["head","contact","social","qr"]; for(var i=0;i<order.length;i++){ var b=st.box[order[i]]; if(b && pt.x>=b.x && pt.x<=b.x+b.w && pt.y>=b.y && pt.y<=b.y+b.h) return order[i]; } return null; }
-  function dragStart(e){ var pt=evtPt(e); var k=hitBlock(pt); if(!k) return; var o=st.pos[k]||{dx:0,dy:0}; st.drag={k:k,sx:pt.x,sy:pt.y,ox:o.dx,oy:o.dy}; $id("cardPreview").classList.add("dragging"); e.preventDefault(); }
-  function dragMove(e){ if(!st.drag) return; var pt=evtPt(e); st.pos[st.drag.k]={dx:st.drag.ox+(pt.x-st.drag.sx), dy:st.drag.oy+(pt.y-st.drag.sy)}; draw(); e.preventDefault(); }
+  function hitEl(pt){
+    var order=["title","org","tel","email","url","addr","name"];
+    var socs=socials(); socs.forEach(function(s){ order.unshift("s_"+s.kind); });
+    order.push("qr");
+    for(var i=0;i<order.length;i++){ var b=st.box[order[i]]; if(b && pt.x>=b.x && pt.x<=b.x+b.w && pt.y>=b.y && pt.y<=b.y+b.h) return order[i]; }
+    return null;
+  }
+  function selectEl(k){ st.sel=k; updateElBar(); draw(); }
+  function updateElBar(){
+    var bar=$id("cardElBar"); if(!bar) return;
+    if(!st.sel){ bar.style.display="none"; return; }
+    bar.style.display="block";
+    var nm=$id("cardElName"); if(nm) nm.textContent=elLabel(st.sel);
+    var sl=$id("cardElSize"); if(sl) sl.value=Math.round(elScale(st.sel)*100);
+  }
+  function dragStart(e){
+    var pt=evtPt(e), k=hitEl(pt);
+    if(!k){ if(st.sel){ st.sel=null; updateElBar(); draw(); } return; }
+    st.sel=k; updateElBar();
+    var o=elOff(k); st.drag={k:k,sx:pt.x,sy:pt.y,ox:o.dx,oy:o.dy,moved:false};
+    $id("cardPreview").classList.add("dragging"); draw(); e.preventDefault();
+  }
+  function dragMove(e){ if(!st.drag) return; var pt=evtPt(e);
+    setOff(st.drag.k, st.drag.ox+(pt.x-st.drag.sx), st.drag.oy+(pt.y-st.drag.sy)); st.drag.moved=true; draw(); e.preventDefault(); }
   function dragEnd(){ if(st.drag){ st.drag=null; $id("cardPreview").classList.remove("dragging"); } }
 
   // ===================== thumbnail pickers =====================
@@ -7754,12 +7884,22 @@ var CARD = (function(){
     draw();
   }
 
-  // ===================== photo upload =====================
-  function photo(inputId, which, labelId){
-    $id(inputId).addEventListener("change", function(e){
+  // ===================== photo: capture (camera) vs upload (gallery), front/back =====================
+  function markPhoto(which){
+    var front=(which==="frontImg");
+    var ids=front?["capFrontLabel","upFrontLabel"]:["capBackLabel","upBackLabel"];
+    var txt=front?((typeof t==="function"&&t("card.doneFront"))||"✓ 앞면 완료")
+                 :((typeof t==="function"&&t("card.doneBack"))||"✓ 뒷면 완료");
+    ids.forEach(function(id){ var el=$id(id); if(el) el.textContent=txt; });
+  }
+  function photo(inputId, which){
+    var el=$id(inputId); if(!el) return;
+    el.addEventListener("change", function(e){
       var f=e.target.files[0]; if(!f) return; var img=new Image();
-      img.onload=function(){ st[which]=img; thumbs(); $id(labelId).textContent="✓ "+(which==="frontImg"?"앞면":"뒷면")+" 업로드됨"; };
+      img.onload=function(){ st[which]=img; thumbs(); markPhoto(which);
+        if(which==="frontImg") toast((typeof t==="function"&&t("card.frontOk"))||"앞면 등록됨 — 뒷면도 촬영/업로드하세요"); };
       img.src=URL.createObjectURL(f);
+      el.value="";   // allow re-selecting the same file
     });
   }
   function thumbs(){
@@ -7772,7 +7912,15 @@ var CARD = (function(){
     ["cdName","cdTitle","cdOrg","cdTel","cdEmail","cdUrl","cdAddr","cdInsta","cdYt","cdLi","cdX","cdTk","cdGh"].forEach(function(id){ var el=$id(id); if(el) el.addEventListener("input", draw); });
     var ac=$id("cardAccent"); if(ac) ac.addEventListener("input",function(){ setName("cardAccentHex",ac.value); buildTplGrid(); buildQrGrid(); draw(); });
     var qc=$id("cardQrColor"); if(qc) qc.addEventListener("input",function(){ setName("cardQrColorHex",qc.value); buildQrGrid(); draw(); });
-    photo("cardFront","frontImg","cardFrontLabel"); photo("cardBack","backImg","cardBackLabel");
+    photo("capFront","frontImg"); photo("upFront","frontImg"); photo("capBack","backImg"); photo("upBack","backImg");
+    var bg=$id("cardBg"); if(bg) bg.addEventListener("change",function(e){ var f=e.target.files[0]; if(!f) return; var img=new Image();
+      img.onload=function(){ st.bgImg=img; var cl=$id("cardBgClear"); if(cl) cl.style.display="";
+        var lb=$id("cardBgLabel"); if(lb) lb.textContent="✓ "+((typeof t==="function"&&t("card.bg.done"))||"배경 사진 적용됨");
+        if(!tpl().photo){ st.tpl="photo"; markGrid("cardTplGrid","photo"); setName("cardTplName","포토"); }
+        buildTplGrid(); draw(); };
+      img.src=URL.createObjectURL(f); bg.value=""; });
+    var bgc=$id("cardBgClear"); if(bgc) bgc.addEventListener("click",function(){ st.bgImg=null; this.style.display="none";
+      var lb=$id("cardBgLabel"); if(lb) lb.textContent=(typeof t==="function"&&t("card.bg.up"))||"🖼️ 배경 사진 (포토 템플릿)"; buildTplGrid(); draw(); });
     var b;
     if(b=$id("cardOcr")) b.addEventListener("click",runOcr);
     if(b=$id("cardOcrAi")) b.addEventListener("click",runOcrAi);
@@ -7781,7 +7929,9 @@ var CARD = (function(){
     if(b=$id("cardPdf")) b.addEventListener("click",dlPdf);
     if(b=$id("cardShare")) b.addEventListener("click",share);
     if(b=$id("cardSave")) b.addEventListener("click",saveFolder);
-    if(b=$id("cardResetPos")) b.addEventListener("click",function(){ st.pos={}; draw(); toast((typeof t==="function"&&t("card.posReset"))||"위치를 초기화했어요"); });
+    if(b=$id("cardResetPos")) b.addEventListener("click",function(){ st.el={}; st.sel=null; updateElBar(); draw(); toast((typeof t==="function"&&t("card.posReset"))||"위치·크기를 초기화했어요"); });
+    var esz=$id("cardElSize"); if(esz) esz.addEventListener("input",function(){ if(st.sel){ setScale(st.sel, (+this.value)/100); draw(); } });
+    var edone=$id("cardElDone"); if(edone) edone.addEventListener("click",function(){ st.sel=null; updateElBar(); draw(); });
     var pv=$id("cardPreview");
     if(pv){ pv.addEventListener("mousedown",dragStart); window.addEventListener("mousemove",dragMove); window.addEventListener("mouseup",dragEnd);
             pv.addEventListener("touchstart",dragStart,{passive:false}); window.addEventListener("touchmove",dragMove,{passive:false}); window.addEventListener("touchend",dragEnd); }
