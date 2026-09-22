@@ -149,20 +149,28 @@ export default async function handler(req, res) {
     const image = String(b.image || "");
     if (!/^data:image\//i.test(image)) { res.status(400).json({ error: "missing_image" }); return; }
 
-    // gate: Pro licenses pass; everyone else limited per IP (only when KV is set)
-    const license = String(b.license || "").trim().toUpperCase().slice(0, 64);
-    const pro = await isProLicense(license);
-    if (!pro && KV_URL && KV_TOK) {
-      const FREE = Math.max(0, parseInt(process.env.AI_FREE_LIMIT || "3", 10) || 0);
-      const WIN = Math.max(0, parseInt(process.env.AI_LIMIT_WINDOW_SEC || "0", 10) || 0);
-      const key = "aiq:" + clientIp(req);   // shared budget with AI art
-      const n = await kv("incr/" + encodeURIComponent(key));
-      if (n !== null) {
-        if (WIN > 0 && n === 1) { await kv("expire/" + encodeURIComponent(key) + "/" + WIN); }
-        if (n > FREE) {
-          res.status(402).json({ error: "trial_exhausted", limit: FREE,
-            detail: "AI 무료 체험 " + FREE + "회를 모두 사용했습니다. Pro로 무제한 이용하세요." });
-          return;
+    // gate: AI runs on credits (decoupled from Pro), shared with AI art. Enforced only when KV is set.
+    const creditCode = String(b.creditCode || b.credit_code || "").trim().toUpperCase().slice(0, 64);
+    if (KV_URL && KV_TOK) {
+      if (creditCode) {
+        const ckey = "aicredit:" + creditCode;
+        const bal = await kv("get/" + encodeURIComponent(ckey));
+        const n = bal === null ? null : parseInt(bal, 10) || 0;
+        if (n === null) { res.status(402).json({ error: "invalid_code", detail: "유효하지 않은 크레딧 코드입니다." }); return; }
+        if (n <= 0) { res.status(402).json({ error: "credits_exhausted", detail: "AI 크레딧을 모두 사용했습니다. 크레딧 팩을 구매하세요." }); return; }
+        await kv("decr/" + encodeURIComponent(ckey));
+      } else {
+        const FREE = Math.max(0, parseInt(process.env.AI_FREE_LIMIT || "3", 10) || 0);
+        const WIN = Math.max(0, parseInt(process.env.AI_LIMIT_WINDOW_SEC || "0", 10) || 0);
+        const key = "aiq:" + clientIp(req);   // shared budget with AI art
+        const n = await kv("incr/" + encodeURIComponent(key));
+        if (n !== null) {
+          if (WIN > 0 && n === 1) { await kv("expire/" + encodeURIComponent(key) + "/" + WIN); }
+          if (n > FREE) {
+            res.status(402).json({ error: "trial_exhausted", limit: FREE,
+              detail: "AI 무료 체험 " + FREE + "회를 모두 사용했습니다. 크레딧 팩을 구매하세요." });
+            return;
+          }
         }
       }
     }

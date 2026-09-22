@@ -1348,7 +1348,7 @@
     </nav>
     <div style="margin-top:10px">Aesthetic QR Studio · <span data-i18n="foot.tag">아름답고 스캔되는 QR을 만드는 스튜디오 · QR 생성·디자인은 브라우저에서 처리 (AI 기능만 서버 전송·저장 안 함)</span></div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · 빌드 <b id="verTag">2026.09.22-card6</b></div>
+    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · 빌드 <b id="verTag">2026.09.22-price</b></div>
   </footer>
 </div>
 
@@ -1377,9 +1377,9 @@
       <li><span class="pf-ic">💧</span><div><b data-i18n="pro.f1h">워터마크 없는 내보내기</b><span data-i18n="pro.f1p">QR·명함 PNG·SVG를 브랜드 표시 없이 깨끗하게 저장</span></div></li>
       <li><span class="pf-ic">🖨️</span><div><b data-i18n="pro.f2h">고해상도 인쇄 품질</b><span data-i18n="pro.f2p">2048 · 4096px — 포스터·메뉴판·현수막·명함 인쇄</span></div></li>
       <li><span class="pf-ic">📇</span><div><b data-i18n="pro.f3h">상업용·명함 무제한</b><span data-i18n="pro.f3p">디지털 명함·상업적 사용 + 대량 생성</span></div></li>
-      <li><span class="pf-ic">🎨</span><div><b data-i18n="pro.f4h">AI 아트 QR·AI 명함 인식</b><span data-i18n="pro.f4p">AI 생성 아트 QR과 고정밀 명함 인식을 무제한</span></div></li>
     </ul>
-    <div class="pro-price"><b id="proPrice">₩12,900</b> <span data-i18n="pro.once">1회 결제 · 영구 사용</span></div>
+    <div class="pro-note" data-i18n="pro.aiNote" style="font-size:11.5px;color:var(--mut2);margin:-2px 0 10px">✨ AI 아트·AI 명함 인식은 별도 <b>크레딧 팩</b>으로 이용합니다(사용한 만큼만 지불).</div>
+    <div class="pro-price"><span class="pro-anchor" id="proAnchor" style="text-decoration:line-through;color:var(--mut2);font-weight:500;margin-right:7px"></span><b id="proPrice">₩9,900</b> <span data-i18n="pro.once">1회 결제 · 영구 사용</span></div>
     <button class="btn" id="proBuy" data-i18n="pro.buy">구매하기</button>
     <div class="pro-key">
       <div class="lbl" data-i18n="pro.have">이미 구매하셨나요? 라이선스 키를 입력하세요</div>
@@ -5448,12 +5448,13 @@ var AI = { busy:false, tries:0, counted:false };
 function aiStatus(t){ $("aiStatus").innerHTML=t; }
 function aiFail(d){
   AI.busy=false; $("aiGo").disabled=false;
-  // server-side trial limit reached → align the client counter and show the Pro upsell
-  if(d && d.error==="trial_exhausted"){
+  // server-side credit/trial limit reached → align the client counter and offer the credit pack
+  if(d && (d.error==="trial_exhausted" || d.error==="credits_exhausted")){
     try{ localStorage.setItem(AITRIALKEY, String(PRO.aiFreeTrials)); }catch(e){}
+    if(d.error==="credits_exhausted") aiSetPurchased(0);
     refreshAiTrialUI();
-    aiStatus(t("ai.trialOut")||"무료 체험 종료 — Pro로 무제한 이용");
-    openPro("aiArt", (d.detail || (t("pro.aiUsedUp")||"AI 아트 무료 체험을 모두 사용했습니다. Pro로 무제한 이용하세요.").replace("{n}", PRO.aiFreeTrials)));
+    aiStatus(t("ai.creditsOut")||"AI 크레딧 소진 — 크레딧 팩을 구매하세요");
+    openAiPack();
     return;
   }
   var msg;
@@ -5466,8 +5467,8 @@ function aiFail(d){
 }
 function aiCreate(prompt, scale){
   aiStatus("생성 요청 중… (대비 "+scale.toFixed(2)+")");
-  var lic=""; try{ lic=localStorage.getItem(PROKEY)||""; }catch(e){}
-  fetch("/api/art-qr",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({content:S.content,prompt:prompt,scale:scale,license:lic})})
+  var code=""; try{ code=localStorage.getItem("aqr_ai_code_v1")||""; }catch(e){}
+  fetch("/api/art-qr",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({content:S.content,prompt:prompt,scale:scale,creditCode:code})})
     .then(function(r){ return r.json(); })
     .then(function(d){ if(d.error){ aiFail(d); return; } aiPoll(d.id, prompt, scale, Date.now()); })
     .catch(function(){ aiFail({error:"network"}); });
@@ -5517,12 +5518,9 @@ function aiVerify(url, prompt, scale){
 }
 $("aiGo").addEventListener("click",function(){
   if(AI.busy) return;
-  track("ai_generate",{pro:isPro(),trialsLeft:aiTrialsLeft()});
-  // AI art is the only feature with a real per-use server cost → gate it: free trials, then Pro.
-  if(!isPro() && aiTrialsLeft()<=0){
-    openPro("aiArt", (t("pro.aiUsedUp")||"AI 아트 무료 체험 {n}회를 모두 사용했습니다. Pro로 무제한 이용하세요.").replace("{n}", PRO.aiFreeTrials));
-    return;
-  }
+  track("ai_generate",{creditsLeft:aiCreditsLeft()});
+  // AI art is the only feature with a real per-use cost → free trials, then a paid credit pack.
+  if(aiCreditsLeft()<=0){ openAiPack(); return; }
   var prompt=($("aiPrompt").value||"").trim();
   if(!prompt){ toast("프롬프트를 입력하거나 스타일 프리셋을 클릭하세요"); $("aiPrompt").focus(); return; }
   AI.busy=true; AI.tries=0; AI.counted=false; $("aiGo").disabled=true;
@@ -5802,31 +5800,53 @@ try{ if(!localStorage.getItem(OBKEY)) setTimeout(showOnboard, 600); }catch(e){}
 //      already runs server-side and can require a valid license there for real enforcement.
 var PRO = {
   active:false,
-  price:"₩12,900",     // one-time — set to match your MoR product price
+  price:"₩9,900",      // one-time launch price — set to match your MoR product price
+  priceAnchor:"₩14,900", // struck-through "정가" anchor (empty string hides it)
   checkoutUrl:"",      // MoR checkout link (empty → "구매 준비 중" toast) — paste your Polar/LS checkout URL
   validateUrl:"/api/validate",  // server license check (api/validate.js); falls back to DEV format if unreachable
-  gate:{ hiresExport:true, aiArt:true },  // Pro-gated features. aiArt = Pro required AFTER the free trials below
-  aiFreeTrials:3       // AI art generations a non-Pro visitor gets free (the ONLY feature with a real per-use server cost)
+  gate:{ hiresExport:true },  // Pro-gated design features (AI art is NOT here — it's separate credits)
+  // --- AI art = separate credit model (the one feature with a real per-use server cost) ---
+  aiFreeTrials:3,      // free AI generations for a new visitor (client + server-KV enforced)
+  aiPackUrl:"",        // MoR checkout for an AI credit pack (empty → "준비 중")
+  aiPackSize:20        // generations per pack (for messaging)
 };
 var PROKEY="aqr_pro_license_v1";
+var AICREDITKEY="aqr_ai_credits_v1";   // locally cached purchased-credit balance (server is source of truth)
 var AITRIALKEY="aqr_ai_trials_v1";
 function isPro(){ return !!PRO.active; }
 function proGated(f){ return !!PRO.gate[f] && !PRO.active; }
 // ---- AI-art free-trial counter (per browser, localStorage) ----
+// ---- AI = separate credit model (free trials + purchased credit packs). Decoupled from Pro. ----
 function aiTrialsUsed(){ try{ return Math.max(0, parseInt(localStorage.getItem(AITRIALKEY)||"0",10)||0); }catch(e){ return 0; } }
-function aiTrialsLeft(){ return isPro() ? Infinity : Math.max(0, PRO.aiFreeTrials - aiTrialsUsed()); }
-function aiBumpTrial(){ if(isPro()) return; try{ localStorage.setItem(AITRIALKEY, String(aiTrialsUsed()+1)); }catch(e){} refreshAiTrialUI(); }
+function aiFreeLeft(){ return Math.max(0, PRO.aiFreeTrials - aiTrialsUsed()); }
+function aiPurchased(){ try{ return Math.max(0, parseInt(localStorage.getItem(AICREDITKEY)||"0",10)||0); }catch(e){ return 0; } }
+function aiSetPurchased(n){ try{ localStorage.setItem(AICREDITKEY, String(Math.max(0,n|0))); }catch(e){} }
+// total generations available now = free remaining + purchased balance (server-KV is the real guard)
+function aiCreditsLeft(){ return aiFreeLeft() + aiPurchased(); }
+function aiTrialsLeft(){ return aiCreditsLeft(); }   // back-compat alias (card OCR uses this name)
+function aiBumpTrial(){ // consume one credit: free first, then purchased
+  if(aiFreeLeft()>0){ try{ localStorage.setItem(AITRIALKEY, String(aiTrialsUsed()+1)); }catch(e){} }
+  else if(aiPurchased()>0){ aiSetPurchased(aiPurchased()-1); }
+  refreshAiTrialUI();
+}
+function openAiPack(reason){ // AI credits exhausted → route to the credit-pack purchase
+  if(PRO.aiPackUrl){ track("ai_pack_click",{}); window.open(PRO.aiPackUrl,"_blank","noopener"); }
+  else { toast(t("ai.packSoon")||"AI 크레딧 팩 준비 중입니다"); }
+}
 function refreshAiTrialUI(){
   var el=$("aiTrialInfo"); if(!el) return;
-  if(isPro()){ el.innerHTML = t("ai.trialPro")||"✅ Pro · AI 아트 무제한"; el.style.color="var(--txt)"; return; }
-  var l=aiTrialsLeft();
-  if(l>0){ el.innerHTML = (t("ai.trialLeft")||"AI 아트 무료 체험 {n}회 남음").replace("{n}", l); el.style.color="var(--mut)"; }
-  else { el.innerHTML = t("ai.trialOut")||"무료 체험 종료 — Pro로 무제한 이용"; el.style.color="var(--txt)"; }
+  var free=aiFreeLeft(), paid=aiPurchased(), l=free+paid;
+  if(l>0){
+    var msg = paid>0 ? (t("ai.credits")||"AI 크레딧 {n}개 남음").replace("{n}", l)
+                     : (t("ai.trialLeft")||"AI 무료 체험 {n}회 남음").replace("{n}", free);
+    el.innerHTML=msg; el.style.color=(free>0?"var(--mut)":"var(--txt)");
+  } else { el.innerHTML = t("ai.creditsOut")||"AI 크레딧 소진 — 크레딧 팩을 구매하세요"; el.style.color="var(--txt)"; }
 }
 function refreshProUI(){
   var eo=document.querySelector(".export-opts"); if(eo) eo.classList.toggle("free", !PRO.active);
   var pb=$("proBtn"); if(pb){ pb.classList.toggle("on", PRO.active); pb.querySelector("span").textContent = PRO.active ? t("pro.badgeOn") : t("pro.badge"); }
   var pp=$("proPrice"); if(pp) pp.textContent=PRO.price;
+  var pa=$("proAnchor"); if(pa){ pa.textContent=PRO.priceAnchor||""; pa.style.display=PRO.priceAnchor?"":"none"; }
   refreshAiTrialUI();
 }
 function validateLicense(key, cb){
@@ -7303,8 +7323,12 @@ var I18N = {
   "dyn.imgArt":{ko:'🖼️ 이미지 아트 QR',en:'🖼️ Image art QR',zh:'🖼️ 图片艺术二维码',ja:'🖼️ 画像アートQR'},
   "dyn.poster":{ko:'🪧 포스터 모드 · 선명한 QR',en:'🪧 Poster mode · crisp QR',zh:'🪧 海报模式 · 清晰二维码',ja:'🪧 ポスターモード · くっきりQR'},
   "ai.trialPro":{ko:'✅ Pro · AI 아트 무제한',en:'✅ Pro · unlimited AI art',zh:'✅ Pro · AI 艺术无限制',ja:'✅ Pro · AIアート無制限'},
-  "ai.trialLeft":{ko:'AI 아트 무료 체험 <b>{n}회</b> 남음',en:'AI art — <b>{n}</b> free trial(s) left',zh:'AI 艺术 — 剩余 <b>{n}</b> 次免费试用',ja:'AIアート — 無料体験 残り<b>{n}</b>回'},
-  "ai.trialOut":{ko:'무료 체험 종료 — <b>Pro</b>로 무제한 이용',en:'Free trials used — go <b>Pro</b> for unlimited',zh:'免费试用已用完 — 升级 <b>Pro</b> 无限使用',ja:'無料体験終了 — <b>Pro</b>で無制限'},
+  "ai.trialLeft":{ko:'AI 무료 체험 <b>{n}회</b> 남음',en:'AI — <b>{n}</b> free trial(s) left',zh:'AI — 剩余 <b>{n}</b> 次免费试用',ja:'AI — 無料体験 残り<b>{n}</b>回'},
+  "ai.trialOut":{ko:'무료 체험 종료 — 크레딧 팩을 구매하세요',en:'Free trials used — buy a credit pack',zh:'免费试用已用完 — 请购买积分包',ja:'無料体験終了 — クレジットパックを購入'},
+  "ai.credits":{ko:'AI 크레딧 <b>{n}개</b> 남음',en:'AI credits: <b>{n}</b> left',zh:'AI 积分：剩余 <b>{n}</b>',ja:'AIクレジット 残り<b>{n}</b>'},
+  "ai.creditsOut":{ko:'AI 크레딧 소진 — <b>크레딧 팩</b>을 구매하세요',en:'AI credits used up — buy a <b>credit pack</b>',zh:'AI 积分已用完 — 请购买<b>积分包</b>',ja:'AIクレジット切れ — <b>クレジットパック</b>を購入'},
+  "ai.packSoon":{ko:'AI 크레딧 팩 준비 중입니다',en:'AI credit pack — coming soon',zh:'AI 积分包 — 即将推出',ja:'AIクレジットパック — 準備中'},
+  "pro.aiNote":{ko:'✨ AI 아트·AI 명함 인식은 별도 <b>크레딧 팩</b>으로 이용합니다(사용한 만큼만 지불).',en:'✨ AI art & AI card OCR run on separate <b>credit packs</b> — pay only for what you use.',zh:'✨ AI 艺术与 AI 名片识别使用单独的<b>积分包</b>（按用量付费）。',ja:'✨ AIアート・AI名刺認識は別の<b>クレジットパック</b>で利用（使った分だけ）。'},
   "pro.aiUsedUp":{ko:'AI 아트 무료 체험 {n}회를 모두 사용했습니다. Pro로 무제한 이용하세요.',en:'You have used all {n} free AI-art generations. Go Pro for unlimited.',zh:'您已用完 {n} 次免费 AI 艺术生成。升级 Pro 无限使用。',ja:'AIアートの無料体験{n}回をすべて使用しました。Proで無制限に。'},
   "dyn.vidArt":{ko:'🎬 영상 아트 QR',en:'🎬 Video art QR',zh:'🎬 视频艺术二维码',ja:'🎬 動画アートQR'},
   "dyn.expHigh":{ko:'노출도 높음(스캔 테스트 권장)',en:'high visibility (test the scan)',zh:'显示度高（建议测试扫描）',ja:'表示度が高い（スキャンテスト推奨）'},
@@ -7876,18 +7900,18 @@ var CARD = (function(){
       .catch(function(){ ocrStatus((typeof t==="function"&&t("card.ocrFail"))||"인식 실패 — 배포된(온라인) 사이트에서만 동작합니다. 직접 입력해 주세요."); });
   }
   function runOcrAi(){
-    if(typeof isPro==="function" && !isPro() && typeof aiTrialsLeft==="function" && aiTrialsLeft()<=0){
-      if(typeof openPro==="function") openPro("cardAi", (typeof t==="function"&&t("pro.aiUsedUp"))||"AI 무료 체험을 모두 사용했습니다. Pro로 무제한 이용하세요."); return;
+    if(typeof aiCreditsLeft==="function" && aiCreditsLeft()<=0){
+      if(typeof openAiPack==="function") openAiPack(); return;
     }
     if(!st.frontImg){ toast((typeof t==="function"&&t("card.needPhoto"))||"먼저 앞면 사진을 올리세요"); return; }
     ocrStatus((typeof t==="function"&&t("card.aiRun"))||"AI 고정밀 인식 중…");
-    var lic=""; try{ lic=localStorage.getItem(PROKEY)||""; }catch(e){}
-    var payload={ image: dataUrl(st.frontImg), back: st.backImg?dataUrl(st.backImg):null, license:lic };
+    var code=""; try{ code=localStorage.getItem("aqr_ai_code_v1")||""; }catch(e){}
+    var payload={ image: dataUrl(st.frontImg), back: st.backImg?dataUrl(st.backImg):null, creditCode:code };
     fetch("/api/card-ocr",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)})
       .then(function(r){ return r.json().then(function(d){ return {ok:r.ok,status:r.status,d:d}; }); })
       .then(function(res){
         var d=res.d||{};
-        if(res.status===402 || d.error==="trial_exhausted"){ try{ localStorage.setItem(AITRIALKEY,String(PRO.aiFreeTrials)); }catch(e){} if(typeof refreshAiTrialUI==="function") refreshAiTrialUI(); if(typeof openPro==="function") openPro("cardAi", d.detail||""); ocrStatus((typeof t==="function"&&t("ai.trialOut"))||"무료 체험 종료 — Pro로 무제한"); return; }
+        if(res.status===402 || d.error==="trial_exhausted" || d.error==="credits_exhausted"){ try{ localStorage.setItem(AITRIALKEY,String(PRO.aiFreeTrials)); }catch(e){} if(d.error==="credits_exhausted"&&typeof aiSetPurchased==="function") aiSetPurchased(0); if(typeof refreshAiTrialUI==="function") refreshAiTrialUI(); if(typeof openAiPack==="function") openAiPack(); ocrStatus((typeof t==="function"&&t("ai.creditsOut"))||"AI 크레딧 소진 — 크레딧 팩을 구매하세요"); return; }
         if(d.error==="not_configured" || res.status===503){ ocrStatus((typeof t==="function"&&t("card.aiOff"))||"고정밀(AI) 인식은 서버에 비전 API를 설정한 뒤 사용할 수 있어요."); return; }
         if(d.error){ ocrStatus("AI 인식 실패: "+(d.detail||d.error)); return; }
         applyParsed({name:d.name,title:d.title,org:d.org,tel:d.tel||d.phone,email:d.email,url:d.url||d.website,addr:d.address});
