@@ -613,7 +613,7 @@
             </label>
             <label class="fld" id="ctRaw">
               <div class="lbl" id="ctRawLbl">URL</div>
-              <textarea id="content">https://jay-inky.vercel.app</textarea>
+              <textarea id="content" placeholder="https://example.com" data-i18n-ph="ph.content"></textarea>
             </label>
             <div id="ctWifi" style="display:none">
               <label class="fld"><div class="lbl" data-i18n="lbl.wifiSsid">네트워크 이름 (SSID)</div><input type="text" id="wifiSsid" maxlength="64" data-i18n-ph="ph.wifiSsid" placeholder="예: MyHomeWiFi" /></label>
@@ -769,9 +769,9 @@
               </div>
             </label>
             <div id="aiTrialInfo" style="margin-top:10px;font-size:12px;font-weight:600;color:var(--mut);text-align:center"></div>
-            <div class="row2" style="margin-top:8px">
-              <button class="btn" id="aiGo" data-i18n="btn.aiGo">✨ AI로 생성 (5~30초)</button>
-              <button class="btn sec" id="aiClear" style="display:none" data-i18n="btn.aiClear">AI 아트 제거</button>
+            <div style="margin-top:8px">
+              <button class="btn" id="aiGo" style="width:100%;white-space:nowrap" data-i18n="btn.aiGo">✨ AI로 생성 (5~30초)</button>
+              <button class="btn sec" id="aiClear" style="display:none;width:100%;margin-top:8px" data-i18n="btn.aiClear">AI 아트 제거</button>
             </div>
             <div class="hint" id="aiStatus" data-i18n-html="hint.ai">Stable Diffusion + ControlNet(QR 전용)으로 <b>이미지를 처음부터 QR 명암 구조에 맞춰 생성</b>합니다 — 모듈 격자가 보이지 않는 최고 품질의 아트 QR입니다. 생성 후 자동으로 <b>스캔 검증</b>하고, 실패하면 대비를 올려 재시도합니다. 서버에 <b>REPLICATE_API_TOKEN</b>만 등록하면 됩니다. (이미지당 약 $0.02)</div>
           </div>
@@ -1348,7 +1348,7 @@
     </nav>
     <div style="margin-top:10px">Aesthetic QR Studio · <span data-i18n="foot.tag">아름답고 스캔되는 QR을 만드는 스튜디오 · QR 생성·디자인은 브라우저에서 처리 (AI 기능만 서버 전송·저장 안 함)</span></div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · 빌드 <b id="verTag">2026.09.22-card4</b></div>
+    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · 빌드 <b id="verTag">2026.09.22-card5</b></div>
   </footer>
 </div>
 
@@ -3718,7 +3718,7 @@ var qrcode = function() {
 
 // ---------- state ----------
 var S = {
-  content: "https://jay-inky.vercel.app",
+  content: "",
   ecc: "H",
   dot: "square",
   eye: "square",
@@ -7239,6 +7239,7 @@ var I18N = {
   "hint.art":{ko:'<b>즉시·무료</b> 아트 QR 모드입니다. 이미지가 QR 전체에 깔리고, 이미지의 <b>밝기를 모듈별로 조절</b>해 QR을 이미지에 녹여넣습니다. <b>영상·GIF</b>를 올리거나 <b>정적 이미지+애니메이션</b>을 켜면 움직이는 아트 QR이 됩니다. 최고 품질이 필요하면 아래 <b>AI 생성(서버)</b>을 사용하세요.',en:'An <b>instant, free</b> art-QR mode. The image fills the whole QR and its <b>brightness is tuned per module</b> to blend the QR into the picture. Upload a <b>video/GIF</b>, or turn on <b>static image + animation</b>, for a moving art QR. For top quality, use <b>AI generation (server)</b> below.',zh:'<b>即时·免费</b>的艺术二维码模式。图片铺满整个二维码，并<b>按模块调节亮度</b>把二维码融入图片。上传<b>视频/GIF</b>或开启<b>静态图+动画</b>即可得到动态艺术二维码。追求最高质量请用下方的 <b>AI 生成（服务器）</b>。',ja:'<b>即時・無料</b>のアートQRモードです。画像がQR全体に敷かれ、画像の<b>明るさをモジュールごとに調整</b>してQRを画像に溶け込ませます。<b>動画・GIF</b>を上げるか<b>静止画＋アニメーション</b>をオンにすると動くアートQRになります。最高品質が必要なら下の <b>AI生成（サーバー）</b> を使ってください。'},
   "hint.anim":{ko:'<b>정적 이미지를 올린 뒤 이 스위치를 켜면</b>, 이미지가 줌·드리프트로 살아 움직이는 <b>움짤 QR</b>이 됩니다(모듈은 고정 → 모든 프레임 스캔). 여기에 네 가지 빛 효과(<b>샤인·회전·펄스·스윕</b>)가 더해집니다. <b>애니메이션 저장</b>으로 WebM 영상으로 내보낼 수 있습니다.',en:'<b>Upload a static image and flip this switch</b>, and the image comes alive with zoom & drift as a <b>moving QR</b> (modules stay fixed → every frame scans). Four light effects (<b>shine, rotate, pulse, sweep</b>) are layered on. Use <b>Save animation</b> to export a WebM video.',zh:'<b>上传静态图后打开此开关</b>，图片便以缩放·漂移动起来，成为<b>动态二维码</b>（模块固定 → 每帧都可扫描）。再叠加四种光效（<b>闪耀·旋转·脉冲·扫光</b>）。用<b>保存动画</b>可导出 WebM 视频。',ja:'<b>静止画を上げてこのスイッチをオンにすると</b>、画像がズーム・ドリフトで動く<b>動くQR</b>になります（モジュールは固定 → 全フレームでスキャン可）。さらに4つの光エフェクト（<b>シャイン・回転・パルス・スイープ</b>）が加わります。<b>アニメーション保存</b>でWebM動画として書き出せます。'},
   "hint.ai":{ko:'Stable Diffusion + ControlNet(QR 전용)으로 <b>이미지를 처음부터 QR 명암 구조에 맞춰 생성</b>합니다. 프롬프트를 적고 생성하면 스캔되는 아트워크가 나옵니다.',en:'Uses Stable Diffusion + ControlNet (QR-specific) to <b>generate an image from scratch, shaped to the QR\'s light/dark structure</b>. Write a prompt and generate a scannable artwork.',zh:'用 Stable Diffusion + ControlNet（二维码专用）<b>从零生成契合二维码明暗结构的图像</b>。填写提示词即可生成可扫描的艺术图。',ja:'Stable Diffusion + ControlNet（QR専用）で<b>画像を一から QR の明暗構造に合わせて生成</b>します。プロンプトを書いて生成すると、スキャンできるアートワークができます。'},
+  "ph.content":{ko:'https://example.com 또는 원하는 링크·텍스트를 입력하세요',en:'https://example.com — enter any link or text',zh:'https://example.com 或输入任意链接·文本',ja:'https://example.com など、リンクやテキストを入力'},
   "ph.wifiSsid":{ko:'예: MyHomeWiFi',en:'e.g. MyHomeWiFi',zh:'例：MyHomeWiFi',ja:'例：MyHomeWiFi'},
   "ph.vcName":{ko:'홍길동',en:'John Smith',zh:'张三',ja:'山田太郎'},
   "ph.prompt":{ko:'예: watercolor ocean sunset, soft pastel colors',en:'e.g. watercolor ocean sunset, soft pastel colors',zh:'例：watercolor ocean sunset, soft pastel colors',ja:'例：watercolor ocean sunset, soft pastel colors'},
