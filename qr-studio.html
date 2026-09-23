@@ -246,6 +246,9 @@
 
   label.fld{display:block;margin:14px 0 0}
   label.fld:first-child{margin-top:6px}
+  /* inside a 2-col row, BOTH columns must share the same top margin — otherwise the left
+     column (being :first-child of the row) gets 6px and the right gets 14px → 8px misalignment */
+  .row2 > label.fld:first-child{margin-top:14px}
   label.fld .lbl{font-size:12px;color:var(--mut);margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:17px;white-space:nowrap;overflow:hidden}
   label.fld .lbl b{color:var(--txt);font-weight:600;font-variant-numeric:tabular-nums}
   label.fld .lbl .soc-ic{width:16px;height:16px;flex:none;display:inline-flex}
@@ -1352,7 +1355,7 @@
     </nav>
     <div style="margin-top:10px">Aesthetic QR Studio · <span data-i18n="foot.tag">아름답고 스캔되는 QR을 만드는 스튜디오 · QR 생성·디자인은 브라우저에서 처리 (AI 기능만 서버 전송·저장 안 함)</span></div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · 빌드 <b id="verTag">2026.09.23-a</b></div>
+    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · 빌드 <b id="verTag">2026.09.23-b</b></div>
   </footer>
 </div>
 
@@ -7475,6 +7478,7 @@ function applyLang(lang){
   try{ if(typeof refreshProUI==="function") refreshProUI(); }catch(e){}
   try{ localStorage.setItem("aqr_lang", lang); }catch(e){}
   document.querySelectorAll(".lang-switch").forEach(function(sw){ Array.prototype.forEach.call(sw.children,function(x){ x.classList.toggle("on", x.dataset.lang===lang); }); });
+  try{ if(typeof CARD!=="undefined" && CARD.onLang) CARD.onLang(lang); }catch(e){}
 }
 
 // ================= 명함 (Business Card → vCard QR) =================
@@ -8082,15 +8086,34 @@ var CARD = (function(){
     if(pv){ pv.addEventListener("mousedown",dragStart); window.addEventListener("mousemove",dragMove); window.addEventListener("mouseup",dragEnd);
             pv.addEventListener("touchstart",dragStart,{passive:false}); window.addEventListener("touchmove",dragMove,{passive:false}); window.addEventListener("touchend",dragEnd); }
   }
+  // localized demo/default card values — swapped on language change (never overwrites edits)
+  var DEMO={
+    ko:{cdName:"홍길동",cdTitle:"대표",cdOrg:"아름다운 컴퍼니",cdTel:"010-1234-5678",cdEmail:"hello@company.com"},
+    en:{cdName:"John Doe",cdTitle:"CEO",cdOrg:"Aurora Studio",cdTel:"+1 (555) 123-4567",cdEmail:"hello@company.com"},
+    ja:{cdName:"山田 太郎",cdTitle:"代表",cdOrg:"オーロラ・スタジオ",cdTel:"090-1234-5678",cdEmail:"hello@company.com"},
+    zh:{cdName:"张伟",cdTitle:"总经理",cdOrg:"极光工作室",cdTel:"138-1234-5678",cdEmail:"hello@company.com"}
+  };
+  function fillDemo(lang){
+    var d=DEMO[lang]||DEMO.en;
+    Object.keys(d).forEach(function(id){ var el=$id(id); if(!el) return;
+      var cur=(el.value||"").trim();
+      // fill only when empty or still holding the previous language's demo value (i.e. unedited)
+      if(cur==="" || (st.demo && st.demo[id]!=null && cur===st.demo[id])){ el.value=d[id]; }
+    });
+    st.demo={}; Object.keys(d).forEach(function(id){ st.demo[id]=d[id]; });
+  }
+  function curLang(){ try{ return (typeof LANG!=="undefined"&&LANG)||document.documentElement.getAttribute("lang")||"ko"; }catch(e){ return "ko"; } }
   return {
     enter:function(){ if(!st.entered){ st.entered=true; bind();
-        if(!gval("cdName")){ $id("cdName").value="홍길동"; $id("cdTitle").value="대표"; $id("cdOrg").value="아름다운 컴퍼니"; $id("cdTel").value="010-1234-5678"; $id("cdEmail").value="hello@company.com"; }
+        fillDemo(curLang());
         setName("cardAccentHex",gval("cardAccent")); setName("cardQrColorHex",gval("cardQrColor"));
         buildTplGrid(); buildQrGrid(); buildIndustry(); fillSocIcons(); renderFolder();
       }
       if(typeof refreshAiTrialUI==="function") refreshAiTrialUI();
       draw();
-    }
+    },
+    onLang:function(lang){ if(!st.entered) return; fillDemo(lang);
+      buildIndustry(); setName("cardTplName",tpl().nm); setName("cardQrTplName",qtpl().nm); draw(); }
   };
 })();
 (function initLang(){
