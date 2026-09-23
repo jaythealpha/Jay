@@ -246,8 +246,11 @@
 
   label.fld{display:block;margin:14px 0 0}
   label.fld:first-child{margin-top:6px}
-  label.fld .lbl{font-size:12px;color:var(--mut);margin-bottom:7px;display:flex;justify-content:space-between}
+  label.fld .lbl{font-size:12px;color:var(--mut);margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:17px;white-space:nowrap;overflow:hidden}
   label.fld .lbl b{color:var(--txt);font-weight:600;font-variant-numeric:tabular-nums}
+  label.fld .lbl .soc-ic{width:16px;height:16px;flex:none;display:inline-flex}
+  label.fld .lbl .soc-ic svg{width:16px;height:16px;display:block}
+  .ind-grid .ind .ico svg{width:20px;height:20px;display:block}
   textarea,input[type=text],select{width:100%;background:var(--card);border:1px solid var(--line);color:var(--txt);
     border-radius:var(--rs);padding:10px 14px;font-size:14px;font-family:inherit;outline:none;transition:.15s}
   textarea:focus,input[type=text]:focus,select:focus{border-color:var(--txt);box-shadow:0 0 0 3px var(--focus)}
@@ -1074,6 +1077,7 @@
           <button class="btn sec" id="cardShare" data-i18n="card.share">공유</button>
         </div>
         <button class="btn sec" id="cardSave" style="width:100%;margin-top:9px;flex:none" data-i18n="card.save">＋ 디지털 명함 폴더에 저장 (명함 + QR 동시)</button>
+        <div class="hint" id="cardWmNote" data-i18n-html="card.wmNote" style="margin-top:9px;display:none">무료 버전은 명함 오른쪽 하단에 <b>aesthetic-qr.studio</b> 워터마크가 표시됩니다. <b>Pro</b>에서 제거됩니다.</div>
         <div class="stage-tips" id="cardFolderWrap" style="display:none">
           <h4><span class="sp"></span><span data-i18n="card.folder">디지털 명함 폴더</span></h4>
           <div id="cardFolder" class="gal-grid" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px"></div>
@@ -1118,22 +1122,22 @@
               <label class="fld"><div class="lbl" data-i18n="card.f.email">이메일</div><input type="text" id="cdEmail" maxlength="80" /></label>
             </div>
             <label class="fld"><div class="lbl" data-i18n="card.f.url">웹사이트</div><input type="text" id="cdUrl" maxlength="120" placeholder="https://" /></label>
-            <label class="fld"><div class="lbl" data-i18n="card.f.addr">주소 (선택)</div><input type="text" id="cdAddr" maxlength="120" /></label>
+            <label class="fld"><div class="lbl" data-i18n="card.f.addr">주소</div><input type="text" id="cdAddr" maxlength="120" /></label>
             <details class="grp" id="grpCardSocial" style="margin:14px 0 0;border-radius:12px">
               <summary style="padding:11px 14px"><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M18 8a3 3 0 10-2.83-4M6 12a3 3 0 100-6 3 3 0 000 6zm12 6a3 3 0 10-2.83-4M8.6 13.5l6.8 3M15.4 7.5l-6.8 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span data-i18n="card.grp.social">프로필 · 소셜 (선택)</span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
               <div class="body">
-                <div class="hint" data-i18n="card.social.hint" style="margin-top:0">아이디(@핸들) 또는 전체 URL 어느 쪽이든 좋아요. 명함 하단에 아이콘으로 표시되고, 스캔한 연락처에도 링크로 저장됩니다.</div>
+                <div class="hint" data-i18n="card.social.hint" style="margin-top:0">아이디(@핸들) 또는 전체 URL 어느 쪽이든 좋아요. 스캔한 연락처에 링크로 저장됩니다.</div>
                 <div class="row2">
-                  <label class="fld"><div class="lbl">📷 Instagram</div><input type="text" id="cdInsta" maxlength="120" placeholder="@handle" /></label>
-                  <label class="fld"><div class="lbl">▶️ YouTube</div><input type="text" id="cdYt" maxlength="120" placeholder="@channel" /></label>
+                  <label class="fld"><div class="lbl"><span class="soc-ic" data-brand="instagram"></span><span data-i18n="card.soc.insta">인스타그램</span></div><input type="text" id="cdInsta" maxlength="120" placeholder="@handle" /></label>
+                  <label class="fld"><div class="lbl"><span class="soc-ic" data-brand="youtube"></span><span data-i18n="card.soc.yt">유튜브</span></div><input type="text" id="cdYt" maxlength="120" placeholder="@channel" /></label>
                 </div>
                 <div class="row2">
-                  <label class="fld"><div class="lbl">in LinkedIn</div><input type="text" id="cdLi" maxlength="120" placeholder="in/name" /></label>
-                  <label class="fld"><div class="lbl">✖ X (Twitter)</div><input type="text" id="cdX" maxlength="120" placeholder="@handle" /></label>
+                  <label class="fld"><div class="lbl"><span class="soc-ic" data-brand="linkedin"></span><span data-i18n="card.soc.li">링크드인</span></div><input type="text" id="cdLi" maxlength="120" placeholder="in/name" /></label>
+                  <label class="fld"><div class="lbl"><span class="soc-ic" data-brand="x"></span><span data-i18n="card.soc.x">X (트위터)</span></div><input type="text" id="cdX" maxlength="120" placeholder="@handle" /></label>
                 </div>
                 <div class="row2">
-                  <label class="fld"><div class="lbl">🎵 TikTok</div><input type="text" id="cdTk" maxlength="120" placeholder="@handle" /></label>
-                  <label class="fld"><div class="lbl">🐙 GitHub</div><input type="text" id="cdGh" maxlength="120" placeholder="username" /></label>
+                  <label class="fld"><div class="lbl"><span class="soc-ic" data-brand="tiktok"></span><span data-i18n="card.soc.tk">틱톡</span></div><input type="text" id="cdTk" maxlength="120" placeholder="@handle" /></label>
+                  <label class="fld"><div class="lbl"><span class="soc-ic" data-brand="github"></span><span data-i18n="card.soc.gh">깃허브</span></div><input type="text" id="cdGh" maxlength="120" placeholder="username" /></label>
                 </div>
               </div>
             </details>
@@ -1348,7 +1352,7 @@
     </nav>
     <div style="margin-top:10px">Aesthetic QR Studio · <span data-i18n="foot.tag">아름답고 스캔되는 QR을 만드는 스튜디오 · QR 생성·디자인은 브라우저에서 처리 (AI 기능만 서버 전송·저장 안 함)</span></div>
     <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · 빌드 <b id="verTag">2026.09.22-price</b></div>
+    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · 빌드 <b id="verTag">2026.09.23-a</b></div>
   </footer>
 </div>
 
@@ -6970,7 +6974,14 @@ var I18N = {
   "card.f.tel":{ko:"전화",en:"Phone",zh:"电话",ja:"電話"},
   "card.f.email":{ko:"이메일",en:"Email",zh:"邮箱",ja:"メール"},
   "card.f.url":{ko:"웹사이트",en:"Website",zh:"网站",ja:"ウェブサイト"},
-  "card.f.addr":{ko:"주소 (선택)",en:"Address (optional)",zh:"地址（可选）",ja:"住所（任意）"},
+  "card.f.addr":{ko:"주소",en:"Address",zh:"地址",ja:"住所"},
+  "card.soc.insta":{ko:"인스타그램",en:"Instagram",zh:"Instagram",ja:"Instagram"},
+  "card.soc.yt":{ko:"유튜브",en:"YouTube",zh:"YouTube",ja:"YouTube"},
+  "card.soc.li":{ko:"링크드인",en:"LinkedIn",zh:"LinkedIn",ja:"LinkedIn"},
+  "card.soc.x":{ko:"X (트위터)",en:"X (Twitter)",zh:"X (Twitter)",ja:"X (Twitter)"},
+  "card.soc.tk":{ko:"틱톡",en:"TikTok",zh:"TikTok",ja:"TikTok"},
+  "card.soc.gh":{ko:"깃허브",en:"GitHub",zh:"GitHub",ja:"GitHub"},
+  "card.wmNote":{ko:"무료 버전은 명함 오른쪽 하단에 <b>aesthetic-qr.studio</b> 워터마크가 표시됩니다. <b>Pro</b>에서 제거됩니다.",en:"The free version shows an <b>aesthetic-qr.studio</b> watermark at the bottom-right of the card. <b>Pro</b> removes it.",zh:"免费版会在名片右下角显示 <b>aesthetic-qr.studio</b> 水印。<b>Pro</b> 可移除。",ja:"無料版は名刺右下に <b>aesthetic-qr.studio</b> の透かしが表示されます。<b>Pro</b>で消えます。"},
   "card.grp.design":{ko:"명함 디자인",en:"Card design",zh:"名片设计",ja:"名刺デザイン"},
   "card.d.template":{ko:"템플릿",en:"Template",zh:"模板",ja:"テンプレート"},
   "card.tpl.light":{ko:"라이트",en:"Light",zh:"浅色",ja:"ライト"},
@@ -6992,7 +7003,7 @@ var I18N = {
   "card.saved":{ko:"디지털 명함 폴더에 저장됨 (명함 + QR)",en:"Saved to digital-card folder (card + QR)",zh:"已保存到电子名片文件夹（名片 + 二维码）",ja:"デジタル名刺フォルダに保存（名刺＋QR）"},
   "card.pdfOff":{ko:"PDF는 배포된(온라인) 사이트에서만 동작합니다.",en:"PDF export works only on the deployed (online) site.",zh:"PDF 导出仅在已部署（在线）站点可用。",ja:"PDF出力は公開（オンライン）サイトでのみ動作します。"},
   "card.grp.social":{ko:"프로필 · 소셜 (선택)",en:"Profiles · Social (optional)",zh:"主页 · 社交（可选）",ja:"プロフィール · SNS（任意）"},
-  "card.social.hint":{ko:"아이디(@핸들) 또는 전체 URL 어느 쪽이든 좋아요. 명함 하단에 아이콘으로 표시되고, 스캔한 연락처에도 링크로 저장됩니다.",en:"Enter a @handle or a full URL — either works. Shown as icons at the bottom of the card and saved as links in the scanned contact.",zh:"填 @账号 或完整网址均可。会以图标显示在名片底部，并作为链接存入扫描后的联系人。",ja:"@ハンドルでもフルURLでもOK。名刺下部にアイコン表示され、スキャンした連絡先にもリンクとして保存されます。"},
+  "card.social.hint":{ko:"아이디(@핸들) 또는 전체 URL 어느 쪽이든 좋아요. 스캔한 연락처에 링크로 저장됩니다.",en:"Enter a @handle or a full URL — either works. Saved as links in the scanned contact.",zh:"填 @账号 或完整网址均可。作为链接存入扫描后的联系人。",ja:"@ハンドルでもフルURLでもOK。スキャンした連絡先にリンクとして保存されます。"},
   "card.d.qrStyle":{ko:"QR 스타일",en:"QR style",zh:"二维码样式",ja:"QRスタイル"},
   "card.d.dragHint":{ko:"✋ 미리보기에서 <b>항목을 클릭해 선택</b> → 드래그로 이동, 아래 슬라이더로 크기 조절.",en:"✋ <b>Click an item</b> in the preview to select → drag to move, resize with the slider below.",zh:"✋ 在预览中<b>点击项目</b>选中 → 拖动移动，用下方滑块调整大小。",ja:"✋ プレビューで<b>項目をクリックして選択</b> → ドラッグで移動、下のスライダーでサイズ調整。"},
   "card.d.resetPos":{ko:"위치·크기 초기화",en:"Reset layout",zh:"重置位置·大小",ja:"位置·サイズをリセット"},
@@ -7023,7 +7034,7 @@ var I18N = {
   "card.ind.estate":{ko:"부동산",en:"Real estate",zh:"房地产",ja:"不動産"},
   "card.ind.startup":{ko:"스타트업",en:"Startup",zh:"初创",ja:"スタートアップ"},
   "card.ind.medical":{ko:"의료·클리닉",en:"Medical · Clinic",zh:"医疗·诊所",ja:"医療·クリニック"},
-  "card.ind.legal":{ko:"법률·컨설팅",en:"Legal · Consulting",zh:"法律·咨询",ja:"法務·コンサル"},
+  "card.ind.legal":{ko:"컨설팅",en:"Consulting",zh:"咨询",ja:"コンサル"},
   "card.ind.food":{ko:"요식·레스토랑",en:"Food · Restaurant",zh:"餐饮·餐厅",ja:"飲食·レストラン"},
   "card.ind.fitness":{ko:"피트니스",en:"Fitness",zh:"健身",ja:"フィットネス"},
   "card.ind.photo":{ko:"포토그래퍼",en:"Photographer",zh:"摄影师",ja:"フォトグラファー"},
@@ -7609,19 +7620,40 @@ var CARD = (function(){
     {id:"estate", nm:"부동산",       ico:"🏢", tpl:"outline", accent:"#1e3a8a", qr:"midnight"},
     {id:"startup",nm:"스타트업",     ico:"🚀", tpl:"grad",    accent:"#7c3aed", qr:"grape"},
     {id:"medical",nm:"의료·클리닉",  ico:"🩺", tpl:"topline", accent:"#0ea5e9", qr:"sky"},
-    {id:"legal",  nm:"법률·컨설팅",  ico:"⚖️", tpl:"minimal", accent:"#1f2937", qr:"classic"},
+    {id:"legal",  nm:"컨설팅",       ico:"⚖️", tpl:"minimal", accent:"#1f2937", qr:"classic"},
     {id:"food",   nm:"요식·레스토랑",ico:"🍽️", tpl:"dark",    accent:"#b91c1c", qr:"crimson"},
     {id:"fitness",nm:"피트니스",     ico:"💪", tpl:"accent",  accent:"#16a34a", qr:"forest"},
     {id:"photo",  nm:"포토그래퍼",   ico:"📷", tpl:"photo",   accent:"#111111", qr:"classic"},
     {id:"wedding",nm:"웨딩·플라워",  ico:"💐", tpl:"gradsoft",accent:"#e08aa8", qr:"rose"},
     {id:"edu",    nm:"교육·학원",    ico:"📚", tpl:"leftbar", accent:"#2563eb", qr:"sky"}
   ];
+  // professional monochrome line icons (currentColor) — consistent, no OS emoji variance
+  var ICO_W='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">';
+  var ICO={
+    cafe:ICO_W+'<path d="M4 8h13v4a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M17 9h2a2 2 0 0 1 0 4h-2"/><path d="M7 3v2M10 3v2M13 3v2"/></svg>',
+    beauty:ICO_W+'<path d="M12 3l2.1 5.6L20 11l-5.9 2.4L12 19l-2.1-5.6L4 11l5.9-2.4z"/></svg>',
+    dev:ICO_W+'<path d="M8 8l-4 4 4 4M16 8l4 4-4 4M13.5 6l-3 12"/></svg>',
+    estate:ICO_W+'<rect x="5" y="4" width="14" height="16" rx="1.5"/><path d="M9 8h1.5M13.5 8H15M9 12h1.5M13.5 12H15M10.5 20v-4h3v4"/></svg>',
+    startup:ICO_W+'<path d="M12 3c3.2 1.2 5 5 5 9l-2 3H9l-2-3c0-4 1.8-7.8 5-9z"/><circle cx="12" cy="9" r="1.4"/><path d="M8.5 16.5L6 20M15.5 16.5L18 20"/></svg>',
+    medical:ICO_W+'<path d="M10 4h4v6h6v4h-6v6h-4v-6H4v-4h6z"/></svg>',
+    legal:ICO_W+'<rect x="4" y="7.5" width="16" height="11.5" rx="2"/><path d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5M4 12.5h16"/></svg>',
+    food:ICO_W+'<path d="M7 3v18M5 3v5a2 2 0 0 0 4 0V3"/><path d="M16 3c-1.2 0-2 2.2-2 5s.9 4 2 4.2V21"/></svg>',
+    fitness:ICO_W+'<path d="M4 9v6M7 7v10M17 7v10M20 9v6M7 12h10"/></svg>',
+    photo:ICO_W+'<rect x="3" y="7" width="18" height="13" rx="2.5"/><circle cx="12" cy="13.5" r="3.4"/><path d="M8.5 7l1.2-2h4.6l1.2 2"/></svg>',
+    wedding:ICO_W+'<circle cx="12" cy="12" r="2"/><circle cx="12" cy="6.5" r="2.4"/><circle cx="12" cy="17.5" r="2.4"/><circle cx="6.5" cy="12" r="2.4"/><circle cx="17.5" cy="12" r="2.4"/></svg>',
+    edu:ICO_W+'<path d="M12 5l9 3.8-9 3.8-9-3.8z"/><path d="M7 10.7V15c0 1.5 2.4 3 5 3s5-1.5 5-3v-4.3"/></svg>'
+  };
+  function fillSocIcons(){
+    Array.prototype.forEach.call(document.querySelectorAll('#grpCardSocial .soc-ic'),function(el){
+      var b=el.dataset.brand; if(b && typeof CT_ICON!=="undefined" && CT_ICON[b]) el.innerHTML=CT_ICON[b];
+    });
+  }
   function buildIndustry(){
     var box=$id("cardIndGrid"); if(!box) return; box.innerHTML="";
     PRESETS.forEach(function(p){
       var el=document.createElement("div"); el.className="ind";
       var nm=(typeof t==="function"&&t("card.ind."+p.id))||p.nm;
-      el.innerHTML='<span class="ico">'+p.ico+'</span><span>'+nm+'</span><span class="sw" style="background:'+p.accent+'"></span>';
+      el.innerHTML='<span class="ico">'+(ICO[p.id]||p.ico)+'</span><span>'+nm+'</span><span class="sw" style="background:'+p.accent+'"></span>';
       el.onclick=function(){ applyPreset(p); };
       box.appendChild(el);
     });
@@ -7765,17 +7797,17 @@ var CARD = (function(){
     }
     field("title",L.title,27,"600",onDark?ink:accTx);
     field("org",  L.org,  24,"400",sub);
-    field("tel",  L.tel,  23,"400",sub,"📞");
-    field("email",L.email,23,"400",sub,"✉");
-    field("url",  L.url,  23,"400",sub,"🌐");
-    field("addr", L.addr, 23,"400",sub,"📍");
+    field("tel",  L.tel,  23,"400",sub);
+    field("email",L.email,23,"400",sub);
+    field("url",  L.url,  23,"400",sub);
+    field("addr", L.addr, 23,"400",sub);
 
     // ---- socials (each chip is its own element) ----
     var socs=socials(); var flowX=tx, baseY=L.social;
     socs.forEach(function(s){
       var k="s_"+s.kind, o=elOff(k), sc=elScale(k), fs=20*sc;
       g.font="600 "+Math.round(fs)+"px "+FB; g.textAlign="left";
-      var chip=s.icon+" "+s.label, w=g.measureText(chip).width+22;
+      var chip=s.label, w=g.measureText(chip).width+22;
       var x=flowX+o.dx, y=baseY+o.dy;
       g.fillStyle=onDark?"rgba(255,255,255,.12)":mix(acc,"#ffffff",0.86); rrect(g,x,y-fs*1.2,w,fs*1.75,fs*0.9); g.fill();
       g.fillStyle=onDark?ink:shade(acc,-10); g.fillText(chip,x+11,y);
@@ -7783,12 +7815,14 @@ var CARD = (function(){
       flowX+=w+8; if(flowX>L.wrap){ flowX=tx; baseY+=42; }
     });
 
-    // ---- free brand mark (into export) ----
-    if(typeof isPro!=="function" || !isPro()){
+    // ---- free brand mark (into export); Pro removes it. In-site note reflects the state. ----
+    var freeWm = (typeof isPro!=="function" || !isPro());
+    if(freeWm){
       g.textAlign="right"; g.textBaseline="alphabetic"; g.font="600 15px "+FB;
       g.fillStyle=onDark?"rgba(255,255,255,.45)":"rgba(0,0,0,.30)";
       g.fillText("aesthetic-qr.studio", W-22, H-18); g.textAlign="left";
     }
+    var wmNote=$id("cardWmNote"); if(wmNote) wmNote.style.display=freeWm?"block":"none";
 
     var pv=$id("cardPreview");
     if(pv){ pv.width=W; pv.height=H; pv.classList.toggle("port",port); var pc=pv.getContext("2d"); pc.drawImage(st.hi,0,0);
@@ -8052,7 +8086,7 @@ var CARD = (function(){
     enter:function(){ if(!st.entered){ st.entered=true; bind();
         if(!gval("cdName")){ $id("cdName").value="홍길동"; $id("cdTitle").value="대표"; $id("cdOrg").value="아름다운 컴퍼니"; $id("cdTel").value="010-1234-5678"; $id("cdEmail").value="hello@company.com"; }
         setName("cardAccentHex",gval("cardAccent")); setName("cardQrColorHex",gval("cardQrColor"));
-        buildTplGrid(); buildQrGrid(); buildIndustry(); renderFolder();
+        buildTplGrid(); buildQrGrid(); buildIndustry(); fillSocIcons(); renderFolder();
       }
       if(typeof refreshAiTrialUI==="function") refreshAiTrialUI();
       draw();
