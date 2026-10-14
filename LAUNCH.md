@@ -37,7 +37,7 @@
 ### 아직 소유자(운영) 작업 — 이게 안 되면 매출 0 🔴
 1. **결제 연결(최우선).** `PRO.checkoutUrl`가 비어 있어 지금은 **판매 자체가 불가**. MoR(Polar 권장) 상품 생성 → `checkoutUrl`·`validateUrl`·`price` 입력(§1 참고).
 2. **커스텀 도메인.** `jay-inky.vercel.app`에는 카드번호를 안 넣음. 도메인 연결 + canonical/og/robots/sitemap 치환(§Phase 0).
-3. **실제 문의 이메일.** `CONTACT_EMAIL`이 아직 `contact@your-domain.com` placeholder. 실제 주소로 교체(라이선스 재발송 채널이자 신뢰 요소).
+3. **문의 이메일.** `CONTACT_EMAIL` = jay@jaythealpha.com 으로 설정 완료.
 4. **라이선스 서버 검증.** 지금은 DEV 오프라인 포맷 검사(`QRPRO-XXXX-XXXX`)만 통과 → 아무 포맷이면 언락되는 상태. MoR의 라이선스 검증 API를 `PRO.validateUrl`에 연결해야 실제 방어가 됨.
 
 ### 구조적 결정 사항 (매출 천장) 🟠
@@ -166,7 +166,7 @@ LICENSE_VALIDATE_URL=https://…/validate# (선택) Pro 라이선스 서버검�
 **판매 성립 필수(하나라도 비면 매출 0):**
 - [ ] MoR 상품 생성 + `PRO.checkoutUrl` 입력 (← 지금 비어 있어 판매 불가)
 - [ ] `PRO.validateUrl`에 MoR 라이선스 검증 API 연결 (← 없으면 아무 포맷이나 언락됨)
-- [ ] `CONTACT_EMAIL` 실제 값 교체 (라이선스 재발송·신뢰)
+- [x] `CONTACT_EMAIL` 실제 값 교체 (jay@jaythealpha.com)
 - [ ] 커스텀 도메인 연결 + canonical/og/robots/sitemap 도메인 치환
 - [ ] Vercel Production Branch = `claude/website-analysis-implementation-8rolis` 확인
 

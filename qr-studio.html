@@ -5,20 +5,25 @@
 <meta name="google" content="notranslate" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Aesthetic QR Studio — 평범함을 특별하게</title>
-<meta name="description" content="스캔되는 예술. 색상·그라디언트·모듈 형태·로고·애니메이션까지 커스터마이즈하는 미적 QR 코드 생성기. 서버·로그인 없이 브라우저에서 100% 동작." />
+<meta name="description" id="metaDesc" content="스캔되는 예술. 색상·그라디언트·모듈 형태·로고·애니메이션까지 커스터마이즈하는 미적 QR 코드 생성기. 서버·로그인 없이 브라우저에서 100% 동작." />
 <meta name="keywords" content="QR코드, QR코드 생성기, 디자인 QR, 아트 QR, 로고 QR, 애니메이션 QR, WiFi QR, vCard, qr code generator" />
 <meta name="robots" content="index, follow" />
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
 <meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)" />
 <!-- ▼ 커스텀 도메인 연결 시, 아래 canonical/og:url/og:image 의 도메인만 교체하세요. -->
-<link rel="canonical" href="https://jay-inky.vercel.app/" />
+<link rel="canonical" href="https://jay-inky.vercel.app/" id="canonLink" />
+<link rel="alternate" hreflang="ko" href="https://jay-inky.vercel.app/" />
+<link rel="alternate" hreflang="en" href="https://jay-inky.vercel.app/?lang=en" />
+<link rel="alternate" hreflang="ja" href="https://jay-inky.vercel.app/?lang=ja" />
+<link rel="alternate" hreflang="zh" href="https://jay-inky.vercel.app/?lang=zh" />
+<link rel="alternate" hreflang="x-default" href="https://jay-inky.vercel.app/" />
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="Aesthetic QR Studio" />
 <meta property="og:title" content="Aesthetic QR Studio — 평범한 QR을 브랜드가 되는 아트로" />
 <meta property="og:description" content="색상·그라디언트·모듈·로고·애니메이션까지. 실제로 스캔되는 미적 QR을 브라우저에서 무료로 디자인하세요." />
 <meta property="og:url" content="https://jay-inky.vercel.app/" />
 <meta property="og:image" content="https://jay-inky.vercel.app/assets/cover.png" />
-<meta property="og:locale" content="ko_KR" />
+<meta property="og:locale" content="ko_KR" id="ogLocale" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Aesthetic QR Studio — 스캔되는 QR 아트" />
 <meta name="twitter:description" content="색상·로고·애니메이션까지 커스터마이즈하는 미적 QR 코드 생성기. 브라우저에서 100% 동작." />
@@ -139,6 +144,8 @@
   :root[data-theme="dark"] .theme-toggle .th-moon{display:block}
   /* AR is experimental until fully tested across devices — flag it (grayscale, on-brand) */
   .tabs button[data-view="ar"]{position:relative;overflow:visible}
+  .cat-tabs button.cat-new{position:relative;overflow:visible}
+  .cat-tabs button.cat-new::after{content:"NEW";position:absolute;top:-7px;right:-4px;font-size:7.5px;font-weight:700;letter-spacing:.04em;background:#ff4d8d;color:#fff;border-radius:6px;padding:1px 4px}
   .tabs button[data-view="ar"]::after{content:"BETA";position:absolute;top:-6px;right:-2px;font-size:7.5px;font-weight:700;
     letter-spacing:.4px;color:var(--charcoal);background:var(--bg2);border:1px solid var(--line2);
     border-radius:6px;padding:1px 3px;line-height:1.25;pointer-events:none}
@@ -159,7 +166,7 @@
 
   /* studio layout */
   .studio{display:grid;grid-template-columns:1fr 390px;gap:22px;align-items:start}
-  @media(max-width:900px){.studio{grid-template-columns:1fr}}
+  @media(max-width:900px){.studio{grid-template-columns:minmax(0,1fr)} .stage{position:static}}
 
   .stage{position:sticky;top:80px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:24px;box-shadow:none}
   .canvas-hold{position:relative;display:grid;place-items:center;min-height:420px;overflow:hidden;
@@ -283,7 +290,7 @@
   .tpl-grid .tpl .nm{font-size:10px;color:var(--mut);text-align:center;padding:4px 2px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .tpl-grid .tpl.on .nm{color:var(--txt);font-weight:600}
   .card-drag-hint{font-size:11px;color:var(--mut);margin-top:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-  #cardPreview{touch-action:none;cursor:grab}
+  #cardPreview{touch-action:pan-y pinch-zoom;cursor:grab}
   #cardPreview.dragging{cursor:grabbing}
   #cardPreview.port{max-width:340px}
   .ind-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:7px;margin-top:2px}
@@ -366,6 +373,16 @@
   /* about */
   /* AR */
   .ar-wrap{max-width:720px;margin:0 auto}
+  .ar-guide{max-width:720px;margin:0 auto 16px;border:1px solid var(--line);border-radius:var(--r);background:var(--bg2);padding:14px 16px}
+  .ar-guide h3{margin:0 0 10px;font-size:16px}
+  .ar-guide .seg{margin-bottom:12px}
+  .ar-guide ol{margin:0;padding-left:20px;line-height:1.65;font-size:14px}
+  .ar-guide ol li{margin:4px 0}
+  .ar-try{display:flex;gap:16px;align-items:center}
+  .ar-try canvas{width:168px;height:168px;flex:none;background:#fff;border-radius:12px;border:1px solid var(--line2);padding:6px}
+  .ar-guide .note{font-size:12.5px;color:var(--mut);margin-top:10px;line-height:1.55}
+  .ar-guide .mob-only{display:none}
+  @media (max-width:640px){ .ar-try{flex-direction:column;align-items:stretch} .ar-try canvas{align-self:center} .ar-guide .mob-only{display:block} }
   .ar-stage{position:relative;width:100%;aspect-ratio:3/4;min-height:340px;max-height:72vh;background:var(--dark);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;display:grid;place-items:center}
   #arCam{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
   #arCanvas{width:100%;height:100%;object-fit:cover;touch-action:none;cursor:grab;display:block}
@@ -386,6 +403,26 @@
   .kbd{background:var(--bg2);border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:12px;color:var(--txt);font-family:var(--font-mono)}
 
   footer{text-align:center;color:var(--mut);font-size:12px;margin-top:50px;padding-top:24px;border-top:1px solid var(--line);line-height:1.7}
+  /* ---- phone layout (mobile audit fixes) ---- */
+  @media(max-width:640px){
+    header.top{position:static;gap:8px}
+    .brand p{display:none}
+    .nav-cluster{width:100%;flex-wrap:nowrap}
+    .tabs{flex:1;min-width:0;flex-wrap:nowrap;overflow-x:auto;padding-top:8px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+    .tabs::-webkit-scrollbar{display:none}
+    .tabs button{flex:none;min-height:40px}
+    .lang-switch button{min-height:40px}
+    .seg button{min-height:40px}
+    .pro-close{padding:12px;top:6px;right:6px}
+    textarea,input,select{font-size:16px !important}
+    .cat-tabs{flex-wrap:nowrap;overflow-x:auto;padding-top:9px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+    .cat-tabs::-webkit-scrollbar{display:none}
+    .cat-tabs button{flex:none}
+  }
+  .toast{margin-bottom:env(safe-area-inset-bottom)}
+  .ob-mask{overscroll-behavior:contain}
+  .ob-card{overscroll-behavior:contain;max-height:88dvh}
+  html.modal-open,html.modal-open body{overflow:hidden}
   .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--dark);border:0;
     color:var(--on-dark);padding:11px 22px;border-radius:var(--pill);font-size:13px;font-weight:500;opacity:0;transition:.25s;pointer-events:none;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.18)}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -523,6 +560,7 @@
       <button data-cat="animation" data-i18n-tip="cat.tip.animation" data-tip="이미지가 살아 움직이는 아트 QR. 카드를 클릭하면 그 이미지가 적용된 채 편집할 수 있어요."><span data-i18n="cat.animation">애니메이션</span></button>
       <button data-cat="logo" data-i18n-tip="cat.tip.logo" data-tip="중앙에 브랜드 텍스트가 들어간 로고형 QR. 클릭 후 문구를 바꾸거나 로고 이미지를 올릴 수 있어요."><span data-i18n="cat.logo">로고</span></button>
       <button data-cat="pictogram" data-i18n-tip="cat.tip.pictogram" data-tip="용도·업종별 픽토그램 QR. Wi-Fi·연락처·전화 같은 용도형은 클릭하면 입력폼이 예시값과 함께 열려요."><span data-i18n="cat.pictogram">픽토그램</span></button>
+      <button data-cat="motion" class="cat-new" data-i18n-tip="cat.tip.motion" data-tip="QR 점들이 날아와 모이는 모션 QR. 색·로고·이미지를 넣고 영상(MP4·WebM)으로 저장할 수 있어요."><span data-i18n="cat.motion">모션</span></button>
       <button data-cat="frame" data-i18n-tip="cat.tip.frame" data-tip="우드·골드·폴라로이드 등 실제 액자 프레임 디자인."><span data-i18n="cat.frame">프레임</span></button>
       <button data-cat="myqr" data-i18n-tip="cat.tip.myqr" data-tip="내가 저장한 QR 보관함. 스튜디오에서 ‘현재 디자인 저장’을 누르면 여기 쌓입니다."><span data-i18n="cat.myqr">★ My QR</span></button>
     </div>
@@ -532,6 +570,7 @@
     </div>
     <div class="gal-grid" id="galGrid"></div>
     <div id="galEmpty" class="hint" style="display:none;text-align:center;padding:40px 0"></div>
+    <div id="motionWrap" style="display:none"><iframe id="motionFrame" title="Motion QR" loading="lazy" style="width:100%;height:1400px;border:0;display:block;border-radius:var(--r);background:transparent"></iframe></div>
   </section>
 
   <!-- ============ STUDIO ============ -->
@@ -1205,6 +1244,28 @@
       <p data-i18n="ar.p">후면 카메라로 아무 QR 코드나 비추세요. 코드를 실시간 인식해 그 위에 3D 오브젝트·정보 카드를 얹어 보여줍니다. 100% 브라우저 처리(영상 전송 없음).</p>
       <div class="lang-switch" role="group" aria-label="Language"><button data-lang="ko" translate="no">Korean</button><button data-lang="en" translate="no">English</button><button data-lang="ja" translate="no">Japanese</button><button data-lang="zh" translate="no">Chinese</button></div>
     </div>
+    <div class="ar-guide" id="arGuide">
+      <h3 data-i18n="argd.title">AR, 이렇게 써요</h3>
+      <div class="seg" id="arGuideSeg">
+        <button data-g="try" class="on"><span data-i18n="argd.tab.try">30초 체험</span></button>
+        <button data-g="make"><span data-i18n="argd.tab.make">고객용 AR QR 만들기</span></button>
+      </div>
+      <div id="arGuideTry">
+        <div class="ar-try">
+          <canvas id="arTryQr" width="336" height="336" aria-label="AR demo QR"></canvas>
+          <div>
+            <div data-i18n-html="argd.try.steps"></div>
+            <div class="note mob-only" data-i18n="argd.try.mobile"></div>
+          </div>
+        </div>
+      </div>
+      <div id="arGuideMake" style="display:none">
+        <div data-i18n-html="argd.make.steps"></div>
+        <button class="btn" id="arMakeQrBtn" type="button" style="width:100%;margin-top:12px" data-i18n="argd.make.btn">✨ 지금 선택한 AR로 QR 만들기</button>
+      </div>
+      <div class="note" data-i18n="argd.note"></div>
+      <div class="note" data-i18n-html="argd.tips"></div>
+    </div>
     <div class="ar-wrap">
       <div class="ar-stage" id="arStage">
         <video id="arCam" playsinline muted></video>
@@ -1357,7 +1418,7 @@
     </nav>
     <div style="margin-top:10px">Aesthetic QR Studio · <span data-i18n="foot.tag">아름답고 스캔되는 QR을 만드는 스튜디오 · QR 생성·디자인은 브라우저에서 처리 (AI 기능만 서버 전송·저장 안 함)</span></div>
     <div style="margin-top:6px" data-i18n="foot.tm">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · <span data-i18n="foot.build">빌드</span> <b id="verTag">2026.10.14-b</b></div>
+    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · <span data-i18n="foot.build">빌드</span> <b id="verTag">2026.10.14-c</b></div>
   </footer>
 </div>
 
@@ -4589,7 +4650,15 @@ function drawArtLayer(g, size, n, m){
     }
     return drawCover(g, S.artImg, x, y, w, h);
   }
-  if (!paintArt(0,0,size,size)){ g.fillStyle="#0b0d12"; g.fillRect(0,0,size,size); }
+  if (S.artImg===S.logo){
+    // "logo as pattern": the logo is fitted (not cover-cropped) on the QR background and scaled by
+    // the Logo size slider (10–45% → 35–125% of the canvas), so the user controls how big it reads.
+    g.fillStyle = S.transparent ? "#ffffff" : (S.bg||"#ffffff"); g.fillRect(0,0,size,size);
+    var lw=S.logo.naturalWidth||S.logo.width||1, lh=S.logo.naturalHeight||S.logo.height||1;
+    var k=0.35+Math.max(0,Math.min(1,(S.logoSize-10)/35))*0.90, sc=Math.min(size*k/lw, size*k/lh);
+    var zz=moveImg ? 1+0.04*Math.sin(_phase*6.28318) : 1, ww=lw*sc*zz, hh=lh*sc*zz;
+    try{ g.drawImage(S.logo, (size-ww)/2, (size-hh)/2, ww, hh); }catch(e){}
+  } else if (!paintArt(0,0,size,size)){ g.fillStyle="#0b0d12"; g.fillRect(0,0,size,size); }
 
   // 2) centred QR zone + clean ring (the ring IS the quiet zone)
   var qArea=size*0.60, q0=(size-qArea)/2, unit=qArea/n;
@@ -4819,7 +4888,7 @@ function scanScore(){
   var cr1 = S.transparent ? 6 : contrastRatio(S.fg1,S.bg);
   var cr = (S.fill==="solid") ? cr1 : Math.min(cr1, S.transparent?6:contrastRatio(S.fg2,S.bg));  // fg2 only matters for gradients
   if(cr<1.8) s-=55; else if(cr<2.6) s-=24; else if(cr<3.2) s-=10; else if(cr<4.5) s-=3;
-  if(S.logo){ var maxLogo=({L:14,M:18,Q:24,H:30})[S.ecc], ratio=S.logoSize/maxLogo;
+  if(S.logo && S.artImg!==S.logo){ var maxLogo=({L:14,M:18,Q:24,H:30})[S.ecc], ratio=S.logoSize/maxLogo;
     if(ratio>1.05) s-=32; else if(ratio>0.9) s-=16; else if(ratio>0.75) s-=6; }
   if(S.dot==="diamond"||S.dot==="classy"||S.dot==="star") s-=8;
   if(S.eyeColorOn && S.eyeColor){ var ce=contrastRatio(S.eyeColor,S.bg); if(ce<2.6) s-=18; else if(ce<3.5) s-=6; }
@@ -4854,7 +4923,7 @@ function updateMeta(){
   var cr2 = (S.fill==="solid"||S.transparent) ? cr : contrastRatio(S.fg2, S.bg);  // fg2 only affects gradients
   if (Math.min(cr,cr2) < 2.6) warn.push(t("dyn.contrastLow"));
   var maxLogo = ({L:14,M:18,Q:24,H:30})[S.ecc];
-  if (S.logo && S.logoSize > maxLogo-4) warn.push(t("dyn.logoBig"));
+  if (S.logo && S.artImg!==S.logo && S.logoSize > maxLogo-4) warn.push(t("dyn.logoBig"));
   if (S.dot === "diamond" || S.dot === "classy") warn.push(t("dyn.decoModule"));
   if (warn.length){ $("metaScan").textContent="⚠ "+warn.join(" · "); $("metaScan").style.color="var(--txt)"; }
   else { $("metaScan").textContent="✓ "+t("dyn.scanGood"); $("metaScan").style.color="var(--mut)"; }
@@ -5022,7 +5091,7 @@ document.addEventListener("pointerout", function(e){
   if(to===el) return;                            // moved within the same control
   clearTimeout(_tipHideT); _tipHideT=setTimeout(_tipHide, 40);
 }, true);
-document.addEventListener("focusin", function(e){ var el=_tipFrom(e.target); if(el) _tipShow(el); });
+document.addEventListener("focusin", function(e){ var el=_tipFrom(e.target); if(el && e.target.matches && e.target.matches(":focus-visible")) _tipShow(el); });
 document.addEventListener("focusout", function(e){ if(_tipFrom(e.target)) _tipHide(); });
 // Any scroll or focus change invalidates the anchored position → hide immediately.
 window.addEventListener("scroll", _tipHide, true);
@@ -5030,8 +5099,8 @@ window.addEventListener("blur", _tipHide);
 document.addEventListener("pointerdown", _tipHide, true);
 
 // ---------- footer info pages (About / Privacy / Terms / Contact) ----------
-// ⚠️ 배포 전: 아래 CONTACT_EMAIL 과 각 문서의 [회사/서비스명·도메인·연락처] 를 실제 값으로 교체하세요.
-var CONTACT_EMAIL = "contact@your-domain.com"; // ← 실제 이메일로 교체
+// Contact address shown in the info pages (about / privacy / terms / contact).
+var CONTACT_EMAIL = "jay@jaythealpha.com";
 var INFO_PAGES = {
   about:{ title:"소개", html:
     "<p><b>Aesthetic QR Studio</b> 는 평범한 흑백 QR을 브랜드가 되는 아트로 바꿔주는 웹 기반 QR 디자인 스튜디오입니다. 색상·그라디언트·모듈 형태·중앙 로고/픽토그램·프레임·애니메이션까지 조정하면서도 <b>실제로 스캔되는</b> QR을 만들 수 있습니다.</p>"+
@@ -5358,7 +5427,7 @@ function applyBrandQr(){
   } else if(style==="pattern"){
     // route the logo into the art layer → the QR dots form the logo (Netflix/FedEx wordmark look)
     S.artImg=S.logo; S.artIsVideo=false; S.artIsGif=false; S.artInvert=false;
-    S.artVisibility=58; S.artDensity=6; S.dot="dots"; S.eye="target";
+    S.artVisibility=58; S.artDensity=6; S.dot="dots"; S.eye="target"; S.logoSize=40;
   } else {
     S.artImg=null; S.dot="dots"; S.eye="target"; S.logoPad=true;
     if(style==="badge"){ S.logoSize=30; }
@@ -5615,6 +5684,10 @@ function syncPictoSel(){ var box=$("pictoPicker"); if(!box) return; Array.protot
 // ---- content-type button icons: real brand marks (SVG) where they help recognition,
 //      closest emoji elsewhere. Brand-coloured icons stay visible on the black selected
 //      pill; the pure-dark marks (X, TikTok, GitHub) use currentColor so they flip. ----
+// Official brand marks (glyphs: Simple Icons, CC0) — used for social/app pictograms and content-type
+// buttons. Brand names and logos are trademarks of their owners; they are shown only to label a link.
+var BRAND_SVG={"youtube": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"#FF0000\" d=\"M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z\"/></svg>", "instagram": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><defs><radialGradient id=\"ig\" cx=\".3\" cy=\"1.07\" r=\"1.5\"><stop offset=\"0\" stop-color=\"#fdf497\"/><stop offset=\".05\" stop-color=\"#fdf497\"/><stop offset=\".45\" stop-color=\"#fd5949\"/><stop offset=\".6\" stop-color=\"#d6249f\"/><stop offset=\".9\" stop-color=\"#285AEB\"/></radialGradient></defs><path fill=\"url(#ig)\" d=\"M7.0301.084c-1.2768.0602-2.1487.264-2.911.5634-.7888.3075-1.4575.72-2.1228 1.3877-.6652.6677-1.075 1.3368-1.3802 2.127-.2954.7638-.4956 1.6365-.552 2.914-.0564 1.2775-.0689 1.6882-.0626 4.947.0062 3.2586.0206 3.6671.0825 4.9473.061 1.2765.264 2.1482.5635 2.9107.308.7889.72 1.4573 1.388 2.1228.6679.6655 1.3365 1.0743 2.1285 1.38.7632.295 1.6361.4961 2.9134.552 1.2773.056 1.6884.069 4.9462.0627 3.2578-.0062 3.668-.0207 4.9478-.0814 1.28-.0607 2.147-.2652 2.9098-.5633.7889-.3086 1.4578-.72 2.1228-1.3881.665-.6682 1.0745-1.3378 1.3795-2.1284.2957-.7632.4966-1.636.552-2.9124.056-1.2809.0692-1.6898.063-4.948-.0063-3.2583-.021-3.6668-.0817-4.9465-.0607-1.2797-.264-2.1487-.5633-2.9117-.3084-.7889-.72-1.4568-1.3876-2.1228C21.2982 1.33 20.628.9208 19.8378.6165 19.074.321 18.2017.1197 16.9244.0645 15.6471.0093 15.236-.005 11.977.0014 8.718.0076 8.31.0215 7.0301.0839m.1402 21.6932c-1.17-.0509-1.8053-.2453-2.2287-.408-.5606-.216-.96-.4771-1.3819-.895-.422-.4178-.6811-.8186-.9-1.378-.1644-.4234-.3624-1.058-.4171-2.228-.0595-1.2645-.072-1.6442-.079-4.848-.007-3.2037.0053-3.583.0607-4.848.05-1.169.2456-1.805.408-2.2282.216-.5613.4762-.96.895-1.3816.4188-.4217.8184-.6814 1.3783-.9003.423-.1651 1.0575-.3614 2.227-.4171 1.2655-.06 1.6447-.072 4.848-.079 3.2033-.007 3.5835.005 4.8495.0608 1.169.0508 1.8053.2445 2.228.408.5608.216.96.4754 1.3816.895.4217.4194.6816.8176.9005 1.3787.1653.4217.3617 1.056.4169 2.2263.0602 1.2655.0739 1.645.0796 4.848.0058 3.203-.0055 3.5834-.061 4.848-.051 1.17-.245 1.8055-.408 2.2294-.216.5604-.4763.96-.8954 1.3814-.419.4215-.8181.6811-1.3783.9-.4224.1649-1.0577.3617-2.2262.4174-1.2656.0595-1.6448.072-4.8493.079-3.2045.007-3.5825-.006-4.848-.0608M16.953 5.5864A1.44 1.44 0 1 0 18.39 4.144a1.44 1.44 0 0 0-1.437 1.4424M5.8385 12.012c.0067 3.4032 2.7706 6.1557 6.173 6.1493 3.4026-.0065 6.157-2.7701 6.1506-6.1733-.0065-3.4032-2.771-6.1565-6.174-6.1498-3.403.0067-6.156 2.771-6.1496 6.1738M8 12.0077a4 4 0 1 1 4.008 3.9921A3.9996 3.9996 0 0 1 8 12.0077\"/></svg>", "tiktok": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"#25F4EE\" transform=\"translate(-.55 -.45)\" d=\"M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z\"/><path fill=\"#FE2C55\" transform=\"translate(.55 .45)\" d=\"M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z\"/><path fill=\"#000\" d=\"M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z\"/></svg>", "x": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"#000000\" d=\"M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z\"/></svg>", "facebook": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"#0866FF\" d=\"M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 2.103-.287 1.564h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.628 3.874 10.35 9.101 11.647Z\"/></svg>", "linkedin": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"#0A66C2\" d=\"M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z\"/></svg>", "telegram": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"#26A5E4\" d=\"M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z\"/></svg>", "github": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"#181717\" d=\"M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12\"/></svg>", "whatsapp": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"#25D366\" d=\"M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z\"/></svg>", "spotify": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"#1ED760\" d=\"M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z\"/></svg>", "paypal": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"#003087\" d=\"M7.016 19.198h-4.2a.562.562 0 0 1-.555-.65L5.093.584A.692.692 0 0 1 5.776 0h7.222c3.417 0 5.904 2.488 5.846 5.5-.006.25-.027.5-.066.747A6.794 6.794 0 0 1 12.071 12H8.743a.69.69 0 0 0-.682.583l-.325 2.056-.013.083-.692 4.39-.015.087zM19.79 6.142c-.01.087-.01.175-.023.261a7.76 7.76 0 0 1-7.695 6.598H9.007l-.283 1.795-.013.083-.692 4.39-.134.843-.014.088H6.86l-.497 3.15a.562.562 0 0 0 .555.65h3.612c.34 0 .63-.249.683-.585l.952-6.031a.692.692 0 0 1 .683-.584h2.126a6.793 6.793 0 0 0 6.707-5.752c.306-1.95-.466-3.744-1.89-4.906z\"/></svg>", "appstore": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"#0D96F6\" d=\"M8.8086 14.9194l6.1107-11.0368c.0837-.1513.1682-.302.2437-.4584.0685-.142.1267-.2854.1646-.4403.0803-.3259.0588-.6656-.066-.9767-.1238-.3095-.3417-.5678-.6201-.7355a1.4175 1.4175 0 0 0-.921-.1924c-.3207.043-.6135.1935-.8443.4288-.1094.1118-.1996.2361-.2832.369-.092.1463-.175.2979-.259.4492l-.3864.6979-.3865-.6979c-.0837-.1515-.1667-.303-.2587-.4492-.0837-.1329-.1739-.2572-.2835-.369-.2305-.2353-.5233-.3857-.844-.429a1.4181 1.4181 0 0 0-.921.1926c-.2784.1677-.4964.426-.6203.7355-.1246.311-.1461.6508-.066.9767.038.155.0962.2984.1648.4403.0753.1564.1598.307.2437.4584l1.248 2.2543-4.8625 8.7825H2.0295c-.1676 0-.3351-.0007-.5026.0092-.1522.009-.3004.0284-.448.0714-.3108.0906-.5822.2798-.7783.548-.195.2665-.3006.5929-.3006.9279 0 .3352.1057.6612.3006.9277.196.2683.4675.4575.7782.548.1477.043.296.0623.4481.0715.1675.01.335.009.5026.009h13.0974c.0171-.0357.059-.1294.1-.2697.415-1.4151-.6156-2.843-2.0347-2.843zM3.113 18.5418l-.7922 1.5008c-.0818.1553-.1644.31-.2384.4705-.067.1458-.124.293-.1611.452-.0785.3346-.0576.6834.0645 1.0029.1212.3175.3346.583.607.7549.2727.172.5891.2416.9013.1975.3139-.044.6005-.1986.8263-.4402.1072-.1148.1954-.2424.2772-.3787.0902-.1503.1714-.3059.2535-.4612L6 19.4636c-.0896-.149-.9473-1.4704-2.887-.9218m20.5861-3.0056a1.4707 1.4707 0 0 0-.779-.5407c-.1476-.0425-.2961-.0616-.4483-.0705-.1678-.0099-.3352-.0091-.503-.0091H18.648l-4.3891-7.817c-.6655.7005-.9632 1.485-1.0773 2.1976-.1655 1.0333.0367 2.0934.546 3.0004l5.2741 9.3933c.084.1494.167.299.2591.4435.0837.131.1739.2537.2836.364.231.2323.5238.3809.8449.4232.3192.0424.643-.0244.9217-.1899.2784-.1653.4968-.4204.621-.7257.1246-.3072.146-.6425.0658-.9641-.0381-.1529-.0962-.2945-.165-.4346-.0753-.1543-.1598-.303-.2438-.4524l-1.216-2.1662h1.596c.1677 0 .3351.0009.5029-.009.1522-.009.3007-.028.4483-.0705a1.4707 1.4707 0 0 0 .779-.5407A1.5386 1.5386 0 0 0 24 16.452a1.539 1.539 0 0 0-.3009-.9158Z\"/></svg>", "zoom": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"#0B5CFF\" d=\"M5.033 14.649H.743a.74.74 0 0 1-.686-.458.74.74 0 0 1 .16-.808L3.19 10.41H1.06A1.06 1.06 0 0 1 0 9.35h3.957c.301 0 .57.18.686.458a.74.74 0 0 1-.161.808L1.51 13.59h2.464c.585 0 1.06.475 1.06 1.06zM24 11.338c0-1.14-.927-2.066-2.066-2.066-.61 0-1.158.265-1.537.686a2.061 2.061 0 0 0-1.536-.686c-1.14 0-2.066.926-2.066 2.066v3.311a1.06 1.06 0 0 0 1.06-1.06v-2.251a1.004 1.004 0 0 1 2.013 0v2.251c0 .586.474 1.06 1.06 1.06v-3.311a1.004 1.004 0 0 1 2.012 0v2.251c0 .586.475 1.06 1.06 1.06zM16.265 12a2.728 2.728 0 1 1-5.457 0 2.728 2.728 0 0 1 5.457 0zm-1.06 0a1.669 1.669 0 1 0-3.338 0 1.669 1.669 0 0 0 3.338 0zm-4.82 0a2.728 2.728 0 1 1-5.458 0 2.728 2.728 0 0 1 5.457 0zm-1.06 0a1.669 1.669 0 1 0-3.338 0 1.669 1.669 0 0 0 3.338 0z\"/></svg>", "kakaotalk": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" fill=\"#3C1E1E\"/><path fill=\"#FEE500\" d=\"M22.125 0H1.875C.8394 0 0 .8394 0 1.875v20.25C0 23.1606.8394 24 1.875 24h20.25C23.1606 24 24 23.1606 24 22.125V1.875C24 .8394 23.1606 0 22.125 0zM12 18.75c-.591 0-1.1697-.0413-1.7317-.1209-.5626.3965-3.813 2.6797-4.1198 2.7225 0 0-.1258.0489-.2328-.0141s-.0876-.2282-.0876-.2282c.0322-.2198.8426-3.0183.992-3.5333-2.7452-1.36-4.5701-3.7686-4.5701-6.5135C2.25 6.8168 6.6152 3.375 12 3.375s9.75 3.4418 9.75 7.6875c0 4.2457-4.3652 7.6875-9.75 7.6875zM8.0496 9.8672h-.8777v3.3417c0 .2963-.2523.5372-.5625.5372s-.5625-.2409-.5625-.5372V9.8672h-.8777c-.3044 0-.552-.2471-.552-.5508s.2477-.5508.552-.5508h2.8804c.3044 0 .552.2471.552.5508s-.2477.5508-.552.5508zm10.9879 2.9566a.558.558 0 0 1 .108.4167.5588.5588 0 0 1-.2183.371.5572.5572 0 0 1-.3383.1135.558.558 0 0 1-.4493-.2236l-1.3192-1.7479-.1952.1952v1.2273a.5635.5635 0 0 1-.5627.5628.563.563 0 0 1-.5625-.5625V9.3281c0-.3102.2523-.5625.5625-.5625s.5625.2523.5625.5625v1.209l1.5694-1.5694c.0807-.0807.1916-.1252.312-.1252.1404 0 .2814.0606.3871.1661.0985.0984.1573.2251.1654.3566.0082.1327-.036.2542-.1241.3425l-1.2818 1.2817 1.3845 1.8344zm-8.3502-3.5023c-.095-.2699-.3829-.5475-.7503-.5557-.3663.0083-.6542.2858-.749.5551l-1.3455 3.5415c-.1708.5305-.0217.7272.1333.7988a.8568.8568 0 0 0 .3576.0776c.2346 0 .4139-.0952.4678-.2481l.2787-.7297 1.7152.0001.2785.7292c.0541.1532.2335.2484.4681.2484a.8601.8601 0 0 0 .3576-.0775c.1551-.0713.3041-.2681.1329-.7999l-1.3449-3.5398zm-1.3116 2.4433l.5618-1.5961.5618 1.5961H9.3757zm5.9056 1.3836c0 .2843-.2418.5156-.5391.5156h-1.8047c-.2973 0-.5391-.2314-.5391-.5156V9.3281c0-.3102.2576-.5625.5742-.5625s.5742.2523.5742.5625v3.3047h1.1953c.2974 0 .5392.2314.5392.5156z\"/></svg>", "naver": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><rect width=\"24\" height=\"24\" rx=\"5.5\" fill=\"#03C75A\"/><path fill=\"#fff\" transform=\"translate(6 6) scale(.5)\" d=\"M16.273 12.845 7.376 0H0v24h7.726V11.156L16.624 24H24V0h-7.727v12.845Z\"/></svg>"};
+function brandLogoUrl(b){ var v=BRAND_SVG[b]; return v ? "data:image/svg+xml,"+encodeURIComponent(v.replace("<svg ",'<svg width="512" height="512" ')) : ""; }
 var CT_ICON={
   instagram:'<svg viewBox="0 0 24 24" fill="none" stroke="#E1306C" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1.1" fill="#E1306C" stroke="none"/></svg>',
   youtube:'<svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="4" fill="#FF0000"/><path d="M10 8.5l6 3.5-6 3.5z" fill="#fff"/></svg>',
@@ -5628,6 +5701,7 @@ var CT_ICON={
   spotify:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#1DB954"/><path d="M7 10.4c3-.8 6.6-.5 9.2 1.1M7.6 13.4c2.4-.6 5.1-.4 7.2 1M8.1 16.1c1.9-.5 3.9-.3 5.5.7" stroke="#fff" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>',
   paypal:'<svg viewBox="0 0 24 24"><path d="M9.3 4h5.9c2.4 0 4 1.5 3.6 4-.4 2.6-2.3 4-4.9 4h-2.7l-.8 4H7.6L9.3 4z" fill="#002991"/><path d="M8 7h5.4c1.9 0 3 1.1 2.7 3-.4 2-2 3-4 3H9.9L9.2 20H6.5L8 7z" fill="#009CDE"/></svg>'
 };
+["instagram","youtube","tiktok","x","facebook","linkedin","telegram","github","whatsapp","spotify","paypal","appstore"].forEach(function(b){ if(BRAND_SVG[b]) CT_ICON[b]=BRAND_SVG[b]; });
 function applyCtIcons(){
   var seg=$("ctypeSeg"); if(!seg) return;
   Array.prototype.forEach.call(seg.children,function(b){
@@ -5643,6 +5717,20 @@ var CT_EMOJI={url:"🌐",text:"📝",wifi:"📶",vcard:"👤",tel:"📞",sms:"�
 // when a connection type is chosen and the centre is a pictogram, mirror the matching emoji
 function syncCenterToCType(ct){
   if(S.centerMode!=="emoji") return;
+  // brand link types use the brand's real logo instead of a look-alike emoji
+  if(typeof BRAND_SVG!=="undefined" && BRAND_SVG[ct]){
+    getArtImg(brandLogoUrl(ct), function(img){
+      if(!img) return;
+      S.logo=img; S.centerMode="none"; S.logoSize=24; S.logoPad=true; setEcc("H");
+      if($("logoSizeWrap")) $("logoSizeWrap").style.display="block";
+      if($("logoBgWrap")) $("logoBgWrap").style.display="flex";
+      if($("logoClear")) $("logoClear").style.display="block";
+      $("logoSize").value=S.logoSize; $("logoSizeOut").textContent=S.logoSize+"%"; $("logoPad").checked=true;
+      if(typeof setSeg==="function") setSeg("centerModeSeg","cmode","none");
+      rerender();
+    });
+    return;
+  }
   var e=CT_EMOJI[ct]; if(!e) return;
   S.centerText=e; var ci=$("centerText"); if(ci) ci.value=e; syncPictoSel();
 }
@@ -5793,24 +5881,56 @@ $("bulkGen").addEventListener("click",generateBulkSheet);
 
 // ---------- tabs ----------
 $("tabs").addEventListener("click",function(e){
-  var b=e.target.closest("button"); if(!b) return;
-  Array.prototype.forEach.call(this.children,function(x){x.classList.remove("active");});
-  b.classList.add("active");
-  ["gallery","studio","card","ar","about"].forEach(function(v){ $("view-"+v).classList.toggle("active", v===b.dataset.view); });
-  if(b.dataset.view==="studio") rerender();
-  if(b.dataset.view==="card" && typeof CARD!=="undefined"){ CARD.enter(); }
-  if(b.dataset.view==="ar") AR.refresh(); else AR.leave();
-  if(b.dataset.view==="gallery"){ if(curCat==="animation" && typeof startGalAnim==="function") startGalAnim(); } else if(typeof stopGalAnim==="function"){ stopGalAnim(); }
+  var b=e.target.closest("button"); if(!b||!b.dataset.view) return;
+  gotoView(b.dataset.view);
 });
-function gotoView(v){
+// Single entry point for switching views. Every switch is recorded in browser history (#studio,
+// #card, …) so the phone/browser Back button, the logo (home) and shared links all work.
+var VIEWS=["gallery","studio","card","ar","about"];
+function curView(){ for(var i=0;i<VIEWS.length;i++){ if($("view-"+VIEWS[i]).classList.contains("active")) return VIEWS[i]; } return "gallery"; }
+function gotoView(v, opt){
+  opt=opt||{}; if(VIEWS.indexOf(v)<0) v="gallery";
+  var prev=curView();
   Array.prototype.forEach.call($("tabs").children,function(x){x.classList.toggle("active", x.dataset.view===v);});
-  ["gallery","studio","card","ar","about"].forEach(function(k){ $("view-"+k).classList.toggle("active", k===v); });
+  VIEWS.forEach(function(k){ $("view-"+k).classList.toggle("active", k===v); });
   if(v==="studio") rerender();
   if(v==="card" && typeof CARD!=="undefined"){ CARD.enter(); }
   if(v==="ar") AR.refresh(); else AR.leave();
-  if(typeof stopGalAnim==="function" && v!=="gallery") stopGalAnim();
-  window.scrollTo(0,0);
+  if(v==="gallery"){ if(typeof curCat!=="undefined" && curCat==="animation" && typeof startGalAnim==="function") startGalAnim(); }
+  else if(typeof stopGalAnim==="function") stopGalAnim();
+  if(!opt.noHistory && (prev!==v || (location.hash.slice(1)||"gallery")!==v)){
+    try{ history.pushState({view:v},"",(v==="gallery"?location.pathname+location.search:"#"+v)); }catch(e){}
+  }
+  if(!opt.keepScroll) window.scrollTo(0,0);
 }
+// Popups (info / Pro / onboarding) get their own history entry, so Back closes the popup first
+// instead of leaving the page; closing a popup with its X button pops that entry again.
+var _navPopping=false, _navSkipPop=false;
+function openMasks(){ return Array.prototype.filter.call(document.querySelectorAll('[id$="Mask"]'),function(m){ return m.classList.contains("show"); }); }
+function closeMask(m){ if(m.id==="obMask" && typeof hideOnboard==="function") hideOnboard(); else m.classList.remove("show"); }
+document.querySelectorAll('[id$="Mask"]').forEach(function(m){
+  var was=m.classList.contains("show");
+  new MutationObserver(function(){
+    var now=m.classList.contains("show"); if(now===was) return; was=now;
+    document.documentElement.classList.toggle("modal-open", openMasks().length>0);
+    if(_navPopping) return;
+    if(now){ try{ history.pushState({view:curView(),modal:m.id},"",location.href); }catch(e){} }
+    else if(history.state && history.state.modal===m.id){ _navSkipPop=true; history.back(); }
+  }).observe(m,{attributes:true,attributeFilter:["class"]});
+});
+window.addEventListener("popstate",function(e){
+  if(_navSkipPop){ _navSkipPop=false; return; }
+  var open=openMasks();
+  if(open.length){ _navPopping=true; open.forEach(closeMask); _navPopping=false; return; }
+  var v=(e.state&&e.state.view)||location.hash.slice(1)||"gallery";
+  gotoView(v,{noHistory:true});
+});
+// logo / title = home
+(function(){ var br=document.querySelector("header .brand"); if(!br) return;
+  br.style.cursor="pointer"; br.setAttribute("role","link"); br.setAttribute("tabindex","0");
+  br.addEventListener("click",function(){ gotoView("gallery"); });
+  br.addEventListener("keydown",function(e){ if(e.key==="Enter") gotoView("gallery"); });
+})();
 
 // ---------- first-visit onboarding ----------
 var OBKEY="aqr_onboarded_v1";
@@ -6293,6 +6413,7 @@ var AR = (function(){
       }
     } else {
       setArMode("qr");
+      if(opts.obj && $("arObj") && /^(cube|card|portal)$/.test(opts.obj)){ $("arObj").value=opts.obj; $("arObj").dispatchEvent(new Event("change")); }
     }
   }
   return {
@@ -6377,11 +6498,7 @@ var AR = (function(){
 })();
 
 // ---------- feature chips (jump to the matching control group) ----------
-function gotoStudio(){
-  Array.prototype.forEach.call($("tabs").children,function(x){x.classList.toggle("active", x.dataset.view==="studio");});
-  ["gallery","studio","ar","about"].forEach(function(v){ $("view-"+v).classList.toggle("active", v==="studio"); });
-  rerender();
-}
+function gotoStudio(){ gotoView("studio"); }
 $("featureChips").addEventListener("click",function(e){
   var b=e.target.closest("button"); if(!b) return;
   gotoStudio();
@@ -6498,6 +6615,18 @@ function makeScene(kind){
 }
 
 var GAL_TR = {
+  '페이스북 페이지':{en:'Facebook page',zh:'Facebook 主页',ja:'Facebookページ'},
+  '스캔 → 페이스북':{en:'Scan → Facebook',zh:'扫描 → Facebook',ja:'スキャン → Facebook'},
+  'X 프로필':{en:'X profile',zh:'X 主页',ja:'Xプロフィール'},
+  '스캔 → X':{en:'Scan → X',zh:'扫描 → X',ja:'スキャン → X'},
+  '왓츠앱 채팅':{en:'WhatsApp chat',zh:'WhatsApp 聊天',ja:'WhatsAppチャット'},
+  '스캔 → 대화 시작':{en:'Scan → start chat',zh:'扫描 → 开始聊天',ja:'スキャン → チャット開始'},
+  '깃허브':{en:'GitHub',zh:'GitHub',ja:'GitHub'},
+  '스캔 → 저장소':{en:'Scan → repository',zh:'扫描 → 代码仓库',ja:'スキャン → リポジトリ'},
+  '카카오톡 채널':{en:'KakaoTalk channel',zh:'KakaoTalk 频道',ja:'カカオトークチャンネル'},
+  '스캔 → 채널 추가':{en:'Scan → add channel',zh:'扫描 → 添加频道',ja:'スキャン → チャンネル追加'},
+  '네이버 블로그':{en:'Naver Blog',zh:'Naver 博客',ja:'NAVERブログ'},
+  '스캔 → 블로그':{en:'Scan → blog',zh:'扫描 → 博客',ja:'スキャン → ブログ'},
   '프리미엄 라거':{en:'Premium Lager',zh:'优质拉格',ja:'プレミアムラガー'},
   '골든 에일':{en:'Golden Ale',zh:'金色艾尔',ja:'ゴールデンエール'},
   '로스트 커피':{en:'Roast Coffee',zh:'烘焙咖啡',ja:'ロースト コーヒー'},
@@ -6842,15 +6971,21 @@ var CATS = {
     {name:"매장 위치",tag:"스캔 → 지도 열기",s:{fill:"solid",fg1:"#b91c1c",bg:"#ffffff",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"📍",centerScale:28,frameOn:true,frameStyle:"card",frameMode:"solid",frameBg1:"#b91c1c"},ct:"geo",fields:{geoLat:"37.5665",geoLng:"126.9780"}},
     {name:"쿠폰 코드",tag:"스캔 → 쿠폰 코드 표시",s:{fill:"linear",fg1:"#db2777",fg2:"#f97316",angle:120,dot:"rounded",eye:"rounded",bg:"#ffffff",centerMode:"emoji",centerText:"🎁",centerScale:26},ct:"text",fields:{content:"10% 할인 쿠폰: WELCOME10"}},
     {name:"리뷰 남기기",tag:"스캔 → 리뷰 페이지",s:{fill:"solid",fg1:"#b45309",bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"⭐",centerScale:22,ecc:"H",labelOn:true,labelText:"REVIEW US ★"},ct:"url",fields:{content:"https://jay-inky.vercel.app"}},
-    {name:"인스타 프로필",tag:"스캔 → 인스타그램",s:{fill:"linear",fg1:"#e1306c",fg2:"#f77737",angle:120,bg:"#ffffff",dot:"rounded",eye:"circle",centerMode:"emoji",centerText:"📸",centerScale:28,labelOn:true,labelText:"@FOLLOW"},ct:"instagram",fields:{socialUser:"my.brand"}},
-    {name:"유튜브 채널",tag:"스캔 → 채널 구독",s:{fill:"solid",fg1:"#c1121f",bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"▶️",centerScale:28,frameOn:true,frameStyle:"card",frameMode:"solid",frameBg1:"#c1121f",labelOn:true,labelText:"SUBSCRIBE"},ct:"youtube",fields:{socialUser:"mychannel"}},
-    {name:"틱톡",tag:"스캔 → 틱톡 프로필",s:{fill:"linear",fg1:"#25f4ee",fg2:"#fe2c55",angle:120,bg:"#0b0d12",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"🎵",centerScale:28},ct:"tiktok",fields:{socialUser:"mybrand"}},
-    {name:"링크드인",tag:"스캔 → 프로필",s:{fill:"solid",fg1:"#0a66c2",bg:"#ffffff",dot:"square",eye:"square",centerMode:"emoji",centerText:"💼",centerScale:28,frameOn:true,frameStyle:"shadow",frameMode:"linear",frameBg1:"#0a66c2",frameBg2:"#0b2a6b",frameAngle:120},ct:"linkedin",fields:{socialUser:"myname"}},
-    {name:"텔레그램 채널",tag:"스캔 → 대화 열기",s:{fill:"solid",fg1:"#229ed9",bg:"#ffffff",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"✈️",centerScale:28},ct:"telegram",fields:{socialUser:"mychannel"}},
-    {name:"앱 다운로드",tag:"스캔 → 스토어 열기",s:{fill:"linear",fg1:"#334155",fg2:"#0f172a",angle:120,bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"📱",centerScale:28,labelOn:true,labelText:"GET THE APP"},ct:"appstore",fields:{linkUrl:"https://apps.apple.com/app/id000000000"}},
+    {name:"인스타 프로필",tag:"스캔 → 인스타그램",s:{fill:"linear",fg1:"#e1306c",fg2:"#f77737",angle:120,bg:"#ffffff",dot:"rounded",eye:"circle",centerMode:"none",centerLogoUrl:brandLogoUrl("instagram"),logoSize:24,logoPad:true,ecc:"H",labelOn:true,labelText:"@FOLLOW"},ct:"instagram",fields:{socialUser:"my.brand"}},
+    {name:"유튜브 채널",tag:"스캔 → 채널 구독",s:{fill:"solid",fg1:"#c1121f",bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"none",centerLogoUrl:brandLogoUrl("youtube"),logoSize:24,logoPad:true,ecc:"H",frameOn:true,frameStyle:"card",frameMode:"solid",frameBg1:"#c1121f",labelOn:true,labelText:"SUBSCRIBE"},ct:"youtube",fields:{socialUser:"mychannel"}},
+    {name:"틱톡",tag:"스캔 → 틱톡 프로필",s:{fill:"linear",fg1:"#25f4ee",fg2:"#fe2c55",angle:120,bg:"#0b0d12",dot:"dots",eye:"circle",centerMode:"none",centerLogoUrl:brandLogoUrl("tiktok"),logoSize:24,logoPad:true,ecc:"H"},ct:"tiktok",fields:{socialUser:"mybrand"}},
+    {name:"링크드인",tag:"스캔 → 프로필",s:{fill:"solid",fg1:"#0a66c2",bg:"#ffffff",dot:"square",eye:"square",centerMode:"none",centerLogoUrl:brandLogoUrl("linkedin"),logoSize:24,logoPad:true,ecc:"H",frameOn:true,frameStyle:"shadow",frameMode:"linear",frameBg1:"#0a66c2",frameBg2:"#0b2a6b",frameAngle:120},ct:"linkedin",fields:{socialUser:"myname"}},
+    {name:"텔레그램 채널",tag:"스캔 → 대화 열기",s:{fill:"solid",fg1:"#229ed9",bg:"#ffffff",dot:"dots",eye:"circle",centerMode:"none",centerLogoUrl:brandLogoUrl("telegram"),logoSize:24,logoPad:true,ecc:"H"},ct:"telegram",fields:{socialUser:"mychannel"}},
+    {name:"앱 다운로드",tag:"스캔 → 스토어 열기",s:{fill:"linear",fg1:"#334155",fg2:"#0f172a",angle:120,bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"none",centerLogoUrl:brandLogoUrl("appstore"),logoSize:24,logoPad:true,ecc:"H",labelOn:true,labelText:"GET THE APP"},ct:"appstore",fields:{linkUrl:"https://apps.apple.com/app/id000000000"}},
     {name:"화상회의 참가",tag:"스캔 → 회의 입장",s:{fill:"solid",fg1:"#1d4ed8",bg:"#ffffff",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"🎥",centerScale:28,frameOn:true,frameStyle:"card",frameMode:"solid",frameBg1:"#1d4ed8"},ct:"video",fields:{linkUrl:"https://meet.google.com/abc-defg-hij"}},
-    {name:"스포티파이",tag:"스캔 → 플레이리스트",s:{fill:"solid",fg1:"#1db954",bg:"#0b0d12",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"🎧",centerScale:28},ct:"spotify",fields:{linkUrl:"https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M"}},
-    {name:"PayPal 결제",tag:"스캔 → 결제·송금",s:{fill:"solid",fg1:"#003087",bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"💰",centerScale:28,frameOn:true,frameStyle:"card",frameMode:"linear",frameBg1:"#009cde",frameBg2:"#003087",frameAngle:120},ct:"paypal",fields:{ppUser:"myshop",ppAmt:"10.00"}},
+    {name:"스포티파이",tag:"스캔 → 플레이리스트",s:{fill:"solid",fg1:"#1db954",bg:"#0b0d12",dot:"dots",eye:"circle",centerMode:"none",centerLogoUrl:brandLogoUrl("spotify"),logoSize:24,logoPad:true,ecc:"H"},ct:"spotify",fields:{linkUrl:"https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M"}},
+    {name:"PayPal 결제",tag:"스캔 → 결제·송금",s:{fill:"solid",fg1:"#003087",bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"none",centerLogoUrl:brandLogoUrl("paypal"),logoSize:24,logoPad:true,ecc:"H",frameOn:true,frameStyle:"card",frameMode:"linear",frameBg1:"#009cde",frameBg2:"#003087",frameAngle:120},ct:"paypal",fields:{ppUser:"myshop",ppAmt:"10.00"}},
+    {name:"페이스북 페이지",tag:"스캔 → 페이스북",s:{fill:"solid",fg1:"#0866ff",bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"none",centerLogoUrl:brandLogoUrl("facebook"),logoSize:24,logoPad:true,ecc:"H"},ct:"facebook",fields:{socialUser:"mybrand"}},
+    {name:"X 프로필",tag:"스캔 → X",s:{fill:"solid",fg1:"#0f1419",bg:"#ffffff",dot:"square",eye:"square",centerMode:"none",centerLogoUrl:brandLogoUrl("x"),logoSize:22,logoPad:true,ecc:"H"},ct:"x",fields:{socialUser:"mybrand"}},
+    {name:"왓츠앱 채팅",tag:"스캔 → 대화 시작",s:{fill:"solid",fg1:"#128c4a",bg:"#ffffff",dot:"dots",eye:"circle",centerMode:"none",centerLogoUrl:brandLogoUrl("whatsapp"),logoSize:24,logoPad:true,ecc:"H"},ct:"whatsapp",fields:{waNum:"821012345678"}},
+    {name:"깃허브",tag:"스캔 → 저장소",s:{fill:"solid",fg1:"#181717",bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"none",centerLogoUrl:brandLogoUrl("github"),logoSize:24,logoPad:true,ecc:"H"},ct:"github",fields:{socialUser:"myname"}},
+    {name:"카카오톡 채널",tag:"스캔 → 채널 추가",s:{fill:"solid",fg1:"#3c1e1e",bg:"#fffbe6",dot:"rounded",eye:"rounded",centerMode:"none",centerLogoUrl:brandLogoUrl("kakaotalk"),logoSize:24,logoPad:true,ecc:"H"},ct:"url",fields:{content:"https://pf.kakao.com/_mychannel"}},
+    {name:"네이버 블로그",tag:"스캔 → 블로그",s:{fill:"solid",fg1:"#03a94d",bg:"#ffffff",dot:"dots",eye:"rounded",centerMode:"none",centerLogoUrl:brandLogoUrl("naver"),logoSize:24,logoPad:true,ecc:"H"},ct:"url",fields:{content:"https://blog.naver.com/myblog"}},
     {name:"일정 등록",tag:"스캔 → 캘린더 추가",s:{fill:"solid",fg1:"#7c3aed",bg:"#ffffff",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"📅",centerScale:28,frameOn:true,frameStyle:"stamp"},ct:"event",fields:{evTitle:"제품 출시 행사",evLoc:"서울 강남"}},
     {name:"소화기",tag:"소방 안전",s:{fill:"solid",fg1:"#dc2626",bg:"#ffffff",dot:"dots",eye:"square",centerMode:"emoji",centerText:"🧯",centerScale:32,frameOn:true,frameMode:"solid",frameBg1:"#b91c1c"}},
     {name:"응급·병원",tag:"의료",s:{fill:"solid",fg1:"#16a34a",bg:"#ffffff",dot:"dots",eye:"square",centerMode:"emoji",centerText:"🏥",centerScale:32,frameOn:true,frameMode:"linear",frameBg1:"#16a34a",frameBg2:"#0b3d22",frameAngle:135}},
@@ -7000,8 +7135,20 @@ function startGalAnim(){
   }
   galRaf=requestAnimationFrame(step);
 }
+// Motion tab: the Motion QR Lab (motion.html) runs embedded in an iframe, in the current language.
+function showMotion(on){
+  var w=$("motionWrap"), f=$("motionFrame"); if(!w) return;
+  w.style.display=on?"block":"none"; $("galGrid").style.display=on?"none":"";
+  if(on){ var src="motion.html?embed=1&lang="+(LANG||"ko"); if(f.getAttribute("src")!==src) f.setAttribute("src",src); }
+}
+window.addEventListener("message",function(e){
+  var d=e.data; if(!d || d.type!=="motionHeight") return;
+  var f=$("motionFrame"); if(f && e.source===f.contentWindow) f.style.height=Math.max(600,Math.min(6000,+d.h||0))+"px";
+});
 function buildGallery(){
   var grid=$("galGrid"), empty=$("galEmpty");
+  showMotion(curCat==="motion");
+  if(curCat==="motion"){ $("myqrBar").style.display="none"; empty.style.display="none"; if(typeof stopGalAnim==="function") stopGalAnim(); return; }
   $("myqrBar").style.display = (curCat==="myqr") ? "flex" : "none";
   grid.innerHTML=""; empty.style.display="none"; stopGalAnim(); galItems=[];
   if(curCat==="myqr"){ renderMyQr(); return; }
@@ -7054,9 +7201,7 @@ function applyPreset(ps, meta){
   syncStudioUI();
   if(ps.scene){ $("artControls").style.display="block"; $("artLabel").textContent=t("art.sceneOk"); }
   openRelevantGroups(ps);
-  Array.prototype.forEach.call($("tabs").children,function(x){x.classList.toggle("active", x.dataset.view==="studio");});
-  ["gallery","studio","ar","about"].forEach(function(v){ $("view-"+v).classList.toggle("active", v==="studio"); });
-  rerender();
+  gotoView("studio");
   toast(ps.artUrl?tx("이미지 프리셋 적용 — 이미지 로딩 중…","Image preset applied — loading image…","画像プリセットを適用 — 読み込み中…","已应用图片预设 — 正在加载图片…"):tx("프리셋 적용됨 — 자유롭게 편집하세요","Preset applied — edit freely","プリセットを適用しました — 自由に編集できます","已应用预设 — 可自由编辑"));
 }
 function setSeg(id,key,val){
@@ -7116,9 +7261,7 @@ function renderMyQr(){
         im.onload=function(){ S.aiArt=im; $("aiClear").style.display="block"; aiStatus(tx("저장된 AI 아트 QR을 불러왔습니다.","Loaded the saved AI-art QR.","保存したAIアートQRを読み込みました。","已载入保存的 AI 艺术二维码。")); render(ctx,EXPORT); updateMeta(); };
         im.src=item.ai;
       }
-      Array.prototype.forEach.call($("tabs").children,function(x){x.classList.toggle("active", x.dataset.view==="studio");});
-      ["gallery","studio","ar","about"].forEach(function(v){ $("view-"+v).classList.toggle("active", v==="studio"); });
-      rerender(); toast(tx("불러왔습니다 — 자유롭게 편집하세요","Loaded — edit freely","読み込みました — 自由に編集できます","已载入 — 可自由编辑"));
+      gotoView("studio"); toast(tx("불러왔습니다 — 자유롭게 편집하세요","Loaded — edit freely","読み込みました — 自由に編集できます","已载入 — 可自由编辑"));
     });
   });
 }
@@ -7181,6 +7324,19 @@ var I18N = {
   "foot.about":{ko:"소개",en:"About",zh:"关于",ja:"紹介"},
   "foot.privacy":{ko:"개인정보처리방침",en:"Privacy Policy",zh:"隐私政策",ja:"プライバシー"},
   "foot.terms":{ko:"이용약관",en:"Terms of Use",zh:"使用条款",ja:"利用規約"},
+  "argd.title":{ko:"AR, 이렇게 써요",en:"How to use AR",ja:"ARの使い方",zh:"AR 使用方法"},
+  "argd.tab.try":{ko:"30초 체험",en:"Try it in 30 seconds",ja:"30秒で体験",zh:"30 秒体验"},
+  "argd.tab.make":{ko:"고객용 AR QR 만들기",en:"Make an AR QR for customers",ja:"お客様向けAR QRを作る",zh:"制作顾客用 AR 二维码"},
+  "argd.try.steps":{ko:"<ol><li><b>휴대폰 기본 카메라</b>로 이 QR을 찍고, 뜨는 링크를 여세요.</li><li>열린 페이지에서 <b>‘📷 카메라 시작’</b>을 누르고 카메라 권한을 허용하세요.</li><li>휴대폰을 <b>다시 이 QR에 비추면</b> QR 위에 3D 큐브와 정보 카드가 나타나요.</li></ol>",en:"<ol><li>Scan this QR with your <b>phone's camera app</b> and open the link.</li><li>On the page that opens, tap <b>“📷 Start camera”</b> and allow camera access.</li><li><b>Point the phone back at this QR</b> — a 3D cube and an info card appear on top of it.</li></ol>",ja:"<ol><li><b>スマホの標準カメラ</b>でこのQRを読み取り、表示されたリンクを開きます。</li><li>開いたページで<b>「📷 カメラ開始」</b>を押し、カメラを許可します。</li><li>スマホを<b>もう一度このQRに向ける</b>と、QRの上に3Dキューブと情報カードが現れます。</li></ol>",zh:"<ol><li>用<b>手机自带相机</b>扫描这个二维码，打开弹出的链接。</li><li>在打开的页面点击<b>“📷 启动相机”</b>，并允许使用相机。</li><li>把手机<b>再次对准这个二维码</b>，二维码上方就会出现 3D 立方体和信息卡片。</li></ol>"},
+  "argd.try.mobile":{ko:"지금 휴대폰으로 보고 있다면: 이 QR을 PC·태블릿 같은 다른 화면에 띄우거나 인쇄한 뒤, 아래 ‘카메라 시작’을 누르고 비추세요.",en:"On a phone right now? Show this QR on another screen (PC, tablet) or print it, then tap “Start camera” below and point at it.",ja:"いまスマホで見ている場合：このQRをPCやタブレットなど別の画面に表示するか印刷し、下の「カメラ開始」を押して映してください。",zh:"如果正在用手机浏览：请把这个二维码显示在电脑、平板等其他屏幕上或打印出来，然后点击下方“启动相机”对准它。"},
+  "argd.make.steps":{ko:"<ol><li>아래 화면에서 <b>AR 종류</b>를 고르세요 — QR 위 3D·정보 카드 / 얼굴 스티커 / 이미지 마커.</li><li><b>‘AR QR 만들기’</b>를 누르면 AR 링크가 담긴 QR이 스튜디오에 열려요. 색·로고를 꾸미고 저장하세요.</li><li>매장·포스터·명함에 인쇄해 붙이세요. 고객은 <b>앱 설치 없이</b> 기본 카메라로 찍고 → 링크를 열고 → ‘카메라 시작’ 한 번이면 AR을 봅니다.</li></ol>",en:"<ol><li>Pick the <b>AR type</b> below — 3D + info card on the QR / face sticker / image marker.</li><li>Tap <b>“Make AR QR”</b>: a QR carrying the AR link opens in the Studio. Style it and download.</li><li>Print it on your store sign, poster or card. Customers need <b>no app</b>: scan with the camera → open the link → tap “Start camera” once to see the AR.</li></ol>",ja:"<ol><li>下の画面で<b>ARの種類</b>を選びます — QR上の3D・情報カード／顔スタンプ／画像マーカー。</li><li><b>「AR QRを作る」</b>を押すと、ARリンク入りのQRがスタジオで開きます。色やロゴを整えて保存してください。</li><li>店舗・ポスター・名刺に印刷して貼りましょう。お客様は<b>アプリ不要</b>：標準カメラで読み取り → リンクを開く → 「カメラ開始」を1回押すだけでARが見られます。</li></ol>",zh:"<ol><li>在下方选择<b>AR 类型</b> — 二维码上的 3D 与信息卡片 / 人脸贴纸 / 图片标记。</li><li>点击<b>“制作 AR 二维码”</b>，含有 AR 链接的二维码会在工作室中打开。设计好颜色和标志后下载。</li><li>印在门店、海报或名片上。顾客<b>无需安装应用</b>：用相机扫码 → 打开链接 → 点一次“启动相机”即可看到 AR。</li></ol>"},
+  "argd.make.btn":{ko:"✨ 지금 선택한 AR로 QR 만들기",en:"✨ Make an AR QR with this effect",ja:"✨ 選んだARでQRを作る",zh:"✨ 用当前 AR 效果制作二维码"},
+  "argd.note":{ko:"※ 카메라 앱 화면에서 바로 AR이 뜨지는 않아요. 링크를 열면 웹페이지에서 실행되는 방식이며, iPhone(Safari)·Android(Chrome) 모두 앱 설치 없이 동작합니다.",en:"Note: AR doesn't appear inside the camera app itself — the link opens a web page that runs it. Works on iPhone (Safari) and Android (Chrome) with no app install.",ja:"※ カメラアプリの画面に直接ARは出ません。リンクを開くとWebページ上で動作します。iPhone（Safari）・Android（Chrome）ともにアプリ不要です。",zh:"※ AR 不会直接出现在相机应用里，而是打开链接后在网页中运行。iPhone（Safari）和 Android（Chrome）都无需安装应用。"},
+  "argd.tips":{ko:"<b>잘 안 보이면?</b> 밝은 곳에서 · QR이 화면의 1/3 이상 차도록 가까이 · 반사와 흔들림 줄이기 · 카메라 권한 ‘허용’ 확인",en:"<b>Nothing showing?</b> Use good light · move close so the QR fills a third of the screen · avoid glare and shake · make sure camera access is allowed",ja:"<b>うまく出ないときは？</b> 明るい場所で · QRが画面の1/3以上になるまで近づける · 反射や手ぶれを減らす · カメラの許可を確認",zh:"<b>看不到效果？</b> 在明亮处使用 · 靠近到二维码占屏幕三分之一以上 · 避免反光和抖动 · 确认已允许使用相机"},
+  "toast.arPickDemo":{ko:"이미지 마커는 ‘데모’ 이미지일 때만 공유 QR을 만들 수 있어요.",en:"Shareable QRs work with the demo image marker only.",ja:"共有用QRはデモ画像マーカーのときのみ作成できます。",zh:"仅演示图片标记可生成分享二维码。"},
+  "doc.desc":{ko:"스캔되는 예술. 색상·그라디언트·모듈 형태·로고·애니메이션까지 커스터마이즈하는 미적 QR 코드 생성기. 브라우저에서 바로 동작합니다.",en:"Scannable art. Design beautiful QR codes with colors, gradients, module shapes, logos and animation — right in your browser.",ja:"読み取れるアート。色・グラデーション・モジュール形状・ロゴ・アニメーションまで自在にデザインできるQRコードジェネレーター。ブラウザですぐ使えます。",zh:"可扫描的艺术。自定义颜色、渐变、模块形状、标志和动画的美观二维码生成器，直接在浏览器中使用。"},
+  "cat.motion":{ko:"모션",en:"Motion",zh:"动态",ja:"モーション"},
+  "cat.tip.motion":{ko:"QR 점들이 날아와 모이는 모션 QR. 색·로고·이미지를 넣고 영상(MP4·WebM)으로 저장할 수 있어요.",en:"Motion QR: the dots fly in and assemble. Add colors, a logo or an image and save it as a video (MP4/WebM).",zh:"动态二维码：码点飞入并组合成形。可添加颜色、标志或图片，并保存为视频（MP4/WebM）。",ja:"QRのドットが飛んできて組み上がるモーションQR。色・ロゴ・画像を入れて動画（MP4・WebM）で保存できます。"},
   "foot.contact":{ko:"문의",en:"Contact",zh:"联系",ja:"お問い合わせ"},
   "foot.motion":{ko:"모션 QR 실험실",en:"Motion QR Lab",zh:"动态二维码实验室",ja:"モーションQRラボ"},
   "foot.tag":{ko:"아름답고 스캔되는 QR을 만드는 스튜디오 · QR 생성·디자인은 브라우저에서 처리 (AI 기능만 서버 전송·저장 안 함)",en:"A studio for beautiful, scannable QR codes · QR building & design run in your browser (only AI features send to a server, and aren't stored)",zh:"打造美观且可扫描二维码的工作室 · 二维码生成与设计在浏览器中处理（仅 AI 功能会发送到服务器，且不存储）",ja:"美しくスキャン可能なQRを作るスタジオ · QR生成・デザインはブラウザで処理（AI機能のみサーバー送信・保存なし）"},
@@ -7732,11 +7888,20 @@ function applyLang(lang){
   document.querySelectorAll("[data-i18n-cta]").forEach(function(el){ var v=t(el.getAttribute("data-i18n-cta")); if(v!=null){ el.textContent=v; el.setAttribute("data-cta",v); } });
   try{ var dt=t("doc.title"); if(dt) document.title=dt; }catch(e){}
   document.querySelectorAll("[data-i18n-ph]").forEach(function(el){ var v=t(el.getAttribute("data-i18n-ph")); if(v!=null) el.setAttribute("placeholder",v); });
-  try{ if($("galGrid") && $("galGrid").children.length) buildGallery(); }catch(e){}
+  try{ if($("galGrid") && ($("galGrid").children.length || curCat==="motion")) buildGallery(); }catch(e){}
   try{ updateMeta(); }catch(e){}
   try{ centerUIvis(); }catch(e){}
   try{ if(typeof refreshProUI==="function") refreshProUI(); }catch(e){}
   try{ localStorage.setItem("aqr_lang", lang); }catch(e){}
+  // one URL per language (?lang=en|ja|zh; Korean = no param) so each language is shareable/indexable
+  try{
+    var u=new URL(location.href); if(lang==="ko") u.searchParams.delete("lang"); else u.searchParams.set("lang",lang);
+    if(u.href!==location.href) history.replaceState(history.state,"",u.href);
+    var base="https://jay-inky.vercel.app/", c=document.getElementById("canonLink"); if(c) c.href = lang==="ko"?base:base+"?lang="+lang;
+    var md=document.getElementById("metaDesc"), dd=t("doc.desc"); if(md && dd) md.setAttribute("content",dd);
+    var ol=document.getElementById("ogLocale"); if(ol) ol.setAttribute("content",({ko:"ko_KR",en:"en_US",ja:"ja_JP",zh:"zh_CN"})[lang]);
+    var mo=document.querySelector('a[href^="motion.html"]'); if(mo) mo.setAttribute("href","motion.html?lang="+lang);
+  }catch(e){}
   document.querySelectorAll(".lang-switch").forEach(function(sw){ Array.prototype.forEach.call(sw.children,function(x){ x.classList.toggle("on", x.dataset.lang===lang); }); });
   try{ if(typeof CARD!=="undefined" && CARD.onLang) CARD.onLang(lang); }catch(e){}
 }
@@ -8119,6 +8284,7 @@ var CARD = (function(){
   function dragStart(e){
     var pt=evtPt(e), k=hitEl(pt);
     if(!k){ if(st.sel){ st.sel=null; updateElBar(); draw(); } return; }
+    if(e.type==="touchstart" && st.sel!==k){ st.sel=k; updateElBar(); draw(); return; }   // tap = select, then drag
     st.sel=k; updateElBar();
     var o=elOff(k); st.drag={k:k,sx:pt.x,sy:pt.y,ox:o.dx,oy:o.dy,moved:false};
     $id("cardPreview").classList.add("dragging"); draw(); e.preventDefault();
@@ -8380,7 +8546,9 @@ var CARD = (function(){
   var saved=null; try{ saved=localStorage.getItem("aqr_lang"); }catch(e){}
   var nav=(navigator.language||"ko").toLowerCase();
   var auto = nav.indexOf("zh")===0?"zh": nav.indexOf("ja")===0?"ja": nav.indexOf("ko")===0?"ko":"en";
-  applyLang(saved||auto);
+  var qlang=null; try{ qlang=new URLSearchParams(location.search).get("lang"); }catch(e){}
+  if(!/^(ko|en|ja|zh)$/.test(qlang||"")) qlang=null;
+  applyLang(qlang||saved||auto);
   document.addEventListener("click",function(e){ var b=e.target.closest(".lang-switch button[data-lang]"); if(b) applyLang(b.dataset.lang); });
 })();
 try{ loadPro(); }catch(e){}   // restore a saved Pro license after i18n is ready
@@ -8392,6 +8560,8 @@ function buildArLinkUrl(mode,opts){
   u.searchParams.set("ar",mode);
   if(opts.src) u.searchParams.set("src",opts.src);
   if(opts.sticker) u.searchParams.set("sticker",opts.sticker);
+  if(opts.obj) u.searchParams.set("obj",opts.obj);
+  try{ if(typeof LANG!=="undefined" && LANG && LANG!=="ko") u.searchParams.set("lang",LANG); }catch(e){}
   return u.toString();
 }
 function pushArLinkToStudio(url){
@@ -8401,6 +8571,31 @@ function pushArLinkToStudio(url){
   gotoView("studio");
   toast(t("toast.arShareOk"));
 }
+
+// ---- AR guide: live demo QR (opens this page in AR mode) + one-click "make AR QR" ----
+(function(){
+  var seg=$("arGuideSeg"); if(!seg) return;
+  seg.addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return;
+    Array.prototype.forEach.call(seg.children,function(x){x.classList.toggle("on",x===b);});
+    $("arGuideTry").style.display=b.dataset.g==="try"?"block":"none";
+    $("arGuideMake").style.display=b.dataset.g==="make"?"block":"none";
+  });
+  function drawTry(){
+    var cv=$("arTryQr"); if(!cv) return; var g=cv.getContext("2d"), Z=cv.width;
+    var link=buildArLinkUrl("qr",{obj:"cube"});
+    try{ var q=qrcode(0,"M"); q.addData(link); q.make(); var n=q.getModuleCount(), m=2, u=Z/(n+m*2);
+      g.fillStyle="#fff"; g.fillRect(0,0,Z,Z); g.fillStyle="#111";
+      for(var r=0;r<n;r++) for(var c=0;c<n;c++) if(q.isDark(r,c)) g.fillRect(Math.floor((c+m)*u),Math.floor((r+m)*u),Math.ceil(u),Math.ceil(u));
+    }catch(e){}
+  }
+  drawTry();
+  $("arMakeQrBtn").addEventListener("click",function(){
+    var m=(document.querySelector("#arModeSeg .on")||{dataset:{armode:"qr"}}).dataset.armode;
+    if(m==="face"){ var sym=AR.getFaceSticker(); pushArLinkToStudio(buildArLinkUrl("face",{sticker:sym||"😎"})); return; }
+    if(m==="marker"){ if(!AR.isDemoMarker()){ toast(t("toast.arPickDemo")); return; } pushArLinkToStudio(buildArLinkUrl("marker",{src:"demo"})); return; }
+    pushArLinkToStudio(buildArLinkUrl("qr",{obj:$("arObj").value}));
+  });
+})();
 if($("arShareMarkerBtn")) $("arShareMarkerBtn").addEventListener("click",function(){
   if(!AR.isDemoMarker()){ toast(t("toast.arShareCustomWarn")); return; }
   pushArLinkToStudio(buildArLinkUrl("marker",{src:"demo"}));
@@ -8421,13 +8616,18 @@ if (typeof qrcode === "undefined"){
   buildMarkPicker();
   buildGallery();
   AR.init();
+  (function initRoute(){
+    var h=location.hash.slice(1);
+    try{ history.replaceState({view:VIEWS.indexOf(h)>=0?h:"gallery"},""); }catch(e){}
+    if(VIEWS.indexOf(h)>0) gotoView(h,{noHistory:true});
+  })();
   (function initFromLink(){
     try{
       var qp=new URLSearchParams(location.search);
       var ar=qp.get("ar");
       if(!ar) return;
       gotoView("ar");
-      var opts={ src:qp.get("src")||"", sticker:qp.get("sticker")||"" };
+      var opts={ src:qp.get("src")||"", sticker:qp.get("sticker")||"", obj:qp.get("obj")||"" };
       AR.enterFromLink(ar,opts).then(function(){
         var banner=$("arMsg");
         setTimeout(function(){
