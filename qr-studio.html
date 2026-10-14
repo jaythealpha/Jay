@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" translate="no" class="notranslate">
 <head>
 <meta charset="UTF-8" />
+<meta name="google" content="notranslate" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Aesthetic QR Studio — 평범함을 특별하게</title>
 <meta name="description" content="스캔되는 예술. 색상·그라디언트·모듈 형태·로고·애니메이션까지 커스터마이즈하는 미적 QR 코드 생성기. 서버·로그인 없이 브라우저에서 100% 동작." />
@@ -501,10 +502,10 @@
       <h2 data-i18n-html="hero.h">평범한 QR을 <span class="g">브랜드가 되는 아트</span>로</h2>
       <p data-i18n="hero.p">흑백 사각형은 이제 그만. 색상·그라디언트·모듈 형태·로고·애니메이션으로 스캔되는 디자인을 만드세요. 아래 프리셋을 눌러 스튜디오에서 바로 편집할 수 있습니다.</p>
       <div class="lang-switch" id="langSwitch" role="group" aria-label="Language">
-        <button data-lang="ko">KR</button>
-        <button data-lang="en">EN</button>
-        <button data-lang="ja">JP</button>
-        <button data-lang="zh">CN</button>
+        <button data-lang="ko" translate="no">Korean</button>
+        <button data-lang="en" translate="no">English</button>
+        <button data-lang="ja" translate="no">Japanese</button>
+        <button data-lang="zh" translate="no">Chinese</button>
       </div>
     </div>
     <div class="gal-intro">
@@ -518,12 +519,11 @@
       </div>
     </div>
     <div class="cat-tabs" id="catTabs">
-      <button data-cat="standard" class="on" data-i18n-tip="cat.tip.standard" data-tip="색상·그라디언트 기본 디자인 모음. 클릭하면 스튜디오로 불러와 편집할 수 있어요.">Standard</button>
-      <button data-cat="animation" data-i18n-tip="cat.tip.animation" data-tip="이미지가 살아 움직이는 아트 QR. 카드를 클릭하면 그 이미지가 적용된 채 편집할 수 있어요.">Animation</button>
-      <button data-cat="logo" data-i18n-tip="cat.tip.logo" data-tip="중앙에 브랜드 텍스트가 들어간 로고형 QR. 클릭 후 문구를 바꾸거나 로고 이미지를 올릴 수 있어요.">Logo</button>
-      <button data-cat="pictogram" data-i18n-tip="cat.tip.pictogram" data-tip="중앙에 픽토그램(이모지)이 들어간 QR. 클릭 후 아이콘을 자유롭게 바꿀 수 있어요.">Pictogram</button>
-      <button data-cat="frame" data-i18n-tip="cat.tip.frame" data-tip="우드·골드·폴라로이드 등 실제 액자 프레임 디자인.">Frame</button>
-      <button data-cat="usecase" data-i18n-tip="cat.tip.usecase" data-tip="Wi-Fi·명함·전화 등 바로 쓰는 용도별 템플릿. 클릭하면 입력폼이 예시값과 함께 열려요."><span data-i18n="cat.usecase">활용</span></button>
+      <button data-cat="standard" class="on" data-i18n-tip="cat.tip.standard" data-tip="색상·그라디언트 기본 디자인 모음. 클릭하면 스튜디오로 불러와 편집할 수 있어요."><span data-i18n="cat.standard">기본</span></button>
+      <button data-cat="animation" data-i18n-tip="cat.tip.animation" data-tip="이미지가 살아 움직이는 아트 QR. 카드를 클릭하면 그 이미지가 적용된 채 편집할 수 있어요."><span data-i18n="cat.animation">애니메이션</span></button>
+      <button data-cat="logo" data-i18n-tip="cat.tip.logo" data-tip="중앙에 브랜드 텍스트가 들어간 로고형 QR. 클릭 후 문구를 바꾸거나 로고 이미지를 올릴 수 있어요."><span data-i18n="cat.logo">로고</span></button>
+      <button data-cat="pictogram" data-i18n-tip="cat.tip.pictogram" data-tip="용도·업종별 픽토그램 QR. Wi-Fi·연락처·전화 같은 용도형은 클릭하면 입력폼이 예시값과 함께 열려요."><span data-i18n="cat.pictogram">픽토그램</span></button>
+      <button data-cat="frame" data-i18n-tip="cat.tip.frame" data-tip="우드·골드·폴라로이드 등 실제 액자 프레임 디자인."><span data-i18n="cat.frame">프레임</span></button>
       <button data-cat="myqr" data-i18n-tip="cat.tip.myqr" data-tip="내가 저장한 QR 보관함. 스튜디오에서 ‘현재 디자인 저장’을 누르면 여기 쌓입니다."><span data-i18n="cat.myqr">★ My QR</span></button>
     </div>
     <div id="myqrBar" style="display:none;margin:0 0 14px;display:none;align-items:center;gap:10px;flex-wrap:wrap">
@@ -536,7 +536,7 @@
 
   <!-- ============ STUDIO ============ -->
   <section class="view" id="view-studio">
-    <div class="lang-switch" role="group" aria-label="Language"><button data-lang="ko">KR</button><button data-lang="en">EN</button><button data-lang="ja">JP</button><button data-lang="zh">CN</button></div>
+    <div class="lang-switch" role="group" aria-label="Language"><button data-lang="ko" translate="no">Korean</button><button data-lang="en" translate="no">English</button><button data-lang="ja" translate="no">Japanese</button><button data-lang="zh" translate="no">Chinese</button></div>
     <div class="studio">
       <!-- preview -->
       <div class="stage">
@@ -690,7 +690,7 @@
               <div class="hint" data-i18n="hint.cy">스캔하면 지갑 앱이 열려 해당 주소로 송금할 수 있습니다(BIP-21 표준).</div>
             </div>
             <div id="ctEvent" style="display:none">
-              <label class="fld"><div class="lbl" data-i18n="lbl.evTitle">일정 제목</div><input type="text" id="evTitle" maxlength="80" placeholder="제품 출시 행사" /></label>
+              <label class="fld"><div class="lbl" data-i18n="lbl.evTitle">일정 제목</div><input type="text" id="evTitle" maxlength="80" data-i18n-ph="ph.evTitle" placeholder="제품 출시 행사" /></label>
               <label class="fld"><div class="lbl" data-i18n="lbl.evLoc">장소 (선택)</div><input type="text" id="evLoc" maxlength="120" /></label>
               <div class="row2">
                 <label class="fld"><div class="lbl" data-i18n="lbl.evStart">시작</div><input type="datetime-local" id="evStart" /></label>
@@ -710,12 +710,12 @@
             </div>
             <div class="hint" id="ctPreview" style="display:none"></div>
             <label class="fld">
-              <div class="lbl">오류 정정 레벨 <b id="eccOut">H (30%)</b></div>
+              <div class="lbl"><span data-i18n="lbl.eccLevel">오류 정정 레벨</span> <b id="eccOut">H (30%)</b></div>
               <div class="seg" id="eccSeg">
-                <button data-ecc="L" data-tip="복원력 7%. 데이터가 짧아지지만 로고·아트에는 약해요.">L</button>
-                <button data-ecc="M" data-tip="복원력 15%. 일반 용도의 균형점.">M</button>
-                <button data-ecc="Q" data-tip="복원력 25%. 로고를 조금 넣을 때.">Q</button>
-                <button data-ecc="H" class="on" data-tip="복원력 30%(최대). 로고·아트·픽토그램을 크게 넣어도 스캔됩니다. 권장.">H</button>
+                <button data-ecc="L" data-i18n-tip="ecc.tip.L" data-tip="복원력 7%. 데이터가 짧아지지만 로고·아트에는 약해요.">L</button>
+                <button data-ecc="M" data-i18n-tip="ecc.tip.M" data-tip="복원력 15%. 일반 용도의 균형점.">M</button>
+                <button data-ecc="Q" data-i18n-tip="ecc.tip.Q" data-tip="복원력 25%. 로고를 조금 넣을 때.">Q</button>
+                <button data-ecc="H" class="on" data-i18n-tip="ecc.tip.H" data-tip="복원력 30%(최대). 로고·아트·픽토그램을 크게 넣어도 스캔됩니다. 권장.">H</button>
               </div>
               <div class="hint" data-i18n-html="hint.ecc">오류가 나도 스스로 복원하는 여유량입니다. 높을수록 로고를 크게 넣어도 스캔돼요 — 로고·아트 사용 시 <b>H</b> 권장.</div>
             </label>
@@ -723,7 +723,7 @@
         </details>
 
         <details class="grp" id="grpArt" open>
-          <summary><svg class="ic" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="10" r="2" fill="currentColor"/><path d="M4 18l5-5 3 3 4-4 4 4" stroke="currentColor" stroke-width="2" fill="none"/></svg><span data-i18n="grp.art">이미지 · 영상 · GIF 아트 QR</span><span style="margin-left:8px;font-size:10px;font-weight:600;color:var(--on-acc);background:var(--acc);padding:2px 8px;border-radius:9999px">핵심</span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
+          <summary><svg class="ic" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="10" r="2" fill="currentColor"/><path d="M4 18l5-5 3 3 4-4 4 4" stroke="currentColor" stroke-width="2" fill="none"/></svg><span data-i18n="grp.art">이미지 · 영상 · GIF 아트 QR</span><span style="margin-left:8px;font-size:10px;font-weight:600;color:var(--on-acc);background:var(--acc);padding:2px 8px;border-radius:9999px" data-i18n="badge.core">핵심</span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
           <div class="body">
             <label class="file-btn" for="artFile" id="artLabel" data-i18n="btn.artUpload">＋ 이미지 / 영상 / GIF 업로드 — QR 전체를 덮는 아트</label>
             <input type="file" id="artFile" accept="image/*,image/gif,video/*" />
@@ -754,7 +754,7 @@
         </details>
 
         <details class="grp" id="grpAI" open>
-          <summary><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 5.8L20 10l-5.6 2.2L12 18l-2.4-5.8L4 10l5.6-2.2L12 2z" fill="currentColor"/><circle cx="19" cy="17" r="2.4" fill="currentColor"/><circle cx="5.5" cy="18.5" r="1.6" fill="currentColor"/></svg><span data-i18n="grp.ai">AI 아트 QR</span><span style="margin-left:8px;font-size:10px;font-weight:600;color:var(--on-acc);background:var(--acc);padding:2px 8px;border-radius:9999px">서버 생성 · 최고 품질</span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
+          <summary><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 5.8L20 10l-5.6 2.2L12 18l-2.4-5.8L4 10l5.6-2.2L12 2z" fill="currentColor"/><circle cx="19" cy="17" r="2.4" fill="currentColor"/><circle cx="5.5" cy="18.5" r="1.6" fill="currentColor"/></svg><span data-i18n="grp.ai">AI 아트 QR</span><span style="margin-left:8px;font-size:10px;font-weight:600;color:var(--on-acc);background:var(--acc);padding:2px 8px;border-radius:9999px" data-i18n="badge.aiServer">서버 생성 · 최고 품질</span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
           <div class="body">
             <label class="fld">
               <div class="lbl" data-i18n="lbl.prompt">프롬프트 (영어 권장 — 그릴 장면을 서술)</div>
@@ -784,16 +784,16 @@
         </details>
 
         <details class="grp" open>
-          <summary><svg class="ic" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4" fill="currentColor"/><rect x="4" y="4" width="4" height="4" rx="1" fill="currentColor"/><rect x="16" y="16" width="4" height="4" rx="1.3" fill="currentColor"/></svg><span data-i18n="grp.module">모듈 & 눈(Eye)</span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
+          <summary><svg class="ic" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4" fill="currentColor"/><rect x="4" y="4" width="4" height="4" rx="1" fill="currentColor"/><rect x="16" y="16" width="4" height="4" rx="1.3" fill="currentColor"/></svg><span data-i18n="grp.module">모듈 & 코너(눈)</span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
           <div class="body">
             <label class="fld">
               <div class="lbl" data-i18n="lbl.moduleShape">모듈 형태</div>
               <div class="seg" id="dotSeg">
                 <button data-dot="square" class="on"><span data-i18n="seg.dot.square">사각</span></button>
-                <button data-dot="rounded"><span data-i18n="seg.dot.rounded">둥근</span></button>
+                <button data-dot="rounded"><span data-i18n="seg.dot.rounded">라운드</span></button>
                 <button data-dot="liquid"><span data-i18n="seg.dot.liquid">리퀴드</span></button>
-                <button data-dot="dots"><span data-i18n="seg.dot.dots">점</span></button>
-                <button data-dot="classy"><span data-i18n="seg.dot.classy">클래시</span></button>
+                <button data-dot="dots"><span data-i18n="seg.dot.dots">도트</span></button>
+                <button data-dot="classy"><span data-i18n="seg.dot.classy">엘레강스</span></button>
                 <button data-dot="diamond"><span data-i18n="seg.dot.diamond">다이아</span></button>
                 <button data-dot="hexagon"><span data-i18n="seg.dot.hexagon">육각형</span></button>
                 <button data-dot="star"><span data-i18n="seg.dot.star">별</span></button>
@@ -803,9 +803,9 @@
               <div class="lbl" data-i18n="lbl.eyeShape">눈(코너) 형태</div>
               <div class="seg" id="eyeSeg">
                 <button data-eye="square" class="on"><span data-i18n="seg.eye.square">사각</span></button>
-                <button data-eye="rounded"><span data-i18n="seg.eye.rounded">둥근</span></button>
+                <button data-eye="rounded"><span data-i18n="seg.eye.rounded">라운드</span></button>
                 <button data-eye="circle"><span data-i18n="seg.eye.circle">원형</span></button>
-                <button data-eye="leaf"><span data-i18n="seg.eye.leaf">잎사귀</span></button>
+                <button data-eye="leaf"><span data-i18n="seg.eye.leaf">리프</span></button>
                 <button data-eye="target"><span data-i18n="seg.eye.target">타겟</span></button>
               </div>
             </label>
@@ -899,7 +899,7 @@
             <label class="fld">
               <div class="lbl" data-i18n="lbl.effect">효과</div>
               <div class="seg" id="animSeg">
-                <button data-anim="shine" class="on"><span data-i18n="seg.anim.shine">샤인 ✨</span></button>
+                <button data-anim="shine" class="on"><span data-i18n="seg.anim.shine">반짝임 ✨</span></button>
                 <button data-anim="rotate"><span data-i18n="seg.anim.rotate">회전</span></button>
                 <button data-anim="pulse"><span data-i18n="seg.anim.pulse">펄스</span></button>
                 <button data-anim="sweep"><span data-i18n="seg.anim.sweep">스윕</span></button>
@@ -928,10 +928,10 @@
               <div class="lbl" data-i18n="lbl.ctaPreset">스캔 유도 문구 (클릭해서 적용)</div>
               <div class="chips" id="ctaChips">
                 <button type="button" class="chip" data-cta="SCAN ME">SCAN ME</button>
-                <button type="button" class="chip" data-cta="스캔하세요">스캔하세요</button>
-                <button type="button" class="chip" data-cta="👆 지금 스캔">👆 지금 스캔</button>
-                <button type="button" class="chip" data-cta="MENU ▸ 스캔">MENU ▸ 스캔</button>
-                <button type="button" class="chip" data-cta="이벤트 참여 ▸">이벤트 참여 ▸</button>
+                <button type="button" class="chip" data-cta="스캔하세요" data-i18n-cta="cta.scanPlease">스캔하세요</button>
+                <button type="button" class="chip" data-cta="👆 지금 스캔" data-i18n-cta="cta.scanNow">👆 지금 스캔</button>
+                <button type="button" class="chip" data-cta="MENU ▸ 스캔" data-i18n-cta="cta.menu">MENU ▸ 스캔</button>
+                <button type="button" class="chip" data-cta="이벤트 참여 ▸" data-i18n-cta="cta.event">이벤트 참여 ▸</button>
                 <button type="button" class="chip" data-cta="＠ FOLLOW">＠ FOLLOW</button>
                 <button type="button" class="chip" data-cta="SCAN TO WIN 🎁">SCAN TO WIN 🎁</button>
               </div>
@@ -1012,8 +1012,8 @@
               <div class="fld" id="centerBadgeWrap" style="display:none">
                 <div class="lbl" data-i18n="lbl.centerBadge">배지 모양</div>
                 <div class="seg seg-wrap" id="centerBadgeSeg">
-                  <button data-badge="pill" class="on"><span data-i18n="seg.badge.pill">알약</span></button>
-                  <button data-badge="rounded"><span data-i18n="seg.badge.rounded">둥근사각</span></button>
+                  <button data-badge="pill" class="on"><span data-i18n="seg.badge.pill">캡슐</span></button>
+                  <button data-badge="rounded"><span data-i18n="seg.badge.rounded">둥근 사각</span></button>
                   <button data-badge="circle"><span data-i18n="seg.badge.circle">원형</span></button>
                   <button data-badge="hexagon"><span data-i18n="seg.badge.hexagon">육각형</span></button>
                   <button data-badge="shield"><span data-i18n="seg.badge.shield">방패</span></button>
@@ -1022,7 +1022,7 @@
                 </div>
               </div>
               <div class="fld" id="markPickerWrap" style="display:none">
-                <div class="lbl" data-i18n="lbl.markPick">마크 심볼 — 클릭해서 변경</div>
+                <div class="lbl" data-i18n="lbl.markPick">마크 선택 — 클릭해서 변경</div>
                 <div id="markPicker" class="picto-grid"></div>
               </div>
               <div class="fld" id="genLogoWrap" style="display:none">
@@ -1031,7 +1031,7 @@
                 <div id="logoExamples" class="logo-examples"></div>
               </div>
               <div class="fld" id="pictoPickerWrap" style="display:none">
-                <div class="lbl" data-i18n="lbl.pictoPick">픽토그램 소스 — 클릭해서 변경</div>
+                <div class="lbl" data-i18n="lbl.pictoPick">픽토그램 선택 — 클릭해서 변경</div>
                 <div id="pictoPicker" class="picto-grid"></div>
               </div>
               <label class="fld" id="centerColorWrap">
@@ -1115,9 +1115,9 @@
         <details class="grp" open id="grpCardInfo">
           <summary><svg class="ic" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6" stroke="currentColor" stroke-width="2"/></svg><span data-i18n="card.grp.info">명함 정보</span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/></svg></summary>
           <div class="body">
-            <label class="fld"><div class="lbl" data-i18n="card.f.name">이름 *</div><input type="text" id="cdName" maxlength="60" placeholder="홍길동" /></label>
+            <label class="fld"><div class="lbl" data-i18n="card.f.name">이름 *</div><input type="text" id="cdName" maxlength="60" data-i18n-ph="ph.cdName" placeholder="홍길동" /></label>
             <div class="row2">
-              <label class="fld"><div class="lbl" data-i18n="card.f.title">직함</div><input type="text" id="cdTitle" maxlength="60" placeholder="대표 / Manager" /></label>
+              <label class="fld"><div class="lbl" data-i18n="card.f.title">직함</div><input type="text" id="cdTitle" maxlength="60" data-i18n-ph="ph.cdTitle" placeholder="대표 / Manager" /></label>
               <label class="fld"><div class="lbl" data-i18n="card.f.org">회사/조직</div><input type="text" id="cdOrg" maxlength="60" /></label>
             </div>
             <div class="row2">
@@ -1161,7 +1161,7 @@
               <div class="ind-grid" id="cardIndGrid"></div>
             </label>
             <label class="fld">
-              <div class="lbl"><span data-i18n="card.d.template">명함 템플릿</span><b id="cardTplName"></b></div>
+              <div class="lbl"><span data-i18n="card.d.template">템플릿</span><b id="cardTplName"></b></div>
               <div class="tpl-grid" id="cardTplGrid"></div>
             </label>
             <div class="row2" style="margin-top:2px">
@@ -1203,13 +1203,13 @@
     <div class="hero" style="padding:6px 0 16px">
       <h2 data-i18n-html="ar.h">카메라로 <span class="g">QR을 비추면</span> AR이 나타납니다</h2>
       <p data-i18n="ar.p">후면 카메라로 아무 QR 코드나 비추세요. 코드를 실시간 인식해 그 위에 3D 오브젝트·정보 카드를 얹어 보여줍니다. 100% 브라우저 처리(영상 전송 없음).</p>
-      <div class="lang-switch" role="group" aria-label="Language"><button data-lang="ko">KR</button><button data-lang="en">EN</button><button data-lang="ja">JP</button><button data-lang="zh">CN</button></div>
+      <div class="lang-switch" role="group" aria-label="Language"><button data-lang="ko" translate="no">Korean</button><button data-lang="en" translate="no">English</button><button data-lang="ja" translate="no">Japanese</button><button data-lang="zh" translate="no">Chinese</button></div>
     </div>
     <div class="ar-wrap">
       <div class="ar-stage" id="arStage">
         <video id="arCam" playsinline muted></video>
         <canvas id="arCanvas"></canvas>
-        <div class="ar-msg" id="arMsg">‘카메라 시작’을 눌러 QR을 비춰 보세요</div>
+        <div class="ar-msg" id="arMsg" data-i18n="ar.msgStart">‘카메라 시작’을 눌러 QR을 비춰 보세요</div>
         <div class="ar-badge" id="arBadge"></div>
       </div>
       <div class="seg" id="arModeSeg" style="max-width:460px;margin:0 auto 12px">
@@ -1228,8 +1228,8 @@
             <option value="portal" data-i18n="opt.arPortal">🌀 네온 포탈</option>
           </select>
         </label>
-        <button class="btn" id="arShot" disabled>📸 사진 저장</button>
-        <button class="btn sec" id="arStop" disabled>정지</button>
+        <button class="btn" id="arShot" disabled data-i18n="btn.arShot">📸 사진 저장</button>
+        <button class="btn sec" id="arStop" disabled data-i18n="btn.arStop">정지</button>
       </div>
       <div id="arMarkerUpload" style="display:none">
         <div class="hint" data-i18n-html="hint.markerSteps"><b>사용 방법</b><br>① 아래 ‘데모로 체험하기’를 누르거나 내 이미지를 업로드<br>② ‘카메라 시작’ 클릭<br>③ <b>다른 기기 화면</b>(휴대폰·모니터·태블릿)에 마커 이미지를 띄우고 이 카메라로 비추기<br>④ 스티커가 나타나 마커를 따라다닙니다</div>
@@ -1276,7 +1276,7 @@
         <button class="btn sec" id="arShareFaceBtn" style="width:100%;display:none" data-i18n="btn.arShareFace">🔗 이 스티커로 스캔용 QR 만들기</button>
         <div class="hint" id="hintFaceMode" data-i18n="hint.faceMode">얼굴을 인식해 선택한 스티커가 실시간으로 따라다닙니다. 처음 켤 때 인식 모델을 한 번 내려받아요(이후엔 오프라인 동작). 영상은 기기 밖으로 전송되지 않습니다.</div>
       </div>
-      <div class="hint" id="arHintQr" style="text-align:center;margin-top:10px">스튜디오에서 만든 QR을 <b>다른 화면/인쇄물</b>에 띄워 두고 이 카메라로 비추면 그 위에 AR이 나타납니다. 실시간 인식은 <b>jsQR</b>(브라우저 내 디코딩)로 동작합니다.</div>
+      <div class="hint" id="arHintQr" data-i18n-html="hint.arQr" style="text-align:center;margin-top:10px">스튜디오에서 만든 QR을 <b>다른 화면/인쇄물</b>에 띄워 두고 이 카메라로 비추면 그 위에 AR이 나타납니다. 실시간 인식은 <b>jsQR</b>(브라우저 내 디코딩)로 동작합니다.</div>
     </div>
   </section>
 
@@ -1285,7 +1285,7 @@
     <div class="about">
       <h2 style="font-size:26px;margin:8px 0 4px" data-i18n="gd.title">사용법 가이드</h2>
       <p style="font-size:13px;color:var(--mut2)"><span data-i18n="gd.intro">아름다운 QR 코드를 만드는 스튜디오입니다. 아래 순서대로 따라 하면 처음이라도 몇 분 안에 완성할 수 있어요.</span> <button class="btn sec" id="replayOnboard" style="flex:none;padding:6px 14px;font-size:12px;margin-left:6px" data-i18n="gd.replay">첫 화면 안내 다시 보기</button></p>
-      <div class="lang-switch" role="group" aria-label="Language"><button data-lang="ko">KR</button><button data-lang="en">EN</button><button data-lang="ja">JP</button><button data-lang="zh">CN</button></div>
+      <div class="lang-switch" role="group" aria-label="Language"><button data-lang="ko" translate="no">Korean</button><button data-lang="en" translate="no">English</button><button data-lang="ja" translate="no">Japanese</button><button data-lang="zh" translate="no">Chinese</button></div>
 
       <h3 style="margin-top:22px" data-i18n="gd.h1">3단계로 끝내기</h3>
       <div class="guide-grid">
@@ -1354,8 +1354,8 @@
       <button type="button" class="foot-link" data-info="contact" data-i18n="foot.contact">문의</button>
     </nav>
     <div style="margin-top:10px">Aesthetic QR Studio · <span data-i18n="foot.tag">아름답고 스캔되는 QR을 만드는 스튜디오 · QR 생성·디자인은 브라우저에서 처리 (AI 기능만 서버 전송·저장 안 함)</span></div>
-    <div style="margin-top:6px">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · 빌드 <b id="verTag">2026.09.23-b</b></div>
+    <div style="margin-top:6px" data-i18n="foot.tm">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
+    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · <span data-i18n="foot.build">빌드</span> <b id="verTag">2026.10.14-a</b></div>
   </footer>
 </div>
 
@@ -4267,7 +4267,7 @@ function render(g2, exportSize){
   if (!data){
     g.fillStyle = "#1c2130"; g.fillRect(0,0,size,size);
     g.fillStyle = "#ff5c8a"; g.font = "bold 40px sans-serif"; g.textAlign="center";
-    g.fillText("데이터가 너무 깁니다", size/2, size/2);
+    g.fillText(tx("데이터가 너무 깁니다","Data is too long","データが長すぎます","数据过长"), size/2, size/2);
     return;
   }
   var n = data.n, m = data.m;
@@ -4821,7 +4821,7 @@ function scanScore(){
   if(S.transparent) s-=4;
   return Math.max(0,Math.min(100,Math.round(s)));
 }
-function scoreBand(v){ return v>=85?{k:"우수",c:"var(--mut)"}:v>=70?{k:"양호",c:"var(--mut)"}:v>=50?{k:"주의",c:"var(--txt)"}:{k:"위험",c:"var(--term-red)"}; }
+function scoreBand(v){ return v>=85?{k:tx("우수","Excellent","優秀","优秀"),c:"var(--mut)"}:v>=70?{k:tx("양호","Good","良好","良好"),c:"var(--mut)"}:v>=50?{k:tx("주의","Caution","注意","注意"),c:"var(--txt)"}:{k:tx("위험","Risky","危険","风险"),c:"var(--term-red)"}; }
 
 // ---------- scannability meter ----------
 function updateMeta(){
@@ -4829,7 +4829,7 @@ function updateMeta(){
   if(!data){ $("metaVer").textContent="—"; $("metaScan").textContent=t("dyn.overflow"); $("metaScan").style.color="var(--term-red)"; return; }
   $("metaVer").textContent = t("dyn.ver")+" "+data.version+" · "+data.n+"×"+data.n;
   var sc=scanScore(), band=scoreBand(sc);
-  $("metaEcc").innerHTML = "ECC "+S.ecc+" · <b style=\"color:"+band.c+"\">스캔 "+sc+"</b>";
+  $("metaEcc").innerHTML = "ECC "+S.ecc+" · <b style=\"color:"+band.c+tx("\">스캔 ","\">Scan ","\">スキャン ","\">扫描 ")+sc+"</b>";
   if (S.aiArt){
     $("metaScan").textContent=t("dyn.aiApplied");
     $("metaScan").style.color="var(--txt)";
@@ -4910,13 +4910,13 @@ function exportPNG(){
   if(jpg){ g.globalCompositeOperation="destination-over"; g.fillStyle="#ffffff"; g.fillRect(0,0,res,res); g.globalCompositeOperation="source-over"; }
   var mime=jpg?"image/jpeg":"image/png", ext=jpg?"jpg":"png", q=jpg?0.95:undefined;
   var out=stampFooter(off, res);   // free = brand footer below QR; Pro = clean
-  out.toBlob(function(b){ download(URL.createObjectURL(b), "aesthetic-qr-"+res+"."+ext); toast(ext.toUpperCase()+" 저장됨 · "+res+"px"); track("qr_download",{fmt:ext,res:res,pro:isPro()}); if(was) startAnim(); }, mime, q);
+  out.toBlob(function(b){ download(URL.createObjectURL(b), "aesthetic-qr-"+res+"."+ext); toast(ext.toUpperCase()+tx(" 저장됨 · "," saved · "," 保存しました · "," 已保存 · ")+res+"px"); track("qr_download",{fmt:ext,res:res,pro:isPro()}); if(was) startAnim(); }, mime, q);
 }
 function exportSVG(){
-  if(S.aiArt){ toast("AI 아트 QR은 PNG로 저장하세요 (SVG는 벡터 전용)"); return; }
-  var svg=toSVG(); if(!svg){toast("생성 실패");return;}
+  if(S.aiArt){ toast(tx("AI 아트 QR은 PNG로 저장하세요 (SVG는 벡터 전용)","Save AI-art QR as PNG (SVG is vector-only)","AIアートQRはPNGで保存してください（SVGはベクター専用）","AI 艺术二维码请保存为 PNG（SVG 仅限矢量）")); return; }
+  var svg=toSVG(); if(!svg){toast(tx("생성 실패","Generation failed","生成に失敗しました","生成失败"));return;}
   var blob=new Blob([svg],{type:"image/svg+xml"});
-  download(URL.createObjectURL(blob), "aesthetic-qr.svg"); toast("SVG 저장됨"); track("qr_download",{fmt:"svg",pro:isPro()});
+  download(URL.createObjectURL(blob), "aesthetic-qr.svg"); toast(tx("SVG 저장됨","SVG saved","SVGを保存しました","SVG 已保存")); track("qr_download",{fmt:"svg",pro:isPro()});
 }
 function copyPNG(){
   var res=S.exportRes||EXPORT;
@@ -4926,22 +4926,22 @@ function copyPNG(){
   var out=stampFooter(off, res);   // keep the boundary consistent (copy is also a share vector)
   out.toBlob(function(b){
     if(navigator.clipboard && window.ClipboardItem){
-      navigator.clipboard.write([new ClipboardItem({"image/png":b})]).then(function(){toast("클립보드에 복사됨");},function(){toast("복사 실패");});
-    } else { toast("이 브라우저는 복사 미지원"); }
+      navigator.clipboard.write([new ClipboardItem({"image/png":b})]).then(function(){toast(tx("클립보드에 복사됨","Copied to clipboard","クリップボードにコピーしました","已复制到剪贴板"));},function(){toast(tx("복사 실패","Copy failed","コピーに失敗しました","复制失败"));});
+    } else { toast(tx("이 브라우저는 복사 미지원","This browser can't copy images","このブラウザはコピー非対応です","此浏览器不支持复制")); }
     if(was) startAnim();
   },"image/png");
 }
 function exportWebM(){
-  if(!isAnimating()){ toast("애니메이션 또는 영상 아트를 먼저 켜세요"); return; }
-  if(!canvas.captureStream || typeof MediaRecorder==="undefined"){ toast("이 브라우저는 영상 저장 미지원"); return; }
+  if(!isAnimating()){ toast(tx("애니메이션 또는 영상 아트를 먼저 켜세요","Turn on animation or video art first","先にアニメーションか動画アートをオンにしてください","请先开启动画或视频艺术")); return; }
+  if(!canvas.captureStream || typeof MediaRecorder==="undefined"){ toast(tx("이 브라우저는 영상 저장 미지원","This browser can't record video","このブラウザは動画保存に非対応です","此浏览器不支持视频保存")); return; }
   var stream=canvas.captureStream(30);
   var mime = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")?"video/webm;codecs=vp9":"video/webm";
   var rec=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:6000000});
   var chunks=[];
   rec.ondataavailable=function(e){ if(e.data.size) chunks.push(e.data); };
-  rec.onstop=function(){ var b=new Blob(chunks,{type:"video/webm"}); download(URL.createObjectURL(b),"aesthetic-qr.webm"); toast("애니메이션(WebM) 저장됨"); };
+  rec.onstop=function(){ var b=new Blob(chunks,{type:"video/webm"}); download(URL.createObjectURL(b),"aesthetic-qr.webm"); toast(tx("애니메이션(WebM) 저장됨","Animation (WebM) saved","アニメーション（WebM）を保存しました","动画（WebM）已保存")); };
   var dur = S.artIsVideo ? Math.min((S.artImg && S.artImg.duration ? S.artImg.duration*1000 : 4000), 8000) : (3600/S.animSpeed);
-  toast("녹화 중… ("+Math.round(dur/1000)+"초)");
+  toast(tx("녹화 중… (","Recording… (","録画中…（","录制中…（")+Math.round(dur/1000)+tx("초)","s)","秒）","秒）"));
   rec.start();
   setTimeout(function(){ rec.stop(); }, dur + 200);
 }
@@ -5054,14 +5054,36 @@ var INFO_PAGES = {
     "<h4>6. 문의</h4><p><a href=\"mailto:"+CONTACT_EMAIL+"\">"+CONTACT_EMAIL+"</a></p>" },
   contact:{ title:"문의", html:
     "<p>서비스 관련 문의·제휴·버그 제보는 아래로 연락 주세요.</p>"+
-    "<h4>이메일</h4><p><a href=\"mailto:"+CONTACT_EMAIL+"\">"+CONTACT_EMAIL+"</a></p>"+
-    "<p style=\"opacity:.7;font-size:12px\">※ 배포 전 실제 연락 이메일로 교체하세요(코드의 <code>CONTACT_EMAIL</code>).</p>" }
+    "<h4>이메일</h4><p><a href=\"mailto:"+CONTACT_EMAIL+"\">"+CONTACT_EMAIL+"</a></p>"+"" }
 };
+// localized info pages (ko lives in INFO_PAGES); %EMAIL% → contact link
+var INFO_I18N = {
+  en:{
+    about:"<p><b>Aesthetic QR Studio</b> is a web-based QR design studio that turns plain black-and-white QR codes into on-brand art. Adjust colors, gradients, module shapes, a center logo or pictogram, frames and animation — and still get a QR that <b>actually scans</b>.</p><h4>Highlights</h4><ul><li><b>Privacy first</b> — QR building, design and free business-card reading run entirely in your browser. Only when you use <b>AI art</b> or <b>AI precision card reading</b> is that input sent to a server (and it isn't stored afterwards). Nothing else leaves your device.</li><li><b>24 content types</b> — URL, Wi-Fi, contact, call, SMS, email, location, events, social (Instagram, YouTube, TikTok, X…), payments, crypto and more.</li><li><b>Design tools</b> — center logo/pictogram, decorative frames, animation (WebM), high-resolution export, bulk generation.</li><li><b>Languages</b> — Korean, English, Japanese, Chinese.</li></ul><h4>Technology</h4><p>Runs as a single HTML app using the open-source <code>qrcode-generator</code> encoder (MIT). QR Code® is a registered trademark of DENSO WAVE.</p>",
+    privacy:"<p>We process as little personal data as possible and do not collect personal data for advertising or tracking. Last updated: 2026-10-14.</p><h4>1. Principle — processing in your browser</h4><p>What you put into a QR (URLs, contacts, Wi-Fi passwords…), images you upload and <b>free card reading</b> are processed <b>only in your browser</b> and are never sent to or stored on a server. <b>The AI features in section 3 are the exception.</b></p><h4>2. Local storage (localStorage)</h4><p>Theme, onboarding state, saved 'My QR' and 'digital card' items, and your Pro license state are kept <b>only in your browser</b> and never transmitted. Clearing browser data deletes them.</p><h4>3. AI features (optional) — sent to a server</h4><p>When you use <b>AI art QR</b> or <b>AI precision card reading</b>, only that feature's input (prompt/QR content or the card photo) is sent to our server function and the AI provider for processing. We do not store it after generating or reading. If you don't use these two features, nothing is sent.</p><h4>4. Payments (if applicable)</h4><p>Pro payments are handled by an external Merchant of Record; we never store card details. Payment-related data follows that provider's policy.</p><h4>5. Contact</h4><p>Privacy questions: %EMAIL%</p>",
+    terms:"<p>These terms apply to your use of Aesthetic QR Studio (the 'Service'). By using the Service you agree to them. Last updated: 2026-10-14.</p><h4>1. The Service</h4><p>Core features are free; some advanced features may be offered as a paid upgrade (Pro). The Service may change or stop without notice.</p><h4>2. Your responsibilities</h4><ul><li>You are responsible for the content of the QR codes you create and how you use them.</li><li>Do not upload or use images or logos that infringe others' trademarks, copyrights or likeness rights.</li><li>Do not encode illegal, deceptive or malicious links.</li></ul><h4>3. Intellectual property</h4><p>All built-in gallery graphics and presets are original works; brand names shown as examples are fictional. No real trademarks are used.</p><h4>4. Disclaimer</h4><p>The Service is provided 'as is'. Scanning on every device and reader is not guaranteed — always test with a real phone before printing or publishing.</p><h4>5. Limitation of liability</h4><p>To the extent permitted by law, we are not liable for direct or indirect damages arising from use of the Service.</p><h4>6. Contact</h4><p>%EMAIL%</p>",
+    contact:"<p>For questions, partnerships or bug reports, please reach us here.</p><h4>Email</h4><p>%EMAIL%</p>"
+  },
+  ja:{
+    about:"<p><b>Aesthetic QR Studio</b> は、ありふれた白黒のQRをブランドらしいアートに変えるWebベースのQRデザインスタジオです。色・グラデーション・モジュール形状・中央のロゴ/ピクトグラム・フレーム・アニメーションまで調整しながら、<b>きちんと読み取れる</b>QRを作れます。</p><h4>主な特長</h4><ul><li><b>プライバシー優先</b> — QRの生成・デザイン・名刺の無料自動認識はすべてブラウザ内で処理します。<b>AIアート</b>・<b>AI高精度名刺認識</b>を使うときだけ、その入力がサーバーに送信されます（生成・認識後は保存しません）。それ以外のデータは送信されません。</li><li><b>24種類のコンテンツ</b> — URL・Wi-Fi・連絡先・電話・SMS・メール・位置・予定・SNS（Instagram/YouTube/TikTok/Xなど）・決済・暗号資産など。</li><li><b>デザインツール</b> — 中央ロゴ/ピクトグラム、装飾フレーム、アニメーション（WebM）、高解像度書き出し、一括生成。</li><li><b>多言語</b> — 韓国語・英語・日本語・中国語。</li></ul><h4>技術</h4><p>単一のHTMLアプリとして動作し、オープンソースのエンコーダー <code>qrcode-generator</code>（MIT）を使用しています。QR Code® は株式会社デンソーウェーブの登録商標です。</p>",
+    privacy:"<p>本サービスは個人情報の取り扱いを最小限にとどめ、広告・トラッキング目的での個人情報収集は行いません。最終更新日：2026-10-14。</p><h4>1. 基本方針 — ブラウザ内での処理</h4><p>QRに入力する内容（URL・連絡先・Wi-Fiパスワードなど）、アップロードする画像、名刺の<b>無料自動認識</b>は<b>ブラウザ内だけ</b>で処理され、サーバーへ送信・保存されません。<b>ただし、下記3のAI機能は例外</b>です。</p><h4>2. ローカル保存（localStorage）</h4><p>テーマ設定、オンボーディング表示、「My QR」「デジタル名刺」の保存項目、Proライセンス状態などは<b>お使いのブラウザにのみ</b>保存され、外部には送信されません。ブラウザのデータを削除すると一緒に削除されます。</p><h4>3. AI機能（任意）— サーバー送信</h4><p><b>AIアートQR</b>と<b>AI高精度名刺認識</b>を使う場合に限り、その入力（プロンプト/QRの内容または名刺写真）が処理のためにサーバー関数およびAI提供事業者へ送信されます。生成・認識後、本サービスはこれを保存しません。これらを使わなければ送信は発生しません。</p><h4>4. 決済（該当する場合）</h4><p>Proの決済は外部の販売代行事業者（Merchant of Record）が処理し、カード情報を本サービスが保管することはありません。決済に関する個人情報は当該事業者のポリシーに従います。</p><h4>5. お問い合わせ</h4><p>個人情報に関するお問い合わせ：%EMAIL%</p>",
+    terms:"<p>本規約は Aesthetic QR Studio（以下「本サービス」）の利用に適用されます。本サービスを利用することで本規約に同意したものとみなします。最終更新日：2026-10-14。</p><h4>1. サービス</h4><p>基本機能は無料で提供され、一部の高度な機能は有料（Pro）で提供される場合があります。本サービスは予告なく変更・中止されることがあります。</p><h4>2. 利用者の責任</h4><ul><li>作成したQRの内容とその使用についての責任は利用者にあります。</li><li>他者の商標・著作権・肖像権を侵害する画像やロゴをアップロード・使用しないでください。</li><li>違法・欺瞞的・悪意のあるリンクをQRに含めないでください。</li></ul><h4>3. 知的財産権</h4><p>本サービスに内蔵されたギャラリーのグラフィック・プリセットはすべてオリジナル作品であり、例として表示されるブランド名は架空のものです。実在の商標は使用していません。</p><h4>4. 保証の否認</h4><p>本サービスは「現状のまま」提供されます。すべての端末・リーダーでの読み取りを保証するものではありません。印刷・公開の前に必ず実機でテストしてください。</p><h4>5. 責任の制限</h4><p>法律で認められる範囲において、本サービスの利用により生じた直接・間接の損害について責任を負いません。</p><h4>6. お問い合わせ</h4><p>%EMAIL%</p>",
+    contact:"<p>サービスに関するお問い合わせ・提携・不具合のご報告は、以下までご連絡ください。</p><h4>メール</h4><p>%EMAIL%</p>"
+  },
+  zh:{
+    about:"<p><b>Aesthetic QR Studio</b> 是一款网页版二维码设计工作室，能把普通的黑白二维码变成具有品牌感的艺术作品。可调整颜色、渐变、模块形状、中心标志/图标、边框和动画，同时生成<b>真正可以扫描</b>的二维码。</p><h4>主要特点</h4><ul><li><b>隐私优先</b> — 二维码生成、设计和名片免费自动识别全部在浏览器内完成。仅在使用 <b>AI 艺术</b>或 <b>AI 高精度名片识别</b>时，相关输入才会发送到服务器（生成或识别后不保存）。其他数据都不会离开你的设备。</li><li><b>24 种内容类型</b> — 网址、Wi-Fi、联系人、电话、短信、邮件、位置、日程、社交（Instagram/YouTube/TikTok/X 等）、支付、加密货币等。</li><li><b>设计工具</b> — 中心标志/图标、装饰边框、动画（WebM）、高分辨率导出、批量生成。</li><li><b>多语言</b> — 韩语、英语、日语、中文。</li></ul><h4>技术</h4><p>以单个 HTML 应用运行，使用开源编码器 <code>qrcode-generator</code>（MIT）。QR Code® 是 DENSO WAVE 的注册商标。</p>",
+    privacy:"<p>本服务仅最低限度地处理个人信息，不会出于广告或追踪目的收集个人信息。最后更新：2026-10-14。</p><h4>1. 基本原则 — 在浏览器内处理</h4><p>你在二维码中输入的内容（网址、联系人、Wi-Fi 密码等）、上传的图片以及名片<b>免费自动识别</b>，均<b>只在浏览器内</b>处理，不会发送或保存到服务器。<b>第 3 条所述的 AI 功能除外。</b></p><h4>2. 本地存储（localStorage）</h4><p>主题设置、引导显示状态、“My QR”和“电子名片”保存项目、Pro 许可状态等<b>仅保存在你的浏览器中</b>，不会对外传输。清除浏览器数据时会一并删除。</p><h4>3. AI 功能（可选）— 发送到服务器</h4><p>仅在使用 <b>AI 艺术二维码</b>和 <b>AI 高精度名片识别</b>时，该功能的输入（提示词/二维码内容或名片照片）才会发送到我们的服务器函数及相应 AI 服务商进行处理。生成或识别完成后，本服务不会保存。若不使用这两项功能，则不会发生任何传输。</p><h4>4. 付款（如适用）</h4><p>Pro 付款由外部代理商（Merchant of Record）处理，本服务不保存银行卡信息。与付款相关的个人信息遵循该服务商的政策。</p><h4>5. 联系</h4><p>个人信息相关咨询：%EMAIL%</p>",
+    terms:"<p>本条款适用于 Aesthetic QR Studio（以下简称“本服务”）的使用。使用本服务即表示你同意本条款。最后更新：2026-10-14。</p><h4>1. 服务</h4><p>基础功能免费提供，部分高级功能可能以付费（Pro）形式提供。本服务可能在不事先通知的情况下变更或停止。</p><h4>2. 用户责任</h4><ul><li>你需对所生成二维码的内容及其使用负责。</li><li>请勿上传或使用侵犯他人商标、著作权或肖像权的图片和标志。</li><li>请勿在二维码中包含违法、欺诈或恶意链接。</li></ul><h4>3. 知识产权</h4><p>本服务内置的图库图形和预设均为原创作品，示例中的品牌名称均为虚构，未使用任何真实商标。</p><h4>4. 免责声明</h4><p>本服务按“现状”提供，不保证在所有设备和扫描器上都能成功扫描。打印或发布前请务必用真机测试。</p><h4>5. 责任限制</h4><p>在法律允许的范围内，我们不对因使用本服务产生的直接或间接损失承担责任。</p><h4>6. 联系</h4><p>%EMAIL%</p>",
+    contact:"<p>如有服务咨询、合作或问题反馈，请通过以下方式联系我们。</p><h4>邮箱</h4><p>%EMAIL%</p>"
+  }
+};
+
 function openInfo(key){
   var pg=INFO_PAGES[key]; if(!pg) return;
   var tk=(typeof t==="function")?t("foot."+key):null;
   $("infoTitle").textContent = tk || pg.title;
-  $("infoBody").innerHTML = pg.html;
+  var loc=(typeof INFO_I18N!=="undefined"&&INFO_I18N[LANG]&&INFO_I18N[LANG][key]);
+  $("infoBody").innerHTML = loc ? loc.replace(/%EMAIL%/g,'<a href="mailto:'+CONTACT_EMAIL+'">'+CONTACT_EMAIL+'</a>') : pg.html;
   $("infoMask").classList.add("show");
 }
 function closeInfo(){ $("infoMask").classList.remove("show"); }
@@ -5078,7 +5100,7 @@ var _aiNoticeAt=0;
 function aiNotice(){
   if(!S.aiArt) return false;
   var now=Date.now();
-  if(now-_aiNoticeAt>2500){ _aiNoticeAt=now; toast("AI 아트 QR 적용 중 — 디자인 옵션을 쓰려면 'AI 아트 제거'를 누르세요"); }
+  if(now-_aiNoticeAt>2500){ _aiNoticeAt=now; toast(tx("AI 아트 QR 적용 중 — 디자인 옵션을 쓰려면 'AI 아트 제거'를 누르세요","AI-art QR is applied — tap 'Remove AI art' to use design options","AIアートQRを適用中 — デザインを変えるには「AIアートを削除」を押してください","正在使用 AI 艺术二维码 — 如需设计选项请点击“移除 AI 艺术”")); }
   return true;
 }
 function segBind(id, key, cb, deadUnderAi){
@@ -5107,7 +5129,7 @@ function setContent(v){
   S.content = v;
   // the generated AI image encodes the OLD content — keeping it would show a QR that
   // points somewhere else. Invalidate it and ask the user to regenerate.
-  if (S.aiArt){ S.aiArt=null; $("aiClear").style.display="none"; aiStatus("내용이 변경되어 AI 아트가 제거되었습니다 — 새 내용으로 다시 생성하세요."); toast("내용 변경 → AI 아트 제거됨 (다시 생성 필요)"); }
+  if (S.aiArt){ S.aiArt=null; $("aiClear").style.display="none"; aiStatus(tx("내용이 변경되어 AI 아트가 제거되었습니다 — 새 내용으로 다시 생성하세요.","Content changed, so the AI art was removed — generate again for the new content.","内容が変わったためAIアートを削除しました — 新しい内容で再生成してください。","内容已更改，AI 艺术已移除 — 请用新内容重新生成。")); toast(tx("내용 변경 → AI 아트 제거됨 (다시 생성 필요)","Content changed → AI art removed (regenerate)","内容変更 → AIアート削除（再生成が必要）","内容已更改 → AI 艺术已移除（需重新生成）")); }
   rerender();
 }
 function ctEsc(v){ return String(v||"").replace(/([\\;,:"])/g, "\\$1"); }  // WIFI: payload escaping
@@ -5124,14 +5146,14 @@ var SOCIAL = {
 };
 // arbitrary-link types → the user pastes a full URL, we pass it through
 var LINKT = {
-  appstore:{lblKey:"lbl.appstore", lbl:"앱 스토어 링크", ph:"https://apps.apple.com/…  또는  play.google.com/…"},
+  appstore:{lblKey:"lbl.appstore", lbl:"앱 스토어 링크", ph:"https://apps.apple.com/…  ·  play.google.com/…"},
   spotify: {lblKey:"lbl.spotify",  lbl:"Spotify 링크",   ph:"https://open.spotify.com/…"},
   review:  {lblKey:"lbl.review",   lbl:"구글 리뷰 / 지도 링크", ph:"https://g.page/…/review"},
-  video:   {lblKey:"lbl.video",    lbl:"화상회의 링크",  ph:"https://zoom.us/j/…  또는  meet.google.com/…"}
+  video:   {lblKey:"lbl.video",    lbl:"화상회의 링크",  ph:"https://zoom.us/j/…  ·  meet.google.com/…"}
 };
 function socialHandle(raw){ return String(raw||"").trim().replace(/^@+/,"").replace(/\s+/g,""); }
 function socialLabel(ct){ return SOCIAL[ct].name + " " + (t("lbl.handle")||"사용자명"); }
-function socialPh(ct){ return SOCIAL[ct].at ? "@핸들" : (t("ph.handle")||"사용자명 또는 @핸들"); }
+function socialPh(ct){ return SOCIAL[ct].at ? tx("@핸들","@handle","@ハンドル","@用户名") : (t("ph.handle")||"사용자명 또는 @핸들"); }
 function linkLabel(ct){ return (t(LINKT[ct].lblKey)||LINKT[ct].lbl); }
 function buildContent(){
   var v = "";
@@ -5253,8 +5275,8 @@ $("logoFile").addEventListener("change",function(e){
     $("logoBgWrap").style.display="flex";
     $("logoClear").style.display="block";
     $("brandQrWrap").style.display="block";
-    $("logoLabel").textContent="✓ 로고 업로드됨 — 변경하려면 클릭";
-    if(S.ecc!=="H"){ /* suggest */ toast("로고 사용 시 ECC-H 권장"); }
+    $("logoLabel").textContent=tx("✓ 로고 업로드됨 — 변경하려면 클릭","✓ Logo uploaded — click to change","✓ ロゴをアップロード — クリックで変更","✓ 已上传标志 — 点击更换");
+    if(S.ecc!=="H"){ /* suggest */ toast(tx("로고 사용 시 ECC-H 권장","ECC-H recommended with a logo","ロゴ使用時はECC-H推奨","使用标志时建议 ECC-H")); }
     rerender();
   };
   img.src=URL.createObjectURL(f);
@@ -5356,7 +5378,7 @@ $("logoClear").addEventListener("click",function(){
   if(S.artImg===S.logo) S.artImg=null;   // if the logo was used as the art pattern, clear that too
   S.logo=null; $("logoFile").value="";
   $("logoSizeWrap").style.display="none"; $("logoBgWrap").style.display="none"; $("logoClear").style.display="none"; $("brandQrWrap").style.display="none";
-  $("logoLabel").textContent="＋ 로고 이미지 업로드 (PNG·JPG·SVG)";
+  $("logoLabel").textContent=tx("＋ 로고 이미지 업로드 (PNG·JPG·SVG)","＋ Upload logo (PNG·JPG·SVG)","＋ ロゴ画像をアップロード（PNG·JPG·SVG）","＋ 上传标志图片（PNG·JPG·SVG）");
   rerender();
 });
 
@@ -5386,10 +5408,10 @@ $("artFile").addEventListener("change",function(e){
       S.artImg=gi; S.artIsVideo=false; S.artIsGif=true;
       $("artControls").style.display="block";
       $("artLabel").textContent=t("art.gifOk");
-      if(S.ecc!=="H") toast("아트 QR은 ECC-H 권장");
+      if(S.ecc!=="H") toast(tx("아트 QR은 ECC-H 권장","ECC-H recommended for art QR","アートQRはECC-H推奨","艺术二维码建议 ECC-H"));
       rerender();
     };
-    gi.onerror=function(){ toast("GIF를 불러오지 못했어요"); };
+    gi.onerror=function(){ toast(tx("GIF를 불러오지 못했어요","Couldn't load the GIF","GIFを読み込めませんでした","无法加载 GIF")); };
     gi.src=url;
   } else if (/^video\//.test(f.type)){
     removeArtVid();
@@ -5406,33 +5428,33 @@ $("artFile").addEventListener("change",function(e){
       v.play().catch(function(){});
       $("artControls").style.display="block";
       $("artLabel").textContent=t("art.vidOk2");
-      if(S.ecc!=="H") toast("아트 QR은 ECC-H 권장");
+      if(S.ecc!=="H") toast(tx("아트 QR은 ECC-H 권장","ECC-H recommended for art QR","アートQRはECC-H推奨","艺术二维码建议 ECC-H"));
       rerender();
     }
     v.addEventListener("loadeddata",ready);
     v.addEventListener("canplay",ready);
     v.addEventListener("loadedmetadata",function(){ v.play().then(ready).catch(ready); });
-    v.addEventListener("error",function(){ removeArtVid(); toast("이 영상 형식은 지원되지 않아요 — MP4(H.264) 또는 WebM으로 변환해 주세요"); });
+    v.addEventListener("error",function(){ removeArtVid(); toast(tx("이 영상 형식은 지원되지 않아요 — MP4(H.264) 또는 WebM으로 변환해 주세요","This video format isn't supported — convert to MP4 (H.264) or WebM","この動画形式は非対応です — MP4（H.264）かWebMに変換してください","不支持此视频格式 — 请转换为 MP4（H.264）或 WebM")); });
     v.src=url; try{ v.load(); }catch(e){}
-    setTimeout(function(){ if(!done){ if(v.videoWidth){ ready(); } else { removeArtVid(); toast("영상을 불러오지 못했어요 — MP4(H.264) 권장(아이폰 .mov는 브라우저에 따라 미지원)"); } } }, 7000);
+    setTimeout(function(){ if(!done){ if(v.videoWidth){ ready(); } else { removeArtVid(); toast(tx("영상을 불러오지 못했어요 — MP4(H.264) 권장(아이폰 .mov는 브라우저에 따라 미지원)","Couldn't load the video — MP4 (H.264) recommended (iPhone .mov may not play in some browsers)","動画を読み込めませんでした — MP4（H.264）推奨（iPhoneの.movはブラウザにより非対応）","无法加载视频 — 建议 MP4（H.264）（iPhone 的 .mov 在部分浏览器不受支持）")); } } }, 7000);
   } else {
     // Robust across Safari: fully decode, then BAKE into an offscreen canvas.
     // Canvas→canvas drawImage always works (no decode-timing / large-image / HEIC pitfalls).
     var useBaked=function(src){
       var iw=src.naturalWidth||src.width, ih=src.naturalHeight||src.height;
-      if(!iw||!ih){ toast("이미지를 읽지 못했어요"); return; }
+      if(!iw||!ih){ toast(tx("이미지를 읽지 못했어요","Couldn't read the image","画像を読み取れませんでした","无法读取图片")); return; }
       var MAX=1600, k=Math.min(1, MAX/Math.max(iw,ih));
       var oc=document.createElement("canvas"); oc.width=Math.max(1,Math.round(iw*k)); oc.height=Math.max(1,Math.round(ih*k));
       try{ oc.getContext("2d").drawImage(src,0,0,oc.width,oc.height); }
-      catch(e){ toast("이미지 처리에 실패했어요"); return; }
+      catch(e){ toast(tx("이미지 처리에 실패했어요","Image processing failed","画像の処理に失敗しました","图片处理失败")); return; }
       S.artImg=oc; S.artIsVideo=false; S.artIsGif=false;
       $("artControls").style.display="block";
       $("artLabel").textContent=t("art.imgOk");
       if(S.ecc!=="H") setEcc("H");
-      toast("‘애니메이션 켜기’를 켜면 이미지가 움직이는 움짤 QR이 됩니다");
+      toast(tx("‘애니메이션 켜기’를 켜면 이미지가 움직이는 움짤 QR이 됩니다","Turn on 'Animate' to make the image move","「アニメーション」をオンにすると画像が動くQRになります","开启“动画”即可让图片动起来"));
       rerender();
     };
-    var viaImg=function(){ var img=new Image(); img.onload=function(){ useBaked(img); }; img.onerror=function(){ toast("이미지를 불러오지 못했어요"); }; img.src=url; };
+    var viaImg=function(){ var img=new Image(); img.onload=function(){ useBaked(img); }; img.onerror=function(){ toast(tx("이미지를 불러오지 못했어요","Couldn't load the image","画像を読み込めませんでした","无法加载图片")); }; img.src=url; };
     if(window.createImageBitmap){ createImageBitmap(f).then(useBaked).catch(viaImg); }
     else { viaImg(); }
   }
@@ -5465,15 +5487,15 @@ function aiFail(d){
     return;
   }
   var msg;
-  if(d && d.error==="no_token") msg="서버에 <b>REPLICATE_API_TOKEN</b>이 없습니다 — Vercel → Settings → Environment Variables에 등록 후 <b>재배포</b>하세요.";
-  else if(d && d.error==="network") msg="네트워크 오류 — 배포된 사이트(https)에서만 작동합니다. 잠시 후 다시 시도하세요.";
-  else if(d && d.error==="timeout") msg="시간 초과(2분) — 다시 시도해 주세요.";
-  else if(d && (d.error==="model_not_found"||d.error==="no_version")) msg=(d.detail||"모델을 찾을 수 없습니다.");
-  else msg="생성 실패: "+((d&&(d.detail||d.error))||"알 수 없는 오류")+" <br>입력 필드 오류(Invalid input)라면 모델마다 필드명이 달라서 그렇습니다 — 환경변수 <b>REPLICATE_CONTENT_FIELD</b> / <b>REPLICATE_SCALE_FIELD</b>로 맞출 수 있습니다. 이 메시지를 그대로 알려주세요.";
+  if(d && d.error==="no_token") msg=tx("서버에 <b>REPLICATE_API_TOKEN</b>이 없습니다 — Vercel → Settings → Environment Variables에 등록 후 <b>재배포</b>하세요.","The server has no <b>REPLICATE_API_TOKEN</b> — add it in Vercel → Settings → Environment Variables and <b>redeploy</b>.","サーバーに<b>REPLICATE_API_TOKEN</b>がありません — Vercel → Settings → Environment Variablesに登録して<b>再デプロイ</b>してください。","服务器缺少 <b>REPLICATE_API_TOKEN</b> — 请在 Vercel → Settings → Environment Variables 中添加并<b>重新部署</b>。");
+  else if(d && d.error==="network") msg=tx("네트워크 오류 — 배포된 사이트(https)에서만 작동합니다. 잠시 후 다시 시도하세요.","Network error — this works only on the deployed (https) site. Please try again shortly.","ネットワークエラー — 公開サイト（https）でのみ動作します。少し待って再試行してください。","网络错误 — 仅在已部署的网站（https）上可用。请稍后重试。");
+  else if(d && d.error==="timeout") msg=tx("시간 초과(2분) — 다시 시도해 주세요.","Timed out (2 min) — please try again.","タイムアウト（2分）— もう一度お試しください。","超时（2 分钟）— 请重试。");
+  else if(d && (d.error==="model_not_found"||d.error==="no_version")) msg=(d.detail||tx("모델을 찾을 수 없습니다.","Model not found.","モデルが見つかりません。","找不到模型。"));
+  else msg=tx("생성 실패: ","Generation failed: ","生成に失敗しました: ","生成失败：")+((d&&(d.detail||d.error))||tx("알 수 없는 오류","Unknown error","不明なエラー","未知错误"))+tx(" <br>입력 필드 오류(Invalid input)라면 모델마다 필드명이 달라서 그렇습니다 — 환경변수 <b>REPLICATE_CONTENT_FIELD</b> / <b>REPLICATE_SCALE_FIELD</b>로 맞출 수 있습니다. 이 메시지를 그대로 알려주세요."," <br>If it says Invalid input, field names differ per model — set <b>REPLICATE_CONTENT_FIELD</b> / <b>REPLICATE_SCALE_FIELD</b>. Please share this message as-is."," <br>Invalid input の場合はモデルごとに項目名が異なります — <b>REPLICATE_CONTENT_FIELD</b> / <b>REPLICATE_SCALE_FIELD</b> で調整できます。このメッセージをそのままお知らせください。"," <br>若提示 Invalid input，是因为各模型字段名不同 — 可通过 <b>REPLICATE_CONTENT_FIELD</b> / <b>REPLICATE_SCALE_FIELD</b> 调整。请原样告知此消息。");
   aiStatus("⚠️ "+msg);
 }
 function aiCreate(prompt, scale){
-  aiStatus("생성 요청 중… (대비 "+scale.toFixed(2)+")");
+  aiStatus(tx("생성 요청 중… (대비 ","Requesting… (contrast ","リクエスト中…（コントラスト ","请求中…（对比度 ")+scale.toFixed(2)+")");
   var code=""; try{ code=localStorage.getItem("aqr_ai_code_v1")||""; }catch(e){}
   fetch("/api/art-qr",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({content:S.content,prompt:prompt,scale:scale,creditCode:code})})
     .then(function(r){ return r.json(); })
@@ -5489,13 +5511,13 @@ function aiPoll(id, prompt, scale, t0){
       if(d.status==="failed" || d.status==="canceled"){ aiFail({error:"generation_failed",detail:d.detail}); return; }
       var el=Math.round((Date.now()-t0)/1000);
       if(el>120){ aiFail({error:"timeout"}); return; }
-      aiStatus("🎨 AI 생성 중… "+el+"초 (보통 5~30초, 첫 요청은 콜드스타트로 더 걸릴 수 있음)");
+      aiStatus(tx("🎨 AI 생성 중… ","🎨 Generating with AI… ","🎨 AI生成中… ","🎨 AI 生成中… ")+el+tx("초 (보통 5~30초, 첫 요청은 콜드스타트로 더 걸릴 수 있음)","s (usually 5–30s; the first request can take longer to warm up)","秒（通常5〜30秒、初回は起動に時間がかかる場合があります）","秒（通常 5–30 秒，首次请求可能因冷启动更久）"));
       setTimeout(function(){ aiPoll(id, prompt, scale, t0); }, 2000);
     })
     .catch(function(){ aiFail({error:"network"}); });
 }
 function aiVerify(url, prompt, scale){
-  aiStatus("🔍 스캔 검증 중…");
+  aiStatus(tx("🔍 스캔 검증 중…","🔍 Verifying scan…","🔍 スキャン検証中…","🔍 正在验证扫描…"));
   var img=new Image(); img.crossOrigin="anonymous";
   img.onload=function(){
     var okScan=null;  // true/false/null(unknown — e.g. CORS taint)
@@ -5508,19 +5530,19 @@ function aiVerify(url, prompt, scale){
     }catch(e){ okScan=null; }
     if(okScan===false && AI.tries<3){
       AI.tries++;
-      aiStatus("스캔 실패 → 대비를 한 단계 올려 재생성 ("+AI.tries+"/3)…");
+      aiStatus(tx("스캔 실패 → 대비를 한 단계 올려 재생성 (","Scan failed → regenerating with more contrast (","スキャン失敗 → コントラストを上げて再生成（","扫描失败 → 提高对比度重新生成（")+AI.tries+"/3)…");
       aiCreate(prompt, Math.min(2.2, scale+0.35));
       return;
     }
     S.aiArt=img; AI.busy=false; $("aiGo").disabled=false; $("aiClear").style.display="block";
     if(!AI.counted){ AI.counted=true; aiBumpTrial(); }   // one successful user generation = one free trial used (retries don't re-count)
-    aiStatus(okScan===true ? "✅ 완료 — 스캔 검증 통과! PNG로 저장하세요."
-           : okScan===false ? "✅ 생성 완료 — 자동 검증은 실패했지만 휴대폰 스캔은 될 수 있어요. 안 되면 다시 생성하세요."
-           : "✅ 생성 완료 — 휴대폰으로 스캔 확인을 권장합니다.");
+    aiStatus(okScan===true ? tx("✅ 완료 — 스캔 검증 통과! PNG로 저장하세요.","✅ Done — scan check passed! Save as PNG.","✅ 完了 — スキャン検証に合格！PNGで保存してください。","✅ 完成 — 扫描验证通过！请保存为 PNG。")
+           : okScan===false ? tx("✅ 생성 완료 — 자동 검증은 실패했지만 휴대폰 스캔은 될 수 있어요. 안 되면 다시 생성하세요.","✅ Generated — auto-check failed but a phone may still scan it. Regenerate if not.","✅ 生成完了 — 自動検証は失敗しましたがスマホでは読める場合があります。読めなければ再生成してください。","✅ 已生成 — 自动验证未通过，但手机仍可能扫描成功。若不行请重新生成。")
+           : tx("✅ 생성 완료 — 휴대폰으로 스캔 확인을 권장합니다.","✅ Generated — please confirm with a phone scan.","✅ 生成完了 — スマホでのスキャン確認をおすすめします。","✅ 已生成 — 建议用手机扫描确认。"));
     stopAnim(); render(ctx, EXPORT); updateMeta();
-    toast("AI 아트 QR 적용됨");
+    toast(tx("AI 아트 QR 적용됨","AI-art QR applied","AIアートQRを適用しました","已应用 AI 艺术二维码"));
   };
-  img.onerror=function(){ aiFail({error:"image_load",detail:"결과 이미지를 불러오지 못했습니다"}); };
+  img.onerror=function(){ aiFail({error:"image_load",detail:tx("결과 이미지를 불러오지 못했습니다","Couldn't load the result image","結果画像を読み込めませんでした","无法加载结果图片")}); };
   img.src=url;
 }
 $("aiGo").addEventListener("click",function(){
@@ -5529,7 +5551,7 @@ $("aiGo").addEventListener("click",function(){
   // AI art is the only feature with a real per-use cost → free trials, then a paid credit pack.
   if(aiCreditsLeft()<=0){ openAiPack(); return; }
   var prompt=($("aiPrompt").value||"").trim();
-  if(!prompt){ toast("프롬프트를 입력하거나 스타일 프리셋을 클릭하세요"); $("aiPrompt").focus(); return; }
+  if(!prompt){ toast(tx("프롬프트를 입력하거나 스타일 프리셋을 클릭하세요","Enter a prompt or tap a style preset","プロンプトを入力するかスタイルプリセットを選んでください","请输入提示词或点击风格预设")); $("aiPrompt").focus(); return; }
   AI.busy=true; AI.tries=0; AI.counted=false; $("aiGo").disabled=true;
   if(S.ecc!=="H") setEcc("H");
   aiCreate(prompt, 1.1);
@@ -5542,7 +5564,7 @@ $("aiStyleSeg").addEventListener("click",function(e){
 });
 $("aiClear").addEventListener("click",function(){
   S.aiArt=null; $("aiClear").style.display="none";
-  aiStatus("AI 아트 제거됨 — 다시 생성할 수 있습니다.");
+  aiStatus(tx("AI 아트 제거됨 — 다시 생성할 수 있습니다.","AI art removed — you can generate again.","AIアートを削除しました — 再生成できます。","AI 艺术已移除 — 可以重新生成。"));
   rerender();
 });
 
@@ -5634,7 +5656,7 @@ function centerUIvis(){
 $("centerModeSeg").addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b)return; Array.prototype.forEach.call(this.children,function(x){x.classList.remove("on");}); b.classList.add("on"); S.centerMode=b.dataset.cmode; if(S.centerMode!=="none"){ if(!S.centerText || (S.centerMode==="emoji")!==/\p{Emoji}/u.test(S.centerText||"a")) S.centerText=(S.centerMode==="emoji")?"⭐":"BRAND"; $("centerText").value=S.centerText; if(S.ecc!=="H") setEcc("H"); } centerUIvis(); rerender(); });
 $("centerText").addEventListener("input",function(e){ S.centerText=e.target.value; syncPictoSel(); rerender(); });
 $("centerColor").addEventListener("input",function(e){ S.centerColor=e.target.value; rerender(); });
-function centerScaleLabel(v){ var op = Math.round(centerOpacity(v)*100); return op<100 ? v+"% · 투명 "+(100-op)+"%" : v+"%"; }
+function centerScaleLabel(v){ var op = Math.round(centerOpacity(v)*100); return op<100 ? v+tx("% · 투명 ","% · transparent ","% · 透明 ","% · 透明 ")+(100-op)+"%" : v+"%"; }
 $("centerScale").addEventListener("input",function(e){ S.centerScale=+e.target.value; $("centerScaleOut").textContent=centerScaleLabel(+e.target.value); rerender(); });
 $("centerBadgeSeg").addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b)return; S.centerBadge=b.dataset.badge; Array.prototype.forEach.call(this.children,function(x){x.classList.toggle("on",x===b);}); rerender(); });
 $("genLogoBtn").addEventListener("click",function(){ buildLogoExamples(); });
@@ -5964,7 +5986,7 @@ var AR = (function(){
     g.font="700 "+Math.round(h*0.30)+"px -apple-system,'Noto Sans KR',sans-serif";
     g.fillText((isUrl?"🔗 ":"📄 ")+label, x+h*0.28, y+h*0.36);
     g.fillStyle="rgba(34,211,238,0.95)"; g.font="600 "+Math.round(h*0.22)+"px -apple-system,'Noto Sans KR',sans-serif";
-    g.fillText(isUrl?"탭하여 열기":"QR 내용", x+h*0.28, y+h*0.72);
+    g.fillText(isUrl?tx("탭하여 열기","Tap to open","タップして開く","点击打开"):tx("QR 내용","QR content","QRの内容","二维码内容"), x+h*0.28, y+h*0.72);
     // little pointer to the QR
     g.beginPath(); g.moveTo(anchor.x-6,y+h); g.lineTo(anchor.x+6,y+h); g.lineTo(anchor.x,y+h+8); g.closePath(); g.fillStyle=grd; g.fill();
   }
@@ -6140,8 +6162,8 @@ var AR = (function(){
       } else {
         if(frame%2===0){ var d=detect(W,H); if(d){ last=d; ttl=10; } else if(ttl>0){ ttl--; } else { last=null; } }
         else if(ttl>0){ ttl--; } else { last=null; }
-        if(last){ overlay(cx,last,tAnim); if(badge){ badge.textContent="🔎 인식됨: "+((last.data||"").slice(0,40)); badge.classList.add("on"); } if(msg)msg.style.display="none"; }
-        else { if(badge)badge.classList.remove("on"); if(msg){ msg.textContent=window.jsQR?"QR 코드를 화면에 비춰 보세요…":"QR 인식 모듈을 불러오지 못했어요(vendor/jsQR.js)."; msg.style.display="block"; } }
+        if(last){ overlay(cx,last,tAnim); if(badge){ badge.textContent=tx("🔎 인식됨: ","🔎 Detected: ","🔎 認識: ","🔎 已识别：")+((last.data||"").slice(0,40)); badge.classList.add("on"); } if(msg)msg.style.display="none"; }
+        else { if(badge)badge.classList.remove("on"); if(msg){ msg.textContent=window.jsQR?tx("QR 코드를 화면에 비춰 보세요…","Point the camera at a QR code…","QRコードをカメラに映してください…","请将摄像头对准二维码…"):tx("QR 인식 모듈을 불러오지 못했어요(vendor/jsQR.js).","Couldn't load the QR reader (vendor/jsQR.js).","QR認識モジュールを読み込めませんでした（vendor/jsQR.js）。","无法加载二维码识别模块（vendor/jsQR.js）。"); msg.style.display="block"; } }
       }
       loopErrCount=0;
     }catch(e){
@@ -6154,16 +6176,16 @@ var AR = (function(){
   function showMsg(txt){ if(msg){ msg.textContent=txt; msg.style.display="block"; } }
   function explain(err){
     var n=(err&&err.name)||"", d=(err&&err.message)||"";
-    if(n==="NotAllowedError"||n==="SecurityError") return "카메라 권한이 거부됨 (NotAllowedError). Safari 설정 › 웹사이트 › 카메라에서 이 사이트를 ‘허용’으로 바꾸고 새로고침하세요.";
-    if(n==="NotFoundError"||n==="OverconstrainedError") return "사용 가능한 카메라를 찾지 못했어요 ("+n+").";
-    if(n==="NotReadableError") return "카메라를 다른 앱이 사용 중이에요 (NotReadableError). 줌/페이스타임 등을 끄고 다시 시도하세요.";
-    return "카메라를 열 수 없어요: "+(n||d||"알 수 없는 오류");
+    if(n==="NotAllowedError"||n==="SecurityError") return tx("카메라 권한이 거부됨 (NotAllowedError). Safari 설정 › 웹사이트 › 카메라에서 이 사이트를 ‘허용’으로 바꾸고 새로고침하세요.","Camera permission denied (NotAllowedError). Allow this site in your browser's camera settings, then reload.","カメラの許可が拒否されました（NotAllowedError）。ブラウザのカメラ設定でこのサイトを許可して再読み込みしてください。","摄像头权限被拒绝（NotAllowedError）。请在浏览器摄像头设置中允许本网站后刷新。");
+    if(n==="NotFoundError"||n==="OverconstrainedError") return tx("사용 가능한 카메라를 찾지 못했어요 (","No usable camera found (","使えるカメラが見つかりません（","未找到可用的摄像头（")+n+").";
+    if(n==="NotReadableError") return tx("카메라를 다른 앱이 사용 중이에요 (NotReadableError). 줌/페이스타임 등을 끄고 다시 시도하세요.","Another app is using the camera (NotReadableError). Close Zoom/FaceTime etc. and try again.","別のアプリがカメラを使用中です（NotReadableError）。Zoom/FaceTimeなどを閉じて再試行してください。","摄像头正被其他应用占用（NotReadableError）。请关闭 Zoom/FaceTime 等后重试。");
+    return tx("카메라를 열 수 없어요: ","Can't open the camera: ","カメラを開けません: ","无法打开摄像头：")+(n||d||tx("알 수 없는 오류","Unknown error","不明なエラー","未知错误"));
   }
   function openLink(){ if(last && /^https?:\/\//i.test(last.data)){ window.open(last.data,"_blank","noopener"); } }
   async function start(){
     els();
-    if(!window.isSecureContext){ showMsg("보안 연결(HTTPS)이 아니어서 카메라를 쓸 수 없어요. https://jay-inky.vercel.app 로 접속했는지 확인하세요."); return; }
-    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){ showMsg("이 브라우저는 카메라 API(getUserMedia)를 지원하지 않아요."); return; }
+    if(!window.isSecureContext){ showMsg(tx("보안 연결(HTTPS)이 아니어서 카메라를 쓸 수 없어요. https://jay-inky.vercel.app 로 접속했는지 확인하세요.","The camera needs a secure (HTTPS) connection. Make sure you opened the https:// address.","セキュア接続（HTTPS）でないためカメラを使えません。https:// のアドレスで開いているか確認してください。","非安全连接（HTTPS）无法使用摄像头。请确认使用 https:// 地址访问。")); return; }
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){ showMsg(tx("이 브라우저는 카메라 API(getUserMedia)를 지원하지 않아요.","This browser doesn't support the camera API (getUserMedia).","このブラウザはカメラAPI（getUserMedia）に非対応です。","此浏览器不支持摄像头 API（getUserMedia）。")); return; }
     if(arMode==="face" && !faceModelsReady){
       showMsg(t("ar.faceLoading"));
       var ok=await ensureFaceModels();
@@ -6181,7 +6203,7 @@ var AR = (function(){
       var mok=await ensureMarkerController();
       if(mok && markerController) markerController.processVideo(cam);
     }
-    showMsg(arMode==="face" ? t("ar.faceSearching") : arMode==="marker" ? t("ar.markerSearching") : "QR 코드를 화면에 비춰 보세요…"); fit();
+    showMsg(arMode==="face" ? t("ar.faceSearching") : arMode==="marker" ? t("ar.markerSearching") : tx("QR 코드를 화면에 비춰 보세요…","Point the camera at a QR code…","QRコードをカメラに映してください…","请将摄像头对准二维码…")); fit();
     $("arStart").disabled=true; $("arShot").disabled=false; $("arStop").disabled=false; $("arFlip").disabled=false;
     cv.addEventListener("click",openLink);
     if(raf)cancelAnimationFrame(raf); raf=requestAnimationFrame(loop);
@@ -6194,11 +6216,11 @@ var AR = (function(){
     if(cx&&cv){ cx.clearRect(0,0,cv.width,cv.height); }
     if(badge)badge.classList.remove("on");
     if(cv) cv.removeEventListener("click",openLink);
-    if(msg){ msg.textContent="정지됨 — 다시 시작할 수 있어요"; msg.style.display="block"; }
+    if(msg){ msg.textContent=tx("정지됨 — 다시 시작할 수 있어요","Stopped — you can start again","停止しました — 再開できます","已停止 — 可重新开始"); msg.style.display="block"; }
     $("arStart").disabled=false; $("arShot").disabled=true; $("arStop").disabled=true; $("arFlip").disabled=true;
   }
   async function flip(){ facing=(facing==="environment")?"user":"environment"; if(stream){ stream.getTracks().forEach(function(t){t.stop();}); stream=null; } $("arStart").disabled=false; await start(); }
-  function shot(){ if(!stream||!cv)return; cv.toBlob(function(b){ if(!b)return; download(URL.createObjectURL(b),"qr-ar.png"); toast("AR 사진 저장됨"); },"image/png"); }
+  function shot(){ if(!stream||!cv)return; cv.toBlob(function(b){ if(!b)return; download(URL.createObjectURL(b),"qr-ar.png"); toast(tx("AR 사진 저장됨","AR photo saved","ARの写真を保存しました","AR 照片已保存")); },"image/png"); }
   function leave(){ if(stream) stop(); }
   function buildStickerPicker(){
     var box=$("stickerPicker"); if(!box) return; box.innerHTML="";
@@ -6233,8 +6255,8 @@ var AR = (function(){
       ensureMarkerController().then(function(ok){ if(ok && markerController) markerController.processVideo(cam); });
     }
     if(msg) msg.style.display="block";
-    var hintMap={qr:"QR 코드를 화면에 비춰 보세요…", face:t("ar.faceSearching"), marker: markerBuffer?t("ar.markerSearching"):t("ar.markerNeeded")};
-    var idleMap={qr:"‘카메라 시작’을 눌러 QR을 비춰 보세요", face:t("ar.faceHint"), marker: markerBuffer?t("ar.markerHint"):t("ar.markerNeeded")};
+    var hintMap={qr:tx("QR 코드를 화면에 비춰 보세요…","Point the camera at a QR code…","QRコードをカメラに映してください…","请将摄像头对准二维码…"), face:t("ar.faceSearching"), marker: markerBuffer?t("ar.markerSearching"):t("ar.markerNeeded")};
+    var idleMap={qr:tx("‘카메라 시작’을 눌러 QR을 비춰 보세요","Tap 'Start camera' and point it at a QR","「カメラ開始」を押してQRを映してください","点击“启动摄像头”并对准二维码"), face:t("ar.faceHint"), marker: markerBuffer?t("ar.markerHint"):t("ar.markerNeeded")};
     showMsg(stream ? hintMap[m] : idleMap[m]);
   }
   async function loadDemoMarker(){
@@ -6515,16 +6537,16 @@ var GAL_TR = {
   '마법의 숲':{en:'Magic Forest',zh:'魔法森林',ja:'魔法の森'},
   '크리스탈':{en:'Crystal',zh:'水晶',ja:'クリスタル'},
   '소화기':{en:'Fire Extinguisher',zh:'灭火器',ja:'消火器'},
-  '응급/병원':{en:'ER / Hospital',zh:'急救/医院',ja:'救急・病院'},
+  '응급·병원':{en:'ER / Hospital',zh:'急救/医院',ja:'救急・病院'},
   '와이파이':{en:'Wi-Fi',zh:'Wi-Fi',ja:'Wi-Fi'},
   '별점 리뷰':{en:'Star Review',zh:'星级评价',ja:'星評価'},
   '이벤트 선물':{en:'Event Gift',zh:'活动礼物',ja:'イベントギフト'},
   '카페 메뉴':{en:'Café Menu',zh:'咖啡菜单',ja:'カフェメニュー'},
   '매장 위치':{en:'Store Location',zh:'门店位置',ja:'店舗の位置'},
   '음악/플레이':{en:'Music / Play',zh:'音乐/播放',ja:'音楽・再生'},
-  '홈/부동산':{en:'Home / Realty',zh:'房产/家居',ja:'住宅・不動産'},
+  '홈·부동산':{en:'Home / Realty',zh:'房产/家居',ja:'住宅・不動産'},
   '친환경':{en:'Eco',zh:'环保',ja:'エコ'},
-  '포토/카메라':{en:'Photo / Camera',zh:'照片/相机',ja:'フォト・カメラ'},
+  '포토·카메라':{en:'Photo / Camera',zh:'照片/相机',ja:'フォト・カメラ'},
   '주차':{en:'Parking',zh:'停车',ja:'駐車'},
   '골드 액자':{en:'Gold Frame',zh:'金色相框',ja:'ゴールド額'},
   '우드 프레임':{en:'Wood Frame',zh:'木质相框',ja:'ウッドフレーム'},
@@ -6541,9 +6563,9 @@ var GAL_TR = {
   '카페 Wi-Fi':{en:'Café Wi-Fi',zh:'咖啡馆 Wi-Fi',ja:'カフェWi-Fi'},
   '디지털 명함':{en:'Digital Card',zh:'电子名片',ja:'デジタル名刺'},
   '전화 문의':{en:'Call Us',zh:'电话咨询',ja:'電話問い合わせ'},
-  '문자 참여':{en:'SMS Join',zh:'短信参与',ja:'SMS参加'},
+  '문자로 참여':{en:'SMS Join',zh:'短信参与',ja:'SMS参加'},
   '이메일 문의':{en:'Email Us',zh:'邮件咨询',ja:'メール問い合わせ'},
-  '쿠폰 텍스트':{en:'Coupon Text',zh:'优惠券文本',ja:'クーポンテキスト'},
+  '쿠폰 코드':{en:'Coupon Text',zh:'优惠券文本',ja:'クーポンテキスト'},
   '리뷰 남기기':{en:'Leave a Review',zh:'留下评价',ja:'レビューを書く'},
   '사이버·다크':{en:'Cyber · Dark',zh:'赛博·暗黑',ja:'サイバー・ダーク'},
   '청량한 하늘':{en:'Fresh Sky',zh:'清爽天空',ja:'さわやかな空'},
@@ -6587,7 +6609,6 @@ var GAL_TR = {
   '길찾기':{en:'Directions',zh:'导航',ja:'道案内'},
   '미디어':{en:'Media',zh:'媒体',ja:'メディア'},
   '부동산':{en:'Real Estate',zh:'房产',ja:'不動産'},
-  '에코':{en:'Eco',zh:'环保',ja:'エコ'},
   '사진':{en:'Photo',zh:'摄影',ja:'写真'},
   '교통':{en:'Transit',zh:'交通',ja:'交通'},
   '미술관 액자':{en:'Gallery Frame',zh:'美术馆相框',ja:'美術館額'},
@@ -6605,7 +6626,133 @@ var GAL_TR = {
   '스캔 → 메일 작성':{en:'Scan → compose email',zh:'扫描 → 编写邮件',ja:'スキャン → メール作成'},
   '스캔 → 지도 열기':{en:'Scan → open map',zh:'扫描 → 打开地图',ja:'スキャン → 地図を開く'},
   '스캔 → 쿠폰 코드 표시':{en:'Scan → show coupon',zh:'扫描 → 显示优惠码',ja:'スキャン → クーポン表示'},
-  '스캔 → 리뷰 페이지':{en:'Scan → review page',zh:'扫描 → 评价页面',ja:'スキャン → レビューページ'}
+  '스캔 → 리뷰 페이지':{en:'Scan → review page',zh:'扫描 → 评价页面',ja:'スキャン → レビューページ'},
+  '글렌마르 싱글몰트':{en:'Glenmar Single Malt',zh:'Glenmar 单一麦芽',ja:'グレンマー シングルモルト'},
+  '위스키·오리지널':{en:'Whisky · Original',zh:'威士忌 · 原创',ja:'ウイスキー・オリジナル'},
+  '오크리브 버번':{en:'Oakleave Bourbon',zh:'Oakleave 波本',ja:'オークリーブ バーボン'},
+  '하이파인 리저브':{en:'Highpine Reserve',zh:'Highpine 珍藏',ja:'ハイパイン リザーブ'},
+  '코르베인 라이':{en:'Corvane Rye',zh:'Corvane 黑麦',ja:'コルベイン ライ'},
+  '앰버베일 블렌드':{en:'Ambervale Blend',zh:'Ambervale 调和',ja:'アンバーベイル ブレンド'},
+  '아우렐리아 리저브':{en:'Aurelia Reserve',zh:'Aurelia 珍藏',ja:'アウレリア リザーブ'},
+  '에투알 파리':{en:'Étoile Paris',zh:'Étoile Paris',ja:'エトワール パリ'},
+  '패션·오리지널':{en:'Fashion · Original',zh:'时尚 · 原创',ja:'ファッション・オリジナル'},
+  '메종 베로':{en:'Maison Vero',zh:'Maison Vero',ja:'メゾン ヴェロ'},
+  '뤼네르':{en:'Lunaire',zh:'Lunaire',ja:'リュネール'},
+  '누아렐리 스튜디오':{en:'Noirelli Studio',zh:'Noirelli Studio',ja:'ノワレリ スタジオ'},
+  '베스트라 밀라노':{en:'Vestra Milano',zh:'Vestra Milano',ja:'ヴェストラ ミラノ'},
+  '스트라이브':{en:'Strive',zh:'Strive',ja:'ストライブ'},
+  '스포츠·오리지널':{en:'Sports · Original',zh:'运动 · 原创',ja:'スポーツ・オリジナル'},
+  '키네틱스':{en:'Kinetix',zh:'Kinetix',ja:'キネティクス'},
+  '벨로스 런클럽':{en:'Velos Run Club',zh:'Velos 跑团',ja:'ベロス ランクラブ'},
+  '프로스피드':{en:'ProSpeed',zh:'ProSpeed',ja:'プロスピード'},
+  '아이언피크':{en:'Ironpeak',zh:'Ironpeak',ja:'アイアンピーク'},
+  '인스타 프로필':{en:'Instagram profile',zh:'Instagram 主页',ja:'Instagramプロフィール'},
+  '스캔 → 인스타그램':{en:'Scan → Instagram',zh:'扫描 → Instagram',ja:'スキャン → Instagram'},
+  '유튜브 채널':{en:'YouTube channel',zh:'YouTube 频道',ja:'YouTubeチャンネル'},
+  '스캔 → 채널 구독':{en:'Scan → subscribe',zh:'扫描 → 订阅频道',ja:'スキャン → チャンネル登録'},
+  '틱톡':{en:'TikTok',zh:'TikTok',ja:'TikTok'},
+  '스캔 → 틱톡 프로필':{en:'Scan → TikTok profile',zh:'扫描 → TikTok 主页',ja:'スキャン → TikTokプロフィール'},
+  '링크드인':{en:'LinkedIn',zh:'LinkedIn',ja:'LinkedIn'},
+  '스캔 → 프로필':{en:'Scan → profile',zh:'扫描 → 主页',ja:'スキャン → プロフィール'},
+  '텔레그램 채널':{en:'Telegram channel',zh:'Telegram 频道',ja:'Telegramチャンネル'},
+  '스캔 → 대화 열기':{en:'Scan → open chat',zh:'扫描 → 打开对话',ja:'スキャン → チャットを開く'},
+  '앱 다운로드':{en:'App download',zh:'下载应用',ja:'アプリをダウンロード'},
+  '스캔 → 스토어 열기':{en:'Scan → open store',zh:'扫描 → 打开商店',ja:'スキャン → ストアを開く'},
+  '화상회의 참가':{en:'Join video call',zh:'加入视频会议',ja:'ビデオ会議に参加'},
+  '스캔 → 회의 입장':{en:'Scan → join meeting',zh:'扫描 → 进入会议',ja:'スキャン → 会議に参加'},
+  '스포티파이':{en:'Spotify',zh:'Spotify',ja:'Spotify'},
+  '스캔 → 플레이리스트':{en:'Scan → playlist',zh:'扫描 → 播放列表',ja:'スキャン → プレイリスト'},
+  'PayPal 결제':{en:'PayPal payment',zh:'PayPal 付款',ja:'PayPal決済'},
+  '스캔 → 결제·송금':{en:'Scan → pay / send',zh:'扫描 → 付款 · 转账',ja:'スキャン → 決済・送金'},
+  '일정 등록':{en:'Add to calendar',zh:'添加日程',ja:'予定を登録'},
+  '스캔 → 캘린더 추가':{en:'Scan → add to calendar',zh:'扫描 → 添加到日历',ja:'スキャン → カレンダーに追加'},
+  '레스토랑':{en:'Restaurant',zh:'餐厅',ja:'レストラン'},
+  '베이커리':{en:'Bakery',zh:'烘焙店',ja:'ベーカリー'},
+  '와인바':{en:'Wine bar',zh:'葡萄酒吧',ja:'ワインバー'},
+  '주점':{en:'Bar',zh:'酒吧',ja:'バー'},
+  '칵테일바':{en:'Cocktail bar',zh:'鸡尾酒吧',ja:'カクテルバー'},
+  '헬스장':{en:'Gym',zh:'健身房',ja:'ジム'},
+  '피트니스':{en:'Fitness',zh:'健身',ja:'フィットネス'},
+  '요가·필라테스':{en:'Yoga · Pilates',zh:'瑜伽 · 普拉提',ja:'ヨガ・ピラティス'},
+  '헤어살롱':{en:'Hair salon',zh:'美发沙龙',ja:'ヘアサロン'},
+  '뷰티':{en:'Beauty',zh:'美容',ja:'ビューティー'},
+  '코스메틱':{en:'Cosmetics',zh:'化妆品',ja:'コスメ'},
+  '약국':{en:'Pharmacy',zh:'药店',ja:'薬局'},
+  '반려동물':{en:'Pets',zh:'宠物',ja:'ペット'},
+  '자동차·정비':{en:'Auto · Repair',zh:'汽车 · 维修',ja:'自動車・整備'},
+  '자동차':{en:'Auto',zh:'汽车',ja:'オート'},
+  '서점·도서관':{en:'Bookstore · Library',zh:'书店 · 图书馆',ja:'書店・図書館'},
+  '문화':{en:'Culture',zh:'文化',ja:'カルチャー'},
+  '게임·PC방':{en:'Gaming · PC café',zh:'游戏 · 网吧',ja:'ゲーム・ネットカフェ'},
+  '엔터테인먼트':{en:'Entertainment',zh:'娱乐',ja:'エンタメ'},
+  '공연·티켓':{en:'Shows · Tickets',zh:'演出 · 门票',ja:'公演・チケット'},
+  '호텔·숙박':{en:'Hotel · Stay',zh:'酒店 · 住宿',ja:'ホテル・宿泊'},
+  '여행':{en:'Travel',zh:'旅行',ja:'旅行'},
+  '플라워샵':{en:'Flower shop',zh:'花店',ja:'フラワーショップ'},
+  '리테일':{en:'Retail',zh:'零售',ja:'リテール'},
+  '디저트 카페':{en:'Dessert café',zh:'甜品咖啡馆',ja:'デザートカフェ'},
+  '노래방':{en:'Karaoke',zh:'KTV',ja:'カラオケ'},
+  '패션·의류':{en:'Fashion · Apparel',zh:'时尚 · 服装',ja:'ファッション・アパレル'},
+  '주얼리':{en:'Jewelry',zh:'珠宝',ja:'ジュエリー'},
+  '우표 · 에어메일':{en:'Stamp · Airmail',zh:'邮票 · 航空邮件',ja:'切手・エアメール'},
+  '빈티지 우표':{en:'Vintage stamp',zh:'复古邮票',ja:'ヴィンテージ切手'},
+  '우표 · 로즈':{en:'Stamp · Rose',zh:'邮票 · 玫瑰',ja:'切手・ローズ'},
+  '조개 도일리':{en:'Scallop doily',zh:'扇贝蕾丝垫',ja:'スカラップ ドイリー'},
+  '레이스 프레임':{en:'Lace frame',zh:'蕾丝边框',ja:'レースフレーム'},
+  '포스터 · 스캔미':{en:'Poster · Scan me',zh:'海报 · 扫我',ja:'ポスター・スキャンミー'},
+  '헤드라인 포스터':{en:'Headline poster',zh:'标题海报',ja:'ヘッドラインポスター'},
+  '포스터 · 선셋':{en:'Poster · Sunset',zh:'海报 · 日落',ja:'ポスター・サンセット'},
+  '폴라로이드 · 메모':{en:'Polaroid · Note',zh:'拍立得 · 便签',ja:'ポラロイド・メモ'},
+  '손글씨 감성':{en:'Handwritten feel',zh:'手写风格',ja:'手書き風'},
+  '네온 · 그린':{en:'Neon · Green',zh:'霓虹 · 绿',ja:'ネオン・グリーン'},
+  '우드 · 다크월넛':{en:'Wood · Dark walnut',zh:'木纹 · 深胡桃',ja:'ウッド・ダークウォルナット'},
+  '서클아트 골드':{en:'Circle art gold',zh:'圆形艺术 · 金',ja:'サークルアート ゴールド'},
+  '모노 카드 · 라이트':{en:'Mono card · Light',zh:'单色卡片 · 浅色',ja:'モノカード・ライト'},
+  '미니멀':{en:'Minimal',zh:'极简',ja:'ミニマル'},
+  '라인':{en:'Line',zh:'线条',ja:'ライン'},
+  '페이퍼':{en:'Paper',zh:'纸张',ja:'ペーパー'},
+  '틴트':{en:'Tint',zh:'浅色调',ja:'ティント'},
+  '레프트바':{en:'Left bar',zh:'左侧条',ja:'レフトバー'},
+  '탑라인':{en:'Top line',zh:'顶部线',ja:'トップライン'},
+  '코너':{en:'Corner',zh:'角饰',ja:'コーナー'},
+  '프레임':{en:'Frame',zh:'边框',ja:'フレーム'},
+  '리본':{en:'Ribbon',zh:'丝带',ja:'リボン'},
+  '배지':{en:'Badge',zh:'徽章',ja:'バッジ'},
+  '도트':{en:'Dots',zh:'圆点',ja:'ドット'},
+  '다크':{en:'Dark',zh:'深色',ja:'ダーク'},
+  '잉크':{en:'Ink',zh:'墨色',ja:'インク'},
+  '슬레이트':{en:'Slate',zh:'石板',ja:'スレート'},
+  '다크라인':{en:'Dark line',zh:'深色线',ja:'ダークライン'},
+  '네온':{en:'Neon',zh:'霓虹',ja:'ネオン'},
+  '솔리드':{en:'Solid',zh:'纯色',ja:'ソリッド'},
+  '그라디언트':{en:'Gradient',zh:'渐变',ja:'グラデーション'},
+  '그라드바':{en:'Gradient bar',zh:'渐变条',ja:'グラデバー'},
+  '소프트':{en:'Soft',zh:'柔和',ja:'ソフト'},
+  '모노':{en:'Mono',zh:'单色',ja:'モノ'},
+  '클래식 L':{en:'Classic L',zh:'经典 L',ja:'クラシック L'},
+  '다크 L':{en:'Dark L',zh:'深色 L',ja:'ダーク L'},
+  '포토':{en:'Photo',zh:'照片',ja:'フォト'},
+  '포토 L':{en:'Photo L',zh:'照片 L',ja:'フォト L'},
+  '럭스':{en:'Luxe',zh:'奢华',ja:'ラグジュアリー'},
+  '샴페인':{en:'Champagne',zh:'香槟',ja:'シャンパン'},
+  '아웃라인':{en:'Outline',zh:'描边',ja:'アウトライン'},
+  '다이애그':{en:'Diagonal',zh:'斜纹',ja:'ダイアゴナル'},
+  '라운드':{en:'Round',zh:'圆角',ja:'ラウンド'},
+  '리프':{en:'Leaf',zh:'叶形',ja:'リーフ'},
+  '클래시':{en:'Classy',zh:'优雅',ja:'クラッシー'},
+  '다이아':{en:'Diamond',zh:'菱形',ja:'ダイヤ'},
+  '헥사':{en:'Hexa',zh:'六边形',ja:'ヘキサ'},
+  '스타':{en:'Star',zh:'星形',ja:'スター'},
+  '리퀴드':{en:'Liquid',zh:'液态',ja:'リキッド'},
+  '타겟':{en:'Target',zh:'靶心',ja:'ターゲット'},
+  '믹스':{en:'Mix',zh:'混合',ja:'ミックス'},
+  '그레이프':{en:'Grape',zh:'葡萄紫',ja:'グレープ'},
+  '민트':{en:'Mint',zh:'薄荷',ja:'ミント'},
+  '골드':{en:'Gold',zh:'金色',ja:'ゴールド'},
+  '로즈':{en:'Rose',zh:'玫瑰',ja:'ローズ'},
+  '미드나잇':{en:'Midnight',zh:'午夜',ja:'ミッドナイト'},
+  '플럼':{en:'Plum',zh:'梅紫',ja:'プラム'},
+  '크림슨':{en:'Crimson',zh:'深红',ja:'クリムゾン'}
 };
 function gtr(str){ var e=GAL_TR[str]; return (e && e[LANG]) ? e[LANG] : str; }
 var CATS = {
@@ -6675,17 +6822,31 @@ var CATS = {
     {name:"아이언피크",tag:"스포츠·오리지널",s:{artUrl:"assets/logo-ironpeak-bg.webp",centerLogoUrl:"assets/logo-ironpeak-obj.png",anim:true,animKind:"shine",fg1:"#3d4a5c",dot:"dots",eye:"square",artVisibility:56,logoSize:27,logoPad:true,labelOn:true,labelText:"IRONPEAK · OUTDOOR"}}
   ],
   pictogram:[
+    {name:"카페 Wi-Fi",tag:"스캔 → 와이파이 자동 접속",s:{fill:"solid",fg1:"#5b3a1a",bg:"#fffaf2",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"☕",centerScale:26,frameOn:true,frameStyle:"wood"},ct:"wifi",fields:{wifiSsid:"MyCafe_WiFi",wifiPass:"cafe1234"}},
+    {name:"디지털 명함",tag:"스캔 → 연락처 저장",s:{centerMode:"emoji",centerText:"📇",centerScale:24,ecc:"H",fill:"linear",fg1:"#2563eb",fg2:"#4f46e5",angle:120,dot:"dots",eye:"circle",bg:"#ffffff",frameOn:true,frameStyle:"shadow",frameMode:"linear",frameBg1:"#1d4ed8",frameBg2:"#0b2a6b",frameAngle:120},ct:"vcard",fields:{vcName:"홍길동",vcTel:"010-1234-5678",vcEmail:"hong@company.com",vcOrg:"회사명"}},
+    {name:"전화 문의",tag:"스캔 → 바로 전화",s:{fill:"solid",fg1:"#15803d",bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"📞",centerScale:28,frameOn:true,frameStyle:"card",frameMode:"solid",frameBg1:"#15803d"},ct:"tel",fields:{telNum:"010-1234-5678"}},
+    {name:"문자로 참여",tag:"스캔 → 문자 작성",s:{fill:"solid",fg1:"#6d28d9",bg:"#ffffff",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"💬",centerScale:28},ct:"sms",fields:{smsNum:"010-1234-5678",smsMsg:"이벤트 참여합니다"}},
+    {name:"이메일 문의",tag:"스캔 → 메일 작성",s:{fill:"solid",fg1:"#0e7490",bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"✉️",centerScale:28},ct:"email",fields:{emTo:"contact@company.com",emSubj:"문의드립니다"}},
+    {name:"매장 위치",tag:"스캔 → 지도 열기",s:{fill:"solid",fg1:"#b91c1c",bg:"#ffffff",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"📍",centerScale:28,frameOn:true,frameStyle:"card",frameMode:"solid",frameBg1:"#b91c1c"},ct:"geo",fields:{geoLat:"37.5665",geoLng:"126.9780"}},
+    {name:"쿠폰 코드",tag:"스캔 → 쿠폰 코드 표시",s:{fill:"linear",fg1:"#db2777",fg2:"#f97316",angle:120,dot:"rounded",eye:"rounded",bg:"#ffffff",centerMode:"emoji",centerText:"🎁",centerScale:26},ct:"text",fields:{content:"10% 할인 쿠폰: WELCOME10"}},
+    {name:"리뷰 남기기",tag:"스캔 → 리뷰 페이지",s:{fill:"solid",fg1:"#d97706",bg:"#ffffff",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"⭐",centerScale:28,labelOn:true,labelText:"REVIEW US ★"},ct:"url",fields:{content:"https://jay-inky.vercel.app"}},
+    {name:"인스타 프로필",tag:"스캔 → 인스타그램",s:{fill:"linear",fg1:"#e1306c",fg2:"#f77737",angle:120,bg:"#ffffff",dot:"rounded",eye:"circle",centerMode:"emoji",centerText:"📸",centerScale:28,labelOn:true,labelText:"@FOLLOW"},ct:"instagram",fields:{socialUser:"my.brand"}},
+    {name:"유튜브 채널",tag:"스캔 → 채널 구독",s:{fill:"solid",fg1:"#c1121f",bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"▶️",centerScale:28,frameOn:true,frameStyle:"card",frameMode:"solid",frameBg1:"#c1121f",labelOn:true,labelText:"SUBSCRIBE"},ct:"youtube",fields:{socialUser:"mychannel"}},
+    {name:"틱톡",tag:"스캔 → 틱톡 프로필",s:{fill:"linear",fg1:"#25f4ee",fg2:"#fe2c55",angle:120,bg:"#0b0d12",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"🎵",centerScale:28},ct:"tiktok",fields:{socialUser:"mybrand"}},
+    {name:"링크드인",tag:"스캔 → 프로필",s:{fill:"solid",fg1:"#0a66c2",bg:"#ffffff",dot:"square",eye:"square",centerMode:"emoji",centerText:"💼",centerScale:28,frameOn:true,frameStyle:"shadow",frameMode:"linear",frameBg1:"#0a66c2",frameBg2:"#0b2a6b",frameAngle:120},ct:"linkedin",fields:{socialUser:"myname"}},
+    {name:"텔레그램 채널",tag:"스캔 → 대화 열기",s:{fill:"solid",fg1:"#229ed9",bg:"#ffffff",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"✈️",centerScale:28},ct:"telegram",fields:{socialUser:"mychannel"}},
+    {name:"앱 다운로드",tag:"스캔 → 스토어 열기",s:{fill:"linear",fg1:"#334155",fg2:"#0f172a",angle:120,bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"📱",centerScale:28,labelOn:true,labelText:"GET THE APP"},ct:"appstore",fields:{linkUrl:"https://apps.apple.com/app/id000000000"}},
+    {name:"화상회의 참가",tag:"스캔 → 회의 입장",s:{fill:"solid",fg1:"#1d4ed8",bg:"#ffffff",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"🎥",centerScale:28,frameOn:true,frameStyle:"card",frameMode:"solid",frameBg1:"#1d4ed8"},ct:"video",fields:{linkUrl:"https://meet.google.com/abc-defg-hij"}},
+    {name:"스포티파이",tag:"스캔 → 플레이리스트",s:{fill:"solid",fg1:"#1db954",bg:"#0b0d12",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"🎧",centerScale:28},ct:"spotify",fields:{linkUrl:"https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M"}},
+    {name:"PayPal 결제",tag:"스캔 → 결제·송금",s:{fill:"solid",fg1:"#003087",bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"💰",centerScale:28,frameOn:true,frameStyle:"card",frameMode:"linear",frameBg1:"#009cde",frameBg2:"#003087",frameAngle:120},ct:"paypal",fields:{ppUser:"myshop",ppAmt:"10.00"}},
+    {name:"일정 등록",tag:"스캔 → 캘린더 추가",s:{fill:"solid",fg1:"#7c3aed",bg:"#ffffff",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"📅",centerScale:28,frameOn:true,frameStyle:"stamp"},ct:"event",fields:{evTitle:"제품 출시 행사",evLoc:"서울 강남"}},
     {name:"소화기",tag:"소방 안전",s:{fill:"solid",fg1:"#dc2626",bg:"#ffffff",dot:"dots",eye:"square",centerMode:"emoji",centerText:"🧯",centerScale:32,frameOn:true,frameMode:"solid",frameBg1:"#b91c1c"}},
-    {name:"응급/병원",tag:"의료",s:{fill:"solid",fg1:"#16a34a",bg:"#ffffff",dot:"dots",eye:"square",centerMode:"emoji",centerText:"🏥",centerScale:32,frameOn:true,frameMode:"linear",frameBg1:"#16a34a",frameBg2:"#0b3d22",frameAngle:135}},
-    {name:"와이파이",tag:"안내",s:{fill:"solid",fg1:"#2563eb",bg:"#ffffff",dot:"dots",eye:"square",centerMode:"emoji",centerText:"📶",centerScale:32,frameOn:true,frameMode:"linear",frameBg1:"#1d4ed8",frameBg2:"#0b2a6b",frameAngle:120}},
-    {name:"별점 리뷰",tag:"리뷰",s:{fill:"solid",fg1:"#f59e0b",bg:"#ffffff",dot:"dots",eye:"square",centerMode:"emoji",centerText:"⭐",centerScale:32,frameOn:true,frameMode:"solid",frameBg1:"#d97706"}},
+    {name:"응급·병원",tag:"의료",s:{fill:"solid",fg1:"#16a34a",bg:"#ffffff",dot:"dots",eye:"square",centerMode:"emoji",centerText:"🏥",centerScale:32,frameOn:true,frameMode:"linear",frameBg1:"#16a34a",frameBg2:"#0b3d22",frameAngle:135}},
     {name:"이벤트 선물",tag:"프로모션",s:{fill:"solid",fg1:"#db2777",bg:"#ffffff",dot:"dots",eye:"square",centerMode:"emoji",centerText:"🎁",centerScale:32,frameOn:true,frameMode:"linear",frameBg1:"#be185d",frameBg2:"#500724",frameAngle:120}},
     {name:"카페 메뉴",tag:"F&B",s:{fill:"solid",fg1:"#6f4e37",bg:"#fffaf3",dot:"dots",eye:"square",centerMode:"emoji",centerText:"☕",centerScale:32,frameOn:true,frameMode:"linear",frameBg1:"#5b3a29",frameBg2:"#2e1c14",frameAngle:135}},
-    {name:"매장 위치",tag:"길찾기",s:{fill:"solid",fg1:"#e11d48",bg:"#ffffff",dot:"dots",eye:"square",centerMode:"emoji",centerText:"📍",centerScale:32,frameOn:true,frameMode:"linear",frameBg1:"#be123c",frameBg2:"#4c0519",frameAngle:120}},
-    {name:"음악/플레이",tag:"미디어",s:{fill:"solid",fg1:"#7c3aed",bg:"#ffffff",dot:"dots",eye:"square",centerMode:"emoji",centerText:"🎵",centerScale:32,frameOn:true,frameMode:"linear",frameBg1:"#6d28d9",frameBg2:"#2e1065",frameAngle:135}},
-    {name:"홈/부동산",tag:"부동산",s:{fill:"solid",fg1:"#0d9488",bg:"#ffffff",dot:"dots",eye:"square",centerMode:"emoji",centerText:"🏠",centerScale:32,frameOn:true,frameMode:"solid",frameBg1:"#0f766e"}},
-    {name:"친환경",tag:"에코",s:{fill:"solid",fg1:"#22c55e",bg:"#ffffff",dot:"dots",eye:"square",centerMode:"emoji",centerText:"🌿",centerScale:32,frameOn:true,frameMode:"solid",frameBg1:"#15803d"}},
-    {name:"포토/카메라",tag:"사진",s:{fill:"solid",fg1:"#8b5cf6",bg:"#ffffff",dot:"dots",eye:"square",centerMode:"emoji",centerText:"📷",centerScale:32,frameOn:true,frameMode:"linear",frameBg1:"#7c3aed",frameBg2:"#2e1065",frameAngle:120}},
+    {name:"홈·부동산",tag:"부동산",s:{fill:"solid",fg1:"#0d9488",bg:"#ffffff",dot:"dots",eye:"square",centerMode:"emoji",centerText:"🏠",centerScale:32,frameOn:true,frameMode:"solid",frameBg1:"#0f766e"}},
+    {name:"친환경",tag:"친환경",s:{fill:"solid",fg1:"#22c55e",bg:"#ffffff",dot:"dots",eye:"square",centerMode:"emoji",centerText:"🌿",centerScale:32,frameOn:true,frameMode:"solid",frameBg1:"#15803d"}},
+    {name:"포토·카메라",tag:"사진",s:{fill:"solid",fg1:"#8b5cf6",bg:"#ffffff",dot:"dots",eye:"square",centerMode:"emoji",centerText:"📷",centerScale:32,frameOn:true,frameMode:"linear",frameBg1:"#7c3aed",frameBg2:"#2e1065",frameAngle:120}},
     {name:"주차",tag:"교통",s:{fill:"solid",fg1:"#2563eb",bg:"#ffffff",dot:"dots",eye:"square",centerMode:"emoji",centerText:"🅿️",centerScale:32,frameOn:true,frameMode:"solid",frameBg1:"#1e40af"}},
     {name:"레스토랑",tag:"F&B",s:{fill:"solid",fg1:"#b91c1c",bg:"#fffaf7",dot:"dots",eye:"square",centerMode:"emoji",centerText:"🍽️",centerScale:32,frameOn:true,frameMode:"linear",frameBg1:"#dc2626",frameBg2:"#7c2d12",frameAngle:135}},
     {name:"베이커리",tag:"F&B",s:{fill:"solid",fg1:"#b45309",bg:"#fffdf5",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"🥐",centerScale:32,frameOn:true,frameStyle:"wood"}},
@@ -6696,15 +6857,15 @@ var CATS = {
     {name:"헤어살롱",tag:"뷰티",s:{fill:"solid",fg1:"#be185d",bg:"#ffffff",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"💇",centerScale:32,frameOn:true,frameMode:"linear",frameBg1:"#db2777",frameBg2:"#500724",frameAngle:120}},
     {name:"코스메틱",tag:"뷰티",s:{fill:"solid",fg1:"#9d174d",bg:"#fff5f8",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"🧴",centerScale:32,frameOn:true,frameStyle:"polaroid"}},
     {name:"약국",tag:"의료",s:{fill:"solid",fg1:"#047857",bg:"#ffffff",dot:"dots",eye:"square",centerMode:"emoji",centerText:"💊",centerScale:32,frameOn:true,frameMode:"solid",frameBg1:"#065f46"}},
-    {name:"반려동물",tag:"펫",s:{fill:"solid",fg1:"#0e7490",bg:"#f2fbfd",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"🐾",centerScale:32,frameOn:true,frameStyle:"card",frameMode:"linear",frameBg1:"#06b6d4",frameBg2:"#0e7490",frameAngle:135}},
-    {name:"자동차·정비",tag:"오토",s:{fill:"solid",fg1:"#334155",bg:"#ffffff",dot:"square",eye:"square",centerMode:"emoji",centerText:"🚗",centerScale:32,frameOn:true,frameStyle:"shadow",frameMode:"linear",frameBg1:"#475569",frameBg2:"#1e293b",frameAngle:135}},
+    {name:"반려동물",tag:"반려동물",s:{fill:"solid",fg1:"#0e7490",bg:"#f2fbfd",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"🐾",centerScale:32,frameOn:true,frameStyle:"card",frameMode:"linear",frameBg1:"#06b6d4",frameBg2:"#0e7490",frameAngle:135}},
+    {name:"자동차·정비",tag:"자동차",s:{fill:"solid",fg1:"#334155",bg:"#ffffff",dot:"square",eye:"square",centerMode:"emoji",centerText:"🚗",centerScale:32,frameOn:true,frameStyle:"shadow",frameMode:"linear",frameBg1:"#475569",frameBg2:"#1e293b",frameAngle:135}},
     {name:"서점·도서관",tag:"문화",s:{fill:"solid",fg1:"#3730a3",bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"📚",centerScale:32,frameOn:true,frameMode:"linear",frameBg1:"#4338ca",frameBg2:"#1e1b4b",frameAngle:120}},
-    {name:"게임·PC방",tag:"엔터",s:{fill:"linear",fg1:"#7c3aed",fg2:"#22d3ee",angle:120,bg:"#0b0d12",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"🎮",centerScale:32,frameOn:true,frameStyle:"neon",frameBg1:"#7c3aed"}},
-    {name:"공연·티켓",tag:"엔터",s:{fill:"solid",fg1:"#a21caf",bg:"#ffffff",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"🎟️",centerScale:32,frameOn:true,frameStyle:"stamp"}},
+    {name:"게임·PC방",tag:"엔터테인먼트",s:{fill:"linear",fg1:"#7c3aed",fg2:"#22d3ee",angle:120,bg:"#0b0d12",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"🎮",centerScale:32,frameOn:true,frameStyle:"neon",frameBg1:"#7c3aed"}},
+    {name:"공연·티켓",tag:"엔터테인먼트",s:{fill:"solid",fg1:"#a21caf",bg:"#ffffff",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"🎟️",centerScale:32,frameOn:true,frameStyle:"stamp"}},
     {name:"호텔·숙박",tag:"여행",s:{fill:"solid",fg1:"#7c5a12",bg:"#fffdf5",dot:"classy",eye:"leaf",centerMode:"emoji",centerText:"🏨",centerScale:32,frameOn:true,frameStyle:"gold"}},
     {name:"플라워샵",tag:"리테일",s:{fill:"solid",fg1:"#db2777",bg:"#fff5fa",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"🌸",centerScale:32,frameOn:true,frameStyle:"shell"}},
     {name:"디저트 카페",tag:"F&B",s:{fill:"solid",fg1:"#9a3412",bg:"#fffaf3",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"🍰",centerScale:32,frameOn:true,frameStyle:"polaroid"}},
-    {name:"노래방",tag:"엔터",s:{fill:"linear",fg1:"#c026d3",fg2:"#6d28d9",angle:120,bg:"#0b0712",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"🎤",centerScale:32,frameOn:true,frameStyle:"neon",frameBg1:"#e879f9"}},
+    {name:"노래방",tag:"엔터테인먼트",s:{fill:"linear",fg1:"#c026d3",fg2:"#6d28d9",angle:120,bg:"#0b0712",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"🎤",centerScale:32,frameOn:true,frameStyle:"neon",frameBg1:"#e879f9"}},
     {name:"패션·의류",tag:"리테일",s:{fill:"solid",fg1:"#111111",bg:"#ffffff",dot:"square",eye:"square",centerMode:"emoji",centerText:"👗",centerScale:32,frameOn:true,frameStyle:"poster",frameMode:"solid",frameBg1:"#111111"}},
     {name:"주얼리",tag:"리테일",s:{fill:"solid",fg1:"#8a6d1e",bg:"#fffdf5",dot:"classy",eye:"leaf",centerMode:"emoji",centerText:"💍",centerScale:32,frameOn:true,frameStyle:"gold"}}
   ],
@@ -6733,26 +6894,6 @@ var CATS = {
     {name:"우드 · 다크월넛",tag:"원목 액자",s:{fill:"solid",fg1:"#3b2412",bg:"#fdf8f0",dot:"rounded",eye:"rounded",frameOn:true,frameStyle:"wood"}},
     {name:"서클아트 골드",tag:"도트 링 배지",s:{fill:"linear",fg1:"#d4af37",fg2:"#8a6d1e",angle:120,bg:"#ffffff",dot:"classy",eye:"leaf",frameOn:true,frameStyle:"circle",frameMode:"solid",frameBg1:"#c9a227"}},
     {name:"모노 카드 · 라이트",tag:"컬러 카드",s:{fill:"solid",fg1:"#0f172a",bg:"#ffffff",dot:"square",eye:"square",frameOn:true,frameStyle:"card",frameMode:"linear",frameBg1:"#e5e7eb",frameBg2:"#94a3b8",frameAngle:135}}
-  ],
-  usecase:[
-    {name:"카페 Wi-Fi",tag:"스캔 → 와이파이 자동 접속",s:{fill:"solid",fg1:"#5b3a1a",bg:"#fffaf2",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"☕",centerScale:26,frameOn:true,frameStyle:"wood"},ct:"wifi",fields:{wifiSsid:"MyCafe_WiFi",wifiPass:"cafe1234"}},
-    {name:"디지털 명함",tag:"스캔 → 연락처 저장",s:{fill:"linear",fg1:"#2563eb",fg2:"#4f46e5",angle:120,dot:"dots",eye:"circle",bg:"#ffffff",frameOn:true,frameStyle:"shadow",frameMode:"linear",frameBg1:"#1d4ed8",frameBg2:"#0b2a6b",frameAngle:120},ct:"vcard",fields:{vcName:"홍길동",vcTel:"010-1234-5678",vcEmail:"hong@company.com",vcOrg:"회사명"}},
-    {name:"전화 문의",tag:"스캔 → 바로 전화",s:{fill:"solid",fg1:"#15803d",bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"📞",centerScale:28,frameOn:true,frameStyle:"card",frameMode:"solid",frameBg1:"#15803d"},ct:"tel",fields:{telNum:"010-1234-5678"}},
-    {name:"문자 참여",tag:"스캔 → 문자 작성",s:{fill:"solid",fg1:"#6d28d9",bg:"#ffffff",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"💬",centerScale:28},ct:"sms",fields:{smsNum:"010-1234-5678",smsMsg:"이벤트 참여합니다"}},
-    {name:"이메일 문의",tag:"스캔 → 메일 작성",s:{fill:"solid",fg1:"#0e7490",bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"✉️",centerScale:28},ct:"email",fields:{emTo:"contact@company.com",emSubj:"문의드립니다"}},
-    {name:"매장 위치",tag:"스캔 → 지도 열기",s:{fill:"solid",fg1:"#b91c1c",bg:"#ffffff",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"📍",centerScale:28,frameOn:true,frameStyle:"card",frameMode:"solid",frameBg1:"#b91c1c"},ct:"geo",fields:{geoLat:"37.5665",geoLng:"126.9780"}},
-    {name:"쿠폰 텍스트",tag:"스캔 → 쿠폰 코드 표시",s:{fill:"linear",fg1:"#db2777",fg2:"#f97316",angle:120,dot:"rounded",eye:"rounded",bg:"#ffffff",centerMode:"emoji",centerText:"🎁",centerScale:26},ct:"text",fields:{content:"10% 할인 쿠폰: WELCOME10"}},
-    {name:"리뷰 남기기",tag:"스캔 → 리뷰 페이지",s:{fill:"solid",fg1:"#d97706",bg:"#ffffff",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"⭐",centerScale:28,labelOn:true,labelText:"리뷰 남기기"},ct:"url",fields:{content:"https://jay-inky.vercel.app"}},
-    {name:"인스타 프로필",tag:"스캔 → 인스타그램",s:{fill:"linear",fg1:"#e1306c",fg2:"#f77737",angle:120,bg:"#ffffff",dot:"rounded",eye:"circle",centerMode:"emoji",centerText:"📸",centerScale:28,labelOn:true,labelText:"@FOLLOW"},ct:"instagram",fields:{socialUser:"my.brand"}},
-    {name:"유튜브 채널",tag:"스캔 → 채널 구독",s:{fill:"solid",fg1:"#c1121f",bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"▶️",centerScale:28,frameOn:true,frameStyle:"card",frameMode:"solid",frameBg1:"#c1121f",labelOn:true,labelText:"SUBSCRIBE"},ct:"youtube",fields:{socialUser:"mychannel"}},
-    {name:"틱톡",tag:"스캔 → 틱톡 프로필",s:{fill:"linear",fg1:"#25f4ee",fg2:"#fe2c55",angle:120,bg:"#0b0d12",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"🎵",centerScale:28},ct:"tiktok",fields:{socialUser:"mybrand"}},
-    {name:"링크드인",tag:"스캔 → 프로필",s:{fill:"solid",fg1:"#0a66c2",bg:"#ffffff",dot:"square",eye:"square",centerMode:"emoji",centerText:"💼",centerScale:28,frameOn:true,frameStyle:"shadow",frameMode:"linear",frameBg1:"#0a66c2",frameBg2:"#0b2a6b",frameAngle:120},ct:"linkedin",fields:{socialUser:"myname"}},
-    {name:"텔레그램 채널",tag:"스캔 → 대화 열기",s:{fill:"solid",fg1:"#229ed9",bg:"#ffffff",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"✈️",centerScale:28},ct:"telegram",fields:{socialUser:"mychannel"}},
-    {name:"앱 다운로드",tag:"스캔 → 스토어 열기",s:{fill:"linear",fg1:"#334155",fg2:"#0f172a",angle:120,bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"📱",centerScale:28,labelOn:true,labelText:"GET THE APP"},ct:"appstore",fields:{linkUrl:"https://apps.apple.com/app/id000000000"}},
-    {name:"화상회의 참가",tag:"스캔 → 회의 입장",s:{fill:"solid",fg1:"#1d4ed8",bg:"#ffffff",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"🎥",centerScale:28,frameOn:true,frameStyle:"card",frameMode:"solid",frameBg1:"#1d4ed8"},ct:"video",fields:{linkUrl:"https://meet.google.com/abc-defg-hij"}},
-    {name:"스포티파이",tag:"스캔 → 플레이리스트",s:{fill:"solid",fg1:"#1db954",bg:"#0b0d12",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"🎧",centerScale:28},ct:"spotify",fields:{linkUrl:"https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M"}},
-    {name:"PayPal 결제",tag:"스캔 → 결제·송금",s:{fill:"solid",fg1:"#003087",bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"💰",centerScale:28,frameOn:true,frameStyle:"card",frameMode:"linear",frameBg1:"#009cde",frameBg2:"#003087",frameAngle:120},ct:"paypal",fields:{ppUser:"myshop",ppAmt:"10.00"}},
-    {name:"일정 등록",tag:"스캔 → 캘린더 추가",s:{fill:"solid",fg1:"#7c3aed",bg:"#ffffff",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"📅",centerScale:28,frameOn:true,frameStyle:"stamp"},ct:"event",fields:{evTitle:"제품 출시 행사",evLoc:"서울 강남"}}
   ]
 };
 var curCat="standard";
@@ -6816,7 +6957,7 @@ function syncStudioUI(){
   $("labelSize").value=S.labelSize; $("labelSizeOut").textContent=S.labelSize+"%";
   setSeg("labelPosSeg","lpos",S.labelPos); $("labelOffset").value=S.labelOffset; $("labelOffsetOut").textContent=S.labelOffset;
   $("artControls").style.display="none"; $("artLabel").textContent=t("art.reset2");
-  if($("logoClear")){ $("logoSizeWrap").style.display="none"; $("logoBgWrap").style.display="none"; $("logoClear").style.display="none"; $("logoLabel").textContent="＋ 로고 이미지 업로드 (PNG·JPG·SVG)"; $("logoFile").value=""; }
+  if($("logoClear")){ $("logoSizeWrap").style.display="none"; $("logoBgWrap").style.display="none"; $("logoClear").style.display="none"; $("logoLabel").textContent=tx("＋ 로고 이미지 업로드 (PNG·JPG·SVG)","＋ Upload logo (PNG·JPG·SVG)","＋ ロゴ画像をアップロード（PNG·JPG·SVG）","＋ 上传标志图片（PNG·JPG·SVG）"); $("logoFile").value=""; }
   if(typeof syncFrameIconUI==="function") syncFrameIconUI();
 }
 function applyPreset(ps, meta){
@@ -6825,7 +6966,7 @@ function applyPreset(ps, meta){
   for(var k in ps) S[k]=ps[k];
   if(ps.scene){ S.artImg=makeScene(ps.scene); S.artIsVideo=false; }
   else if(ps.artUrl){ getArtImg(ps.artUrl, function(img){ if(img){ S.artImg=img; S.artIsVideo=false; $("artControls").style.display="block"; $("artLabel").textContent=t("art.webOk"); rerender(); } }); }
-  if(ps.centerLogoUrl){ getArtImg(ps.centerLogoUrl, function(img){ if(img){ S.logo=img; if($("logoSizeWrap")) $("logoSizeWrap").style.display="block"; if($("logoBgWrap")) $("logoBgWrap").style.display="flex"; if($("logoClear")) $("logoClear").style.display="block"; if($("logoLabel")) $("logoLabel").textContent="✓ 로고 업로드됨 — 변경하려면 클릭"; rerender(); } }); }
+  if(ps.centerLogoUrl){ getArtImg(ps.centerLogoUrl, function(img){ if(img){ S.logo=img; if($("logoSizeWrap")) $("logoSizeWrap").style.display="block"; if($("logoBgWrap")) $("logoBgWrap").style.display="flex"; if($("logoClear")) $("logoClear").style.display="block"; if($("logoLabel")) $("logoLabel").textContent=tx("✓ 로고 업로드됨 — 변경하려면 클릭","✓ Logo uploaded — click to change","✓ ロゴをアップロード — クリックで変更","✓ 已上传标志 — 点击更换"); rerender(); } }); }
   // use-case presets carry a connection type + prefilled form fields (e.g. Wi-Fi SSID)
   if(meta && meta.ct){
     selectCType(meta.ct);
@@ -6838,7 +6979,7 @@ function applyPreset(ps, meta){
   Array.prototype.forEach.call($("tabs").children,function(x){x.classList.toggle("active", x.dataset.view==="studio");});
   ["gallery","studio","ar","about"].forEach(function(v){ $("view-"+v).classList.toggle("active", v==="studio"); });
   rerender();
-  toast(ps.artUrl?"이미지 프리셋 적용 — 이미지 로딩 중…":"프리셋 적용됨 — 자유롭게 편집하세요");
+  toast(ps.artUrl?tx("이미지 프리셋 적용 — 이미지 로딩 중…","Image preset applied — loading image…","画像プリセットを適用 — 読み込み中…","已应用图片预设 — 正在加载图片…"):tx("프리셋 적용됨 — 자유롭게 편집하세요","Preset applied — edit freely","プリセットを適用しました — 自由に編集できます","已应用预设 — 可自由编辑"));
 }
 function setSeg(id,key,val){
   var el=$(id); if(!el) return;
@@ -6857,7 +6998,7 @@ $("catTabs").addEventListener("click",function(e){
 // ---------- My QR (local storage) ----------
 var MYKEY="aqr_myqr_v1";
 function loadMyQr(){ try{ return JSON.parse(localStorage.getItem(MYKEY)||"[]"); }catch(e){ return []; } }
-function storeMyQr(a){ try{ localStorage.setItem(MYKEY, JSON.stringify(a)); }catch(e){ toast("저장 공간이 부족합니다"); } }
+function storeMyQr(a){ try{ localStorage.setItem(MYKEY, JSON.stringify(a)); }catch(e){ toast(tx("저장 공간이 부족합니다","Not enough storage space","保存容量が不足しています","存储空间不足")); } }
 function snapshotDesign(){ var o={content:S.content}; DKEYS.forEach(function(k){o[k]=S[k];}); return o; }
 function currentThumb(){ var c=document.createElement("canvas"); c.width=c.height=260; var pm=S.margin; if(S.margin>3)S.margin=3; try{ render(c.getContext("2d"),260); }catch(e){} S.margin=pm; return c.toDataURL("image/jpeg",0.7); }
 // bake the (CORS-clean) AI art image to a compact JPEG data-URL so it can live in localStorage
@@ -6871,13 +7012,13 @@ function bakeAiArt(){
 }
 function saveCurrentQr(){
   var arr=loadMyQr();
-  if(arr.length>=60){ toast("최대 60개까지 저장됩니다"); return; }
+  if(arr.length>=60){ toast(tx("최대 60개까지 저장됩니다","Up to 60 items can be saved","最大60件まで保存できます","最多可保存 60 个")); return; }
   var ai=bakeAiArt();
   var name=(ai?"AI·":"")+((S.content||"").replace(/^https?:\/\//i,"").slice(0,24)||"내 QR");
   var item={id:"q"+(arr.length)+"_"+name.length+"_"+(S.fg1||"")+Math.round(S.angle||0), name:name, d:snapshotDesign(), thumb:currentThumb()};
   if(ai) item.ai=ai;
   arr.unshift(item);
-  storeMyQr(arr); toast(ai?"AI 아트 QR이 My QR에 저장됨":"My QR에 저장됨"); if(curCat==="myqr") renderMyQr();
+  storeMyQr(arr); toast(ai?tx("AI 아트 QR이 My QR에 저장됨","AI-art QR saved to My QR","AIアートQRをMy QRに保存しました","AI 艺术二维码已保存到 My QR"):tx("My QR에 저장됨","Saved to My QR","My QRに保存しました","已保存到 My QR")); if(curCat==="myqr") renderMyQr();
 }
 function renderMyQr(){
   var grid=$("galGrid"), empty=$("galEmpty"); grid.innerHTML="";
@@ -6889,17 +7030,17 @@ function renderMyQr(){
     card.innerHTML='<span class="del" data-i="'+i+'">'+t("myqr.del")+'</span><span class="use">'+t("myqr.use")+'</span><img src="'+item.thumb+'" style="width:100%;border-radius:8px;display:block;background:#fff"/><div class="name">'+ (item.name||t("myqr.name")) +'</div><div class="tag">'+t("myqr.tag")+'</div>';
     grid.appendChild(card);
     card.addEventListener("click",function(ev){
-      if(ev.target.closest(".del")){ ev.stopPropagation(); var a=loadMyQr(); a.splice(i,1); storeMyQr(a); renderMyQr(); toast("삭제됨"); return; }
+      if(ev.target.closest(".del")){ ev.stopPropagation(); var a=loadMyQr(); a.splice(i,1); storeMyQr(a); renderMyQr(); toast(tx("삭제됨","Deleted","削除しました","已删除")); return; }
       var d=item.d; resetDesign(true); for(var k in d){ if(k==="content") S.content=d[k]; else S[k]=d[k]; }
       $("content").value=S.content||""; syncStudioUI();
       if(item.ai){
         var im=new Image();
-        im.onload=function(){ S.aiArt=im; $("aiClear").style.display="block"; aiStatus("저장된 AI 아트 QR을 불러왔습니다."); render(ctx,EXPORT); updateMeta(); };
+        im.onload=function(){ S.aiArt=im; $("aiClear").style.display="block"; aiStatus(tx("저장된 AI 아트 QR을 불러왔습니다.","Loaded the saved AI-art QR.","保存したAIアートQRを読み込みました。","已载入保存的 AI 艺术二维码。")); render(ctx,EXPORT); updateMeta(); };
         im.src=item.ai;
       }
       Array.prototype.forEach.call($("tabs").children,function(x){x.classList.toggle("active", x.dataset.view==="studio");});
       ["gallery","studio","ar","about"].forEach(function(v){ $("view-"+v).classList.toggle("active", v==="studio"); });
-      rerender(); toast("불러왔습니다 — 자유롭게 편집하세요");
+      rerender(); toast(tx("불러왔습니다 — 자유롭게 편집하세요","Loaded — edit freely","読み込みました — 自由に編集できます","已载入 — 可自由编辑"));
     });
   });
 }
@@ -6907,6 +7048,39 @@ $("saveMyQr").addEventListener("click",saveCurrentQr);
 
 // ---------- i18n (KO / EN / ZH / JA) ----------
 var I18N = {
+  "doc.title":{ko:"Aesthetic QR Studio — 평범함을 특별하게",en:"Aesthetic QR Studio — beautiful QR codes that scan",zh:"Aesthetic QR Studio — 美观又能扫描的二维码",ja:"Aesthetic QR Studio — 美しく読み取れるQR"},
+  "lbl.eccLevel":{ko:"오류 정정 레벨",en:"Error correction",zh:"纠错等级",ja:"誤り訂正レベル"},
+  "ecc.tip.L":{ko:"복원력 7%. 데이터가 짧아지지만 로고·아트에는 약해요.",en:"7% recovery. Smallest code, but weak with logos or art.",zh:"7% 纠错。码最小，但不适合放标志或艺术图。",ja:"復元力7%。コードは小さいがロゴ・アートには弱い。"},
+  "ecc.tip.M":{ko:"복원력 15%. 일반 용도의 균형점.",en:"15% recovery. A balanced default for general use.",zh:"15% 纠错。日常使用的平衡选择。",ja:"復元力15%。一般用途のバランス型。"},
+  "ecc.tip.Q":{ko:"복원력 25%. 로고를 조금 넣을 때.",en:"25% recovery. For a small logo.",zh:"25% 纠错。适合放小标志。",ja:"復元力25%。小さめのロゴを入れるとき。"},
+  "ecc.tip.H":{ko:"복원력 30%(최대). 로고·아트·픽토그램을 크게 넣어도 스캔됩니다. 권장.",en:"30% recovery (max). Still scans with a large logo, art or pictogram. Recommended.",zh:"30% 纠错（最高）。放大标志、艺术图或图标也能扫描。推荐。",ja:"復元力30%（最大）。ロゴ・アート・ピクトグラムを大きく入れても読み取れます。推奨。"},
+  "badge.core":{ko:"핵심",en:"Core",zh:"核心",ja:"主要"},
+  "badge.aiServer":{ko:"서버 생성 · 최고 품질",en:"Server-generated · best quality",zh:"服务器生成 · 最高画质",ja:"サーバー生成・最高品質"},
+  "cta.scanPlease":{ko:"스캔하세요",en:"Scan here",zh:"请扫码",ja:"スキャンしてね"},
+  "cta.scanNow":{ko:"👆 지금 스캔",en:"👆 Scan now",zh:"👆 立即扫码",ja:"👆 今すぐスキャン"},
+  "cta.menu":{ko:"MENU ▸ 스캔",en:"MENU ▸ Scan",zh:"菜单 ▸ 扫码",ja:"MENU ▸ スキャン"},
+  "cta.event":{ko:"이벤트 참여 ▸",en:"Join the event ▸",zh:"参加活动 ▸",ja:"イベント参加 ▸"},
+  "ar.msgStart":{ko:"‘카메라 시작’을 눌러 QR을 비춰 보세요",en:"Tap 'Start camera' and point it at a QR",zh:"点击“启动摄像头”并对准二维码",ja:"「カメラ開始」を押してQRを映してください"},
+  "btn.arShot":{ko:"📸 사진 저장",en:"📸 Save photo",zh:"📸 保存照片",ja:"📸 写真を保存"},
+  "btn.arStop":{ko:"정지",en:"Stop",zh:"停止",ja:"停止"},
+  "hint.arQr":{ko:"스튜디오에서 만든 QR을 <b>다른 화면/인쇄물</b>에 띄워 두고 이 카메라로 비추면 그 위에 AR이 나타납니다. 실시간 인식은 <b>jsQR</b>(브라우저 내 디코딩)로 동작합니다.",en:"Show a QR you made in the Studio on <b>another screen or a printout</b> and point this camera at it — AR appears on top. Live detection runs on <b>jsQR</b> (decoded in your browser).",zh:"把在工作室制作的二维码显示在<b>另一块屏幕或打印件</b>上，用此摄像头对准，AR 就会叠加在上面。实时识别基于 <b>jsQR</b>（在浏览器内解码）。",ja:"スタジオで作ったQRを<b>別の画面や印刷物</b>に表示してこのカメラで映すと、その上にARが現れます。リアルタイム認識は<b>jsQR</b>（ブラウザ内でデコード）で動作します。"},
+  "ph.evTitle":{ko:"제품 출시 행사",en:"Product launch event",zh:"产品发布会",ja:"製品発表イベント"},
+  "ph.cdName":{ko:"홍길동",en:"John Doe",zh:"张伟",ja:"山田 太郎"},
+  "ph.cdTitle":{ko:"대표 / Manager",en:"CEO / Manager",zh:"总经理 / 经理",ja:"代表 / マネージャー"},
+  "foot.tm":{ko:"QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)",en:"QR Code is a registered trademark of DENSO WAVE · Encoder: qrcode-generator (MIT, © Kazuhiko Arase)",zh:"QR Code 是 DENSO WAVE 的注册商标 · 编码器：qrcode-generator（MIT，© Kazuhiko Arase）",ja:"QR Code は株式会社デンソーウェーブの登録商標です · エンコーダー：qrcode-generator（MIT, © Kazuhiko Arase）"},
+  "foot.build":{ko:"빌드",en:"Build",zh:"版本",ja:"ビルド"},
+  "ct.tip.instagram":{ko:"인스타그램 사용자명을 담아 프로필로 바로 이동합니다.",en:"Opens an Instagram profile from the username.",zh:"根据用户名直接打开 Instagram 主页。",ja:"ユーザー名からInstagramのプロフィールを開きます。"},
+  "ct.tip.youtube":{ko:"유튜브 채널 핸들(@이름)로 채널을 엽니다.",en:"Opens a YouTube channel from its @handle.",zh:"根据 @用户名 打开 YouTube 频道。",ja:"@ハンドルからYouTubeチャンネルを開きます。"},
+  "ct.tip.tiktok":{ko:"틱톡 사용자명(@이름)으로 프로필을 엽니다.",en:"Opens a TikTok profile from the @username.",zh:"根据 @用户名 打开 TikTok 主页。",ja:"@ユーザー名からTikTokのプロフィールを開きます。"},
+  "ct.tip.x":{ko:"X(트위터) 사용자명으로 프로필을 엽니다.",en:"Opens an X (Twitter) profile from the username.",zh:"根据用户名打开 X（Twitter）主页。",ja:"ユーザー名からX（Twitter）のプロフィールを開きます。"},
+  "ct.tip.facebook":{ko:"페이스북 사용자명/페이지로 이동합니다.",en:"Opens a Facebook profile or page.",zh:"打开 Facebook 个人主页或专页。",ja:"Facebookのプロフィール/ページを開きます。"},
+  "ct.tip.linkedin":{ko:"링크드인 프로필(in/사용자명)로 이동합니다.",en:"Opens a LinkedIn profile (in/username).",zh:"打开 LinkedIn 个人资料（in/用户名）。",ja:"LinkedInのプロフィール（in/ユーザー名）を開きます。"},
+  "ct.tip.telegram":{ko:"텔레그램 사용자명으로 대화를 엽니다.",en:"Opens a Telegram chat from the username.",zh:"根据用户名打开 Telegram 对话。",ja:"ユーザー名からTelegramのチャットを開きます。"},
+  "ct.tip.github":{ko:"깃허브 사용자명으로 프로필을 엽니다.",en:"Opens a GitHub profile from the username.",zh:"根据用户名打开 GitHub 主页。",ja:"ユーザー名からGitHubのプロフィールを開きます。"},
+  "ct.tip.appstore":{ko:"앱 스토어/플레이스토어 링크로 앱 다운로드 페이지를 엽니다.",en:"Opens the App Store / Google Play download page.",zh:"打开 App Store / Google Play 的下载页面。",ja:"App Store/Google Playのダウンロードページを開きます。"},
+  "ct.tip.spotify":{ko:"스포티파이 트랙·앨범·플레이리스트 링크를 엽니다.",en:"Opens a Spotify track, album or playlist.",zh:"打开 Spotify 歌曲、专辑或歌单链接。",ja:"Spotifyの曲・アルバム・プレイリストを開きます。"},
+  "ct.tip.review":{ko:"구글 리뷰/지도 장소 링크로 리뷰 작성 페이지를 엽니다.",en:"Opens the Google review page for a place.",zh:"打开地点的 Google 评价页面。",ja:"GoogleのレビューページをMapの場所リンクから開きます。"},
+  "ct.tip.video":{ko:"Zoom·Meet 등 화상회의 참가 링크를 엽니다.",en:"Opens a Zoom / Meet video-call link.",zh:"打开 Zoom、Meet 等视频会议链接。",ja:"Zoom・Meetなどのビデオ会議リンクを開きます。"},
   "nav.gallery":{ko:"갤러리",en:"Gallery",zh:"图库",ja:"ギャラリー"},
   "tip.theme":{ko:"라이트 / 다크 테마 전환",en:"Toggle light / dark theme",zh:"切换浅色 / 深色主题",ja:"ライト / ダークテーマ切替"},
   "seg.eye.target":{ko:"타겟",en:"Target",zh:"靶心",ja:"ターゲット"},
@@ -7057,14 +7231,17 @@ var I18N = {
   "hero.p":{ko:"흑백 사각형은 이제 그만. 색상·그라디언트·모듈 형태·로고·애니메이션으로 스캔되는 디자인을 만드세요. 아래 프리셋을 눌러 스튜디오에서 바로 편집할 수 있습니다.",en:"No more black-and-white squares. Design scannable codes with colors, gradients, module shapes, logos and animation. Click a preset below to edit it in the studio.",zh:"告别黑白方块。用颜色、渐变、模块形状、Logo 和动画设计可扫描的二维码。点击下方预设即可在工作室中编辑。",ja:"白黒の四角はもう卒業。色・グラデーション・モジュール形状・ロゴ・アニメーションでスキャン可能なデザインを。下のプリセットを押せばスタジオで編集できます。"},
   "gal.title":{ko:"디자인 갤러리",en:"Design Gallery",zh:"设计图库",ja:"デザインギャラリー"},
   "gal.sub":{ko:"카테고리를 고르고, 카드를 눌러 스튜디오에 불러오기 (예시 QR은 이 사이트로 연결)",en:"Pick a category and click a card to load it into the studio (sample QRs link to this site)",zh:"选择分类，点击卡片载入工作室（示例二维码指向本站）",ja:"カテゴリを選び、カードを押すとスタジオに読み込みます（サンプルQRはこのサイトへ）"},
-  "cat.usecase":{ko:"활용",en:"Use Cases",zh:"用途",ja:"活用"},
+  "cat.standard":{ko:"기본",en:"Standard",zh:"标准",ja:"スタンダード"},
+  "cat.animation":{ko:"애니메이션",en:"Animation",zh:"动画",ja:"アニメーション"},
+  "cat.logo":{ko:"로고",en:"Logo",zh:"标志",ja:"ロゴ"},
+  "cat.pictogram":{ko:"픽토그램",en:"Pictogram",zh:"图标",ja:"ピクトグラム"},
+  "cat.frame":{ko:"프레임",en:"Frame",zh:"边框",ja:"フレーム"},
   "cat.myqr":{ko:"★ My QR",en:"★ My QR",zh:"★ 我的二维码",ja:"★ マイQR"},
   "cat.tip.standard":{ko:"색상·그라디언트 기본 디자인 모음. 클릭하면 스튜디오로 불러와 편집할 수 있어요.",en:"Basic color & gradient designs. Click to load and edit in the studio.",zh:"基础配色与渐变设计。点击后载入工作室编辑。",ja:"色・グラデーションの基本デザイン集。クリックでスタジオに読み込み編集。"},
   "cat.tip.animation":{ko:"이미지가 살아 움직이는 아트 QR. 카드를 클릭하면 그 이미지가 적용된 채 편집할 수 있어요.",en:"Living, animated art QRs. Click a card to edit with that image applied.",zh:"会动的艺术二维码。点击卡片即可在应用该图像的状态下编辑。",ja:"画像が動くアートQR。カードをクリックするとその画像が適用された状態で編集できます。"},
   "cat.tip.logo":{ko:"중앙에 브랜드 텍스트가 들어간 로고형 QR. 클릭 후 문구를 바꾸거나 로고 이미지를 올릴 수 있어요.",en:"Logo-style QRs with brand text in the center. Click to change the text or upload a logo.",zh:"中心带品牌文字的 Logo 型二维码。点击后可改文字或上传 Logo。",ja:"中央にブランド文字が入るロゴ型QR。クリック後に文言変更やロゴ画像のアップロードが可能。"},
-  "cat.tip.pictogram":{ko:"중앙에 픽토그램(이모지)이 들어간 QR. 클릭 후 아이콘을 자유롭게 바꿀 수 있어요.",en:"QRs with a pictogram (emoji) in the center. Click to swap the icon freely.",zh:"中心带图标（表情）的二维码。点击后可自由更换图标。",ja:"中央にピクトグラム（絵文字）が入るQR。クリック後にアイコンを自由に変更。"},
+  "cat.tip.pictogram":{ko:"용도·업종별 픽토그램 QR. Wi-Fi·연락처·전화 같은 용도형은 클릭하면 입력폼이 예시값과 함께 열려요.",en:"Pictogram QRs by purpose and business type. Purpose ones (Wi-Fi, contact, call…) open their form pre-filled with examples.",zh:"按用途和行业分类的图标二维码。Wi-Fi、联系人、电话等用途类点击后会打开带示例值的表单。",ja:"用途・業種別のピクトグラムQR。Wi-Fi・連絡先・電話などの用途型はクリックすると入力フォームが例文付きで開きます。"},
   "cat.tip.frame":{ko:"우드·골드·폴라로이드 등 실제 액자 프레임 디자인.",en:"Real picture-frame styles — wood, gold, polaroid and more.",zh:"木质、金色、宝丽来等真实相框设计。",ja:"ウッド・ゴールド・ポラロイドなど本物の額縁デザイン。"},
-  "cat.tip.usecase":{ko:"Wi-Fi·명함·전화 등 바로 쓰는 용도별 템플릿. 클릭하면 입력폼이 예시값과 함께 열려요.",en:"Ready-to-use templates — Wi-Fi, contact card, phone, etc. Click to open a prefilled form.",zh:"Wi-Fi、名片、电话等即用模板。点击后打开带示例值的表单。",ja:"Wi-Fi・名刺・電話など即使えるテンプレート。クリックで例入りフォームが開きます。"},
   "cat.tip.myqr":{ko:"내가 저장한 QR 보관함. 스튜디오에서 ‘현재 디자인 저장’을 누르면 여기 쌓입니다.",en:"Your saved QR library. Press “Save current design” in the studio to add here.",zh:"你保存的二维码库。在工作室点击“保存当前设计”即可加入。",ja:"保存したQRの保管庫。スタジオで「現在のデザインを保存」を押すとここに貯まります。"},
   "btn.saveMyQr":{ko:"＋ 현재 디자인 저장",en:"＋ Save current design",zh:"＋ 保存当前设计",ja:"＋ 現在のデザインを保存"},
   "btn.png":{ko:"PNG 저장",en:"Save PNG",zh:"保存 PNG",ja:"PNG保存"},
@@ -7125,7 +7302,7 @@ var I18N = {
   "grp.content":{ko:"콘텐츠",en:"Content",zh:"内容",ja:"コンテンツ"},
   "grp.art":{ko:"이미지 · 영상 · GIF 아트 QR",en:"Image · Video · GIF art QR",zh:"图片·视频·GIF 艺术二维码",ja:"画像・動画・GIFアートQR"},
   "grp.ai":{ko:"AI 아트 QR",en:"AI art QR",zh:"AI 艺术二维码",ja:"AIアートQR"},
-  "grp.module":{ko:"모듈 & 눈(Eye)",en:"Modules & Eyes",zh:"模块与眼",ja:"モジュール＆アイ"},
+  "grp.module":{ko:"모듈 & 코너(눈)",en:"Modules & Eyes",zh:"模块与眼",ja:"モジュール＆アイ"},
   "grp.color":{ko:"색상",en:"Colors",zh:"颜色",ja:"カラー"},
   "grp.logo":{ko:"로고",en:"Logo",zh:"Logo",ja:"ロゴ"},
   "grp.anim":{ko:"애니메이션",en:"Animation",zh:"动画",ja:"アニメーション"},
@@ -7239,7 +7416,7 @@ var I18N = {
   "lbl.frameBg1":{ko:'배경색 1',en:'Background 1',zh:'背景色 1',ja:'背景色 1'},
   "lbl.frameBg2":{ko:'배경색 2',en:'Background 2',zh:'背景色 2',ja:'背景色 2'},
   "lbl.centerMode":{ko:'중앙 콘텐츠',en:'Center content',zh:'中心内容',ja:'中央コンテンツ'},
-  "lbl.pictoPick":{ko:'픽토그램 소스 — 클릭해서 변경',en:'Pictogram source — click to change',zh:'图标来源 — 点击更改',ja:'ピクトグラム素材 — クリックで変更'},
+  "lbl.pictoPick":{ko:'픽토그램 선택 — 클릭해서 변경',en:'Pictogram source — click to change',zh:'图标来源 — 点击更改',ja:'ピクトグラム素材 — クリックで変更'},
   "lbl.centerColor":{ko:'텍스트 색',en:'Text color',zh:'文字颜色',ja:'文字色'},
   "lbl.centerScale":{ko:'크기',en:'Size',zh:'大小',ja:'サイズ'},
   "lbl.margin":{ko:'여백(Quiet zone)',en:'Margin (quiet zone)',zh:'边距（静区）',ja:'余白（クワイエットゾーン）'},
@@ -7282,21 +7459,21 @@ var I18N = {
   "ph.vcName":{ko:'홍길동',en:'John Smith',zh:'张三',ja:'山田太郎'},
   "ph.prompt":{ko:'예: watercolor ocean sunset, soft pastel colors',en:'e.g. watercolor ocean sunset, soft pastel colors',zh:'例：watercolor ocean sunset, soft pastel colors',ja:'例：watercolor ocean sunset, soft pastel colors'},
   "seg.dot.square":{ko:'사각',en:'Square',zh:'方形',ja:'四角'},
-  "seg.dot.rounded":{ko:'둥근',en:'Rounded',zh:'圆角',ja:'丸み'},
-  "seg.dot.dots":{ko:'점',en:'Dots',zh:'圆点',ja:'ドット'},
-  "seg.dot.classy":{ko:'클래시',en:'Classy',zh:'雅致',ja:'クラッシー'},
+  "seg.dot.rounded":{ko:'라운드',en:'Rounded',zh:'圆角',ja:'丸み'},
+  "seg.dot.dots":{ko:'도트',en:'Dots',zh:'圆点',ja:'ドット'},
+  "seg.dot.classy":{ko:'엘레강스',en:'Classy',zh:'雅致',ja:'クラッシー'},
   "seg.dot.diamond":{ko:'다이아',en:'Diamond',zh:'菱形',ja:'ダイヤ'},
   "seg.eye.square":{ko:'사각',en:'Square',zh:'方形',ja:'四角'},
-  "seg.eye.rounded":{ko:'둥근',en:'Rounded',zh:'圆角',ja:'丸み'},
+  "seg.eye.rounded":{ko:'라운드',en:'Rounded',zh:'圆角',ja:'丸み'},
   "seg.eye.circle":{ko:'원형',en:'Circle',zh:'圆形',ja:'円形'},
-  "seg.eye.leaf":{ko:'잎사귀',en:'Leaf',zh:'叶形',ja:'リーフ'},
+  "seg.eye.leaf":{ko:'리프',en:'Leaf',zh:'叶形',ja:'リーフ'},
   "seg.fill.solid":{ko:'단색',en:'Solid',zh:'单色',ja:'単色'},
   "seg.fill.linear":{ko:'선형 그라디언트',en:'Linear gradient',zh:'线性渐变',ja:'線形グラデーション'},
   "seg.fill.radial":{ko:'원형 그라디언트',en:'Radial gradient',zh:'径向渐变',ja:'円形グラデーション'},
   "seg.fmode.solid":{ko:'단색',en:'Solid',zh:'单色',ja:'単色'},
   "seg.fmode.linear":{ko:'선형',en:'Linear',zh:'线性',ja:'線形'},
   "seg.fmode.radial":{ko:'원형',en:'Radial',zh:'径向',ja:'円形'},
-  "seg.anim.shine":{ko:'샤인 ✨',en:'Shine ✨',zh:'闪耀 ✨',ja:'シャイン ✨'},
+  "seg.anim.shine":{ko:'반짝임 ✨',en:'Shine ✨',zh:'闪耀 ✨',ja:'シャイン ✨'},
   "seg.anim.rotate":{ko:'회전',en:'Rotate',zh:'旋转',ja:'回転'},
   "seg.anim.pulse":{ko:'펄스',en:'Pulse',zh:'脉冲',ja:'パルス'},
   "seg.anim.sweep":{ko:'스윕',en:'Sweep',zh:'扫光',ja:'スイープ'},
@@ -7348,14 +7525,14 @@ var I18N = {
   "dyn.expHigh":{ko:'노출도 높음(스캔 테스트 권장)',en:'high visibility (test the scan)',zh:'显示度高（建议测试扫描）',ja:'表示度が高い（スキャンテスト推奨）'},
   "dyn.eccHRec":{ko:'ECC-H 권장',en:'ECC-H recommended',zh:'建议 ECC-H',ja:'ECC-H 推奨'},
   "dyn.contrastLow":{ko:'대비 낮음',en:'low contrast',zh:'对比度低',ja:'コントラスト低'},
-  "dyn.logoBig":{ko:'로고 큼',en:'logo large',zh:'Logo 过大',ja:'ロゴ大'},
+  "dyn.logoBig":{ko:'로고가 큼',en:'logo large',zh:'Logo 过大',ja:'ロゴ大'},
   "dyn.decoModule":{ko:'장식용 모듈(스캔 테스트 권장)',en:'decorative module (test the scan)',zh:'装饰模块（建议测试扫描）',ja:'装飾モジュール（スキャンテスト推奨）'},
   "ctr.lblEmoji":{ko:'픽토그램(직접 입력도 가능)',en:'Pictogram (or type your own)',zh:'图标（也可手动输入）',ja:'ピクトグラム（直接入力も可）'},
   "ctr.lblText":{ko:'로고 텍스트',en:'Text logo',zh:'文字 Logo',ja:'テキストロゴ'},
   "ctr.hintEmoji":{ko:'아래에서 픽토그램을 고르거나 이모지를 붙여넣으세요.',en:'Pick a pictogram below or paste an emoji.',zh:'在下方选择图标，或粘贴一个表情符号。',ja:'下からピクトグラムを選ぶか、絵文字を貼り付けてください。'},
   "ctr.hintText":{ko:'기업/브랜드명을 입력하세요(짧을수록 선명).',en:'Enter a company/brand name (shorter is sharper).',zh:'输入公司/品牌名（越短越清晰）。',ja:'企業・ブランド名を入力（短いほど鮮明）。'},
-  "dens.4":{ko:'성김',en:'Sparse',zh:'稀疏',ja:'粗い'},
-  "dens.5":{ko:'약간 성김',en:'Slightly sparse',zh:'略稀疏',ja:'やや粗い'},
+  "dens.4":{ko:'넓게',en:'Sparse',zh:'稀疏',ja:'粗い'},
+  "dens.5":{ko:'약간 넓게',en:'Slightly sparse',zh:'略稀疏',ja:'やや粗い'},
   "dens.6":{ko:'보통',en:'Medium',zh:'中等',ja:'普通'},
   "dens.7":{ko:'촘촘',en:'Dense',zh:'密',ja:'細かい'},
   "dens.8":{ko:'더 촘촘',en:'Denser',zh:'更密',ja:'より細かい'},
@@ -7379,14 +7556,14 @@ var I18N = {
   "chip.anim":{ko:'✨ 애니메이션',en:'✨ Animation',zh:'✨ 动画',ja:'✨ アニメーション'},
   "seg.cmode.mark":{ko:'마크',en:'Mark',zh:'标志',ja:'マーク'},
   "lbl.centerBadge":{ko:'배지 모양',en:'Badge shape',zh:'徽章形状',ja:'バッジ形状'},
-  "seg.badge.pill":{ko:'알약',en:'Pill',zh:'胶囊',ja:'ピル'},
-  "seg.badge.rounded":{ko:'둥근사각',en:'Rounded',zh:'圆角方',ja:'角丸'},
+  "seg.badge.pill":{ko:'캡슐',en:'Pill',zh:'胶囊',ja:'ピル'},
+  "seg.badge.rounded":{ko:'둥근 사각',en:'Rounded',zh:'圆角方',ja:'角丸'},
   "seg.badge.circle":{ko:'원형',en:'Circle',zh:'圆形',ja:'円形'},
   "seg.badge.hexagon":{ko:'육각형',en:'Hexagon',zh:'六角',ja:'六角形'},
   "seg.badge.shield":{ko:'방패',en:'Shield',zh:'盾牌',ja:'シールド'},
   "seg.badge.ribbon":{ko:'리본',en:'Ribbon',zh:'丝带',ja:'リボン'},
   "seg.badge.none":{ko:'없음',en:'None',zh:'无',ja:'なし'},
-  "lbl.markPick":{ko:'마크 심볼 — 클릭해서 변경',en:'Mark symbol — click to change',zh:'标志符号 — 点击更改',ja:'マークシンボル — クリックで変更'},
+  "lbl.markPick":{ko:'마크 선택 — 클릭해서 변경',en:'Mark symbol — click to change',zh:'标志符号 — 点击更改',ja:'マークシンボル — クリックで変更'},
   "btn.genLogo":{ko:'✨ 브랜드명으로 예시 4개 생성',en:'✨ Generate 4 logo examples',zh:'✨ 用品牌名生成4个示例',ja:'✨ ブランド名で例を4つ生成'},
   "hint.genLogo":{ko:'브랜드명을 입력하고 누르면 배지·색상·심볼을 조합한 로고 예시 4개를 만들어요. 마음에 드는 예시를 누르면 바로 적용됩니다.',en:'Enter a brand name and tap to generate 4 logo examples combining badge, colors and symbol. Tap one you like to apply it instantly.',zh:'输入品牌名后点击，生成结合徽章·颜色·符号的4个 Logo 示例。点击喜欢的即可立即应用。',ja:'ブランド名を入力して押すと、バッジ・色・シンボルを組み合わせたロゴ例を4つ生成します。気に入った例を押すとすぐ適用されます。'},
   "ctr.lblMark":{ko:'브랜드명 (모노그램용)',en:'Brand name (for monogram)',zh:'品牌名（用于字母标）',ja:'ブランド名（モノグラム用）'},
@@ -7465,12 +7642,16 @@ var I18N = {
   "seg.dot.star":{ko:'별',en:'Star',zh:'星形',ja:'星'}
 };
 var LANG="ko";
+// inline 4-language text for dynamic messages (ko default; ja/zh fall back to English)
+function tx(ko,en,ja,zh){ var L=(typeof LANG!=="undefined"&&LANG)||"ko"; return L==="en"?en:L==="ja"?(ja||en):L==="zh"?(zh||en):ko; }
 function t(key){ var e=I18N[key]; return e ? (e[LANG]||e.ko) : null; }
 function applyLang(lang){
   LANG=lang; document.documentElement.setAttribute("lang",lang);
   document.querySelectorAll("[data-i18n]").forEach(function(el){ var v=t(el.getAttribute("data-i18n")); if(v!=null) el.textContent=v; });
   document.querySelectorAll("[data-i18n-html]").forEach(function(el){ var v=t(el.getAttribute("data-i18n-html")); if(v!=null) el.innerHTML=v; });
   document.querySelectorAll("[data-i18n-tip]").forEach(function(el){ var v=t(el.getAttribute("data-i18n-tip")); if(v!=null) el.setAttribute("data-tip",v); });
+  document.querySelectorAll("[data-i18n-cta]").forEach(function(el){ var v=t(el.getAttribute("data-i18n-cta")); if(v!=null){ el.textContent=v; el.setAttribute("data-cta",v); } });
+  try{ var dt=t("doc.title"); if(dt) document.title=dt; }catch(e){}
   document.querySelectorAll("[data-i18n-ph]").forEach(function(el){ var v=t(el.getAttribute("data-i18n-ph")); if(v!=null) el.setAttribute("placeholder",v); });
   try{ if($("galGrid") && $("galGrid").children.length) buildGallery(); }catch(e){}
   try{ updateMeta(); }catch(e){}
@@ -7667,7 +7848,7 @@ var CARD = (function(){
     var a=$id("cardAccent"); if(a){ a.value=p.accent; setName("cardAccentHex",p.accent.toUpperCase()); }
     var qc=$id("cardQrColor"); if(qc){ qc.value=p.accent; setName("cardQrColorHex",p.accent.toUpperCase()); }
     markGrid("cardTplGrid",p.tpl); markGrid("cardQrGrid",p.qr,"qtpl");
-    setName("cardTplName",tpl().nm); setName("cardQrTplName",qtpl().nm);
+    setName("cardTplName",gtr(tpl().nm)); setName("cardQrTplName",gtr(qtpl().nm));
     buildTplGrid(); buildQrGrid(); draw();
     var nm=(typeof t==="function"&&t("card.ind."+p.id))||p.nm;
     toast(((typeof t==="function"&&t("card.indApplied"))||"프리셋 적용: ")+nm);
@@ -7776,7 +7957,7 @@ var CARD = (function(){
     // ---- NAME (deco + underline) ----
     (function(){
       var o=elOff("name"), sc=elScale("name"), fs=L.nameSize*sc, x=tx+o.dx, y=L.name+o.dy;
-      var nm=gval("cdName")||"이름";
+      var nm=gval("cdName")||tx("이름","Name","氏名","姓名");
       g.font="700 "+Math.round(fs)+"px "+FD; g.textAlign="left";
       var nw=g.measureText(nm).width, nameColor=ink, nameX=x, boxW=nw;
       if(pal.deco==="ribbon"){ g.fillStyle=accTx; rrect(g,x-16,y-fs*0.9,nw+32,fs*1.25,12); g.fill(); nameColor=(lum(accTx)<150?"#ffffff":"#111111"); }
@@ -7886,11 +8067,11 @@ var CARD = (function(){
     TPL.forEach(function(T){
       var el=document.createElement("div"); el.className="tpl"+(T.id===st.tpl?" on":""); el.dataset.tpl=T.id;
       var cv=document.createElement("canvas"); cv.width=148; cv.height=84; drawThumb(cv,T,acc);
-      el.appendChild(cv); var nm=document.createElement("div"); nm.className="nm"; nm.textContent=T.nm; el.appendChild(nm);
-      el.onclick=function(){ st.tpl=T.id; markGrid("cardTplGrid",T.id); setName("cardTplName",T.nm); draw(); };
+      el.appendChild(cv); var nm=document.createElement("div"); nm.className="nm"; nm.textContent=gtr(T.nm); el.appendChild(nm);
+      el.onclick=function(){ st.tpl=T.id; markGrid("cardTplGrid",T.id); setName("cardTplName",gtr(T.nm)); draw(); };
       box.appendChild(el);
     });
-    setName("cardTplName",tpl().nm);
+    setName("cardTplName",gtr(tpl().nm));
   }
   function buildQrGrid(){
     var box=$id("cardQrGrid"); if(!box) return; box.innerHTML=""; var qcol=gval("cardQrColor")||"#111111", acc=gval("cardAccent")||"#111111";
@@ -7898,11 +8079,11 @@ var CARD = (function(){
       var el=document.createElement("div"); el.className="tpl"+(p.id===st.qrTpl?" on":""); el.dataset.qtpl=p.id;
       var cv=document.createElement("canvas"); cv.width=72; cv.height=72;
       try{ var q=qrCanvas(72,qcol,acc,p.id); cv.getContext("2d").drawImage(q,0,0); }catch(e){}
-      el.appendChild(cv); var nm=document.createElement("div"); nm.className="nm"; nm.textContent=p.nm; el.appendChild(nm);
-      el.onclick=function(){ st.qrTpl=p.id; markGrid("cardQrGrid",p.id,"qtpl"); setName("cardQrTplName",p.nm); draw(); };
+      el.appendChild(cv); var nm=document.createElement("div"); nm.className="nm"; nm.textContent=gtr(p.nm); el.appendChild(nm);
+      el.onclick=function(){ st.qrTpl=p.id; markGrid("cardQrGrid",p.id,"qtpl"); setName("cardQrTplName",gtr(p.nm)); draw(); };
       box.appendChild(el);
     });
-    setName("cardQrTplName",qtpl().nm);
+    setName("cardQrTplName",gtr(qtpl().nm));
   }
   function markGrid(gridId,id,attr){ attr=attr||"tpl"; var box=$id(gridId); if(!box) return; Array.prototype.forEach.call(box.children,function(c){ c.classList.toggle("on", c.dataset[attr]===id); }); }
   function setName(id,txt){ var el=$id(id); if(el) el.textContent=txt; }
@@ -7951,7 +8132,7 @@ var CARD = (function(){
         var d=res.d||{};
         if(res.status===402 || d.error==="trial_exhausted" || d.error==="credits_exhausted"){ try{ localStorage.setItem(AITRIALKEY,String(PRO.aiFreeTrials)); }catch(e){} if(d.error==="credits_exhausted"&&typeof aiSetPurchased==="function") aiSetPurchased(0); if(typeof refreshAiTrialUI==="function") refreshAiTrialUI(); if(typeof openAiPack==="function") openAiPack(); ocrStatus((typeof t==="function"&&t("ai.creditsOut"))||"AI 크레딧 소진 — 크레딧 팩을 구매하세요"); return; }
         if(d.error==="not_configured" || res.status===503){ ocrStatus((typeof t==="function"&&t("card.aiOff"))||"고정밀(AI) 인식은 서버에 비전 API를 설정한 뒤 사용할 수 있어요."); return; }
-        if(d.error){ ocrStatus("AI 인식 실패: "+(d.detail||d.error)); return; }
+        if(d.error){ ocrStatus(tx("AI 인식 실패: ","AI recognition failed: ","AI認識に失敗しました: ","AI 识别失败：")+(d.detail||d.error)); return; }
         applyParsed({name:d.name,title:d.title,org:d.org,tel:d.tel||d.phone,email:d.email,url:d.url||d.website,addr:d.address});
         if(typeof aiBumpTrial==="function") aiBumpTrial();
         ocrStatus((typeof t==="function"&&t("card.ocrDone"))||"인식 완료 — 항목을 확인·수정하세요.");
@@ -7962,7 +8143,7 @@ var CARD = (function(){
 
   // ===================== downloads =====================
   function fname(){ return ((gval("cdName")||"card").replace(/[^\w가-힣.-]+/g,"_")||"card"); }
-  function dlPng(){ draw(); download(st.hi.toDataURL("image/png"), "명함_"+fname()+".png"); toast((typeof t==="function"&&t("card.dlPng"))||"PNG 저장됨"); if(typeof track==="function")track("card_download",{fmt:"png"}); }
+  function dlPng(){ draw(); download(st.hi.toDataURL("image/png"), tx("명함_","card_","名刺_","名片_")+fname()+".png"); toast((typeof t==="function"&&t("card.dlPng"))||"PNG 저장됨"); if(typeof track==="function")track("card_download",{fmt:"png"}); }
   function dlSvg(){
     draw(); var W=st.hi.width, H=st.hi.height;
     var b=st.box.qr||{x:0,y:0,w:0,h:0}; var qx=b.x+16, qy=b.y+16, qsz=Math.max(0,b.w-32);
@@ -7973,28 +8154,28 @@ var CARD = (function(){
     var s='<svg xmlns="http://www.w3.org/2000/svg" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'">'
       +'<image width="'+W+'" height="'+H+'" href="'+cardPng+'"/>'
       +(qsz>0?'<image x="'+qx+'" y="'+qy+'" width="'+qsz+'" height="'+qsz+'" href="'+qpng+'"/>':'')+'</svg>';
-    download("data:image/svg+xml;charset=utf-8,"+encodeURIComponent(s), "명함_"+fname()+".svg"); toast((typeof t==="function"&&t("card.dlSvg"))||"SVG 저장됨"); if(typeof track==="function")track("card_download",{fmt:"svg"});
+    download("data:image/svg+xml;charset=utf-8,"+encodeURIComponent(s), tx("명함_","card_","名刺_","名片_")+fname()+".svg"); toast((typeof t==="function"&&t("card.dlSvg"))||"SVG 저장됨"); if(typeof track==="function")track("card_download",{fmt:"svg"});
   }
   function dlPdf(){
     draw(); var png=st.hi.toDataURL("image/png"); var pw=st.hi.width, ph=st.hi.height;
     var scale=90/Math.max(pw,ph), mmW=Math.round(pw*scale), mmH=Math.round(ph*scale);
     loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js").then(function(){
-      var J=(window.jspdf&&window.jspdf.jsPDF)||window.jsPDF; if(!J){ toast("PDF 라이브러리 로드 실패"); return; }
+      var J=(window.jspdf&&window.jspdf.jsPDF)||window.jsPDF; if(!J){ toast(tx("PDF 라이브러리 로드 실패","Couldn't load the PDF library","PDFライブラリを読み込めませんでした","无法加载 PDF 库")); return; }
       var doc=new J({orientation:(mmH>mmW?"portrait":"landscape"),unit:"mm",format:[mmW,mmH]});
-      doc.addImage(png,"PNG",0,0,mmW,mmH); doc.save("명함_"+fname()+".pdf"); toast((typeof t==="function"&&t("card.dlPdf"))||"PDF 저장됨"); if(typeof track==="function")track("card_download",{fmt:"pdf"});
+      doc.addImage(png,"PNG",0,0,mmW,mmH); doc.save(tx("명함_","card_","名刺_","名片_")+fname()+".pdf"); toast((typeof t==="function"&&t("card.dlPdf"))||"PDF 저장됨"); if(typeof track==="function")track("card_download",{fmt:"pdf"});
     }).catch(function(){ toast((typeof t==="function"&&t("card.pdfOff"))||"PDF는 배포된(온라인) 사이트에서만 동작합니다."); });
   }
   function share(){
     draw();
     if(navigator.canShare && st.hi.toBlob){
-      st.hi.toBlob(function(b){ var f=new File([b],"명함_"+fname()+".png",{type:"image/png"});
-        if(navigator.canShare({files:[f]})){ navigator.share({files:[f],title:"디지털 명함"}).catch(function(){}); } else { dlPng(); } },"image/png");
+      st.hi.toBlob(function(b){ var f=new File([b],tx("명함_","card_","名刺_","名片_")+fname()+".png",{type:"image/png"});
+        if(navigator.canShare({files:[f]})){ navigator.share({files:[f],title:tx("디지털 명함","Digital business card","デジタル名刺","电子名片")}).catch(function(){}); } else { dlPng(); } },"image/png");
     } else { dlPng(); }
   }
 
   // ===================== digital-card folder =====================
   function load(){ try{ return JSON.parse(localStorage.getItem(CARDKEY)||"[]"); }catch(e){ return []; } }
-  function store(a){ try{ localStorage.setItem(CARDKEY, JSON.stringify(a)); }catch(e){ toast("저장 공간이 부족합니다"); } }
+  function store(a){ try{ localStorage.setItem(CARDKEY, JSON.stringify(a)); }catch(e){ toast(tx("저장 공간이 부족합니다","Not enough storage space","保存容量が不足しています","存储空间不足")); } }
   function saveFolder(){
     if(!gval("cdName")){ toast((typeof t==="function"&&t("card.needName"))||"이름을 입력하세요"); return; }
     draw();
@@ -8010,11 +8191,11 @@ var CARD = (function(){
     arr.forEach(function(it){
       var c=document.createElement("div"); c.className="gal-card"; c.style.padding="10px";
       c.innerHTML='<img src="'+it.card+'" style="width:100%;border-radius:8px;display:block;box-shadow:0 0 0 1px var(--line)"/>'
-        +'<div class="name" style="margin-top:8px">'+ (it.name||"명함") +'</div>'
+        +'<div class="name" style="margin-top:8px">'+ (it.name||tx("명함","Card","名刺","名片")) +'</div>'
         +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">'
-        +'<button class="chip" data-act="card">명함</button><button class="chip" data-act="qr">QR</button>'
-        +'<button class="chip" data-act="load">불러오기</button><button class="chip" data-act="del">삭제</button></div>';
-      c.querySelector('[data-act="card"]').onclick=function(){ download(it.card,"명함_"+(it.name||"card")+".jpg"); };
+        +tx('<button class="chip" data-act="card">명함</button><button class="chip" data-act="qr">QR</button>','<button class="chip" data-act="card">Card</button><button class="chip" data-act="qr">QR</button>','<button class="chip" data-act="card">名刺</button><button class="chip" data-act="qr">QR</button>','<button class="chip" data-act="card">名片</button><button class="chip" data-act="qr">QR</button>')
+        +tx('<button class="chip" data-act="load">불러오기</button><button class="chip" data-act="del">삭제</button></div>','<button class="chip" data-act="load">Load</button><button class="chip" data-act="del">Delete</button></div>','<button class="chip" data-act="load">読み込む</button><button class="chip" data-act="del">削除</button></div>','<button class="chip" data-act="load">载入</button><button class="chip" data-act="del">删除</button></div>');
+      c.querySelector('[data-act="card"]').onclick=function(){ download(it.card,tx("명함_","card_","名刺_","名片_")+(it.name||"card")+".jpg"); };
       c.querySelector('[data-act="qr"]').onclick=function(){ download(it.qr,"QR_"+(it.name||"card")+".png"); };
       c.querySelector('[data-act="load"]').onclick=function(){ loadFromVcard(it.vcard); toast((typeof t==="function"&&t("card.loaded"))||"불러왔습니다 — 편집 후 다시 저장하세요"); };
       c.querySelector('[data-act="del"]').onclick=function(){ var a2=load().filter(function(x){return x.id!==it.id;}); store(a2); renderFolder(); };
@@ -8051,7 +8232,7 @@ var CARD = (function(){
   }
   function thumbs(){
     var box=$id("cardPhotoThumbs"); if(!box) return; box.innerHTML="";
-    [["frontImg","앞"],["backImg","뒤"]].forEach(function(p){ if(!st[p[0]]) return;
+    [["frontImg",tx("앞","Front","表","正面")],["backImg",tx("뒤","Back","裏","背面")]].forEach(function(p){ if(!st[p[0]]) return;
       var cv=document.createElement("canvas"); cv.width=200; cv.height=Math.round(200*(st[p[0]].height/st[p[0]].width)); cv.getContext("2d").drawImage(st[p[0]],0,0,cv.width,cv.height); cv.title=p[1]; box.appendChild(cv); });
   }
 
@@ -8063,7 +8244,7 @@ var CARD = (function(){
     var bg=$id("cardBg"); if(bg) bg.addEventListener("change",function(e){ var f=e.target.files[0]; if(!f) return; var img=new Image();
       img.onload=function(){ st.bgImg=img; var cl=$id("cardBgClear"); if(cl) cl.style.display="";
         var lb=$id("cardBgLabel"); if(lb) lb.textContent="✓ "+((typeof t==="function"&&t("card.bg.done"))||"배경 사진 적용됨");
-        if(!tpl().photo){ st.tpl="photo"; markGrid("cardTplGrid","photo"); setName("cardTplName","포토"); }
+        if(!tpl().photo){ st.tpl="photo"; markGrid("cardTplGrid","photo"); setName("cardTplName",gtr("포토")); }
         buildTplGrid(); draw(); };
       img.src=URL.createObjectURL(f); bg.value=""; });
     var bgc=$id("cardBgClear"); if(bgc) bgc.addEventListener("click",function(){ st.bgImg=null; this.style.display="none";
@@ -8113,7 +8294,7 @@ var CARD = (function(){
       draw();
     },
     onLang:function(lang){ if(!st.entered) return; fillDemo(lang);
-      buildIndustry(); setName("cardTplName",tpl().nm); setName("cardQrTplName",qtpl().nm); draw(); }
+      buildIndustry(); buildTplGrid(); buildQrGrid(); renderFolder(); setName("cardTplName",gtr(tpl().nm)); setName("cardQrTplName",gtr(qtpl().nm)); draw(); }
   };
 })();
 (function initLang(){
@@ -8152,7 +8333,7 @@ if($("arShareFaceBtn")) $("arShareFaceBtn").addEventListener("click",function(){
 });
 // ---------- init ----------
 if (typeof qrcode === "undefined"){
-  document.body.innerHTML='<div style="padding:40px;color:#000;font-family:sans-serif">QR 인코더 로드 실패</div>';
+  document.body.innerHTML=tx('<div style="padding:40px;color:#000;font-family:sans-serif">QR 인코더 로드 실패</div>','<div style="padding:40px;color:#000;font-family:sans-serif">Failed to load the QR encoder</div>','<div style="padding:40px;color:#000;font-family:sans-serif">QRエンコーダーを読み込めませんでした</div>','<div style="padding:40px;color:#000;font-family:sans-serif">二维码编码器加载失败</div>');
 } else {
   render(ctx, EXPORT);
   updateMeta();
