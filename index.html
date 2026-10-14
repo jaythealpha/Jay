@@ -378,7 +378,7 @@
   .fphoto-grid button img{width:100%;height:100%;object-fit:cover;display:block;border-radius:8px}
   .fphoto-grid button.on{border-color:var(--acc)}
   .fphoto-grid .grp{grid-column:1/-1;font-size:12px;color:var(--mut);margin:6px 0 0}
-  .pst-hold canvas{display:block;width:100%;max-width:440px;height:auto;margin:0 auto;border-radius:14px;box-shadow:0 0 0 1px var(--line)}
+  .pst-hold canvas{touch-action:pan-y;cursor:default;display:block;width:100%;max-width:440px;height:auto;margin:0 auto;border-radius:14px;box-shadow:0 0 0 1px var(--line)}
   .pst-btns{display:flex;gap:10px;margin-top:14px} .pst-btns .btn{flex:1}
   .pst-ex{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 2px;margin-top:8px;scrollbar-width:thin}
   .pst-ex button{flex:none;width:64px;height:80px;padding:0;border:2px solid transparent;border-radius:10px;overflow:hidden;cursor:pointer;background:none}
@@ -568,11 +568,10 @@
     </div>
     <div class="cat-tabs" id="catTabs">
       <button data-cat="standard" class="on" data-i18n-tip="cat.tip.standard" data-tip="색상·그라디언트 기본 디자인 모음. 클릭하면 스튜디오로 불러와 편집할 수 있어요."><span data-i18n="cat.standard">기본</span></button>
-      <button data-cat="animation" data-i18n-tip="cat.tip.animation" data-tip="이미지가 살아 움직이는 아트 QR. 카드를 클릭하면 그 이미지가 적용된 채 편집할 수 있어요."><span data-i18n="cat.animation">애니메이션</span></button>
+      <button data-cat="poster" class="cat-new" data-i18n-tip="cat.tip.poster" data-tip="내 이미지와 문구로 만드는 QR 포스터. 예시를 눌러 시작하세요."><span data-i18n="cat.poster">포스터</span></button>
       <button data-cat="logo" data-i18n-tip="cat.tip.logo" data-tip="중앙에 브랜드 텍스트가 들어간 로고형 QR. 클릭 후 문구를 바꾸거나 로고 이미지를 올릴 수 있어요."><span data-i18n="cat.logo">로고</span></button>
       <button data-cat="pictogram" data-i18n-tip="cat.tip.pictogram" data-tip="용도·업종별 픽토그램 QR. Wi-Fi·연락처·전화 같은 용도형은 클릭하면 입력폼이 예시값과 함께 열려요."><span data-i18n="cat.pictogram">픽토그램</span></button>
       <button data-cat="motion" class="cat-new" data-i18n-tip="cat.tip.motion" data-tip="QR 점들이 날아와 모이는 모션 QR. 색·로고·이미지를 넣고 영상(MP4·WebM)으로 저장할 수 있어요."><span data-i18n="cat.motion">모션</span></button>
-      <button data-cat="poster" class="cat-new" data-i18n-tip="cat.tip.poster" data-tip="내 이미지와 문구로 만드는 QR 포스터. 예시를 눌러 시작하세요."><span data-i18n="cat.poster">포스터</span></button>
       <button data-cat="frame" data-i18n-tip="cat.tip.frame" data-tip="영화 포스터·폴라로이드·명화 액자·여행지 테마의 이미지 프레임 50종. 가운데 창에 QR이 들어가요."><span data-i18n="cat.frame">프레임</span></button>
       <button data-cat="myqr" data-i18n-tip="cat.tip.myqr" data-tip="내가 저장한 QR 보관함. 스튜디오에서 ‘현재 디자인 저장’을 누르면 여기 쌓입니다."><span data-i18n="cat.myqr">★ My QR</span></button>
     </div>
@@ -1409,9 +1408,14 @@
             <label class="fld"><div class="lbl" data-i18n="pst.lbl.ratio">비율</div>
               <div class="seg" id="pstRatioSeg"><button data-r="45" class="on"><span data-i18n="pst.ratio.45">4:5 피드</span></button><button data-r="916"><span data-i18n="pst.ratio.916">9:16 스토리</span></button><button data-r="11"><span data-i18n="pst.ratio.11">1:1 정사각</span></button></div></label>
             <label class="fld"><div class="lbl" data-i18n="pst.lbl.pos">QR 위치</div>
-              <div class="seg" id="pstPosSeg"><button data-p="right" class="on"><span data-i18n="pst.pos.right">오른쪽</span></button><button data-p="left"><span data-i18n="pst.pos.left">왼쪽</span></button></div></label>
+              <div class="seg seg-wrap" id="pstPosSeg"><button data-p="br" class="on"><span data-i18n="pst.pos.br">오른쪽 아래</span></button><button data-p="bl"><span data-i18n="pst.pos.bl">왼쪽 아래</span></button><button data-p="bc"><span data-i18n="pst.pos.bc">가운데 아래</span></button><button data-p="tr"><span data-i18n="pst.pos.tr">오른쪽 위</span></button><button data-p="tl"><span data-i18n="pst.pos.tl">왼쪽 위</span></button></div>
+              <div class="hint" data-i18n="pst.hint.drag">미리보기에서 QR 카드를 끌어 원하는 곳에 둘 수도 있어요.</div></label>
+            <label class="fld"><div class="lbl"><span data-i18n="pst.lbl.size">QR 크기</span> <b id="pstSizeOut">30%</b></div><input type="range" id="pstSize" min="20" max="46" step="1" value="30" /></label>
+            <label class="fld"><div class="lbl" data-i18n="pst.lbl.textPos">문구 위치</div>
+              <div class="seg" id="pstTextSeg"><button data-tp="bottom" class="on"><span data-i18n="pst.tp.bottom">아래</span></button><button data-tp="top"><span data-i18n="pst.tp.top">위</span></button></div></label>
             <label class="fld"><div class="lbl" data-i18n="pst.lbl.acc">강조 색</div><input type="color" id="pstAcc" value="#67e8f9" /></label>
-            <div class="switch" style="margin-top:12px"><div class="lbl" data-i18n="pst.lbl.motion" style="margin:0">배경 천천히 움직이기</div><label class="toggle"><input type="checkbox" id="pstMotion" checked /><span></span></label></div>
+            <div class="switch" style="margin-top:12px"><div class="lbl" data-i18n="pst.lbl.motion" style="margin:0">배경 움직임</div><label class="toggle"><input type="checkbox" id="pstMotion" checked /><span></span></label></div>
+            <div class="hint" data-i18n="pst.hint.motion"></div>
           </div>
         </details>
       </div>
@@ -1494,7 +1498,7 @@
     </nav>
     <div style="margin-top:10px">Aesthetic QR Studio · <span data-i18n="foot.tag">아름답고 스캔되는 QR을 만드는 스튜디오 · QR 생성·디자인은 브라우저에서 처리 (AI 기능만 서버 전송·저장 안 함)</span></div>
     <div style="margin-top:6px" data-i18n="foot.tm">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · <span data-i18n="foot.build">빌드</span> <b id="verTag">2026.10.14-f</b></div>
+    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · <span data-i18n="foot.build">빌드</span> <b id="verTag">2026.10.14-g</b></div>
   </footer>
 </div>
 
@@ -7568,10 +7572,7 @@ var I18N = {
   "pst.ratio.916":{ko:"9:16 스토리",en:"9:16 Story",ja:"9:16 ストーリー",zh:"9:16 快拍"},
   "pst.ratio.11":{ko:"1:1 정사각",en:"1:1 Square",ja:"1:1 正方形",zh:"1:1 方形"},
   "pst.lbl.pos":{ko:"QR 위치",en:"QR position",ja:"QRの位置",zh:"二维码位置"},
-  "pst.pos.right":{ko:"오른쪽",en:"Right",ja:"右",zh:"右侧"},
-  "pst.pos.left":{ko:"왼쪽",en:"Left",ja:"左",zh:"左侧"},
   "pst.lbl.acc":{ko:"강조 색",en:"Accent color",ja:"アクセント色",zh:"强调色"},
-  "pst.lbl.motion":{ko:"배경 천천히 움직이기",en:"Slow background motion",ja:"背景をゆっくり動かす",zh:"背景缓慢移动"},
   "pst.btn.png":{ko:"PNG 저장",en:"Save PNG",ja:"PNG保存",zh:"保存 PNG"},
   "pst.btn.vid":{ko:"영상 저장 (6초)",en:"Save video (6s)",ja:"動画を保存（6秒）",zh:"保存视频（6秒）"},
   "pst.wmNote":{ko:"무료 버전은 저장한 이미지·영상 오른쪽 위에 작은 워터마크가 들어가요. <a href=\"#\">Pro</a>에서 없앨 수 있어요.",en:"Free saves include a small watermark in the top-right corner. <a href=\"#\">Pro</a> removes it.",ja:"無料版では保存した画像・動画の右上に小さな透かしが入ります。<a href=\"#\">Pro</a>で消せます。",zh:"免费版保存的图片和视频右上角会带有小水印。<a href=\"#\">Pro</a> 可去除。"},
@@ -7580,6 +7581,19 @@ var I18N = {
   "pst.noRec":{ko:"이 브라우저는 영상 저장을 지원하지 않아요. PNG로 저장해 주세요.",en:"This browser can't record video. Please save a PNG instead.",ja:"このブラウザは動画保存に対応していません。PNGで保存してください。",zh:"此浏览器不支持保存视频，请改为保存 PNG。"},
   "cat.poster":{ko:"포스터",en:"Poster",ja:"ポスター",zh:"海报"},
   "cat.tip.poster":{ko:"내 이미지와 문구로 만드는 QR 포스터. 예시를 눌러 시작하세요.",en:"QR posters from your own image and text. Tap an example to start.",ja:"自分の画像と文言で作るQRポスター。例をタップして始めましょう。",zh:"用自己的图片和文字制作二维码海报。点击示例开始。"},
+  "pst.pos.br":{ko:"오른쪽 아래",en:"Bottom right",ja:"右下",zh:"右下"},
+  "pst.pos.bl":{ko:"왼쪽 아래",en:"Bottom left",ja:"左下",zh:"左下"},
+  "pst.pos.bc":{ko:"가운데 아래",en:"Bottom center",ja:"中央下",zh:"底部居中"},
+  "pst.pos.tr":{ko:"오른쪽 위",en:"Top right",ja:"右上",zh:"右上"},
+  "pst.pos.tl":{ko:"왼쪽 위",en:"Top left",ja:"左上",zh:"左上"},
+  "pst.hint.drag":{ko:"미리보기에서 QR 카드를 끌어 원하는 곳에 둘 수도 있어요.",en:"You can also drag the QR card anywhere in the preview.",ja:"プレビューでQRカードをドラッグして好きな位置に置けます。",zh:"也可以在预览中拖动二维码卡片到任意位置。"},
+  "pst.lbl.size":{ko:"QR 크기",en:"QR size",ja:"QRサイズ",zh:"二维码大小"},
+  "pst.lbl.textPos":{ko:"문구 위치",en:"Text position",ja:"テキストの位置",zh:"文字位置"},
+  "pst.tp.bottom":{ko:"아래",en:"Bottom",ja:"下",zh:"底部"},
+  "pst.tp.top":{ko:"위",en:"Top",ja:"上",zh:"顶部"},
+  "pst.lbl.motion":{ko:"배경 움직임",en:"Background movement",ja:"背景の動き",zh:"背景动态"},
+  "pst.hint.motion":{ko:"켜면 배경 이미지가 천천히 확대·이동해요. 영상으로 저장할 때 적용되고, QR은 움직이지 않아요.",en:"When on, the background slowly zooms and drifts. Applies to video saves; the QR never moves.",ja:"オンにすると背景がゆっくりズーム・移動します。動画保存に反映され、QRは動きません。",zh:"开启后背景会缓慢缩放和平移，保存视频时生效，二维码保持不动。"},
+  "pst.hint.small":{ko:"QR이 작아요. 인쇄물은 2cm 이상이 되도록 크게 해 주세요.",en:"The QR is small — keep it at least 2 cm wide in print.",ja:"QRが小さめです。印刷物では2cm以上になるようにしてください。",zh:"二维码偏小，印刷时请保证至少 2 厘米宽。"},
   "foot.contact":{ko:"문의",en:"Contact",zh:"联系",ja:"お問い合わせ"},
   "foot.motion":{ko:"모션 QR 실험실",en:"Motion QR Lab",zh:"动态二维码实验室",ja:"モーションQRラボ"},
   "foot.tag":{ko:"아름답고 스캔되는 QR을 만드는 스튜디오 · QR 생성·디자인은 브라우저에서 처리 (AI 기능만 서버 전송·저장 안 함)",en:"A studio for beautiful, scannable QR codes · QR building & design run in your browser (only AI features send to a server, and aren't stored)",zh:"打造美观且可扫描二维码的工作室 · 二维码生成与设计在浏览器中处理（仅 AI 功能会发送到服务器，且不存储）",ja:"美しくスキャン可能なQRを作るスタジオ · QR生成・デザインはブラウザで処理（AI機能のみサーバー送信・保存なし）"},
@@ -8815,7 +8829,9 @@ function pushArLinkToStudio(url){
   toast(t("toast.arShareOk"));
 }
 
-// ---------- POSTER: user image + text + a QR card (layout "B": headline left, QR card right) ----------
+// ---------- POSTER: user image + text + a freely placed QR card ----------
+// Examples are starting points; everything (image, text, link, QR position/size) is user-set.
+// Add more examples by appending to EX (image in assets/, texts as [ko,en,ja,zh]).
 var POSTER=(function(){
   var EX=[
     {img:"assets/anim-1.webp",acc:"#67e8f9",t:["NEON NIGHTS","NEON NIGHTS","NEON NIGHTS","NEON NIGHTS"],s:["라이브 공연 · 11.08 SAT 8PM","Live show · Sat 11.08, 8PM","ライブ公演・11.08（土）20時","现场演出 · 11.08 周六 20:00"],c:["티켓 예매","Get tickets","チケット予約","立即购票"]},
@@ -8823,17 +8839,34 @@ var POSTER=(function(){
     {img:"assets/anim-9.webp",acc:"#fbbf24",t:["바로크 나이트","Baroque Night","バロック・ナイト","巴洛克之夜"],s:["클래식 콘서트 · 12.20","Classical concert · Dec 20","クラシックコンサート・12.20","古典音乐会 · 12.20"],c:["예매하기","Book now","予約する","立即预订"]},
     {img:"assets/anim-15.webp",acc:"#a5b4fc",t:["우주 정원","Cosmic Garden","宇宙の庭","宇宙花园"],s:["몰입형 전시 · 지금 오픈","Immersive exhibition · Now open","没入型展示・開催中","沉浸式展览 · 现已开放"],c:["입장권 구매","Get passes","入場券を買う","购买门票"]},
     {img:"assets/anim-13.webp",acc:"#fda4af",t:["디저트 시티","Dessert City","デザートシティ","甜品之城"],s:["신메뉴 출시 · 첫 주 10% 할인","New menu · 10% off launch week","新メニュー・初週10%オフ","新品上市 · 首周九折"],c:["메뉴 보기","See the menu","メニューを見る","查看菜单"]},
-    {img:"assets/anim-16.webp",acc:"#f9a8d4",t:["마법의 숲","Enchanted Forest","魔法の森","魔法森林"],s:["향수 팝업스토어 · 성수","Fragrance pop-up · Seongsu","香水ポップアップ・聖水","香水快闪店 · 圣水"],c:["위치 보기","Find us","場所を見る","查看位置"]}
+    {img:"assets/anim-16.webp",acc:"#f9a8d4",t:["마법의 숲","Enchanted Forest","魔法の森","魔法森林"],s:["향수 팝업스토어 · 성수","Fragrance pop-up · Seongsu","香水ポップアップ・聖水","香水快闪店 · 圣水"],c:["위치 보기","Find us","場所を見る","查看位置"]},
+    {img:"assets/anim-3.webp",acc:"#fde047",t:["주말 플래시 세일","Weekend Flash Sale","週末フラッシュセール","周末限时特卖"],s:["최대 50% · 이번 주 토·일","Up to 50% off · this Sat & Sun","最大50%オフ・今週土日","最高五折 · 本周六日"],c:["쇼핑하기","Shop now","今すぐ買う","立即选购"]},
+    {img:"assets/anim-4.webp",acc:"#e5e7eb",t:["차와 산수","Tea & Mountains","茶と山水","茶与山水"],s:["다도 클래스 · 매주 토요일","Tea ceremony class · Saturdays","茶道クラス・毎週土曜","茶道课 · 每周六"],c:["예약하기","Reserve","予約する","预约"]},
+    {img:"assets/anim-5.webp",acc:"#fb923c",t:["불사조의 귀환","Return of the Phoenix","不死鳥の帰還","凤凰归来"],s:["고대 문명 특별전 · 국립박물관","Ancient civilizations · National Museum","古代文明特別展・国立博物館","古代文明特展 · 国家博物馆"],c:["관람 안내","Plan your visit","観覧案内","参观指南"]},
+    {img:"assets/anim-6.webp",acc:"#c4b5fd",t:["구름 위의 문","Door Above the Clouds","雲の上の扉","云端之门"],s:["애니메이션 영화제 · 11월","Animated film festival · November","アニメーション映画祭・11月","动画电影节 · 11月"],c:["상영작 보기","See the lineup","上映作品を見る","查看片单"]},
+    {img:"assets/anim-7.webp",acc:"#86efac",t:["아르누보 뷰티","Art Nouveau Beauty","アールヌーヴォー・ビューティー","新艺术美妆"],s:["신제품 런칭 · 한정 패키지","New launch · limited packaging","新製品発売・限定パッケージ","新品发布 · 限定包装"],c:["자세히 보기","Learn more","詳しく見る","了解详情"]},
+    {img:"assets/anim-8.webp",acc:"#f0abfc",t:["RETRO WAVE PARTY","RETRO WAVE PARTY","RETRO WAVE PARTY","RETRO WAVE PARTY"],s:["DJ 나이트 · 금요일 10PM","DJ night · Fri 10PM","DJナイト・金曜22時","DJ 之夜 · 周五 22:00"],c:["입장 등록","RSVP","参加登録","报名入场"]},
+    {img:"assets/anim-10.webp",acc:"#e5e7eb",t:["고딕 북페어","Gothic Book Fair","ゴシック・ブックフェア","哥特书展"],s:["독립출판 마켓 · 12.7–8","Indie publishing market · Dec 7–8","独立出版マーケット・12.7–8","独立出版市集 · 12.7–8"],c:["참가 안내","Details","参加案内","参展信息"]},
+    {img:"assets/anim-14.webp",acc:"#fdba74",t:["핸드메이드 마켓","Handmade Market","ハンドメイドマーケット","手作市集"],s:["공예 작가 40팀 · 이번 주말","40 makers · this weekend","クラフト作家40組・今週末","40位手作人 · 本周末"],c:["지도 보기","Get directions","地図を見る","查看地图"]},
+    {img:"assets/anim-17.webp",acc:"#7dd3fc",t:["윈터 크리스탈","Winter Crystal","ウィンター・クリスタル","冬日水晶"],s:["겨울 한정 컬렉션 · 12월 출시","Winter collection · out in December","冬限定コレクション・12月発売","冬季限定系列 · 12月上市"],c:["미리 보기","Preview","先行公開","抢先看"]}
   ];
   var LI={ko:0,en:1,ja:2,zh:3};
-  var st={ex:0,img:null,own:false,title:"",sub:"",cta:"",url:"",ratio:"45",pos:"right",acc:"#67e8f9",motion:true,qr:"ink",edited:{}};
-  var raf=null, t0=0, qrCv=null, qrKey="", active=false, rec=false;
+  // QR card: qx/qy = top-left as a fraction of width/height, qs = side as a fraction of width
+  var st={ex:0,img:null,own:false,title:"",sub:"",cta:"",url:"",ratio:"45",acc:"#67e8f9",motion:true,qr:"ink",
+          qs:0.30,qx:0,qy:0,anchor:"br",tp:"bottom",edited:{}};
+  var raf=null, t0=0, qrCv=null, qrKey="", active=false, rec=false, drag=null;
   var FONT='-apple-system,BlinkMacSystemFont,"Pretendard","Noto Sans KR","Noto Sans JP","Noto Sans SC",sans-serif';
   function li(){ return LI[(typeof LANG!=="undefined"&&LANG)||"ko"]||0; }
   function dims(r){ return r==="916"?[1080,1920]:r==="11"?[1080,1080]:[1080,1350]; }
   function defUrl(){ var c=(S.content||"").trim(); return c&&c!==" " ? c : "https://jay-inky.vercel.app"; }
   function rr(g,x,y,w,h,r){ g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath(); }
-  // the QR card uses the Studio design (colours / module & eye shape / logo), drawn clean (no frame/label/art)
+  // snap the card to one of the quick positions for the current size/ratio
+  function place(anchor, o){
+    o=o||st; var d=dims(o.ratio), W=d[0], H=d[1], cs=o.qs*W, m=W*0.06, mb=(H/W>1.5)?m*1.6:m;
+    var x = anchor[1]==="l" ? m : anchor[1]==="r" ? W-cs-m : (W-cs)/2;
+    var y = anchor[0]==="t" ? m*1.4 : H-cs-mb;
+    o.qx=x/W; o.qy=y/H; o.anchor=anchor;
+  }
   function qrCanvas(url, px, mode){
     var key=[url,px,mode,S.fill,S.fg1,S.fg2,S.angle,S.dot,S.eye,S.eyeColorOn,S.eyeColor,S.ecc,S.logo&&S.logo.src,S.logoSize,S.bg].join("|");
     if(qrCv && key===qrKey) return qrCv;
@@ -8850,43 +8883,70 @@ var POSTER=(function(){
   }
   function cover(g,img,W,H,z,px,py){ var iw=img.naturalWidth||img.width, ih=img.naturalHeight||img.height; if(!iw) return;
     var sc=Math.max(W/iw,H/ih)*z, dw=iw*sc, dh=ih*sc; g.drawImage(img,(W-dw)/2+px*W,(H-dh)/2+py*H,dw,dh); }
+  function wrap(g,text,maxW){ var words=String(text||"").split(/(\s+)/), out=[], cur="";
+    words.forEach(function(w){ var tst=cur+w; if(g.measureText(tst).width>maxW && cur.trim()){ out.push(cur.trim()); cur=w.replace(/^\s+/,""); } else cur=tst; });
+    if(cur.trim()) out.push(cur.trim());
+    var res=[]; out.forEach(function(l){ if(g.measureText(l).width<=maxW){ res.push(l); return; } var b=""; for(var i=0;i<l.length;i++){ if(g.measureText(b+l[i]).width>maxW && b){ res.push(b); b=l[i]; } else b+=l[i]; } if(b) res.push(b); });
+    return res; }
   function fit(g,text,maxW,size,weight,minSize,lines){
     var fs=size; while(fs>minSize){ g.font=weight+" "+fs+"px "+FONT; var L=wrap(g,text,maxW); if(L.length<=lines) return {fs:fs,L:L}; fs-=2; }
     g.font=weight+" "+minSize+"px "+FONT; return {fs:minSize,L:wrap(g,text,maxW).slice(0,lines)};
   }
-  function wrap(g,text,maxW){ var words=String(text||"").split(/(\s+)/), out=[], cur="";
-    words.forEach(function(w){ var tst=cur+w; if(g.measureText(tst).width>maxW && cur.trim()){ out.push(cur.trim()); cur=w.trimStart(); } else cur=tst; });
-    if(cur.trim()) out.push(cur.trim());
-    // CJK without spaces: hard-break by characters
-    var res=[]; out.forEach(function(l){ if(g.measureText(l).width<=maxW){ res.push(l); return; } var b=""; for(var i=0;i<l.length;i++){ if(g.measureText(b+l[i]).width>maxW){ res.push(b); b=l[i]; } else b+=l[i]; } if(b) res.push(b); });
-    return res; }
+  // lay the text out (measure only) for a given box; returns line lists + total height
+  function layoutText(g,o,W,tw,tall){
+    var r={items:[],h:0};
+    if(o.title){ var tt=fit(g,o.title,tw,Math.round(W*(tall?0.08:0.072)),"800",Math.round(W*0.042),3); r.items.push({k:"t",fs:tt.fs,L:tt.L,lh:tt.fs*1.12}); r.h+=tt.L.length*tt.fs*1.12; }
+    if(o.sub){ var sb=fit(g,o.sub,tw,Math.round(W*0.032),"500",Math.round(W*0.022),2); r.items.push({k:"s",fs:sb.fs,L:sb.L,lh:sb.fs*1.3}); r.h+=sb.L.length*sb.fs*1.3+W*0.012; }
+    if(o.cta){ var cf=Math.round(W*0.026); r.items.push({k:"c",fs:cf,L:[o.cta],lh:cf*1.6}); r.h+=cf*1.6+W*0.01; }
+    return r;
+  }
   function draw(g,W,H,P,o){
-    o=o||st; var TAU=6.28318, t=P*TAU, img=o.img;
+    o=o||st; var TAU=6.28318, t=P*TAU, img=o.img, tall=H/W>1.5, m=W*0.06;
     g.clearRect(0,0,W,H); g.fillStyle="#0b0d12"; g.fillRect(0,0,W,H);
     if(img){ if(o.motion) cover(g,img,W,H,1.07+0.04*Math.sin(t),0.015*Math.cos(t),0.008*Math.sin(t)); else cover(g,img,W,H,1.0,0,0); }
-    var gr=g.createLinearGradient(0,H*0.42,0,H); gr.addColorStop(0,"rgba(6,8,14,0)"); gr.addColorStop(.45,"rgba(6,8,14,.5)"); gr.addColorStop(1,"rgba(6,8,14,.82)"); g.fillStyle=gr; g.fillRect(0,0,W,H);
-    var tall=H/W>1.5, cs=W*(tall?0.34:0.30), m=W*0.06, right=o.pos!=="left";
-    var cx=right?W-cs-m:m, cy=H-cs-m*(tall?1.6:1);
-    g.save(); g.shadowColor="rgba(0,0,0,.35)"; g.shadowBlur=W*0.03; g.fillStyle="#fff"; rr(g,cx,cy,cs,cs,W*0.025); g.fill(); g.restore();
+    var top=o.tp==="top";
+    var gr=top?g.createLinearGradient(0,H*0.58,0,0):g.createLinearGradient(0,H*0.42,0,H);
+    gr.addColorStop(0,"rgba(6,8,14,0)"); gr.addColorStop(.45,"rgba(6,8,14,.5)"); gr.addColorStop(1,"rgba(6,8,14,.82)"); g.fillStyle=gr; g.fillRect(0,0,W,H);
+    // QR card
+    var cs=o.qs*W, cx=Math.max(0,Math.min(W-cs,o.qx*W)), cy=Math.max(0,Math.min(H-cs,o.qy*H));
+    g.save(); g.shadowColor="rgba(0,0,0,.35)"; g.shadowBlur=W*0.03; g.fillStyle="#fff"; rr(g,cx,cy,cs,cs,cs*0.08); g.fill(); g.restore();
     var qs=Math.round(cs*0.88); g.drawImage(qrCanvas(o.url||defUrl(), qs, o.qr||"ink"), cx+(cs-qs)/2, cy+(cs-qs)/2, qs, qs);
-    // text block, bottom-aligned with the card, on the opposite side
-    var tw=W-cs-m*3, tx0=right?m:W-m, al=right?"left":"right";
+    if(o.guide){ g.save(); g.strokeStyle="rgba(255,255,255,.9)"; g.setLineDash([W*0.012,W*0.008]); g.lineWidth=W*0.004; rr(g,cx-W*0.008,cy-W*0.008,cs+W*0.016,cs+W*0.016,cs*0.09); g.stroke(); g.restore(); }
+    // text: aligned away from the card; narrowed only when the card shares the text band
+    var ccx=cx+cs/2, al = ccx>W*0.6 ? "left" : ccx<W*0.4 ? "right" : "center";
+    var bandHit = top ? (cy < H*0.45) : (cy+cs > H*0.55);
+    var tw = (bandHit && al!=="center") ? W-cs-m*3 : W-m*2;
+    var tx0 = al==="left" ? m : al==="right" ? W-m : W/2;
     g.textAlign=al; g.textBaseline="alphabetic"; g.shadowColor="rgba(0,0,0,.55)"; g.shadowBlur=W*0.012;
-    var y=cy+cs;
-    if(o.cta){ g.font="700 "+Math.round(W*0.026)+"px "+FONT; g.fillStyle=o.acc; g.fillText(o.cta+(right?"  →":""), tx0, y-W*0.005); y-=W*0.06; }
-    if(o.sub){ var sb=fit(g,o.sub,tw,Math.round(W*0.032),"500",Math.round(W*0.022),2); g.fillStyle="rgba(255,255,255,.9)";
-      for(var i=sb.L.length-1;i>=0;i--){ g.fillText(sb.L[i],tx0,y); y-=sb.fs*1.3; } y-=W*0.012; }
-    if(o.title){ var tt=fit(g,o.title,tw,Math.round(W*(tall?0.08:0.072)),"800",Math.round(W*0.042),3); g.fillStyle="#fff";
-      for(var j=tt.L.length-1;j>=0;j--){ g.fillText(tt.L[j],tx0,y); y-=tt.fs*1.12; } }
+    var LT=layoutText(g,o,W,tw,tall), y;
+    if(!top){
+      var bottom = H - m*(tall?1.6:1);
+      if(bandHit){ bottom = al==="center" ? cy - m*0.6 : Math.min(bottom, cy+cs); }
+      y = bottom - LT.h;
+    } else {
+      y = m*1.4; if(bandHit && al==="center") y = cy+cs+m*0.6;
+    }
+    LT.items.forEach(function(it){
+      if(it.k==="t"){ g.font="800 "+it.fs+"px "+FONT; g.fillStyle="#fff"; }
+      else if(it.k==="s"){ g.font="500 "+it.fs+"px "+FONT; g.fillStyle="rgba(255,255,255,.9)"; }
+      else { g.font="700 "+it.fs+"px "+FONT; g.fillStyle=o.acc; }
+      it.L.forEach(function(line){ y+=it.lh; g.fillText(it.k==="c"&&al==="left"?line+"  →":line, tx0, y - it.lh*0.22); });
+      if(it.k==="s") y+=W*0.012;
+    });
     g.shadowBlur=0;
     if(o.wm){ var wf=Math.round(W*0.02); g.font="600 "+wf+"px "+FONT; var wt="Aesthetic QR Studio", ww=g.measureText(wt).width+wf*1.4;
-      g.fillStyle="rgba(0,0,0,.35)"; rr(g,W-ww-m*0.5,m*0.5,ww,wf*1.9,wf*0.95); g.fill(); g.fillStyle="rgba(255,255,255,.9)"; g.textAlign="center"; g.fillText(wt,W-ww/2-m*0.5,m*0.5+wf*1.32); }
+      var wx = (cx+cs>W*0.7 && cy<H*0.2) ? m*0.5 : W-ww-m*0.5;   // keep clear of a top-right card
+      g.fillStyle="rgba(0,0,0,.35)"; rr(g,wx,m*0.5,ww,wf*1.9,wf*0.95); g.fill(); g.fillStyle="rgba(255,255,255,.9)"; g.textAlign="center"; g.fillText(wt,wx+ww/2,m*0.5+wf*1.32); }
   }
   function cv(){ return $("pstCanvas"); }
   function frame(P, wm){ var c=cv(), d=dims(st.ratio); if(c.width!==d[0]||c.height!==d[1]){ c.width=d[0]; c.height=d[1]; }
-    draw(c.getContext("2d"),d[0],d[1],P,Object.assign({},st,{wm:!!wm})); }
-  function loop(ts){ if(!active){ raf=null; return; } if(!t0) t0=ts; var P=st.motion?(((ts-t0)%6000)/6000):0; frame(P, rec && !isPro()); raf=requestAnimationFrame(loop); }
+    draw(c.getContext("2d"),d[0],d[1],P,Object.assign({},st,{wm:!!wm,guide:!!drag})); }
+  function curP(ts){ return st.motion?(((ts-t0)%6000)/6000):0; }
+  function loop(ts){ if(!active){ raf=null; return; } if(!t0) t0=ts; frame(curP(ts), rec && !isPro()); raf=requestAnimationFrame(loop); }
   function start(){ if(!raf){ t0=0; raf=requestAnimationFrame(loop); } }
+  function sizeUI(){ $("pstSize").value=Math.round(st.qs*100); $("pstSizeOut").textContent=Math.round(st.qs*100)+"%";
+    var small=st.qs<0.24; var h=$("pstSmall"); if(h) h.style.display=small?"block":"none"; }
+  function posUI(){ Array.prototype.forEach.call($("pstPosSeg").children,function(x){ x.classList.toggle("on", x.dataset.p===st.anchor); }); }
   function loadEx(i, keepText){
     var e=EX[i]; st.ex=i; st.own=false; st.acc=e.acc; $("pstAcc").value=e.acc;
     if(!keepText){ var k=li(); st.title=e.t[k]; st.sub=e.s[k]; st.cta=e.c[k]; st.edited={}; syncInputs(); }
@@ -8898,30 +8958,50 @@ var POSTER=(function(){
     EX.forEach(function(e,i){ var b=document.createElement("button"); b.type="button"; b.innerHTML='<img loading="lazy" alt="" src="'+e.img+'">'; b.addEventListener("click",function(){ loadEx(i,false); }); box.appendChild(b); });
   }
   function save(name, url){ download(url, name); toast(t("pst.saved")); }
-  function exportPng(){ frame(st.motion?0.25:0, !isPro()); var c=cv(); save("aesthetic-qr-poster.png", c.toDataURL("image/png")); track && track("poster_png"); }
+  function exportPng(){ var d0=drag; drag=null; frame(st.motion?0.25:0, !isPro()); drag=d0; save("aesthetic-qr-poster.png", cv().toDataURL("image/png")); if(typeof track==="function") track("poster_png"); }
   function exportVid(){
     var c=cv(); if(!c.captureStream || typeof MediaRecorder==="undefined"){ toast(t("pst.noRec")); return; }
     var types=["video/mp4;codecs=avc1","video/mp4","video/webm;codecs=vp9","video/webm"], mt=""; for(var i=0;i<types.length;i++){ if(MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(types[i])){ mt=types[i]; break; } }
     var r; try{ r=new MediaRecorder(c.captureStream(30), mt?{mimeType:mt,videoBitsPerSecond:8e6}:undefined); }catch(e){ toast(t("pst.noRec")); return; }
     var chunks=[]; r.ondataavailable=function(e){ if(e.data&&e.data.size) chunks.push(e.data); };
     r.onstop=function(){ rec=false; $("pstVid").disabled=false; var ext=(mt.indexOf("mp4")>=0)?"mp4":"webm"; save("aesthetic-qr-poster."+ext, URL.createObjectURL(new Blob(chunks,{type:mt||"video/webm"}))); };
-    rec=true; $("pstVid").disabled=true; t0=0; toast(t("pst.recording")); r.start(); setTimeout(function(){ try{ r.stop(); }catch(e){} }, 6050);
+    drag=null; rec=true; $("pstVid").disabled=true; t0=0; toast(t("pst.recording")); r.start(); setTimeout(function(){ try{ r.stop(); }catch(e){} }, 6050);
     if(typeof track==="function") track("poster_video");
   }
   function segWire(id,key,fn){ $(id).addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return;
     Array.prototype.forEach.call(this.children,function(x){x.classList.toggle("on",x===b);}); fn(b.dataset[key]); frame(0); }); }
+  // drag the QR card on the preview (mouse + touch; touches that miss the card still scroll the page)
+  function canvasPt(cx0,cy0){ var c=cv(), r=c.getBoundingClientRect(); return {x:(cx0-r.left)*c.width/r.width, y:(cy0-r.top)*c.height/r.height}; }
+  function hit(p){ var c=cv(), W=c.width, H=c.height, cs=st.qs*W, x=st.qx*W, y=st.qy*H; return p.x>=x&&p.x<=x+cs&&p.y>=y&&p.y<=y+cs; }
+  function dStart(cx0,cy0){ var p=canvasPt(cx0,cy0); if(!hit(p)) return false; var c=cv(); drag={dx:p.x-st.qx*c.width, dy:p.y-st.qy*c.height}; return true; }
+  function dMove(cx0,cy0){ if(!drag) return; var c=cv(), p=canvasPt(cx0,cy0), cs=st.qs*c.width;
+    st.qx=Math.max(0,Math.min(c.width-cs,p.x-drag.dx))/c.width; st.qy=Math.max(0,Math.min(c.height-cs,p.y-drag.dy))/c.height; st.anchor=""; posUI(); }
+  function dEnd(){ if(drag){ drag=null; frame(0); } }
   var inited=false;
   function init(){ if(inited) return; inited=true;
-    buildEx(); loadEx(0,false);
+    var hs=document.createElement("div"); hs.className="hint"; hs.id="pstSmall"; hs.setAttribute("data-i18n","pst.hint.small"); hs.textContent=t("pst.hint.small"); hs.style.display="none";
+    $("pstSize").parentNode.appendChild(hs);
+    buildEx(); place("br"); loadEx(0,false); sizeUI();
     ["Title","Sub","Cta"].forEach(function(k){ $("pst"+k).addEventListener("input",function(){ st[k.toLowerCase()]=this.value; st.edited[k]=true; frame(0); }); });
     $("pstUrl").addEventListener("input",function(){ st.url=this.value.trim(); frame(0); });
     $("pstAcc").addEventListener("input",function(){ st.acc=this.value; });
     $("pstMotion").addEventListener("change",function(){ st.motion=this.checked; });
-    segWire("pstRatioSeg","r",function(v){ st.ratio=v; });
-    segWire("pstPosSeg","p",function(v){ st.pos=v; });
+    segWire("pstRatioSeg","r",function(v){ st.ratio=v; if(st.anchor) place(st.anchor); else { st.qy=Math.min(st.qy, 1-st.qs*dims(v)[0]/dims(v)[1]); } });
+    segWire("pstPosSeg","p",function(v){ place(v); });
+    segWire("pstTextSeg","tp",function(v){ st.tp=v; });
     segWire("pstQrSeg","q",function(v){ st.qr=v; });
+    $("pstSize").addEventListener("input",function(){ var c=cv(), old=st.qs*c.width, cxm=st.qx*c.width+old/2, cym=st.qy*c.height+old/2;
+      st.qs=(+this.value)/100; if(st.anchor) place(st.anchor); else { var n=st.qs*c.width; st.qx=Math.max(0,Math.min(c.width-n,cxm-n/2))/c.width; st.qy=Math.max(0,Math.min(c.height-n,cym-n/2))/c.height; }
+      sizeUI(); frame(0); });
     $("pstFile").addEventListener("change",function(e){ var f=e.target.files&&e.target.files[0]; if(!f) return;
       var rd=new FileReader(); rd.onload=function(){ var im=new Image(); im.onload=function(){ st.img=im; st.own=true; Array.prototype.forEach.call($("pstEx").children,function(b){b.classList.remove("on");}); frame(0); }; im.src=rd.result; }; rd.readAsDataURL(f); });
+    var c=cv();
+    c.addEventListener("mousedown",function(e){ if(dStart(e.clientX,e.clientY)) e.preventDefault(); });
+    window.addEventListener("mousemove",function(e){ if(drag) dMove(e.clientX,e.clientY); else if(active){ cv().style.cursor=hit(canvasPt(e.clientX,e.clientY))?"grab":"default"; } });
+    window.addEventListener("mouseup",dEnd);
+    c.addEventListener("touchstart",function(e){ var tt=e.touches[0]; if(tt && dStart(tt.clientX,tt.clientY)) e.preventDefault(); },{passive:false});
+    window.addEventListener("touchmove",function(e){ if(!drag) return; var tt=e.touches[0]; dMove(tt.clientX,tt.clientY); e.preventDefault(); },{passive:false});
+    window.addEventListener("touchend",dEnd);
     $("pstPng").addEventListener("click",exportPng);
     $("pstVid").addEventListener("click",exportVid);
     $("pstToStudio").addEventListener("click",function(){ if(st.url){ selectCType("url"); $("content").value=st.url; buildContent(); } gotoView("studio"); });
@@ -8937,7 +9017,7 @@ var POSTER=(function(){
         var k=li(); card.innerHTML='<span class="use">'+t("gal.edit")+'</span><canvas width="300" height="375" style="aspect-ratio:4/5;height:auto"></canvas><div class="name"></div><div class="tag"></div>';
         card.querySelector(".name").textContent=e.t[k]; card.querySelector(".tag").textContent=e.s[k];
         var c=card.querySelector("canvas"), im=new Image();
-        im.onload=function(){ draw(c.getContext("2d"),300,375,0,{img:im,title:e.t[k],sub:e.s[k],cta:e.c[k],acc:e.acc,pos:"right",motion:false,url:defUrl()}); };
+        im.onload=function(){ var o={img:im,title:e.t[k],sub:e.s[k],cta:e.c[k],acc:e.acc,motion:false,url:defUrl(),ratio:"45",qs:0.30,tp:"bottom"}; place("br",o); draw(c.getContext("2d"),300,375,0,o); };
         im.src=e.img; card.addEventListener("click",function(){ POSTER.open(i); });
         grid.appendChild(card);
       });
