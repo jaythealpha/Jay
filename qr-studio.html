@@ -1418,7 +1418,7 @@
     </nav>
     <div style="margin-top:10px">Aesthetic QR Studio · <span data-i18n="foot.tag">아름답고 스캔되는 QR을 만드는 스튜디오 · QR 생성·디자인은 브라우저에서 처리 (AI 기능만 서버 전송·저장 안 함)</span></div>
     <div style="margin-top:6px" data-i18n="foot.tm">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · <span data-i18n="foot.build">빌드</span> <b id="verTag">2026.10.14-c</b></div>
+    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · <span data-i18n="foot.build">빌드</span> <b id="verTag">2026.10.14-d</b></div>
   </footer>
 </div>
 
@@ -7216,6 +7216,7 @@ $("catTabs").addEventListener("click",function(e){
   var b=e.target.closest("button"); if(!b) return;
   Array.prototype.forEach.call(this.children,function(x){x.classList.remove("on");});
   b.classList.add("on"); curCat=b.dataset.cat; buildGallery();
+  try{ b.scrollIntoView({inline:"center",block:"nearest",behavior:"smooth"}); }catch(e){}
 });
 
 // ---------- My QR (local storage) ----------
@@ -8616,6 +8617,12 @@ if (typeof qrcode === "undefined"){
   buildMarkPicker();
   buildGallery();
   AR.init();
+  (function initProLink(){   // /?pro=1 (e.g. from the Motion QR Lab watermark note) opens the Pro dialog
+    try{ if(new URLSearchParams(location.search).get("pro")==="1"){
+      setTimeout(function(){ var ob=$("obMask"); if(ob && ob.classList.contains("show")) hideOnboard(); openPro("motion"); },400);
+      var u=new URL(location.href); u.searchParams.delete("pro"); history.replaceState(history.state,"",u.href);
+    } }catch(e){}
+  })();
   (function initRoute(){
     var h=location.hash.slice(1);
     try{ history.replaceState({view:VIEWS.indexOf(h)>=0?h:"gallery"},""); }catch(e){}

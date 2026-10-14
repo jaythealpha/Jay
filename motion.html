@@ -1,31 +1,44 @@
 <!doctype html>
-<html lang="ko" translate="no">
+<html lang="ko" translate="no" class="notranslate">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="google" content="notranslate">
 <meta name="color-scheme" content="light dark">
-<title>Motion QR</title>
-<meta name="description" content="Motion QR prototype: a QR code whose dots are formed by motion. Animate, hold, dissolve, export WebM/PNG, and try a camera AR preview.">
+<title>모션 QR 실험실</title>
+<meta name="description" content="모션 QR 실험실: 점이 움직이며 완성되는 QR. 이미지 효과, 색상·로고·문구, MP4·WebM·PNG 저장, 카메라 AR 미리보기.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='4' fill='%23111'/%3E%3Crect x='3' y='3' width='4' height='4' fill='%23fff'/%3E%3Crect x='9' y='3' width='4' height='4' fill='%23fff'/%3E%3Crect x='3' y='9' width='4' height='4' fill='%23fff'/%3E%3Ccircle cx='11' cy='11' r='1.6' fill='%23fff'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script>
+/* language + embed + theme are resolved before first paint so nothing flashes in the wrong language */
+(function(){
+  var d = document.documentElement, q = {};
+  try { q = Object.fromEntries(new URLSearchParams(location.search)); } catch(e){}
+  var ok = {ko:1,en:1,ja:1,zh:1}, lang = null;
+  if (q.lang && ok[q.lang]) lang = q.lang;
+  if (!lang) try { var s = localStorage.getItem("mq-lang") || localStorage.getItem("aqr_lang"); if (s && ok[s]) lang = s; } catch(e){}
+  d.lang = lang || "ko";
+  if (q.embed === "1") d.classList.add("embed");
+  if (q.theme === "dark" || q.theme === "light") d.setAttribute("data-theme", q.theme);
+})();
+</script>
 <style>
 :root{
   --bg:#fbfbf9; --card:#ffffff; --ink:#0e0e0d; --ink2:#3a3a37; --mute:#76766f; --line:#e6e6e1; --soft:#f2f2ee;
-  --ok:#15803d; --okbg:#e7f5ec; --warn:#a15c07; --track:#dcdcd6;
-  --font:"Nunito", ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  --ok:#15803d; --okbg:#e7f5ec; --warn:#a15c07; --track:#dcdcd6; --accent:#2f6bff;
+  --font:"Nunito", ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", "Hiragino Sans", "Noto Sans JP", "PingFang SC", "Noto Sans SC", sans-serif;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --bg:#121211; --card:#191918; --ink:#f2f2ef; --ink2:#d0d0cb; --mute:#97978f; --line:#2c2c29; --soft:#21211f;
-    --ok:#4ade80; --okbg:#14301e; --warn:#f0b35a; --track:#3a3a36;
+    --ok:#4ade80; --okbg:#14301e; --warn:#f0b35a; --track:#3a3a36; --accent:#7aa2ff;
   }
 }
 :root[data-theme="dark"]{
   --bg:#121211; --card:#191918; --ink:#f2f2ef; --ink2:#d0d0cb; --mute:#97978f; --line:#2c2c29; --soft:#21211f;
-  --ok:#4ade80; --okbg:#14301e; --warn:#f0b35a; --track:#3a3a36;
+  --ok:#4ade80; --okbg:#14301e; --warn:#f0b35a; --track:#3a3a36; --accent:#7aa2ff;
 }
 *{box-sizing:border-box}
 html,body{margin:0}
@@ -33,22 +46,25 @@ body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15p
 a{color:inherit}
 button,input,textarea,select{font:inherit;color:inherit}
 .wrap{max-width:1120px;margin:0 auto;padding:0 16px}
-header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 16px;max-width:1120px;margin:0 auto}
-.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:800;font-size:17px;letter-spacing:-.01em}
-.brand svg{width:26px;height:26px;display:block}
-.tag{font-size:11px;font-weight:700;color:var(--mute);border:1px solid var(--line);border-radius:9999px;padding:1px 8px}
-.seg{display:inline-flex;background:var(--soft);border-radius:9999px;padding:3px;gap:2px}
-.seg button{border:0;background:transparent;border-radius:9999px;padding:6px 12px;font-size:13px;font-weight:700;color:var(--mute);cursor:pointer}
+header.top{display:flex;align-items:center;justify-content:space-between;gap:10px 12px;padding:16px;max-width:1120px;margin:0 auto;flex-wrap:wrap}
+.hl{display:flex;align-items:center;gap:10px;min-width:0;flex-wrap:wrap}
+.back{display:inline-flex;align-items:center;text-decoration:none;font-weight:800;font-size:14px;border:1px solid var(--line);background:var(--card);border-radius:9999px;padding:6px 14px;white-space:nowrap}
+.back:hover{border-color:var(--mute)}
+.brand{display:flex;align-items:center;gap:8px;font-weight:800;font-size:16px;letter-spacing:-.01em;min-width:0}
+.brand svg{width:24px;height:24px;display:block;flex:none}
+.tag{font-size:11px;font-weight:700;color:var(--mute);border:1px solid var(--line);border-radius:9999px;padding:1px 8px;white-space:nowrap}
+.seg{display:inline-flex;flex-wrap:wrap;background:var(--soft);border-radius:20px;padding:3px;gap:2px;max-width:100%}
+.seg button{border:0;background:transparent;border-radius:9999px;padding:6px 12px;font-size:13px;font-weight:700;color:var(--mute);cursor:pointer;white-space:nowrap}
 .seg button[aria-pressed="true"]{background:var(--card);color:var(--ink);box-shadow:0 0 0 1px var(--line)}
-.hero{padding:28px 0 8px;max-width:680px}
+.hero{padding:24px 0 4px;max-width:680px}
 .hero h1{font-size:clamp(28px,5vw,44px);line-height:1.12;letter-spacing:-.025em;margin:0 0 10px;font-weight:800}
 .hero p{margin:0;color:var(--ink2);font-size:16px}
 .studio{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:28px;padding:24px 0 8px;align-items:start}
 @media (max-width:860px){.studio{grid-template-columns:minmax(0,1fr);gap:20px}}
-.stage{position:sticky;top:12px}
+.stage{position:sticky;top:12px;min-width:0}
 @media (max-width:860px){.stage{position:static}}
-.canvas-card{background:var(--card);border:1px solid var(--line);border-radius:28px;padding:18px;display:flex;justify-content:center}
-#cv{display:block;width:100%;max-width:520px;height:auto;aspect-ratio:1/1;border-radius:14px}
+.canvas-card{background:var(--card);border:1px solid var(--line);border-radius:28px;padding:18px;display:flex;justify-content:center;align-items:center}
+#cv{display:block;max-width:100%;max-height:min(68vh,760px);width:auto;height:auto;border-radius:14px}
 .statusrow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:14px 2px 8px;flex-wrap:wrap}
 .status{display:inline-flex;align-items:center;gap:8px;border-radius:9999px;padding:6px 14px 6px 12px;font-weight:700;font-size:13px;background:var(--soft);color:var(--mute);transition:background .2s,color .2s}
 .status i{width:9px;height:9px;border-radius:50%;background:currentColor;opacity:.55}
@@ -61,47 +77,74 @@ header.top{display:flex;align-items:center;justify-content:space-between;gap:12p
 .timeline .f{background:var(--track)}
 .timeline .h{background:var(--ink)}
 .timeline .d{background:var(--track)}
-.timeline .win{position:absolute;top:0;bottom:0;background:var(--ok);opacity:.85}
+.timeline .win{position:absolute;top:auto;bottom:0;height:3px;background:var(--ok);opacity:.85}
 .timeline .head{position:absolute;top:-3px;bottom:-3px;width:3px;margin-left:-1px;background:var(--ok);border-radius:3px;box-shadow:0 0 0 2px var(--card)}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--mute);margin:8px 2px 0;font-weight:600}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .legend b{width:10px;height:10px;border-radius:50%;display:inline-block}
 .transport{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:9999px;border:1px solid var(--line);background:var(--card);padding:10px 16px;font-weight:700;font-size:14px;cursor:pointer;min-height:42px;white-space:nowrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:9999px;border:1px solid var(--line);background:var(--card);padding:10px 16px;font-weight:700;font-size:14px;cursor:pointer;min-height:42px;white-space:nowrap;text-decoration:none}
 .btn:hover{border-color:var(--mute)}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.sm{min-height:36px;padding:7px 14px;font-size:13px}
 .btn svg{width:16px;height:16px;flex:none}
 .spacer{flex:1}
-.msg{min-height:22px;margin:10px 2px 0;font-size:13px;color:var(--mute);font-weight:600}
+.exportrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}
+.exportrow .lab{margin:0}
+.pronote{margin:10px 2px 0;font-size:12.5px;color:var(--mute);font-weight:600}
+.pronote a{color:var(--accent);font-weight:800;text-decoration:none;white-space:nowrap}
+.pronote a:hover{text-decoration:underline}
+.pronote.on{color:var(--ok)}
+.msg{min-height:22px;margin:10px 2px 0;font-size:13px;color:var(--mute);font-weight:600;overflow-wrap:anywhere}
 .msg.warn{color:var(--warn)}
-.panel{display:flex;flex-direction:column;gap:22px}
-.field label.lab,.lab{display:block;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);margin-bottom:8px}
+.panel{display:flex;flex-direction:column;gap:24px;min-width:0}
+.field{min-width:0}
+.lab{display:block;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);margin-bottom:8px}
+.sublab{display:block;font-size:12px;font-weight:700;color:var(--mute);margin:12px 2px 6px}
 .input{width:100%;border:1px solid var(--line);background:var(--card);border-radius:22px;padding:12px 18px;font-size:15px;outline:none;resize:vertical;min-height:48px}
+.input.sm{border-radius:9999px;padding:8px 16px;min-height:40px;font-size:14px;resize:none}
 .input:focus{border-color:var(--ink)}
 .meta{font-size:12px;color:var(--mute);margin:8px 4px 0;font-weight:600}
 .meta.err{color:var(--warn)}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{border:1px solid var(--line);background:var(--card);border-radius:9999px;padding:8px 14px;font-weight:700;font-size:14px;cursor:pointer}
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip.img{border-style:dashed}
+.chip.img[aria-pressed="true"]{border-style:solid}
 .desc{font-size:13px;color:var(--ink2);margin:10px 4px 0}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.colorpill{display:inline-flex;align-items:center;gap:10px;border:1px solid var(--line);background:var(--card);border-radius:9999px;padding:5px 14px 5px 5px;cursor:pointer;font-weight:700;font-size:14px}
-.colorpill input{appearance:none;-webkit-appearance:none;width:30px;height:30px;border:1px solid var(--line);border-radius:50%;padding:0;background:none;cursor:pointer}
+.imgbox{margin-top:12px;border:1px dashed var(--line);border-radius:20px;padding:12px 14px;display:none}
+.imgbox.on{display:block}
+.thumbrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.thumb{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--soft) center/cover no-repeat;flex:none}
+.colorpill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--card);border-radius:9999px;padding:5px 12px 5px 5px;cursor:pointer;font-weight:700;font-size:14px;max-width:100%}
+.colorpill input{appearance:none;-webkit-appearance:none;width:30px;height:30px;border:1px solid var(--line);border-radius:50%;padding:0;background:none;cursor:pointer;flex:none}
 .colorpill input::-webkit-color-swatch-wrapper{padding:0}
 .colorpill input::-webkit-color-swatch{border:0;border-radius:50%}
 .colorpill input::-moz-color-swatch{border:0;border-radius:50%}
 .colorpill code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--mute);font-weight:500}
+.colorpill.off{opacity:.45}
+.check{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:700;cursor:pointer;padding:6px 2px}
+.check input{width:18px;height:18px;accent-color:var(--ink);margin:0;flex:none}
+.pals{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:8px;max-width:480px}
+@media (max-width:520px){.pals{grid-template-columns:repeat(5,minmax(0,1fr));max-width:280px}}
+.pal{position:relative;aspect-ratio:1/1;border-radius:50%;border:1px solid var(--line);cursor:pointer;padding:0;overflow:hidden;min-width:0}
+.pal i{position:absolute;inset:24%;border-radius:30%}
+.pal[aria-pressed="true"]{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--ink)}
 .slider{display:grid;grid-template-columns:76px minmax(0,1fr) 52px;align-items:center;gap:12px;margin:6px 0}
-.slider span{font-size:14px;font-weight:700}
+.slider span{font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis}
 .slider output{font-size:13px;text-align:right;color:var(--mute);font-variant-numeric:tabular-nums;font-weight:700}
 input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:24px;background:transparent;margin:0}
 input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:9999px;background:var(--track)}
 input[type=range]::-moz-range-track{height:4px;border-radius:9999px;background:var(--track)}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--ink);margin-top:-7px;border:3px solid var(--card);box-shadow:0 0 0 1px var(--ink)}
 input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--ink);border:3px solid var(--card)}
-.hint{font-size:12px;color:var(--mute);margin:4px 4px 0;font-weight:600}
+.hint{font-size:12px;color:var(--mute);margin:6px 4px 0;font-weight:600}
 .hint.warn{color:var(--warn)}
+.hint.good{color:var(--ok)}
+.sub2{margin-top:10px}
+[hidden]{display:none !important}
 .card{background:var(--card);border:1px solid var(--line);border-radius:28px;padding:24px}
 section.block{margin:44px 0 0}
 section.block h2{font-size:24px;letter-spacing:-.02em;margin:0 0 6px;font-weight:800}
@@ -122,118 +165,211 @@ table.stats{border-collapse:collapse;width:100%;font-size:13px;min-width:460px}
 table.stats th,table.stats td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
 table.stats tr:last-child td{border-bottom:0}
 table.stats th{color:var(--mute);font-weight:800;font-size:12px}
-.verdict{display:inline-block;border-radius:9999px;padding:2px 10px;font-size:12px;font-weight:800;background:var(--soft)}
+.verdict{display:inline-block;border-radius:9999px;padding:2px 10px;font-size:12px;font-weight:800;background:var(--soft);white-space:nowrap}
 .verdict.y{background:var(--okbg);color:var(--ok)}
 [data-only]{display:none}
-html[lang="ko"] [data-only="ko"],html[lang="en"] [data-only="en"]{display:block}
+html[lang="ko"] [data-only="ko"],html[lang="en"] [data-only="en"],html[lang="ja"] [data-only="ja"],html[lang="zh"] [data-only="zh"]{display:block}
 footer{max-width:1120px;margin:48px auto 0;padding:24px 16px 40px;color:var(--mute);font-size:12px;border-top:1px solid var(--line)}
 footer a{color:var(--mute)}
+#xcv{position:fixed;left:-99999px;top:0;width:8px;height:8px;pointer-events:none;opacity:0}
+/* embed: the main app provides header, language and footer */
+html.embed header.top, html.embed footer{display:none}
+html.embed .hero{padding-top:4px}
+html.embed body{background:transparent}
+html.embed main.wrap{padding-bottom:24px}
+html.embed #feasibility h2{cursor:pointer;display:flex;align-items:center;gap:8px}
+html.embed #feasibility h2::after{content:"";width:9px;height:9px;border-right:2.5px solid currentColor;border-bottom:2.5px solid currentColor;transform:translateY(-3px) rotate(45deg);transition:transform .2s}
+html.embed #feasibility.open h2::after{transform:translateY(2px) rotate(-135deg)}
+html.embed #feasibility:not(.open) > :not(h2){display:none}
 @media (max-width:520px){
+  header.top{padding:12px 16px}
   .canvas-card{padding:12px;border-radius:22px}
   .card{padding:18px;border-radius:22px}
   .btn{padding:9px 14px;font-size:13px}
   .slider{grid-template-columns:64px minmax(0,1fr) 46px;gap:10px}
-  .hero{padding-top:12px}
+  .hero{padding-top:8px}
   .tag{display:none}
-  .brand span{white-space:nowrap}
   .transport{display:grid;grid-template-columns:1fr 1fr}
   .transport .spacer{display:none}
+  .seg button{padding:6px 10px}
 }
 </style>
 </head>
 <body>
 <header class="top">
-  <a class="brand" href="/" aria-label="Motion QR">
-    <svg viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="8" fill="currentColor"/><g fill="var(--bg)"><rect x="5" y="5" width="6" height="6" rx="1.5"/><rect x="15" y="5" width="6" height="6" rx="1.5"/><rect x="5" y="15" width="6" height="6" rx="1.5"/><circle cx="16.5" cy="16.5" r="1.5"/><circle cx="20" cy="20" r="1.2" opacity=".6"/><circle cx="20.5" cy="15.5" r="1" opacity=".35"/></g></svg>
-    <span>Motion QR</span><span class="tag" data-i18n="proto">프로토타입</span>
-  </a>
-  <div class="seg" role="group" aria-label="Language">
+  <div class="hl">
+    <a class="back" id="backLink" href="/" data-i18n="back">← QR 스튜디오</a>
+    <span class="brand">
+      <svg viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="8" fill="currentColor"/><g fill="var(--bg)"><rect x="5" y="5" width="6" height="6" rx="1.5"/><rect x="15" y="5" width="6" height="6" rx="1.5"/><rect x="5" y="15" width="6" height="6" rx="1.5"/><circle cx="16.5" cy="16.5" r="1.5"/><circle cx="20" cy="20" r="1.2" opacity=".6"/><circle cx="20.5" cy="15.5" r="1" opacity=".35"/></g></svg>
+      <span data-i18n="brand">모션 QR 실험실</span><span class="tag" data-i18n="proto">프로토타입</span>
+    </span>
+  </div>
+  <div class="seg" role="group" id="langSeg" data-i18n-aria="langLabel">
     <button type="button" data-lang="ko" aria-pressed="true">Korean</button>
     <button type="button" data-lang="en" aria-pressed="false">English</button>
+    <button type="button" data-lang="ja" aria-pressed="false">Japanese</button>
+    <button type="button" data-lang="zh" aria-pressed="false">Chinese</button>
   </div>
 </header>
 
 <main class="wrap">
   <section class="hero">
-    <h1 data-i18n="h1">움직임이 점을 그리는 QR</h1>
-    <p data-i18n="lead">점들이 움직이며 스캔 가능한 QR로 완성되고, 잠시 머문 뒤 흩어지기를 반복합니다. 스캔은 완성된 프레임에서만 되므로 ‘유지’ 구간이 핵심입니다.</p>
+    <h1 data-i18n="h1"></h1>
+    <p data-i18n="lead"></p>
   </section>
 
   <section class="studio">
     <div class="stage">
-      <div class="canvas-card"><canvas id="cv" width="888" height="888" aria-label="Motion QR preview"></canvas></div>
+      <div class="canvas-card"><canvas id="cv" width="943" height="943" data-i18n-aria="canvasLabel" role="img"></canvas></div>
       <div class="statusrow">
         <span class="status" id="status" role="status" aria-live="polite"><i></i><span id="statusText"></span></span>
         <span class="mono" id="timeText">0.0s</span>
       </div>
-      <div class="timeline" id="timeline" aria-label="Loop timeline">
+      <div class="timeline" id="timeline" data-i18n-aria="timelineLabel">
         <div class="sg f" id="tlF"></div><div class="sg h" id="tlH"></div><div class="sg d" id="tlD"></div>
-        <div class="win" id="tlWin" style="height:3px;top:auto"></div>
+        <div class="win" id="tlWin"></div>
         <div class="head" id="tlHead"></div>
       </div>
       <div class="legend">
-        <span><b style="background:var(--track)"></b><span data-i18n="lgForm">형성 · 해체</span></span>
-        <span><b style="background:var(--ink)"></b><span data-i18n="lgHold">유지</span></span>
+        <span><b style="background:var(--track)"></b><span data-i18n="lgForm"></span></span>
+        <span><b style="background:var(--ink)"></b><span data-i18n="lgHold"></span></span>
         <span><b style="background:var(--ok)"></b><span id="winText"></span></span>
       </div>
       <div class="transport">
         <button class="btn primary" id="playBtn" type="button"></button>
-        <button class="btn" id="replayBtn" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 1 0 1.7-4"/><path d="M2.5 2.5v3h3"/></svg><span data-i18n="replay">처음부터</span></button>
+        <button class="btn" id="replayBtn" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 1 0 1.7-4"/><path d="M2.5 2.5v3h3"/></svg><span data-i18n="replay"></span></button>
         <span class="spacer"></span>
-        <button class="btn" id="pngBtn" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M4.5 6.5 8 10l3.5-3.5M2.5 13.5h11"/></svg><span data-i18n="png">PNG 저장</span></button>
-        <button class="btn" id="vidBtn" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1.5" y="3.5" width="9" height="9" rx="2"/><path d="m10.5 7 4-2.5v7l-4-2.5"/></svg><span data-i18n="vid">영상 저장</span></button>
+        <button class="btn" id="pngBtn" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M4.5 6.5 8 10l3.5-3.5M2.5 13.5h11"/></svg><span data-i18n="png"></span></button>
+        <button class="btn" id="vidBtn" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1.5" y="3.5" width="9" height="9" rx="2"/><path d="m10.5 7 4-2.5v7l-4-2.5"/></svg><span data-i18n="vid"></span></button>
       </div>
+      <div class="exportrow">
+        <span class="lab" data-i18n="lFormat"></span>
+        <div class="seg" role="group" id="fmtSeg">
+          <button type="button" data-fmt="mp4" aria-pressed="true">MP4</button>
+          <button type="button" data-fmt="webm" aria-pressed="false">WebM</button>
+        </div>
+      </div>
+      <p class="pronote" id="proNote"></p>
       <p class="msg" id="msg"></p>
     </div>
 
     <div class="panel">
       <div class="field">
-        <label class="lab" for="text" data-i18n="lContent">내용 (URL 또는 텍스트)</label>
+        <label class="lab" for="text" data-i18n="lContent"></label>
         <textarea class="input" id="text" rows="2" spellcheck="false" autocomplete="off">https://jay-inky.vercel.app</textarea>
         <div class="meta" id="meta"></div>
       </div>
+
       <div class="field">
-        <span class="lab" data-i18n="lStyle">모션 스타일</span>
+        <span class="lab" data-i18n="lStyle"></span>
+        <span class="sublab" data-i18n="grpBasic" style="margin-top:0"></span>
         <div class="chips" id="chips"></div>
+        <span class="sublab" data-i18n="grpImage"></span>
+        <div class="chips" id="chipsImg"></div>
         <p class="desc" id="styleDesc"></p>
+        <div class="imgbox" id="imgBox">
+          <span class="lab" data-i18n="lImage"></span>
+          <div class="thumbrow">
+            <span class="thumb" id="photoThumb"></span>
+            <label class="btn sm"><input type="file" id="photoFile" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden><span data-i18n="upImg"></span></label>
+          </div>
+          <span class="sublab" data-i18n="samples"></span>
+          <div class="chips" id="sampleChips">
+            <button type="button" class="chip" data-sample="vivid" data-i18n="smpVivid"></button>
+            <button type="button" class="chip" data-sample="dark" data-i18n="smpDark"></button>
+            <button type="button" class="chip" data-sample="bright" data-i18n="smpBright"></button>
+          </div>
+          <p class="hint" id="imgHint"></p>
+          <p class="hint" data-i18n="imgPrivacy"></p>
+        </div>
       </div>
+
       <div class="field">
-        <span class="lab" data-i18n="lColors">색상</span>
-        <div class="row">
-          <label class="colorpill"><input type="color" id="fg" value="#111111"><span data-i18n="dots">점</span><code id="fgHex">#111111</code></label>
-          <label class="colorpill"><input type="color" id="bg" value="#ffffff"><span data-i18n="bgc">배경</span><code id="bgHex">#FFFFFF</code></label>
-          <button class="btn" id="swapBtn" type="button" style="min-height:40px;padding:8px 14px" data-i18n="swap">바꾸기</button>
+        <span class="lab" data-i18n="lColors"></span>
+        <div class="pals" id="pals"></div>
+        <span class="sublab" data-i18n="lFill"></span>
+        <div class="seg" role="group" id="fillSeg">
+          <button type="button" data-fill="solid" aria-pressed="true" data-i18n="fillSolid"></button>
+          <button type="button" data-fill="linear" aria-pressed="false" data-i18n="fillLinear"></button>
+          <button type="button" data-fill="radial" aria-pressed="false" data-i18n="fillRadial"></button>
+        </div>
+        <div class="row sub2">
+          <label class="colorpill"><input type="color" id="fg" value="#111111"><span id="fgLab" data-i18n="dots"></span><code id="fgHex">#111111</code></label>
+          <label class="colorpill" id="fg2Wrap" hidden><input type="color" id="fg2" value="#0e7490"><span data-i18n="dots2"></span><code id="fg2Hex">#0E7490</code></label>
+        </div>
+        <div class="slider" id="angleRow" hidden><span data-i18n="angle"></span><input type="range" id="angle" min="0" max="345" step="15" value="45"><output id="angleOut">45°</output></div>
+        <div class="row sub2">
+          <label class="colorpill" id="finWrap"><input type="color" id="finder" value="#111111"><span data-i18n="finderC"></span><code id="finHex">#111111</code></label>
+          <label class="check"><input type="checkbox" id="finSame" checked><span data-i18n="sameAsDots"></span></label>
+        </div>
+        <div class="row sub2">
+          <label class="colorpill"><input type="color" id="bg" value="#ffffff"><span data-i18n="bgc"></span><code id="bgHex">#FFFFFF</code></label>
+          <button class="btn sm" id="swapBtn" type="button" data-i18n="swap"></button>
+          <label class="check"><input type="checkbox" id="transp"><span data-i18n="transparent"></span></label>
         </div>
         <p class="hint" id="contrastHint"></p>
       </div>
+
       <div class="field">
-        <span class="lab" data-i18n="lShape">점 모양</span>
-        <div class="seg" role="group" id="shapeSeg">
-          <button type="button" data-shape="square" aria-pressed="true" data-i18n="square">사각</button>
-          <button type="button" data-shape="round" aria-pressed="false" data-i18n="round">원형</button>
+        <span class="lab" data-i18n="lShape"></span>
+        <div class="seg" role="group" id="shapeSeg"></div>
+      </div>
+
+      <div class="field">
+        <span class="lab" data-i18n="lLogo"></span>
+        <div class="seg" role="group" id="logoSeg">
+          <button type="button" data-logo="none" aria-pressed="true" data-i18n="logoNone"></button>
+          <button type="button" data-logo="image" aria-pressed="false" data-i18n="logoImg"></button>
+          <button type="button" data-logo="text" aria-pressed="false" data-i18n="logoText"></button>
+        </div>
+        <div class="thumbrow sub2" id="logoImgRow" hidden>
+          <span class="thumb" id="logoThumb"></span>
+          <label class="btn sm"><input type="file" id="logoFile" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden><span data-i18n="upLogo"></span></label>
+        </div>
+        <div class="sub2" id="logoTextRow" hidden><input class="input sm" id="logoTextIn" maxlength="6" value="☕" autocomplete="off" spellcheck="false" data-i18n-ph="logoTextPh"></div>
+        <div class="slider" id="logoSizeRow" hidden><span data-i18n="logoSize"></span><input type="range" id="logoSize" min="12" max="26" step="1" value="20"><output id="logoSizeOut">20%</output></div>
+        <p class="hint" id="logoHint" hidden></p>
+      </div>
+
+      <div class="field">
+        <span class="lab" data-i18n="lCaption"></span>
+        <label class="check"><input type="checkbox" id="capOn"><span data-i18n="capOn"></span></label>
+        <div class="row sub2" id="capRow" hidden>
+          <input class="input sm" id="capText" maxlength="40" autocomplete="off" style="flex:1 1 180px;min-width:0">
+          <label class="colorpill"><input type="color" id="capColor" value="#111111"><span data-i18n="capColor"></span></label>
         </div>
       </div>
+
       <div class="field">
-        <span class="lab" data-i18n="lSpeed">속도</span>
-        <div class="slider"><span data-i18n="speed">배속</span><input type="range" id="speed" min="0.5" max="2" step="0.05" value="1"><output id="speedOut">1.00×</output></div>
+        <span class="lab" data-i18n="lFrame"></span>
+        <div class="seg" role="group" id="aspectSeg">
+          <button type="button" data-aspect="1:1" aria-pressed="true" data-i18n="a11"></button>
+          <button type="button" data-aspect="9:16" aria-pressed="false" data-i18n="a916"></button>
+          <button type="button" data-aspect="16:9" aria-pressed="false" data-i18n="a169"></button>
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="lab" data-i18n="lSpeed"></span>
+        <div class="slider"><span data-i18n="speed"></span><input type="range" id="speed" min="0.5" max="2" step="0.05" value="1"><output id="speedOut">1.00×</output></div>
       </div>
       <div class="field">
-        <span class="lab" data-i18n="lTiming">루프 타이밍 (1× 기준)</span>
-        <div class="slider"><span data-i18n="form">형성</span><input type="range" id="tForm" min="0.8" max="5" step="0.1" value="2.4"><output id="tFormOut"></output></div>
-        <div class="slider"><span data-i18n="hold">유지</span><input type="range" id="tHold" min="0.5" max="6" step="0.1" value="2.2"><output id="tHoldOut"></output></div>
-        <div class="slider"><span data-i18n="dissolve">해체</span><input type="range" id="tDis" min="0.4" max="4" step="0.1" value="1.2"><output id="tDisOut"></output></div>
+        <span class="lab" data-i18n="lTiming"></span>
+        <div class="slider"><span data-i18n="form"></span><input type="range" id="tForm" min="0.8" max="5" step="0.1" value="2.4"><output id="tFormOut"></output></div>
+        <div class="slider"><span data-i18n="hold"></span><input type="range" id="tHold" min="0.5" max="6" step="0.1" value="2.2"><output id="tHoldOut"></output></div>
+        <div class="slider"><span data-i18n="dissolve"></span><input type="range" id="tDis" min="0.4" max="4" step="0.1" value="1.2"><output id="tDisOut"></output></div>
         <p class="hint" id="holdHint"></p>
       </div>
     </div>
   </section>
 
   <section class="block" id="ar">
-    <h2 data-i18n="arTitle">카메라 AR 미리보기</h2>
-    <p class="sub" data-i18n="arSub">휴대폰 카메라로 실제 QR(인쇄물이나 다른 화면)을 비추면, 이 페이지가 매 프레임 QR의 네 모서리를 찾아 그 위에 모션을 원근 변환해 덧씌웁니다. 기본 카메라 앱은 이렇게 할 수 없고, 반드시 웹페이지를 먼저 열어야 합니다.</p>
+    <h2 data-i18n="arTitle"></h2>
+    <p class="sub" data-i18n="arSub"></p>
     <div class="card">
       <div class="row">
-        <button class="btn primary" id="arStart" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.5A1.5 1.5 0 0 1 3.5 4h1.6l1-1.5h3.8l1 1.5h1.6A1.5 1.5 0 0 1 14 5.5v6a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 11.5z"/><circle cx="8" cy="8.5" r="2.4"/></svg><span data-i18n="arOn">카메라 켜기</span></button>
-        <button class="btn" id="arStop" type="button" disabled data-i18n="arOff">끄기</button>
+        <button class="btn primary" id="arStart" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.5A1.5 1.5 0 0 1 3.5 4h1.6l1-1.5h3.8l1 1.5h1.6A1.5 1.5 0 0 1 14 5.5v6a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 11.5z"/><circle cx="8" cy="8.5" r="2.4"/></svg><span data-i18n="arOn"></span></button>
+        <button class="btn" id="arStop" type="button" disabled data-i18n="arOff"></button>
       </div>
       <p class="msg" id="arMsg"></p>
       <div class="ar-stage" id="arStage">
@@ -245,59 +381,131 @@ footer a{color:var(--mute)}
   </section>
 
   <section class="block feas" id="feasibility">
-    <h2 data-i18n="feTitle">실현 가능성 검토</h2>
-    <p class="sub" data-i18n="feSub">헤드리스 Chromium에서 각 스타일의 한 루프를 프레임 단위로 캡처해 jsQR로 직접 디코딩한 결과입니다.</p>
+    <h2 data-i18n="feTitle"></h2>
+    <p class="sub" data-i18n="feSub"></p>
     <div class="card">
-<div class="tbl-wrap"><table class="stats">
-  <thead><tr><th data-i18n="thStyle">스타일</th><th data-i18n="thDec">디코딩된 프레임</th><th data-i18n="thSmall">360px 축소</th><th data-i18n="thFormed">완성 프레임 비율</th><th data-i18n="thHold">완성 프레임 디코딩</th></tr></thead>
-  <tbody id="statRows"></tbody>
-</table></div>
-<p class="hint" data-i18n="statNote">기본 설정(형성 2.4초 · 유지 2.2초 · 해체 1.2초, 루프 6.15초, 30fps = 184프레임), 내용 https://jay-inky.vercel.app (버전 4, 오류정정 H). 사각·원형 점 모두 같은 결과.</p>
+      <div class="tbl-wrap"><table class="stats">
+        <thead><tr><th data-i18n="thStyle"></th><th data-i18n="thDec"></th><th data-i18n="thSmall"></th><th data-i18n="thFormed"></th><th data-i18n="thHold"></th></tr></thead>
+        <tbody id="statRows"></tbody>
+      </table></div>
+      <p class="hint" data-i18n="statNote"></p>
+      <h3 data-i18n="imgTblTitle"></h3>
+      <div class="tbl-wrap"><table class="stats">
+        <thead><tr><th data-i18n="thSample"></th><th id="thMorph"></th><th id="thPhotodots"></th><th id="thBurst"></th></tr></thead>
+        <tbody id="imgRows"></tbody>
+      </table></div>
+      <p class="hint" data-i18n="imgTblNote"></p>
 
 <div data-only="ko">
-  <h3>a) 움직이는 QR도 스캔되나요?</h3>
+  <h3>① 움직이는 QR도 스캔되나요?</h3>
   <ul>
-    <li><b>완성된 프레임만 확실히 스캔됩니다.</b> 측정한 모든 스타일에서 ‘완성’ 표시가 켜진 프레임은 100% 디코딩되었고, 잘못 읽힌 프레임은 0개였습니다.</li>
-    <li>오류정정 H(약 30% 복원) 덕분에 거의 완성된 직전·직후 프레임도 일부 읽혀, 실제 디코딩 비율(43–58%)이 이론상 완성 구간(36–41%)보다 높습니다. 다만 이 덤에 기대지 말고 <b>유지 구간을 1.5초 이상</b>(권장 2초 이상) 두세요. 휴대폰 카메라는 초점·노출을 잡고 인식하는 데 보통 0.5–1.5초가 걸립니다.</li>
-    <li><b>호흡</b> 스타일은 점이 최대 16%만 줄었다 커지므로 루프 전체(100%)가 스캔됩니다. 포스터·사이니지처럼 ‘언제 비춰도 읽혀야 하는’ 곳에 적합합니다.</li>
-    <li>발견한 함정: 원형 점 모드에서 정렬 패턴(오른쪽 아래 작은 사각)을 낱개 원으로 그리면 jsQR 인식률이 0%로 떨어졌습니다. 그래서 파인더·정렬 패턴은 항상 한 덩어리로 또렷하게, 가장 먼저 내려앉도록 그립니다.</li>
+    <li><b>완성된 프레임은 확실히 스캔됩니다.</b> 10가지 스타일 × 5가지 점 모양 모두에서 ‘완성’ 표시가 켜진 프레임은 100% 디코딩되었고, 잘못 읽힌 프레임은 0개였습니다.</li>
+    <li>오류정정 H 덕분에 거의 완성된 직전·직후 프레임도 일부 읽히지만, 이 덤에 기대지 말고 <b>유지 구간을 1.5초 이상</b>(권장 2초 이상) 두세요. 휴대폰 카메라는 초점·노출을 잡는 데 보통 0.5–1.5초가 걸립니다.</li>
+    <li>모서리 마커(파인더)와 정렬 패턴은 어떤 점 모양·색에서도 항상 한 덩어리로 또렷하게 그립니다. 낱개 점으로 그리면 인식률이 크게 떨어지는 것을 확인했습니다.</li>
+    <li>가운데 로고는 jsQR 기준 QR 폭의 38%까지 읽혔지만, 실제 카메라의 여유를 두고 최대 28%로 제한했습니다.</li>
   </ul>
-  <h3>b) 영상으로 쓸 수 있나요?</h3>
+  <h3>② 이미지 효과는 어디까지 되나요?</h3>
   <ul>
-    <li><b>WebM(VP9/VP8)</b>: <code>canvas.captureStream()</code> + <code>MediaRecorder</code>로 데스크톱 Chrome·Edge·Firefox, Android Chrome에서 바로 녹화됩니다(30fps, 8Mbps, 루프 1회). 실시간 녹화라 탭을 앞에 두어야 하며, Chrome WebM에는 길이 메타데이터가 없어 일부 편집기에서 길이가 비어 보일 수 있습니다.</li>
-    <li><b>Safari(macOS·iOS 14.5+)</b>: MediaRecorder는 있지만 WebM 대신 <b>MP4(H.264)</b>로 녹화되며, 이 페이지는 자동으로 MP4로 저장합니다. 지원하지 않는 브라우저에선 안내 문구를 띄웁니다.</li>
-    <li><b>MP4가 꼭 필요하면</b>: WebCodecs <code>VideoEncoder</code>(H.264) + mp4-muxer로 프레임 단위 오프라인 인코딩이 가장 깔끔합니다(실시간 제약 없음, 정확한 30fps, 인스타·카톡 호환). Chrome·Edge·Safari 16.4+ 지원, Firefox는 130+부터.</li>
-    <li><b>GIF</b>: 어디서나 재생되지만 256색·용량 큼(수 MB)·부드러움 저하. 흑백 QR은 색 문제는 없으나 2–3배 큽니다. 웹엔 WebM/MP4, 메신저 스티커 용도만 GIF를 권장합니다. 어떤 형식이든 영상 속 QR은 유지 구간에서만 스캔된다는 점은 같습니다.</li>
+    <li><b>사진 → QR</b>: 사진은 변하는 과정에만 쓰이고, 완성 프레임은 고른 점 색으로 정리되므로 어떤 사진이든 스캔이 보장됩니다. 가장 안전하면서 눈에 띄는 방식입니다.</li>
+    <li><b>사진 점묘</b>: 완성 상태에서도 사진 색이 남기 때문에 명암 보정이 핵심입니다. 페이지가 직접 완성 프레임을 원본·축소·카메라처럼 흐리게 만든 사본으로 디코딩해 보고, 실패하면 보정 단계를 0→3으로 올립니다. 측정 결과 밝은 사진은 보정 없이, 컬러풀하거나 어두운 사진과 실제 일러스트는 2단계에서 통과했습니다.</li>
+    <li>한계: 칸 하나에 색 하나라서 사진은 가로 25–57칸 정도의 모자이크로만 보입니다. 얼굴이나 글자는 알아보기 어렵고, 어두운 사진은 밝은 칸이 회색빛으로 바뀝니다. 색이 강한 사진일수록 결과가 예쁩니다.</li>
+    <li><b>로고 폭발</b>: 로고의 투명하지 않은 부분에서 점을 뽑아 QR 자리로 날려 보냅니다. 배경이 투명한 PNG나 SVG 로고가 가장 잘 어울립니다.</li>
   </ul>
-  <h3>c) “카메라로 QR을 비추면 모션이 나타나는” AR</h3>
+  <h3>③ 영상 저장</h3>
   <ul>
-    <li><b>기본 카메라 앱만으로는 불가능합니다.</b> iOS·Android 카메라는 QR에서 URL만 읽어 링크를 띄울 뿐, 그 위에 그래픽을 그릴 수 없습니다.</li>
-    <li>그래서 순서는 ① QR 스캔 → ② 웹페이지 열림 → ③ 페이지가 <code>getUserMedia</code>로 카메라를 켜고 → ④ 매 프레임 jsQR로 QR의 네 모서리를 찾아 → ⑤ 그 사각형에 원근 변환(호모그래피, CSS <code>matrix3d</code>)으로 모션을 덧씌웁니다. 위의 ‘카메라 AR 미리보기’가 정확히 이 방식이며, 헤드리스 테스트에서 가짜 카메라 영상 위 QR을 추적해 오버레이가 붙는 것을 확인했습니다.</li>
-    <li>iOS Safari·Android Chrome 모두 HTTPS에서 동작합니다(이 사이트는 Vercel HTTPS라 OK). 640px로 줄여 디코딩하면 최신 폰에서 대략 15–30fps가 나오지만, 모서리 추정이 프레임마다 흔들려(지터) 스무딩이 필요하고, 빠르게 움직이거나 QR이 작거나 반사가 있으면 추적이 끊깁니다. 또 오버레이가 QR을 가려도 인식은 원본 카메라 영상에서 하므로 문제없습니다.</li>
-    <li>WebXR 이미지 트래킹은 Chrome 실험 플래그 수준이며 iOS Safari엔 없어 아직 쓸 수 없습니다. 더 안정적인 추적이 필요하면 MindAR 같은 이미지 트래킹 라이브러리(별도 마커 학습 필요)나 8th Wall류 유료 SDK가 대안입니다.</li>
+    <li><b>MP4</b>: WebCodecs <code>VideoEncoder</code> + mp4-muxer로 프레임을 하나씩 오프라인 인코딩합니다. 실시간 녹화가 아니라서 정확히 30fps이고 탭을 앞에 둘 필요도 없습니다. H.264 인코더가 있으면 H.264(Chrome·Edge·Safari 16.4+), 없으면 VP9를 MP4에 담고, WebCodecs가 아예 없으면 실시간 녹화로 저장합니다.</li>
+    <li><b>WebM</b>: <code>MediaRecorder</code>로 실시간 녹화합니다. Safari는 WebM 대신 MP4로 녹화됩니다.</li>
+    <li>1:1, 9:16(스토리·릴스), 16:9 비율과 아래 문구가 영상과 PNG에 그대로 들어갑니다. 무료 버전 영상에는 QR 여백 바깥 구석에 작은 워터마크가 들어가고, Pro에서는 빠집니다. PNG는 언제나 깨끗합니다.</li>
+  </ul>
+  <h3>④ “카메라로 비추면 모션이 나타나는” AR</h3>
+  <ul>
+    <li><b>기본 카메라 앱만으로는 불가능합니다.</b> 카메라 앱은 QR에서 링크만 읽을 뿐 그 위에 그래픽을 그리지 못합니다.</li>
+    <li>그래서 QR 스캔 → 웹페이지 열림 → <code>getUserMedia</code>로 카메라 켜기 → 매 프레임 jsQR로 네 모서리 찾기 → CSS <code>matrix3d</code> 원근 변환으로 모션 덧씌우기 순서로 동작합니다. 위의 미리보기가 정확히 이 방식이며, 이미지 효과도 그대로 덧씌워집니다.</li>
+    <li>iOS Safari·Android Chrome 모두 HTTPS에서 동작합니다. 모서리 추정이 프레임마다 흔들려 스무딩을 넣었고, 빠르게 움직이거나 QR이 작거나 반사가 심하면 추적이 끊깁니다.</li>
   </ul>
 </div>
 <div data-only="en">
-  <h3>a) Does a motion QR scan?</h3>
+  <h3>① Does a moving QR scan?</h3>
   <ul>
-    <li><b>Fully-formed frames scan reliably.</b> In every style, 100% of frames flagged “fully formed” decoded, with zero mis-reads.</li>
-    <li>Thanks to error-correction level H (~30% recovery), nearly-formed frames just before/after the hold also decode, so measured decode rates (43–58%) exceed the analytic formed window (36–41%). Don't rely on that bonus — keep the <b>hold ≥ 1.5 s</b> (2 s+ recommended). Phone cameras typically need 0.5–1.5 s to focus, expose and lock.</li>
-    <li><b>Breathe</b> only shrinks modules by up to 16%, so the whole loop (100%) scans — good for posters and signage that must read at any moment.</li>
-    <li>A pitfall we found: in round-dot mode, drawing the alignment pattern (the small square near the bottom-right) as loose circles dropped jsQR decoding to 0%. Finder and alignment patterns are therefore always drawn as crisp single units that land first.</li>
+    <li><b>Fully-formed frames scan reliably.</b> Across 10 styles × 5 dot shapes, 100% of frames flagged “fully formed” decoded, with zero mis-reads.</li>
+    <li>Error correction H also lets some nearly-formed frames decode, but don't rely on that bonus — keep the <b>hold at 1.5 s or more</b> (2 s+ recommended). Phone cameras typically need 0.5–1.5 s to focus and lock.</li>
+    <li>Corner markers (finders) and alignment patterns are always drawn as crisp solid units, whatever the dot shape or color; drawing them as loose dots badly hurt detection in testing.</li>
+    <li>A center logo still decoded with jsQR up to 38% of the code's width; the slider stops at 28% to leave headroom for real cameras.</li>
   </ul>
-  <h3>b) Can it be used as a video?</h3>
+  <h3>② How far do the image effects go?</h3>
   <ul>
-    <li><b>WebM (VP9/VP8)</b>: <code>canvas.captureStream()</code> + <code>MediaRecorder</code> records directly in desktop Chrome, Edge, Firefox and Android Chrome (30 fps, 8 Mbps, one loop). It records in real time, so the tab must stay in front; Chrome's WebM has no duration header, so some editors show an empty length.</li>
-    <li><b>Safari (macOS, iOS 14.5+)</b>: MediaRecorder exists but records <b>MP4 (H.264)</b>, not WebM — this page falls back to MP4 automatically, and shows a message where recording isn't supported at all.</li>
-    <li><b>If you need MP4 everywhere</b>: WebCodecs <code>VideoEncoder</code> (H.264) + mp4-muxer encodes frame by frame offline — no real-time limit, exact 30 fps, plays in Instagram/KakaoTalk. Chrome, Edge, Safari 16.4+; Firefox 130+.</li>
-    <li><b>GIF</b> plays everywhere but is 256 colours, heavy (several MB) and less smooth; a black-and-white QR has no palette issues but files are 2–3× larger. Use WebM/MP4 for the web and GIF only for chat stickers. In any format, the code in the video only scans during the hold.</li>
+    <li><b>Photo → QR</b>: the photo appears only during the transition, and the formed frame settles to your dot color — so it scans with any photo. The safest eye-catcher.</li>
+    <li><b>Photo dots</b>: photo colors stay in the formed frame, so contrast is everything. The page decodes its own formed frame at full size, downscaled, and as a blurred camera-like copy, and raises the boost from 0 to 3 until all pass. In testing, the bright photo needed no boost; the colorful and dark photos and real illustrations passed at boost 2.</li>
+    <li>Limits: one color per module, so the photo becomes a 25–57-cell mosaic. Faces and text won't be recognizable, and dark photos turn light cells grayish. Bold, colorful images look best.</li>
+    <li><b>Logo burst</b>: dots are sampled from the opaque parts of your logo and fly into place. Logos on a transparent background (PNG or SVG) work best.</li>
   </ul>
-  <h3>c) “Point the camera at the QR and the motion appears” (AR)</h3>
+  <h3>③ Video export</h3>
   <ul>
-    <li><b>Not possible with the native camera app.</b> The iOS/Android camera only reads the URL from a QR and offers a link; it can't render anything on top.</li>
-    <li>The flow must be: ① scan → ② a web page opens → ③ it starts the camera with <code>getUserMedia</code> → ④ every frame, jsQR returns the code's four corners → ⑤ the motion is drawn onto that quad with a perspective warp (homography via CSS <code>matrix3d</code>). The “Camera AR preview” above does exactly this; in headless testing it tracked a QR in a fake camera feed and attached the overlay.</li>
-    <li>Works in iOS Safari and Android Chrome over HTTPS (this Vercel site qualifies). Decoding at 640 px gives roughly 15–30 fps on recent phones, but the corner estimate jitters frame-to-frame (needs smoothing), and tracking drops with fast motion, small codes or glare. Covering the code with the overlay is fine because detection runs on the raw camera frame.</li>
-    <li>WebXR image tracking is still behind a Chrome flag and absent from iOS Safari, so it isn't usable yet. For sturdier tracking, use an image-tracking library such as MindAR (needs a trained marker) or a commercial SDK like 8th Wall.</li>
+    <li><b>MP4</b>: frames are encoded one by one, offline, with WebCodecs <code>VideoEncoder</code> + mp4-muxer — exact 30 fps, no need to keep the tab in front. It uses H.264 where an encoder exists (Chrome, Edge, Safari 16.4+), otherwise VP9 inside MP4, and falls back to real-time recording without WebCodecs.</li>
+    <li><b>WebM</b>: recorded in real time with <code>MediaRecorder</code>; Safari records MP4 instead.</li>
+    <li>The 1:1, 9:16 (Story / Reels) and 16:9 frames and the caption go into both video and PNG. Free videos carry a small watermark in a corner outside the quiet zone; Pro removes it. PNGs are always clean.</li>
+  </ul>
+  <h3>④ “Point the camera and the motion appears” (AR)</h3>
+  <ul>
+    <li><b>Not possible with the native camera app</b> — it only reads the link from a QR and can't draw on top.</li>
+    <li>So the flow is: scan → a web page opens → it starts the camera with <code>getUserMedia</code> → jsQR finds the four corners every frame → the motion is drawn onto that quad with a CSS <code>matrix3d</code> perspective warp. The preview above does exactly this, image effects included.</li>
+    <li>Works in iOS Safari and Android Chrome over HTTPS. Corner estimates jitter frame to frame (smoothing is applied), and tracking drops with fast motion, small codes or glare.</li>
+  </ul>
+</div>
+<div data-only="ja">
+  <h3>① 動くQRコードでも読み取れる？</h3>
+  <ul>
+    <li><b>完成したフレームは確実に読み取れます。</b>10種類のスタイル × 5種類のドットの形すべてで、「完成」と判定されたフレームは100%デコードでき、誤読は0件でした。</li>
+    <li>誤り訂正Hのおかげで完成直前・直後のフレームも一部読み取れますが、それに頼らず<b>静止時間は1.5秒以上</b>（おすすめは2秒以上）にしてください。スマホのカメラはピントと露出が合うまでに0.5〜1.5秒ほどかかります。</li>
+    <li>角のマーカー（ファインダー）と位置合わせパターンは、どの形・色でも常にひとかたまりでくっきり描きます。ばらばらのドットで描くと認識率が大きく落ちることを確認しています。</li>
+    <li>中央のロゴは jsQR ではQRの幅の38%まで読み取れましたが、実際のカメラに余裕を持たせて最大28%に制限しています。</li>
+  </ul>
+  <h3>② 画像エフェクトはどこまでできる？</h3>
+  <ul>
+    <li><b>写真 → QR</b>：写真は変化の途中だけに使い、完成フレームは選んだドットの色に落ち着くので、どんな写真でも読み取りが保証されます。いちばん安全で目を引く方法です。</li>
+    <li><b>フォトドット</b>：完成状態にも写真の色が残るため、明暗の補正が鍵です。ページ自身が完成フレームを原寸・縮小・カメラのようにぼかしたコピーでデコードし、失敗すれば補正を0→3まで上げます。測定では明るい写真は補正なし、カラフルな写真・暗い写真・実際のイラストは補正2で合格しました。</li>
+    <li>限界：1マスに1色なので、写真は横25〜57マスほどのモザイクになります。顔や文字は判別しにくく、暗い写真では明るいマスが灰色っぽくなります。色の鮮やかな画像ほどきれいに仕上がります。</li>
+    <li><b>ロゴバースト</b>：ロゴの透明でない部分から点を取り出し、QRの位置へ飛ばします。背景が透明なPNGやSVGのロゴがいちばん映えます。</li>
+  </ul>
+  <h3>③ 動画の保存</h3>
+  <ul>
+    <li><b>MP4</b>：WebCodecs の <code>VideoEncoder</code> と mp4-muxer で、1フレームずつオフラインでエンコードします。リアルタイム録画ではないので正確に30fpsになり、タブを前面に出しておく必要もありません。H.264 エンコーダーがあれば H.264（Chrome・Edge・Safari 16.4以降）、なければ VP9 を MP4 に格納し、WebCodecs がない環境ではリアルタイム録画で保存します。</li>
+    <li><b>WebM</b>：<code>MediaRecorder</code> でリアルタイムに録画します。Safari では WebM の代わりに MP4 で録画されます。</li>
+    <li>1:1、9:16（ストーリー・リール）、16:9 の比率と下のテキストは、動画にもPNGにもそのまま入ります。無料版の動画にはQRの余白の外側、隅に小さなウォーターマークが入り、Proでは入りません。PNGはいつでもウォーターマークなしです。</li>
+  </ul>
+  <h3>④ 「カメラを向けるとモーションが現れる」AR</h3>
+  <ul>
+    <li><b>標準のカメラアプリだけではできません。</b>カメラアプリはQRからリンクを読むだけで、その上に描画はできないからです。</li>
+    <li>そのため、QRを読み取る → ウェブページが開く → <code>getUserMedia</code> でカメラを起動 → 毎フレーム jsQR で四隅を検出 → CSS の <code>matrix3d</code> で遠近変形してモーションを重ねる、という流れになります。上のプレビューはまさにこの方式で、画像エフェクトもそのまま重なります。</li>
+    <li>iOS の Safari、Android の Chrome とも HTTPS で動作します。四隅の推定はフレームごとに揺れるため平滑化を入れていますが、速く動かしたり、QRが小さかったり、反射が強いと追跡が途切れます。</li>
+  </ul>
+</div>
+<div data-only="zh">
+  <h3>① 动态二维码也能扫描吗？</h3>
+  <ul>
+    <li><b>完整成形的画面可以稳定扫描。</b>在 10 种风格 × 5 种点形状下，被标记为“成形”的帧全部成功解码，误读为 0。</li>
+    <li>得益于 H 级纠错，接近成形的前后几帧也有一部分能读出，但不要依赖这一点——<b>停留时长请设为 1.5 秒以上</b>（建议 2 秒以上）。手机摄像头对焦和测光通常需要 0.5–1.5 秒。</li>
+    <li>无论点的形状和颜色如何，定位角和校正图形始终以完整的实心整体绘制。测试发现，把它们拆成零散的点会大幅降低识别率。</li>
+    <li>用 jsQR 测试时，中心标志最大到二维码宽度的 38% 仍可识别；为给真实摄像头留出余量，滑块上限设为 28%。</li>
+  </ul>
+  <h3>② 图片特效能做到什么程度？</h3>
+  <ul>
+    <li><b>照片 → 二维码</b>：照片只出现在变化过程中，成形画面会统一为所选的点颜色，因此任何照片都能保证扫描。这是最稳妥又最吸睛的方式。</li>
+    <li><b>照片点阵</b>：成形后仍保留照片颜色，所以明暗对比是关键。页面会用原尺寸、缩小版和模拟摄像头的模糊版本对成形画面自行解码，若失败就把增强等级从 0 逐级提高到 3。测试中，明亮照片无需增强，多彩照片、暗色照片和真实插画在 2 级通过。</li>
+    <li>局限：每个格子只有一种颜色，照片只能呈现为横向约 25–57 格的马赛克。人脸和文字难以辨认，暗色照片中的浅色格会偏灰。颜色越鲜明的图片效果越好。</li>
+    <li><b>标志迸发</b>：从标志的不透明部分取点，再飞向二维码的位置。透明背景的 PNG 或 SVG 标志效果最好。</li>
+  </ul>
+  <h3>③ 保存视频</h3>
+  <ul>
+    <li><b>MP4</b>：用 WebCodecs 的 <code>VideoEncoder</code> 加 mp4-muxer 逐帧离线编码。不是实时录制，所以帧率精确为 30fps，也不必让标签页保持在前台。有 H.264 编码器时使用 H.264（Chrome、Edge、Safari 16.4 及以上），没有时把 VP9 封装进 MP4；完全不支持 WebCodecs 的环境则改为实时录制。</li>
+    <li><b>WebM</b>：用 <code>MediaRecorder</code> 实时录制；Safari 会以 MP4 代替 WebM。</li>
+    <li>1:1、9:16（快拍·短视频）、16:9 比例和底部文字会原样放进视频和 PNG。免费版视频会在二维码留白区之外的角落加一个小水印，Pro 版则没有。PNG 始终没有水印。</li>
+  </ul>
+  <h3>④ “用摄像头对准就出现动画”的 AR</h3>
+  <ul>
+    <li><b>仅靠系统相机做不到。</b>相机只会从二维码读出链接，无法在上面绘制图形。</li>
+    <li>因此流程是：扫码 → 打开网页 → 用 <code>getUserMedia</code> 打开摄像头 → 每帧用 jsQR 找到四个角 → 通过 CSS <code>matrix3d</code> 透视变换叠加动画。上面的预览正是这种方式，图片特效也会一并叠加。</li>
+    <li>iOS Safari 和 Android Chrome 都可在 HTTPS 下运行。四角的估计每帧都会抖动，因此做了平滑处理；快速移动、二维码太小或反光严重时会跟丢。</li>
   </ul>
 </div>
 
@@ -306,8 +514,10 @@ footer a{color:var(--mute)}
 </main>
 
 <footer>
-  <div data-only="ko">QR 인코더: qrcode-generator (MIT, © Kazuhiko Arase) · AR 디코더: jsQR (Apache-2.0) · QR Code는 DENSO WAVE의 등록상표입니다. · <a href="/">QR 스튜디오로 돌아가기</a></div>
-  <div data-only="en">QR encoder: qrcode-generator (MIT, © Kazuhiko Arase) · AR decoder: jsQR (Apache-2.0) · QR Code is a registered trademark of DENSO WAVE. · <a href="/">Back to QR Studio</a></div>
+  <div data-only="ko">QR 인코더: qrcode-generator (MIT, © Kazuhiko Arase) · 디코더: jsQR (Apache-2.0) · MP4 생성: mp4-muxer (MIT) · QR Code는 DENSO WAVE의 등록상표입니다.</div>
+  <div data-only="en">QR encoder: qrcode-generator (MIT, © Kazuhiko Arase) · Decoder: jsQR (Apache-2.0) · MP4 writer: mp4-muxer (MIT) · QR Code is a registered trademark of DENSO WAVE.</div>
+  <div data-only="ja">QRエンコーダー：qrcode-generator（MIT、© Kazuhiko Arase）· デコーダー：jsQR（Apache-2.0）· MP4生成：mp4-muxer（MIT）· QRコードは株式会社デンソーウェーブの登録商標です。</div>
+  <div data-only="zh">二维码编码：qrcode-generator（MIT，© Kazuhiko Arase）· 解码：jsQR（Apache-2.0）· MP4 生成：mp4-muxer（MIT）· QR Code 是 DENSO WAVE 的注册商标。</div>
 </footer>
 
 <!-- ===== QR encoder library (qrcode-generator, MIT) injected below ===== -->
@@ -2613,41 +2823,59 @@ var qrcode = function() {
 </script>
 
 <script>
-(function(){
-"use strict";
-if (qrcode.stringToBytesFuncs && qrcode.stringToBytesFuncs["UTF-8"]) qrcode.stringToBytes = qrcode.stringToBytesFuncs["UTF-8"];
-
-/* ---------------- i18n ---------------- */
 var I18N = {
   ko: {
-    proto:"프로토타입", h1:"움직임이 점을 그리는 QR",
-    lead:"점들이 움직이며 스캔 가능한 QR로 완성되고, 잠시 머문 뒤 흩어지기를 반복합니다. 스캔은 완성된 프레임에서만 되므로 ‘유지’ 구간이 핵심입니다.",
-    lgForm:"형성 · 해체", lgHold:"유지", replay:"처음부터", png:"PNG 저장", vid:"영상 저장",
+    docTitle:"모션 QR 실험실", docDesc:"점이 움직이며 완성되는 QR을 만들고 MP4·WebM·PNG로 저장하세요. 이미지 효과, 색상·로고·문구, 카메라 AR 미리보기까지.",
+    brand:"모션 QR 실험실", back:"← QR 스튜디오", proto:"프로토타입", langLabel:"언어", canvasLabel:"모션 QR 미리보기", timelineLabel:"루프 타임라인",
+    h1:"움직임이 점을 그리는 QR",
+    lead:"점들이 움직이며 스캔 가능한 QR로 완성되고, 잠시 머문 뒤 흩어지기를 반복합니다. 스캔은 완성된 프레임에서 되므로 ‘유지’ 구간이 핵심이에요.",
+    lgForm:"형성 · 해체", lgHold:"유지", replay:"처음부터", png:"PNG 저장", vid:"영상 저장", lFormat:"영상 형식",
     play:"재생", pause:"일시정지",
-    lContent:"내용 (URL 또는 텍스트)", lStyle:"모션 스타일", lColors:"색상", dots:"점", bgc:"배경", swap:"바꾸기",
-    lShape:"점 모양", square:"사각", round:"원형", lSpeed:"속도", speed:"배속", lTiming:"루프 타이밍 (1× 기준)",
-    form:"형성", hold:"유지", dissolve:"해체",
-    stFormed:"완성 · 스캔 가능", stForming:"형성 중", stDissolving:"해체 중", stBlank:"빈 화면", stAlways:"항상 스캔 가능",
-    win:"스캔 가능 {a}초 / 루프 {b}초 ({p}%)",
-    holdWarn:"유지 시간을 1.5초 이상으로 두세요. 휴대폰 카메라가 초점을 잡고 인식하려면 시간이 필요합니다.",
-    holdOk:"실제 유지 시간 {h}초 — 휴대폰 인식에 충분합니다.",
-    holdAlways:"호흡 스타일은 루프 전체가 완성 상태라 타이밍과 무관하게 스캔됩니다.",
+    lContent:"내용 (URL 또는 텍스트)", lStyle:"모션 스타일", grpBasic:"기본", grpImage:"이미지 효과",
+    lImage:"효과에 쓸 이미지", upImg:"이미지 올리기", samples:"샘플", smpVivid:"컬러 그라데이션", smpDark:"어두운 사진", smpBright:"밝은 사진",
+    imgPrivacy:"이미지는 이 기기 안에서만 처리되며 어디에도 업로드되지 않아요.",
+    imgCheck:"스캔되는지 확인하는 중…", imgOk:"사진 색 그대로도 잘 스캔됩니다.",
+    imgBoost:"스캔이 되도록 사진 색의 명암을 자동으로 보정했어요 (보정 {n}/3단계).",
+    imgFail:"이 사진은 최대로 보정해도 인식이 불안정해요. 다른 사진이나 기본 스타일을 써 보세요.",
+    imgBurstSrc:"점이 터져 나올 모양: {s}", srcLogo:"가운데 로고", srcPhoto:"올린 이미지", srcHeart:"기본 하트",
+    imgMorphNote:"완성 프레임은 위에서 고른 점 색으로 정리되어 스캔이 보장됩니다.",
+    imgBad:"이미지를 읽지 못했어요. PNG·JPG·SVG 파일인지 확인해 주세요.",
+    lColors:"색상", lFill:"채우기", fillSolid:"단색", fillLinear:"선형 그라데이션", fillRadial:"원형 그라데이션",
+    dots:"점", dots1:"시작 색", dots2:"끝 색", angle:"각도", finderC:"모서리 마커", sameAsDots:"점과 같은 색", bgc:"배경", transparent:"투명 배경 (PNG)", swap:"바꾸기",
+    pals:{classic:"클래식", ink:"먹색과 크림", ocean:"바다", sunset:"노을", forest:"숲", grape:"포도", navy:"네이비", coffee:"커피", mint:"민트", rose:"장미"},
     lowContrast:"대비가 낮습니다 ({r}:1). 인식이 어려울 수 있어요.",
     inverted:"밝은 점·어두운 배경(반전)은 일부 스캐너에서 인식되지 않습니다.",
     contrastOk:"대비 {r}:1 — 좋습니다.",
+    lShape:"점 모양", shapes:{square:"사각", round:"원형", rounded:"둥근 사각", diamond:"다이아몬드", star:"별"},
+    lLogo:"가운데 로고", logoNone:"없음", logoImg:"이미지", logoText:"글자·이모지", upLogo:"로고 올리기", logoTextPh:"예: ☕ 또는 카페", logoSize:"크기",
+    logoHint:"오류정정 H 덕분에 가운데를 가려도 읽힙니다. 스캔이 확인된 최대 크기({m}%)까지만 키울 수 있어요.",
+    lCaption:"아래 문구", capOn:"문구 표시", capDefault:"스캔해 주세요", capColor:"문구 색",
+    lFrame:"화면 비율", a11:"1:1 정사각", a916:"9:16 스토리·릴스", a169:"16:9 가로",
+    lSpeed:"속도", speed:"배속", lTiming:"루프 타이밍 (1× 기준)", form:"형성", hold:"유지", dissolve:"해체",
+    stFormed:"완성 · 스캔 가능", stForming:"형성 중", stDissolving:"해체 중", stBlank:"빈 화면", stAlways:"항상 스캔 가능", stImage:"이미지 표시 중",
+    win:"스캔 가능 {a}초 / 루프 {b}초 ({p}%)",
+    holdWarn:"유지 시간을 1.5초 이상으로 두세요. 휴대폰 카메라가 초점을 잡고 인식하려면 시간이 필요합니다.",
+    holdOk:"실제 스캔 가능 시간 {h}초 — 휴대폰 인식에 충분합니다.",
+    holdAlways:"호흡 스타일은 루프 전체가 완성 상태라 타이밍과 무관하게 스캔됩니다.",
     meta:"버전 {v} · {n}×{n} 모듈 · 오류정정 H · 어두운 모듈 {m}개",
     overflow:"내용이 너무 깁니다. 오류정정 H 기준 QR 용량을 넘었습니다.",
     empty:"내용을 입력하세요.",
-    recNo:"이 브라우저는 캔버스 영상 녹화(MediaRecorder)를 지원하지 않습니다. 데스크톱 Chrome·Firefox·Edge 또는 Android Chrome에서 시도하거나, PNG로 저장하세요.",
+    recNo:"이 브라우저는 영상 저장을 지원하지 않습니다. 데스크톱 Chrome·Edge·Safari 또는 Android Chrome에서 시도하거나 PNG로 저장하세요.",
     recBusy:"녹화 중… {a} / {b}초 — 이 탭을 앞에 둔 채 기다려 주세요.",
+    encBusy:"MP4 만드는 중… {p}%",
     recDone:"저장했습니다: {f} ({kb} KB, {fmt})",
-    recFail:"녹화에 실패했습니다: {e}",
+    recFail:"영상 저장에 실패했습니다: {e}",
     recMp4:"이 브라우저는 WebM 대신 MP4로 녹화합니다.",
+    vp9Note:"이 브라우저에는 H.264 인코더가 없어 VP9 코덱으로 MP4를 만들었어요. 일부 앱에서는 재생되지 않을 수 있습니다.",
+    mrNote:"이 브라우저는 프레임 단위 인코딩(WebCodecs)을 지원하지 않아 실시간 녹화로 저장합니다.",
     pngDone:"저장했습니다: {f} (완성 프레임)",
+    proFree:"무료 버전 영상에는 구석에 작은 워터마크가 들어가요. PNG는 언제나 워터마크 없이 저장됩니다.",
+    proLink:"Pro로 워터마크 없애기 →",
+    proOn:"Pro 사용 중 · 영상도 워터마크 없이 저장됩니다.",
     arTitle:"카메라 AR 미리보기",
     arSub:"휴대폰 카메라로 실제 QR(인쇄물이나 다른 화면)을 비추면, 이 페이지가 매 프레임 QR의 네 모서리를 찾아 그 위에 모션을 원근 변환해 덧씌웁니다. 기본 카메라 앱은 이렇게 할 수 없고, 반드시 웹페이지를 먼저 열어야 합니다.",
     arOn:"카메라 켜기", arOff:"끄기",
-    arNoCam:"이 브라우저·기기에서는 카메라를 쓸 수 없습니다. 위의 모션 미리보기와 영상 저장은 그대로 사용할 수 있습니다.",
+    arNoCam:"이 브라우저·기기에서는 카메라를 쓸 수 없습니다. 위의 모션 미리보기와 저장은 그대로 사용할 수 있습니다.",
     arInsecure:"카메라는 HTTPS 페이지에서만 열 수 있습니다.",
     arDenied:"카메라 권한이 거부되었습니다: {e}",
     arLoading:"QR 인식기(jsQR)를 불러오는 중…",
@@ -2658,7 +2886,9 @@ var I18N = {
     feTitle:"실현 가능성 검토",
     feSub:"헤드리스 Chromium에서 각 스타일의 한 루프를 프레임 단위로 캡처해 jsQR로 직접 디코딩한 결과입니다.",
     thStyle:"스타일", thDec:"디코딩된 프레임", thSmall:"360px 축소", thFormed:"‘완성’ 프레임 비율", thHold:"완성 프레임 디코딩",
-    statNote:"기본 설정(형성 2.4초 · 유지 2.2초 · 해체 1.2초, 루프 6.15초, 30fps = 184프레임), 내용 https://jay-inky.vercel.app (버전 4, 오류정정 H), jsQR 1.4. 원형 점도 ±1%p 이내로 같은 결과.",
+    statNote:"기본 설정(형성 2.4초 · 유지 2.2초 · 해체 1.2초, 루프 6.15초, 30fps), 내용 https://jay-inky.vercel.app (버전 4, 오류정정 H), jsQR 1.4. 이미지 스타일은 ‘컬러 그라데이션’ 샘플 기준.",
+    imgTblTitle:"이미지 스타일 × 샘플 이미지", thSample:"샘플", imgTblNote:"각 칸: 완성 프레임 디코딩 수 / 완성 프레임 수 (자동 보정 단계). 보정 0단계는 사진 색을 거의 그대로 쓴 상태입니다.",
+    lvl:"보정 {n}",
     styles:{
       assemble:["조립","흩어진 점이 사방에서 회전하며 날아와 제자리에 안착합니다."],
       ripple:["물결","중심에서 퍼지는 파동을 따라 점이 톡톡 튀어나옵니다."],
@@ -2666,34 +2896,60 @@ var I18N = {
       swarm:["입자 군집","점보다 3배 많은 입자 구름이 소용돌이치며 모여 점으로 굳고, 해체 때 다시 흩어집니다."],
       rain:["빗방울","점이 중력처럼 떨어져 아래 줄부터 차곡차곡 쌓입니다."],
       radar:["레이더","시계 방향으로 도는 레이더 빔이 점을 그려 냅니다."],
-      breathe:["호흡","완성 상태를 유지한 채 점이 숨 쉬듯 맥동합니다. 모든 프레임이 스캔됩니다."]
+      breathe:["호흡","완성 상태를 유지한 채 점이 숨 쉬듯 맥동합니다. 모든 프레임이 스캔됩니다."],
+      morph:["사진 → QR","사진이 점점 모자이크로 바뀌고, 사진 색을 머금은 칸들이 QR 점으로 정리됩니다. 완성되면 선명한 대비로 바뀌어 잘 읽힙니다."],
+      photodots:["사진 점묘","QR 점 하나하나가 사진의 색을 띱니다. 어두운 점은 충분히 어둡게, 밝은 칸은 충분히 밝게 자동 보정해 스캔을 지킵니다."],
+      burst:["로고 폭발","로고(없으면 하트)가 산산이 터지며 점들이 날아가 QR로 자리 잡고, 해체 때 다시 로고로 모입니다."]
     }
   },
   en: {
-    proto:"Prototype", h1:"A QR code drawn by motion",
+    docTitle:"Motion QR Lab", docDesc:"Make a QR code whose dots move into place, then save it as MP4, WebM or PNG — with image effects, colors, logo, caption and a camera AR preview.",
+    brand:"Motion QR Lab", back:"← QR Studio", proto:"Prototype", langLabel:"Language", canvasLabel:"Motion QR preview", timelineLabel:"Loop timeline",
+    h1:"A QR code drawn by motion",
     lead:"Dots move into a scannable QR, hold for a moment, then dissolve — on a loop. Only fully-formed frames scan, so the hold is what matters.",
-    lgForm:"Form · dissolve", lgHold:"Hold", replay:"Replay", png:"Save PNG", vid:"Export video",
+    lgForm:"Form · dissolve", lgHold:"Hold", replay:"Replay", png:"Save PNG", vid:"Export video", lFormat:"Video format",
     play:"Play", pause:"Pause",
-    lContent:"Content (URL or text)", lStyle:"Motion style", lColors:"Colors", dots:"Dots", bgc:"Background", swap:"Swap",
-    lShape:"Dot shape", square:"Square", round:"Round", lSpeed:"Speed", speed:"Rate", lTiming:"Loop timing (at 1×)",
-    form:"Form", hold:"Hold", dissolve:"Dissolve",
-    stFormed:"Fully formed · scannable", stForming:"Forming", stDissolving:"Dissolving", stBlank:"Blank", stAlways:"Always scannable",
-    win:"Scannable {a}s of {b}s loop ({p}%)",
-    holdWarn:"Keep the hold at 1.5 s or more — phone cameras need time to focus and decode.",
-    holdOk:"Effective hold {h}s — enough for phone cameras.",
-    holdAlways:"Breathe stays fully formed for the whole loop, so it scans regardless of timing.",
+    lContent:"Content (URL or text)", lStyle:"Motion style", grpBasic:"Basic", grpImage:"Image effects",
+    lImage:"Image for the effect", upImg:"Upload image", samples:"Samples", smpVivid:"Colorful gradient", smpDark:"Dark photo", smpBright:"Bright photo",
+    imgPrivacy:"Images are processed on this device only and never uploaded.",
+    imgCheck:"Checking that it scans…", imgOk:"Scans fine with the photo's own colors.",
+    imgBoost:"Photo colors were adjusted automatically so the code still scans (boost {n}/3).",
+    imgFail:"Even at maximum boost this photo doesn't scan reliably. Try another photo or a basic style.",
+    imgBurstSrc:"Dots burst out of: {s}", srcLogo:"the center logo", srcPhoto:"your image", srcHeart:"the default heart",
+    imgMorphNote:"The formed frame settles to the dot color chosen above, so it always scans.",
+    imgBad:"Couldn't read that image. Please use a PNG, JPG or SVG file.",
+    lColors:"Colors", lFill:"Fill", fillSolid:"Solid", fillLinear:"Linear gradient", fillRadial:"Radial gradient",
+    dots:"Dots", dots1:"Start", dots2:"End", angle:"Angle", finderC:"Corner markers", sameAsDots:"Same as dots", bgc:"Background", transparent:"Transparent background (PNG)", swap:"Swap",
+    pals:{classic:"Classic", ink:"Ink & cream", ocean:"Ocean", sunset:"Sunset", forest:"Forest", grape:"Grape", navy:"Navy", coffee:"Coffee", mint:"Mint", rose:"Rose"},
     lowContrast:"Low contrast ({r}:1) — this may not scan.",
     inverted:"Light dots on a dark background (inverted) fail on some scanners.",
     contrastOk:"Contrast {r}:1 — good.",
+    lShape:"Dot shape", shapes:{square:"Square", round:"Round", rounded:"Rounded", diamond:"Diamond", star:"Star"},
+    lLogo:"Center logo", logoNone:"None", logoImg:"Image", logoText:"Text or emoji", upLogo:"Upload logo", logoTextPh:"e.g. ☕ or CAFE", logoSize:"Size",
+    logoHint:"Error correction H lets the code read even with the center covered. The size is capped at the largest tested scannable size ({m}%).",
+    lCaption:"Caption", capOn:"Show caption", capDefault:"SCAN ME", capColor:"Caption color",
+    lFrame:"Frame", a11:"1:1 Square", a916:"9:16 Story / Reels", a169:"16:9 Wide",
+    lSpeed:"Speed", speed:"Rate", lTiming:"Loop timing (at 1×)", form:"Form", hold:"Hold", dissolve:"Dissolve",
+    stFormed:"Fully formed · scannable", stForming:"Forming", stDissolving:"Dissolving", stBlank:"Blank", stAlways:"Always scannable", stImage:"Showing image",
+    win:"Scannable {a}s of {b}s loop ({p}%)",
+    holdWarn:"Keep the hold at 1.5 s or more — phone cameras need time to focus and decode.",
+    holdOk:"Scannable for {h}s per loop — enough for phone cameras.",
+    holdAlways:"Breathe stays fully formed for the whole loop, so it scans regardless of timing.",
     meta:"Version {v} · {n}×{n} modules · ECC H · {m} dark modules",
     overflow:"Too long — exceeds QR capacity at error-correction level H.",
     empty:"Enter some content.",
-    recNo:"This browser can't record the canvas (no MediaRecorder). Try desktop Chrome, Firefox or Edge, or Android Chrome — or save a PNG.",
+    recNo:"This browser can't export video. Try desktop Chrome, Edge or Safari, or Android Chrome — or save a PNG.",
     recBusy:"Recording… {a} / {b}s — keep this tab in front.",
+    encBusy:"Encoding MP4… {p}%",
     recDone:"Saved {f} ({kb} KB, {fmt})",
-    recFail:"Recording failed: {e}",
+    recFail:"Video export failed: {e}",
     recMp4:"This browser records MP4 instead of WebM.",
+    vp9Note:"This browser has no H.264 encoder, so the MP4 uses the VP9 codec. Some apps may not play it.",
+    mrNote:"This browser lacks frame-by-frame encoding (WebCodecs), so the video is recorded in real time.",
     pngDone:"Saved {f} (fully-formed frame)",
+    proFree:"Free videos carry a small watermark in the corner. PNGs are always watermark-free.",
+    proLink:"Remove it with Pro →",
+    proOn:"Pro active · videos export without a watermark.",
     arTitle:"Camera AR preview",
     arSub:"Point your phone at a real QR (printed or on another screen): this page finds the code's four corners every frame and draws the motion on top with a perspective warp. The native camera app can't do this — a web page has to be opened first.",
     arOn:"Start camera", arOff:"Stop",
@@ -2702,13 +2958,15 @@ var I18N = {
     arDenied:"Camera permission was denied: {e}",
     arLoading:"Loading the QR detector (jsQR)…",
     arLibFail:"Couldn't load the QR detector. Check your connection.",
-    arSeek:"Looking for a QR… hold it large and centred.",
+    arSeek:"Looking for a QR… hold it large and centered.",
     arTrack:"Tracking · {d}",
     arHelp:"Tip: show this page's PNG on another screen or print it, then point the camera at it. Decoding stays on the device.",
     feTitle:"Feasibility",
-    feSub:"Measured in headless Chromium: one loop of every style captured frame-by-frame and decoded with jsQR.",
+    feSub:"Measured in headless Chromium: one loop of every style captured frame by frame and decoded with jsQR.",
     thStyle:"Style", thDec:"Frames decoded", thSmall:"Downscaled to 360px", thFormed:"Frames “fully formed”", thHold:"Formed frames decoded",
-    statNote:"Default settings (form 2.4 s · hold 2.2 s · dissolve 1.2 s, 6.15 s loop, 30 fps = 184 frames), content https://jay-inky.vercel.app (version 4, ECC H), jsQR 1.4. Round dots match within ±1 pt.",
+    statNote:"Default settings (form 2.4 s · hold 2.2 s · dissolve 1.2 s, 6.15 s loop, 30 fps), content https://jay-inky.vercel.app (version 4, ECC H), jsQR 1.4. Image styles use the “Colorful gradient” sample.",
+    imgTblTitle:"Image styles × sample images", thSample:"Sample", imgTblNote:"Each cell: formed frames decoded / formed frames (automatic boost level). Boost 0 means the photo colors are used almost unchanged.",
+    lvl:"boost {n}",
     styles:{
       assemble:["Assemble","Scattered dots spin in from everywhere and settle into place."],
       ripple:["Ripple","Modules pop in on a wave expanding from the center."],
@@ -2716,34 +2974,227 @@ var I18N = {
       swarm:["Swarm","A cloud of 3× more particles spirals in and locks into modules, then bursts apart."],
       rain:["Rain","Modules drop with gravity and stack up from the bottom row."],
       radar:["Radar","A clockwise radar beam paints the modules in."],
-      breathe:["Breathe","Stays fully formed while the modules pulse gently. Every frame scans."]
+      breathe:["Breathe","Stays fully formed while the modules pulse gently. Every frame scans."],
+      morph:["Photo → QR","Your photo turns into a mosaic, and its colored cells resolve into QR modules — settling to crisp contrast once formed."],
+      photodots:["Photo dots","Every module takes its color from the photo; dark modules are kept dark and light cells light so it still scans."],
+      burst:["Logo burst","Your logo (or a heart, if there is none) bursts apart, its dots fly into the QR, then gather back into the logo."]
+    }
+  },
+  ja: {
+    docTitle:"モーションQRラボ", docDesc:"点が動いて完成するQRコードを作り、MP4・WebM・PNGで保存できます。画像エフェクト、カラー・ロゴ・テキスト、カメラARプレビューにも対応。",
+    brand:"モーションQRラボ", back:"← QRスタジオ", proto:"プロトタイプ", langLabel:"言語", canvasLabel:"モーションQRのプレビュー", timelineLabel:"ループのタイムライン",
+    h1:"動きが点を描くQRコード",
+    lead:"点が動きながら読み取れるQRコードに組み上がり、少し静止してから散っていく——その繰り返しです。読み取れるのは完成したフレームだけなので、「静止」の時間がいちばん大切です。",
+    lgForm:"形成・分解", lgHold:"静止", replay:"最初から", png:"PNGを保存", vid:"動画を保存", lFormat:"動画の形式",
+    play:"再生", pause:"一時停止",
+    lContent:"内容（URLまたはテキスト）", lStyle:"モーションスタイル", grpBasic:"ベーシック", grpImage:"画像エフェクト",
+    lImage:"エフェクトに使う画像", upImg:"画像をアップロード", samples:"サンプル", smpVivid:"カラフル", smpDark:"暗い写真", smpBright:"明るい写真",
+    imgPrivacy:"画像はこの端末の中だけで処理され、どこにも送信されません。",
+    imgCheck:"読み取れるか確認しています…", imgOk:"写真の色のままで問題なく読み取れます。",
+    imgBoost:"読み取れるよう、写真の色の明暗を自動で補正しました（補正 {n}/3）。",
+    imgFail:"この写真は最大まで補正しても読み取りが不安定です。別の写真か、ベーシックのスタイルをお試しください。",
+    imgBurstSrc:"点が飛び出す形：{s}", srcLogo:"中央のロゴ", srcPhoto:"アップロードした画像", srcHeart:"標準のハート",
+    imgMorphNote:"完成フレームは上で選んだドットの色に落ち着くので、確実に読み取れます。",
+    imgBad:"画像を読み込めませんでした。PNG・JPG・SVGファイルかご確認ください。",
+    lColors:"カラー", lFill:"塗り", fillSolid:"単色", fillLinear:"線形グラデーション", fillRadial:"円形グラデーション",
+    dots:"ドット", dots1:"始まりの色", dots2:"終わりの色", angle:"角度", finderC:"角のマーカー", sameAsDots:"ドットと同じ色", bgc:"背景", transparent:"背景を透明に（PNG）", swap:"入れ替え",
+    pals:{classic:"クラシック", ink:"墨とクリーム", ocean:"海", sunset:"夕焼け", forest:"森", grape:"ぶどう", navy:"ネイビー", coffee:"コーヒー", mint:"ミント", rose:"ローズ"},
+    lowContrast:"コントラストが低めです（{r}:1）。読み取れない場合があります。",
+    inverted:"明るいドットと暗い背景（反転）は、一部のスキャナーで読み取れません。",
+    contrastOk:"コントラスト {r}:1 — 良好です。",
+    lShape:"ドットの形", shapes:{square:"四角", round:"丸", rounded:"角丸", diamond:"ひし形", star:"星"},
+    lLogo:"中央のロゴ", logoNone:"なし", logoImg:"画像", logoText:"文字・絵文字", upLogo:"ロゴをアップロード", logoTextPh:"例：☕ や カフェ", logoSize:"サイズ",
+    logoHint:"誤り訂正レベルHのおかげで、中央を隠しても読み取れます。読み取りを確認できた最大サイズ（{m}%）まで大きくできます。",
+    lCaption:"下のテキスト", capOn:"テキストを表示", capDefault:"スキャンしてね", capColor:"テキストの色",
+    lFrame:"画面比率", a11:"1:1 正方形", a916:"9:16 ストーリー・リール", a169:"16:9 横長",
+    lSpeed:"速度", speed:"倍速", lTiming:"ループのタイミング（1×基準）", form:"形成", hold:"静止", dissolve:"分解",
+    stFormed:"完成・読み取り可", stForming:"形成中", stDissolving:"分解中", stBlank:"空白", stAlways:"常に読み取り可", stImage:"画像を表示中",
+    win:"読み取り可能 {a}秒 / ループ {b}秒（{p}%）",
+    holdWarn:"静止時間は1.5秒以上にしてください。スマホのカメラはピントを合わせて認識するまでに時間がかかります。",
+    holdOk:"1ループで {h}秒 読み取れます — スマホには十分です。",
+    holdAlways:"呼吸スタイルはループ全体が完成状態なので、タイミングに関係なく読み取れます。",
+    meta:"バージョン {v} · {n}×{n} モジュール · 誤り訂正 H · 暗いモジュール {m} 個",
+    overflow:"内容が長すぎます。誤り訂正レベルHでのQRコードの容量を超えています。",
+    empty:"内容を入力してください。",
+    recNo:"このブラウザは動画の保存に対応していません。パソコンの Chrome・Edge・Safari、または Android の Chrome でお試しいただくか、PNGで保存してください。",
+    recBusy:"録画中… {a} / {b}秒 — このタブを前面に表示したままお待ちください。",
+    encBusy:"MP4を作成中… {p}%",
+    recDone:"保存しました：{f}（{kb} KB、{fmt}）",
+    recFail:"動画を保存できませんでした：{e}",
+    recMp4:"このブラウザでは WebM ではなく MP4 で録画されます。",
+    vp9Note:"このブラウザには H.264 エンコーダーがないため、VP9 コーデックで MP4 を作成しました。アプリによっては再生できない場合があります。",
+    mrNote:"このブラウザはフレーム単位のエンコード（WebCodecs）に対応していないため、リアルタイム録画で保存します。",
+    pngDone:"保存しました：{f}（完成フレーム）",
+    proFree:"無料版の動画には、隅に小さなウォーターマークが入ります。PNGはいつでもウォーターマークなしで保存できます。",
+    proLink:"Proでウォーターマークを外す →",
+    proOn:"Proをご利用中 · 動画もウォーターマークなしで保存されます。",
+    arTitle:"カメラARプレビュー",
+    arSub:"スマホのカメラで実物のQRコード（印刷物や別の画面）を映すと、このページが毎フレームQRの四隅を見つけ、その上にモーションを遠近変形して重ねます。標準のカメラアプリではできないため、先にこのウェブページを開く必要があります。",
+    arOn:"カメラを起動", arOff:"停止",
+    arNoCam:"このブラウザ・端末ではカメラを使えません。上のモーションプレビューと保存はそのまま使えます。",
+    arInsecure:"カメラは HTTPS のページでのみ起動できます。",
+    arDenied:"カメラの許可が得られませんでした：{e}",
+    arLoading:"QR認識エンジン（jsQR）を読み込んでいます…",
+    arLibFail:"QR認識エンジンを読み込めませんでした。ネットワークをご確認ください。",
+    arSeek:"QRコードを探しています… 画面の中央に大きく映してください。",
+    arTrack:"追跡中 · {d}",
+    arHelp:"ヒント：このページのPNGを別の画面に表示するか印刷して、カメラを向けてみてください。読み取りは端末内だけで行われます。",
+    feTitle:"実現性の検証",
+    feSub:"ヘッドレス Chromium で各スタイルを1ループ分フレームごとに書き出し、jsQR で実際にデコードした結果です。",
+    thStyle:"スタイル", thDec:"デコードできたフレーム", thSmall:"360pxに縮小", thFormed:"「完成」フレームの割合", thHold:"完成フレームのデコード",
+    statNote:"初期設定（形成 2.4秒・静止 2.2秒・分解 1.2秒、ループ 6.15秒、30fps）、内容 https://jay-inky.vercel.app（バージョン4、誤り訂正H）、jsQR 1.4。画像スタイルは「カラフル」サンプルで測定。",
+    imgTblTitle:"画像スタイル × サンプル画像", thSample:"サンプル", imgTblNote:"各セル：デコードできた完成フレーム数 / 完成フレーム数（自動補正レベル）。補正0は写真の色をほぼそのまま使った状態です。",
+    lvl:"補正 {n}",
+    styles:{
+      assemble:["集合","散らばった点が四方から回転しながら飛んできて、定位置に収まります。"],
+      ripple:["波紋","中心から広がる波に合わせて、点がぽんぽんと現れます。"],
+      scan:["スキャンライン","光の帯が上から下へなぞり、一行ずつ浮かび上がらせます。分解は下から上へ。"],
+      swarm:["パーティクル群","点の3倍の粒子が渦を巻きながら集まって点に固まり、分解では再び散らばります。"],
+      rain:["雨粒","点が重力に引かれるように落ち、下の行から順に積み重なります。"],
+      radar:["レーダー","時計回りに回るレーダーの光が点を描き出します。"],
+      breathe:["呼吸","完成した状態のまま、点が呼吸するように脈打ちます。すべてのフレームで読み取れます。"],
+      morph:["写真 → QR","写真が少しずつモザイクになり、写真の色をまとったマスがQRのドットへと整っていきます。完成するとくっきりしたコントラストに変わり、確実に読み取れます。"],
+      photodots:["フォトドット","QRのドット一つひとつが写真の色をまといます。暗いドットは十分暗く、明るいマスは十分明るく自動補正して読み取りを守ります。"],
+      burst:["ロゴバースト","ロゴ（なければハート）がはじけ、点が飛び散ってQRの位置に収まります。分解では再びロゴに集まります。"]
+    }
+  },
+  zh: {
+    docTitle:"动态二维码实验室", docDesc:"制作由运动的点拼成的二维码，并保存为 MP4、WebM 或 PNG。支持图片特效、颜色、标志、文字和摄像头 AR 预览。",
+    brand:"动态二维码实验室", back:"← QR 工作室", proto:"实验版", langLabel:"语言", canvasLabel:"动态二维码预览", timelineLabel:"循环时间轴",
+    h1:"由运动的点拼成的二维码",
+    lead:"点阵在运动中拼成可扫描的二维码，停留片刻后再散开，如此循环。只有完整成形的画面才能被扫描，所以“停留”时长最关键。",
+    lgForm:"成形 · 散开", lgHold:"停留", replay:"从头播放", png:"保存 PNG", vid:"保存视频", lFormat:"视频格式",
+    play:"播放", pause:"暂停",
+    lContent:"内容（网址或文字）", lStyle:"动效风格", grpBasic:"基础", grpImage:"图片特效",
+    lImage:"特效使用的图片", upImg:"上传图片", samples:"示例", smpVivid:"多彩渐变", smpDark:"暗色照片", smpBright:"明亮照片",
+    imgPrivacy:"图片只在本设备上处理，不会上传到任何地方。",
+    imgCheck:"正在检查能否扫描…", imgOk:"保留照片原色也能顺利扫描。",
+    imgBoost:"为保证可扫描，已自动调整照片颜色的明暗（增强 {n}/3 级）。",
+    imgFail:"这张照片即使增强到最大，识别仍不稳定。请换一张照片，或改用基础风格。",
+    imgBurstSrc:"点从这里迸发：{s}", srcLogo:"中心标志", srcPhoto:"上传的图片", srcHeart:"默认爱心",
+    imgMorphNote:"成形画面会统一为上方所选的点颜色，确保可以扫描。",
+    imgBad:"无法读取该图片，请使用 PNG、JPG 或 SVG 文件。",
+    lColors:"颜色", lFill:"填充", fillSolid:"纯色", fillLinear:"线性渐变", fillRadial:"径向渐变",
+    dots:"点", dots1:"起始色", dots2:"结束色", angle:"角度", finderC:"定位角", sameAsDots:"与点同色", bgc:"背景", transparent:"透明背景（PNG）", swap:"互换",
+    pals:{classic:"经典", ink:"墨与奶油", ocean:"海洋", sunset:"晚霞", forest:"森林", grape:"葡萄", navy:"藏青", coffee:"咖啡", mint:"薄荷", rose:"玫瑰"},
+    lowContrast:"对比度偏低（{r}:1），可能无法识别。",
+    inverted:"浅色点配深色背景（反色）在部分扫码工具中无法识别。",
+    contrastOk:"对比度 {r}:1，良好。",
+    lShape:"点的形状", shapes:{square:"方形", round:"圆形", rounded:"圆角方形", diamond:"菱形", star:"星形"},
+    lLogo:"中心标志", logoNone:"无", logoImg:"图片", logoText:"文字或表情", upLogo:"上传标志", logoTextPh:"例如：☕ 或 咖啡", logoSize:"大小",
+    logoHint:"得益于 H 级纠错，中心被遮住也能识别。最大只能放大到经测试可扫描的尺寸（{m}%）。",
+    lCaption:"底部文字", capOn:"显示文字", capDefault:"扫一扫", capColor:"文字颜色",
+    lFrame:"画面比例", a11:"1:1 方形", a916:"9:16 快拍·短视频", a169:"16:9 横屏",
+    lSpeed:"速度", speed:"倍速", lTiming:"循环时长（按 1× 计）", form:"成形", hold:"停留", dissolve:"散开",
+    stFormed:"已成形 · 可扫描", stForming:"成形中", stDissolving:"散开中", stBlank:"空白", stAlways:"始终可扫描", stImage:"正在显示图片",
+    win:"可扫描 {a} 秒 / 循环 {b} 秒（{p}%）",
+    holdWarn:"请把停留时间设为 1.5 秒以上，手机摄像头需要时间对焦和识别。",
+    holdOk:"每个循环可扫描 {h} 秒，足够手机识别。",
+    holdAlways:"呼吸风格在整个循环中都保持成形，与时长无关，随时可扫描。",
+    meta:"版本 {v} · {n}×{n} 模块 · H 级纠错 · 深色模块 {m} 个",
+    overflow:"内容太长，超出了 H 级纠错下的二维码容量。",
+    empty:"请输入内容。",
+    recNo:"此浏览器不支持导出视频。请在电脑版 Chrome、Edge、Safari 或 Android 版 Chrome 中尝试，或保存为 PNG。",
+    recBusy:"录制中… {a} / {b} 秒，请让此标签页保持在前台。",
+    encBusy:"正在生成 MP4… {p}%",
+    recDone:"已保存：{f}（{kb} KB，{fmt}）",
+    recFail:"视频保存失败：{e}",
+    recMp4:"此浏览器会以 MP4 而非 WebM 格式录制。",
+    vp9Note:"此浏览器没有 H.264 编码器，已改用 VP9 编码生成 MP4。部分应用可能无法播放。",
+    mrNote:"此浏览器不支持逐帧编码（WebCodecs），将以实时录制的方式保存。",
+    pngDone:"已保存：{f}（成形画面）",
+    proFree:"免费版视频的角落会带一个小水印。PNG 始终没有水印。",
+    proLink:"升级 Pro 去除水印 →",
+    proOn:"Pro 已启用 · 视频导出无水印。",
+    arTitle:"摄像头 AR 预览",
+    arSub:"用手机摄像头对准真实的二维码（印刷品或另一块屏幕），本页面会在每一帧找到二维码的四个角，并通过透视变换把动画叠加在上面。系统相机做不到这一点，必须先打开网页。",
+    arOn:"打开摄像头", arOff:"关闭",
+    arNoCam:"此浏览器或设备无法使用摄像头。上方的动态预览和保存功能仍可正常使用。",
+    arInsecure:"摄像头只能在 HTTPS 页面中打开。",
+    arDenied:"摄像头权限被拒绝：{e}",
+    arLoading:"正在加载二维码识别器（jsQR）…",
+    arLibFail:"无法加载二维码识别器，请检查网络。",
+    arSeek:"正在寻找二维码… 请将二维码放大并置于画面中央。",
+    arTrack:"追踪中 · {d}",
+    arHelp:"提示：把本页的 PNG 显示在另一块屏幕上或打印出来，再用摄像头对准。识别只在设备内进行。",
+    feTitle:"可行性评估",
+    feSub:"在无头 Chromium 中逐帧截取每种风格的一个循环，并用 jsQR 实际解码的结果。",
+    thStyle:"风格", thDec:"成功解码的帧", thSmall:"缩小到 360px", thFormed:"“成形”帧占比", thHold:"成形帧解码",
+    statNote:"默认设置（成形 2.4 秒 · 停留 2.2 秒 · 散开 1.2 秒，循环 6.15 秒，30fps），内容 https://jay-inky.vercel.app（版本 4，H 级纠错），jsQR 1.4。图片风格使用“多彩渐变”示例。",
+    imgTblTitle:"图片风格 × 示例图片", thSample:"示例", imgTblNote:"每格：成功解码的成形帧数 / 成形帧数（自动增强等级）。增强 0 表示几乎原样使用照片颜色。",
+    lvl:"增强 {n}",
+    styles:{
+      assemble:["汇聚","四散的点从各个方向旋转飞来，落到各自的位置。"],
+      ripple:["涟漪","点随着从中心扩散的波纹一个个弹出。"],
+      scan:["扫描线","一道光带自上而下扫过，逐行显现；散开时则自下而上。"],
+      swarm:["粒子群","数量是点阵三倍的粒子云旋转聚拢、凝成点阵，散开时再次飞散。"],
+      rain:["雨滴","点像受重力一样落下，从最底行开始逐层堆叠。"],
+      radar:["雷达","顺时针旋转的雷达光束一点点描出图案。"],
+      breathe:["呼吸","保持成形状态，点像呼吸一样轻轻起伏。每一帧都可扫描。"],
+      morph:["照片 → 二维码","照片逐渐变成马赛克，带着照片颜色的方格再整理成二维码点阵；成形后切换为清晰的对比，确保可以扫描。"],
+      photodots:["照片点阵","每个点都取自照片的颜色。深色点自动压暗、浅色格自动提亮，确保依然可以扫描。"],
+      burst:["标志迸发","标志（没有时用爱心）炸裂开来，点飞散后落入二维码的位置；散开时再聚回标志。"]
     }
   }
 };
-var STYLE_KEYS = ["assemble","ripple","scan","swarm","rain","radar","breathe"];
 
-function tr(k, vars){
-  var s = I18N[state.lang][k]; if (s == null) s = k;
-  if (vars) for (var v in vars) s = s.split("{"+v+"}").join(vars[v]);
-  return s;
-}
+</script>
+<script>
+(function(){
+"use strict";
+if (qrcode.stringToBytesFuncs && qrcode.stringToBytesFuncs["UTF-8"]) qrcode.stringToBytes = qrcode.stringToBytesFuncs["UTF-8"];
+
+/* ---------------- constants ---------------- */
+var BASIC = ["assemble","ripple","scan","swarm","rain","radar","breathe"];
+var IMGST = ["morph","photodots","burst"];
+var STYLE_KEYS = BASIC.concat(IMGST);
+var SHAPES = /*SHAPES*/["square","round","rounded","diamond","star"];
+var LOGO_MIN = 12, LOGO_MAX = /*LOGOMAX*/28;
+var GAP = 0.35, QUIET = 4, TAU = Math.PI*2;
+var PROKEY = "aqr_pro_license_v1";            /* same key the main app (qr-studio.html) stores the Pro license under */
+var UPGRADE_URL = "/?pro=1";
+/* photo-color clamp levels in decoder gray (0.299R+0.587G+0.114B): [max gray of dark modules, min gray of light cells] */
+var LV = /*LV*/[[100,160],[78,182],[56,204],[34,226]];
+var PALETTES = [
+  {k:"classic", fill:"solid",  fg:"#111111", fg2:"#3a3a3a", angle:45,  finder:"#111111", bg:"#ffffff"},
+  {k:"ink",     fill:"solid",  fg:"#1f2a44", fg2:"#1f2a44", angle:45,  finder:"#b23a0e", bg:"#f6f1e7"},
+  {k:"ocean",   fill:"linear", fg:"#0b4f8a", fg2:"#0e7490", angle:45,  finder:"#0b3b66", bg:"#f2fbff"},
+  {k:"sunset",  fill:"linear", fg:"#9f1239", fg2:"#b4410c", angle:90,  finder:"#7c2d12", bg:"#fff7ed"},
+  {k:"forest",  fill:"radial", fg:"#14532d", fg2:"#3f6212", angle:45,  finder:"#14532d", bg:"#f4f8ef"},
+  {k:"grape",   fill:"radial", fg:"#4c1d95", fg2:"#9d174d", angle:45,  finder:"#3b0764", bg:"#faf5ff"},
+  {k:"navy",    fill:"solid",  fg:"#0f172a", fg2:"#0f172a", angle:45,  finder:"#1d4ed8", bg:"#e8edf5"},
+  {k:"coffee",  fill:"linear", fg:"#3e2723", fg2:"#6d4c41", angle:135, finder:"#3e2723", bg:"#f5efe6"},
+  {k:"mint",    fill:"linear", fg:"#064e3b", fg2:"#0f766e", angle:0,   finder:"#064e3b", bg:"#ecfdf5"},
+  {k:"rose",    fill:"linear", fg:"#831843", fg2:"#9f1239", angle:60,  finder:"#4c0519", bg:"#fff1f2"}
+];
 
 /* ---------------- state ---------------- */
 var reduceMotion = false;
 try { reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches; } catch(e){}
+var EMBED = document.documentElement.classList.contains("embed");
 var state = {
-  text:"https://jay-inky.vercel.app", style:"assemble", fg:"#111111", bg:"#ffffff", shape:"square",
-  speed:1, form:2.4, hold:2.2, dis:1.2, playing:!reduceMotion, t:0, lang:"ko"
+  text:"https://jay-inky.vercel.app", style:"assemble", shape:"square",
+  fill:"solid", fg:"#111111", fg2:"#0e7490", angle:45, finder:"#111111", finderSame:true, bg:"#ffffff", transparent:false, pal:"classic",
+  logoKind:"none", logoSize:20, logoText:"☕", logoImgCanvas:null, logoCanvas:null, logoVer:0,
+  caption:false, capText:null, capColor:"#111111",
+  aspect:"1:1", fmt:"mp4",
+  photoCanvas:null, sample:"vivid", srcVer:1, lvl:0, lvlState:"",
+  speed:1, form:2.4, hold:2.2, dis:1.2, playing:!reduceMotion, t:0,
+  lang:(function(l){ return I18N[l] ? l : "ko"; })(document.documentElement.lang)
 };
-try { var sl = localStorage.getItem("mq-lang"); if (sl === "en" || sl === "ko") state.lang = sl; } catch(e){}
-var GAP = 0.35, QUIET = 4, TAU = Math.PI*2;
 
+function L(){ return I18N[state.lang]; }
+function tr(k, vars){
+  var s = L()[k]; if (s == null) s = I18N.en[k]; if (s == null) s = k;
+  if (vars) for (var v in vars) s = s.split("{"+v+"}").join(vars[v]);
+  return s;
+}
 function timings(){
   var k = 1/state.speed, F = state.form*k, H = state.hold*k, D = state.dis*k, G = GAP*k;
   return {F:F, H:H, D:D, G:G, L:F+H+D+G};
 }
 
-/* ---------------- easing / rng ---------------- */
+/* ---------------- math / color ---------------- */
 function clamp01(x){ return x < 0 ? 0 : x > 1 ? 1 : x; }
 function eOutCubic(x){ return 1 - Math.pow(1-x,3); }
 function eInCubic(x){ return x*x*x; }
@@ -2751,6 +3202,18 @@ function eInOutCubic(x){ return x < .5 ? 4*x*x*x : 1 - Math.pow(-2*x+2,3)/2; }
 function eOutBack(x){ var c1 = 1.70158, c3 = c1+1; return 1 + c3*Math.pow(x-1,3) + c1*Math.pow(x-1,2); }
 function mulberry32(a){ return function(){ a |= 0; a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 function hashStr(s){ var h = 2166136261; for (var i=0;i<s.length;i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function hexRGB(hex){ var h = hex.replace("#",""); if (h.length === 3) h = h.replace(/./g, "$&$&"); var n = parseInt(h,16); return [n>>16&255, n>>8&255, n&255]; }
+function hexA(hex, a){ var c = hexRGB(hex); return "rgba("+c[0]+","+c[1]+","+c[2]+","+a+")"; }
+function rgbStr(c){ return "rgb("+(c[0]|0)+","+(c[1]|0)+","+(c[2]|0)+")"; }
+function lerp3(a, b, t){ return [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t, a[2]+(b[2]-a[2])*t]; }
+function gray(c){ return .299*c[0] + .587*c[1] + .114*c[2]; }
+function clampDark(c, ymax){ var y = gray(c); if (y <= ymax) return c; var k = ymax/y; return [c[0]*k, c[1]*k, c[2]*k]; }
+function clampLight(c, ymin){ var y = gray(c); if (y >= ymin) return c; var k = (255-ymin)/(255-y); return [255-(255-c[0])*k, 255-(255-c[1])*k, 255-(255-c[2])*k]; }
+function lum(hex){
+  var ch = hexRGB(hex).map(function(v){ v/=255; return v <= .03928 ? v/12.92 : Math.pow((v+.055)/1.055, 2.4); });
+  return .2126*ch[0] + .7152*ch[1] + .0722*ch[2];
+}
+function contrast(a, b){ var la = lum(a), lb = lum(b); return (Math.max(la,lb)+.05)/(Math.min(la,lb)+.05); }
 
 /* ---------------- model ---------------- */
 var ALIGN_POS = [[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]];
@@ -2758,7 +3221,7 @@ function buildModel(text, typeNumber, ecl){
   var qr = qrcode(typeNumber || 0, ecl || "H");
   qr.addData(text); qr.make();
   var N = qr.getModuleCount(), version = (N-17)/4, mods = [], i, j;
-  /* anchors = finder (7x7) and alignment (5x5) patterns, drawn as crisp units so they land first */
+  /* anchors = finder (7x7) and alignment (5x5) patterns, always drawn as crisp solid units */
   var anchors = [{x:0,y:0,s:7},{x:N-7,y:0,s:7},{x:0,y:N-7,s:7}];
   var pos = ALIGN_POS[version-1] || [];
   for (i=0;i<pos.length;i++) for (j=0;j<pos.length;j++){
@@ -2771,13 +3234,13 @@ function buildModel(text, typeNumber, ecl){
     }
     if (ok) anchors.push({x:ac-2, y:ar-2, s:5});
   }
-  function inAnchor(r,c){
-    for (var k=0;k<anchors.length;k++){ var a = anchors[k]; if (c >= a.x && c < a.x+a.s && r >= a.y && r < a.y+a.s) return true; }
-    return false;
-  }
+  var dark = new Uint8Array(N*N), amask = new Uint8Array(N*N);
+  for (var k=0;k<anchors.length;k++){ var a = anchors[k]; for (var y=a.y;y<a.y+a.s;y++) for (var x=a.x;x<a.x+a.s;x++) amask[y*N+x] = 1; }
   var darkAll = 0;
-  for (var r=0;r<N;r++) for (var c=0;c<N;c++) if (qr.isDark(r,c)){ darkAll++; if (!inAnchor(r,c)) mods.push({x:c,y:r}); }
-  return { N:N, version:version, mods:mods, darkCount:darkAll, anchors:anchors, plans:{} };
+  for (var r=0;r<N;r++) for (var c=0;c<N;c++) if (qr.isDark(r,c)){ dark[r*N+c] = 1; darkAll++; if (!amask[r*N+c]) mods.push({x:c,y:r}); }
+  var cx = N/2, maxd = Math.hypot(N/2, N/2);
+  mods.forEach(function(m){ var dx = m.x+.5-cx, dy = m.y+.5-cx; m.dist = Math.hypot(dx,dy)/maxd; var an = Math.atan2(dy,dx) + Math.PI/2; m.ang = an < 0 ? an + TAU : an; });
+  return { N:N, version:version, mods:mods, dark:dark, amask:amask, darkCount:darkAll, anchors:anchors, plans:{}, text:text };
 }
 
 var FIN_U = .2, FIN_U2 = .18;
@@ -2788,13 +3251,9 @@ function getPlan(M, key){
   if (M.plans[key]) return M.plans[key];
   var n = M.mods.length, N = M.N, rnd = mulberry32(hashStr(key) ^ (N*7919));
   var d = new Float32Array(n), u = new Float32Array(n), d2 = new Float32Array(n), u2 = new Float32Array(n), R = new Float32Array(n*8);
-  var cx = N/2, cy = N/2, maxd = Math.hypot(N/2, N/2);
   for (var i=0;i<n;i++){
     var m = M.mods[i]; for (var k=0;k<8;k++) R[i*8+k] = rnd();
-    var r0 = R[i*8], r1 = R[i*8+1];
-    var dx = m.x+.5-cx, dy = m.y+.5-cy, dist = Math.hypot(dx,dy)/maxd;
-    var ang = Math.atan2(dy,dx) + Math.PI/2; if (ang < 0) ang += TAU;
-    var rowB = (N-1-m.y)/(N-1);
+    var r0 = R[i*8], r1 = R[i*8+1], dist = m.dist, ang = m.ang, rowB = (N-1-m.y)/(N-1);
     switch(key){
       case "assemble": d[i]=.14+r0*.40; u[i]=.42; d2[i]=r1*.5; u2[i]=.24; break;
       case "ripple":   d[i]=.14+.6*dist+r0*.03; u[i]=.2; d2[i]=.58*dist+r1*.02; u2[i]=.14; break;
@@ -2802,25 +3261,24 @@ function getPlan(M, key){
       case "swarm":    d[i]=.14+r0*.46; u[i]=.36; d2[i]=r1*.5; u2[i]=.24; break;
       case "rain":     d[i]=.14+.62*rowB+r0*.08; u[i]=.16; d2[i]=.56*rowB+r1*.08; u2[i]=.2; break;
       case "radar":    d[i]=.14+.7*(ang/TAU); u[i]=.1; d2[i]=.04+.62*(ang/TAU); u2[i]=.08; break;
-      default:         d[i]=0; u[i]=1; d2[i]=1; u2[i]=0; m.dist = dist;
+      default:         d[i]=0; u[i]=1; d2[i]=1; u2[i]=0;
     }
-    m.dist = dist; m.ang = ang;
   }
   var formEnd = 0, disStart = 1;
   for (var a=0;a<M.anchors.length;a++){ formEnd = Math.max(formEnd, anchorD(a)+FIN_U); disStart = Math.min(disStart, anchorD2(a)); }
   for (i=0;i<n;i++){ formEnd = Math.max(formEnd, d[i]+u[i]); disStart = Math.min(disStart, d2[i]); }
-  var P = { d:d, u:u, d2:d2, u2:u2, R:R, formEnd:formEnd, disStart:disStart, always:key==="breathe" };
+  var P = { key:key, d:d, u:u, d2:d2, u2:u2, R:R, formEnd:formEnd, disStart:disStart, always:key==="breathe" };
   if (key === "swarm"){
     var count = Math.min(n*3, 9000), pr = mulberry32(99 ^ N);
     var pj = new Int32Array(count), pa = new Float32Array(count*6);
     for (var k2=0;k2<count;k2++){
       pj[k2] = k2 < n ? k2 : Math.floor(pr()*n);
-      pa[k2*6]   = pr()*TAU;                 // orbit angle
-      pa[k2*6+1] = .12 + Math.pow(pr(),.7)*.42; // orbit radius (fraction of canvas)
-      pa[k2*6+2] = (pr()<.5?-1:1)*(.25+pr()*.5); // angular velocity
-      pa[k2*6+3] = (pr()-.5)*5;              // spiral spin
-      pa[k2*6+4] = pr()*TAU;                 // burst angle
-      pa[k2*6+5] = .25 + pr()*.45;           // burst radius
+      pa[k2*6]   = pr()*TAU;
+      pa[k2*6+1] = .12 + Math.pow(pr(),.7)*.42;
+      pa[k2*6+2] = (pr()<.5?-1:1)*(.25+pr()*.5);
+      pa[k2*6+3] = (pr()-.5)*5;
+      pa[k2*6+4] = pr()*TAU;
+      pa[k2*6+5] = .25 + pr()*.45;
     }
     P.pj = pj; P.pa = pa; P.pcount = count;
   }
@@ -2844,26 +3302,134 @@ function scanWindow(P, T){
   return (1-P.formEnd)*T.F + T.H + P.disStart*T.D;
 }
 
-/* ---------------- drawing ---------------- */
+/* ---------------- images: samples, uploads, cell sampling ---------------- */
+var sampleCache = {};
+function makeSample(kind){
+  if (sampleCache[kind]) return sampleCache[kind];
+  var S = 512, c = document.createElement("canvas"); c.width = c.height = S;
+  var x = c.getContext("2d"), rnd = mulberry32(hashStr(kind)), g, i;
+  if (kind === "dark"){
+    g = x.createLinearGradient(0,0,0,S); g.addColorStop(0,"#070a18"); g.addColorStop(.6,"#141a36"); g.addColorStop(1,"#0b0c14");
+    x.fillStyle = g; x.fillRect(0,0,S,S);
+    for (i=0;i<46;i++){
+      var bx = rnd()*S, by = S*.15 + rnd()*S*.6, br = 8 + rnd()*44, col = ["255,179,71","255,107,107","255,209,102","120,170,255","255,140,60"][i%5];
+      var rg = x.createRadialGradient(bx,by,0,bx,by,br); rg.addColorStop(0,"rgba("+col+",.85)"); rg.addColorStop(1,"rgba("+col+",0)");
+      x.fillStyle = rg; x.beginPath(); x.arc(bx,by,br,0,TAU); x.fill();
+    }
+    x.fillStyle = "#04050b";
+    for (var bxx=0; bxx<S; ){ var w = 30 + rnd()*60, h = 80 + rnd()*200; x.fillRect(bxx, S-h, w-4, h); bxx += w; }
+  } else if (kind === "bright"){
+    g = x.createLinearGradient(0,0,0,S); g.addColorStop(0,"#cfe8ff"); g.addColorStop(.55,"#fff6e3"); g.addColorStop(1,"#ffe0b8");
+    x.fillStyle = g; x.fillRect(0,0,S,S);
+    var sg = x.createRadialGradient(S*.72,S*.28,0,S*.72,S*.28,S*.3); sg.addColorStop(0,"rgba(255,236,150,1)"); sg.addColorStop(.35,"rgba(255,220,120,.7)"); sg.addColorStop(1,"rgba(255,220,120,0)");
+    x.fillStyle = sg; x.fillRect(0,0,S,S);
+    for (i=0;i<16;i++){ x.fillStyle = "rgba(255,255,255,"+(.55+rnd()*.4)+")"; x.beginPath(); x.ellipse(rnd()*S, S*.1+rnd()*S*.5, 40+rnd()*70, 18+rnd()*26, 0, 0, TAU); x.fill(); }
+    x.fillStyle = "rgba(255,190,200,.55)"; x.beginPath(); x.ellipse(S*.3, S*.88, S*.4, S*.14, 0, 0, TAU); x.fill();
+  } else {
+    g = x.createLinearGradient(0,0,S,S);
+    ["#ff3d7f","#ff9f1c","#ffd23f","#3ddc84","#2f6bff","#a24bff"].forEach(function(cl,k,arr){ g.addColorStop(k/(arr.length-1), cl); });
+    x.fillStyle = g; x.fillRect(0,0,S,S);
+    for (i=0;i<9;i++){
+      var px = rnd()*S, py = rnd()*S, pr = 60+rnd()*120, cc = ["255,255,255","255,61,127","47,107,255","61,220,132"][i%4];
+      var rg2 = x.createRadialGradient(px,py,0,px,py,pr); rg2.addColorStop(0,"rgba("+cc+",.55)"); rg2.addColorStop(1,"rgba("+cc+",0)");
+      x.fillStyle = rg2; x.fillRect(0,0,S,S);
+    }
+  }
+  sampleCache[kind] = c; return c;
+}
+var heartCanvas = null;
+function makeHeart(){
+  if (heartCanvas) return heartCanvas;
+  var S = 256, c = document.createElement("canvas"); c.width = c.height = S; var x = c.getContext("2d");
+  var g = x.createLinearGradient(0,0,S,S); g.addColorStop(0,"#ff4d8d"); g.addColorStop(1,"#ff7a3d");
+  x.fillStyle = g; x.beginPath();
+  x.moveTo(128,224); x.bezierCurveTo(30,160,8,110,20,72); x.bezierCurveTo(34,30,96,18,128,66); x.bezierCurveTo(160,18,222,30,236,72); x.bezierCurveTo(248,110,226,160,128,224); x.closePath(); x.fill();
+  heartCanvas = c; return c;
+}
+function srcCanvas(){ return state.photoCanvas || makeSample(state.sample); }
+function burstSource(){
+  if (state.logoKind !== "none" && state.logoCanvas) return {c:state.logoCanvas, id:"logo"+state.logoVer, k:"srcLogo"};
+  if (state.photoCanvas) return {c:state.photoCanvas, id:"photo"+state.srcVer, k:"srcPhoto"};
+  return {c:makeHeart(), id:"heart", k:"srcHeart"};
+}
+var cellCache = {};
+function getCells(src, id, G){
+  var key = id + "|" + G; if (cellCache[key]) return cellCache[key];
+  var mid = document.createElement("canvas"); mid.width = mid.height = Math.max(G*3, 96);
+  var mx = mid.getContext("2d"); mx.imageSmoothingQuality = "high"; mx.drawImage(src, 0, 0, mid.width, mid.height);
+  var c = document.createElement("canvas"); c.width = c.height = G;
+  var x = c.getContext("2d", {willReadFrequently:true}); x.imageSmoothingQuality = "high"; x.drawImage(mid, 0, 0, G, G);
+  var d = x.getImageData(0,0,G,G).data;
+  cellCache = {}; cellCache[key] = d; return d;
+}
+var pixCache = {};
+function getPix(src, id, g){
+  var key = id + "|" + g; if (pixCache[key]) return pixCache[key];
+  var c = document.createElement("canvas"); c.width = c.height = g;
+  var x = c.getContext("2d"); x.imageSmoothingQuality = "high"; x.drawImage(src, 0, 0, g, g);
+  if (Object.keys(pixCache).length > 24) pixCache = {};
+  pixCache[key] = c; return c;
+}
+function loadImageFile(file){
+  return new Promise(function(res, rej){
+    var url = URL.createObjectURL(file), img = new Image();
+    img.onload = function(){ res(img); setTimeout(function(){ URL.revokeObjectURL(url); }, 1000); };
+    img.onerror = function(){ URL.revokeObjectURL(url); rej(new Error("decode")); };
+    img.src = url;
+  });
+}
+function imgSize(img){ return [img.naturalWidth || img.width || 512, img.naturalHeight || img.height || 512]; }
+function coverSquare(img, S){
+  var c = document.createElement("canvas"); c.width = c.height = S; var x = c.getContext("2d"), sz = imgSize(img), w = sz[0], h = sz[1], s = Math.max(S/w, S/h);
+  x.imageSmoothingQuality = "high"; x.drawImage(img, (S - w*s)/2, (S - h*s)/2, w*s, h*s); return c;
+}
+function containSquare(img, S){
+  var c = document.createElement("canvas"); c.width = c.height = S; var x = c.getContext("2d"), sz = imgSize(img), w = sz[0], h = sz[1], s = Math.min(S/w, S/h);
+  x.imageSmoothingQuality = "high"; x.drawImage(img, (S - w*s)/2, (S - h*s)/2, w*s, h*s); return c;
+}
+function textLogoCanvas(txt){
+  var S = 256, c = document.createElement("canvas"); c.width = c.height = S; var x = c.getContext("2d");
+  txt = (txt || "").trim(); if (!txt) return null;
+  var fam = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",' + getComputedStyle(document.body).fontFamily;
+  var fs = 200; x.font = "800 " + fs + "px " + fam;
+  var w = x.measureText(txt).width; if (w > S*.92) fs = Math.floor(fs * S*.92 / w);
+  x.font = "800 " + fs + "px " + fam; x.textAlign = "center"; x.textBaseline = "middle"; x.fillStyle = state.fg;
+  x.fillText(txt, S/2, S/2 + fs*.04);
+  return c;
+}
+
+/* ---------------- drawing primitives ---------------- */
 function rrPath(p, x, y, w, h, r){
   p.moveTo(x+r,y); p.lineTo(x+w-r,y); p.arcTo(x+w,y,x+w,y+r,r); p.lineTo(x+w,y+h-r); p.arcTo(x+w,y+h,x+w-r,y+h,r);
   p.lineTo(x+r,y+h); p.arcTo(x,y+h,x,y+h-r,r); p.lineTo(x,y+r); p.arcTo(x,y,x+r,y,r); p.closePath();
 }
+function addShape(p, x, y, s, shape){
+  var h = s/2;
+  switch(shape){
+    case "round": p.moveTo(x + s*.47, y); p.arc(x, y, s*.47, 0, TAU); break;
+    case "rounded": rrPath(p, x-h, y-h, s, s, s*.3); break;
+    case "diamond": var dd = s*.6; p.moveTo(x, y-dd); p.lineTo(x+dd, y); p.lineTo(x, y+dd); p.lineTo(x-dd, y); p.closePath(); break;
+    case "star":
+      for (var k=0;k<10;k++){ var a = -Math.PI/2 + k*Math.PI/5, rr = k%2 ? s*.38 : s*.64, px = x + Math.cos(a)*rr, py = y + Math.sin(a)*rr; if (k) p.lineTo(px,py); else p.moveTo(px,py); }
+      p.closePath(); break;
+    default: p.rect(x-h, y-h, s, s);
+  }
+}
 function dot(ctx, x, y, s, shape, rot){
   if (s <= 0) return;
-  if (shape === "round"){ ctx.beginPath(); ctx.arc(x, y, s*.47, 0, TAU); ctx.fill(); }
-  else if (rot){ ctx.save(); ctx.translate(x,y); ctx.rotate(rot); ctx.fillRect(-s/2,-s/2,s,s); ctx.restore(); }
-  else ctx.fillRect(x-s/2, y-s/2, s, s);
+  ctx.beginPath();
+  if (rot && shape !== "round"){ ctx.save(); ctx.translate(x,y); ctx.rotate(rot); addShape(ctx, 0, 0, s, shape); ctx.fill(); ctx.restore(); return; }
+  addShape(ctx, x, y, s, shape); ctx.fill();
 }
-function drawAnchor(ctx, px, py, n, c, shape, scale, alpha){
+function drawAnchor(ctx, px, py, n, c, shape, scale, alpha, fill){
   if (alpha <= 0 || scale <= 0) return;
   var h = n/2;
-  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(px+h*c, py+h*c); if (scale !== 1) ctx.scale(scale, scale);
+  ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = fill; ctx.translate(px+h*c, py+h*c); if (scale !== 1) ctx.scale(scale, scale);
   var ring = new Path2D(), core = new Path2D(), ci = n === 7 ? 1.5 : .5;
-  if (shape === "round"){
-    var k = n === 7 ? 1 : .62;
+  if (shape === "round" || shape === "rounded"){
+    var k = (n === 7 ? 1 : .62) * (shape === "round" ? 1 : .7);
     rrPath(ring, -h*c, -h*c, n*c, n*c, 2.1*c*k); rrPath(ring, -(h-1)*c, -(h-1)*c, (n-2)*c, (n-2)*c, 1.3*c*k);
-    rrPath(core, -ci*c, -ci*c, 2*ci*c, 2*ci*c, n === 7 ? .95*c : .5*c);
+    rrPath(core, -ci*c, -ci*c, 2*ci*c, 2*ci*c, (n === 7 ? .95 : .5)*c*(shape === "round" ? 1 : .7));
   } else {
     ring.rect(-h*c, -h*c, n*c, n*c); ring.rect(-(h-1)*c, -(h-1)*c, (n-2)*c, (n-2)*c);
     core.rect(-ci*c, -ci*c, 2*ci*c, 2*ci*c);
@@ -2871,17 +3437,52 @@ function drawAnchor(ctx, px, py, n, c, shape, scale, alpha){
   ctx.fill(ring, "evenodd"); ctx.fill(core);
   ctx.restore();
 }
+function gradGeom(o, c, Q, N){
+  var cx = (Q + N/2)*c, a = (o.angle||0)*Math.PI/180, co = Math.cos(a), si = Math.sin(a), half = N*c/2;
+  return {cx:cx, cy:cx, co:co, si:si, R:o.fillMode === "radial" ? half*1.42 : half*(Math.abs(co)+Math.abs(si))};
+}
+function makeFill(ctx, o, g){
+  if (o.fillMode === "linear"){
+    var gl = ctx.createLinearGradient(g.cx - g.co*g.R, g.cy - g.si*g.R, g.cx + g.co*g.R, g.cy + g.si*g.R);
+    gl.addColorStop(0, o.fg); gl.addColorStop(1, o.fg2); return gl;
+  }
+  if (o.fillMode === "radial"){
+    var gr = ctx.createRadialGradient(g.cx, g.cy, 0, g.cx, g.cy, g.R);
+    gr.addColorStop(0, o.fg); gr.addColorStop(1, o.fg2); return gr;
+  }
+  return o.fg;
+}
+function fillRGB(o, g, x, y){
+  if (o.fillMode === "linear") return lerp3(o.fgRGB, o.fg2RGB, clamp01(((x-g.cx)*g.co + (y-g.cy)*g.si)/g.R*.5 + .5));
+  if (o.fillMode === "radial") return lerp3(o.fgRGB, o.fg2RGB, clamp01(Math.hypot(x-g.cx, y-g.cy)/g.R));
+  return o.fgRGB;
+}
+function logoBox(M, o){
+  if (!o.logo) return null;
+  var lm = Math.round(M.N * o.logo.size); if ((M.N - lm) % 2) lm++;
+  return {x0:(M.N - lm)/2, lm:lm};
+}
+function inBox(b, x, y){ return b && x >= b.x0 && x < b.x0 + b.lm && y >= b.x0 && y < b.x0 + b.lm; }
+function drawLogo(ctx, b, c, Q, o, alpha){
+  if (!b || alpha <= 0) return;
+  var px = (Q + b.x0)*c, size = b.lm*c, pad = size*.1, p = new Path2D();
+  ctx.save(); ctx.globalAlpha = alpha;
+  rrPath(p, px, px, size, size, size*.2); ctx.fillStyle = o.padColor; ctx.fill(p);
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(o.logo.canvas, px + pad, px + pad, size - 2*pad, size - 2*pad);
+  ctx.restore();
+}
 
-/* per-style module transforms: return [dx, dy, scale, alpha, rot] in cell units, or null to hide */
+/* per-style module transforms: [dx, dy, scale, alpha, rot] in cell units, or null to hide */
 var FX = {
   assemble: function(i, m, R, p, dis, env){
     var o = i*8;
     if (!dis){
       var e = eOutCubic(p), a = R[o+2]*TAU, rad = (.55 + R[o+3]*.6)*env.N;
-      return [Math.cos(a)*rad*(1-e), Math.sin(a)*rad*(1-e), .35+.65*e, clamp01(p*2.5), env.square ? (1-e)*(R[o+4]-.5)*TAU : 0];
+      return [Math.cos(a)*rad*(1-e), Math.sin(a)*rad*(1-e), .35+.65*e, clamp01(p*2.5), (1-e)*(R[o+4]-.5)*TAU];
     }
     var q = eInCubic(p), a2 = R[o+5]*TAU, rad2 = (.5 + R[o+6]*.6)*env.N;
-    return [Math.cos(a2)*rad2*q, Math.sin(a2)*rad2*q, 1-.6*q, 1-p, env.square ? q*(R[o+7]-.5)*TAU : 0];
+    return [Math.cos(a2)*rad2*q, Math.sin(a2)*rad2*q, 1-.6*q, 1-p, q*(R[o+7]-.5)*TAU];
   },
   ripple: function(i, m, R, p, dis){
     if (!dis) return [0, 0, Math.max(0, eOutBack(p)), clamp01(p*3), 0];
@@ -2952,9 +3553,10 @@ var OVERLAY = {
     var ph = env.ph; if (ph.ph === "hold" || ph.ph === "gap") return;
     var ctx = env.ctx, P = env.P, M = env.M, c = env.c, Q = env.Q, W = env.W, pj = P.pj, pa = P.pa, shape = env.o.shape;
     var cx = W/2, cy = W/2, t = ph.t, fadeIn = ph.ph === "form" ? clamp01(ph.s/.07) : 1;
-    ctx.fillStyle = env.o.fg;
+    ctx.fillStyle = env.fill;
     for (var k=0;k<P.pcount;k++){
       var j = pj[k], o = k*6, m = M.mods[j], tx = (Q + m.x + .5)*c, ty = (Q + m.y + .5)*c, x, y, a, size;
+      if (env.box && inBox(env.box, m.x, m.y)) continue;
       if (ph.ph === "form"){
         var e = clamp01((ph.s - P.d[j])/(P.u[j]*.85)); if (e >= 1) continue;
         var ang = pa[o] + pa[o+2]*t, rr = pa[o+1]*W;
@@ -2975,122 +3577,339 @@ var OVERLAY = {
   }
 };
 
-function hexA(hex, a){
-  var h = hex.replace("#",""); if (h.length === 3) h = h.replace(/./g, "$&$&");
-  var n = parseInt(h,16); return "rgba("+(n>>16&255)+","+(n>>8&255)+","+(n&255)+","+a+")";
+/* ---------------- image-driven styles ---------------- */
+/* anchors in image styles land together near the end of forming and leave first when dissolving */
+var IMG_AF = [.70, .86], IMG_AD = [.03, .18];
+function imgAnchor(ph, k){
+  if (ph.ph === "hold" || ph.still) return [1,1];
+  if (ph.ph === "form"){ var p = clamp01((ph.s - IMG_AF[0] - k*.006)/(IMG_AF[1]-IMG_AF[0]-.02)); return [.45 + .55*eOutBack(p), p <= 0 ? 0 : clamp01(p*2.5)]; }
+  if (ph.ph === "dis"){ var q = clamp01((ph.s - IMG_AD[0])/(IMG_AD[1]-IMG_AD[0])); return [1 - .5*eInCubic(q), 1 - q]; }
+  return [0,0];
 }
+function imgPlan(M, key, o){
+  var src = key === "burst" ? burstSource() : {c:srcCanvas(), id:"src"+state.srcVer};
+  var pk = key + "|" + src.id + "|" + (key === "photodots" ? o.lvl : 0) + "|" + o.quiet;
+  if (M.plans[pk]) return M.plans[pk];
+  var N = M.N, n = M.mods.length, rnd = mulberry32(hashStr(pk) ^ (N*31)), i, P = {key:key, img:true, src:src};
+  if (key === "photodots"){
+    var cells = getCells(src.c, src.id, N), lv = LV[Math.min(o.lvl, LV.length-1)], lt = new Array(N*N), dk = new Array(n);
+    var ltc = document.createElement("canvas"); ltc.width = ltc.height = N; var lx = ltc.getContext("2d"), id = lx.createImageData(N, N);
+    var dl = new Float32Array(N*N), dl2 = new Float32Array(N*N);
+    for (var k=0;k<N*N;k++){
+      var rgb = [cells[k*4], cells[k*4+1], cells[k*4+2]], li = clampLight(rgb, lv[1]);
+      lt[k] = rgbStr(li); id.data[k*4] = li[0]; id.data[k*4+1] = li[1]; id.data[k*4+2] = li[2]; id.data[k*4+3] = 255;
+      var x = k % N, y = (k / N) | 0, dist = Math.hypot(x+.5-N/2, y+.5-N/2)/Math.hypot(N/2, N/2);
+      dl[k] = .02 + .4*dist + rnd()*.04; dl2[k] = .28 + .5*dist + rnd()*.04;
+    }
+    lx.putImageData(id, 0, 0);
+    var d = new Float32Array(n), u = new Float32Array(n), d2 = new Float32Array(n), u2 = new Float32Array(n), R = new Float32Array(n*8);
+    for (i=0;i<n;i++){
+      var m = M.mods[i], kk = m.y*N + m.x;
+      dk[i] = rgbStr(clampDark([cells[kk*4], cells[kk*4+1], cells[kk*4+2]], lv[0]));
+      for (var j=0;j<8;j++) R[i*8+j] = rnd();
+      d[i] = .3 + R[i*8]*.34; u[i] = .3; d2[i] = R[i*8+1]*.4; u2[i] = .24;
+    }
+    var ltEnd = 0; for (k=0;k<N*N;k++) ltEnd = Math.max(ltEnd, dl[k] + .18);
+    var fe = Math.max(ltEnd, IMG_AF[1]); for (i=0;i<n;i++) fe = Math.max(fe, d[i]+u[i]);
+    P.lt = lt; P.ltc = ltc; P.dk = dk; P.dl = dl; P.dl2 = dl2; P.ltEnd = ltEnd; P.d = d; P.u = u; P.d2 = d2; P.u2 = u2; P.R = R;
+    P.formEnd = fe; P.disStart = IMG_AD[0];
+  } else if (key === "morph"){
+    var G = N + 2*o.quiet, cl = getCells(src.c, src.id, G), cnt = G*G;
+    var md = new Float32Array(cnt), md2 = new Float32Array(cnt), pc = new Array(cnt);
+    for (var q=0;q<cnt;q++){
+      var qx = q % G - o.quiet, qy = ((q / G) | 0) - o.quiet, inA = qx >= 0 && qy >= 0 && qx < N && qy < N && M.amask[qy*N+qx];
+      md[q] = inA ? .64 + rnd()*.03 : .46 + rnd()*.26; md2[q] = inA ? .03 + rnd()*.02 : .05 + rnd()*.3;
+      pc[q] = [cl[q*4], cl[q*4+1], cl[q*4+2]];
+    }
+    P.G = G; P.md = md; P.md2 = md2; P.pc = pc; P.mu = .16; P.formEnd = Math.max(.88, IMG_AF[1]); P.disStart = IMG_AD[0];
+  } else { /* burst */
+    var S = 128, sc = document.createElement("canvas"); sc.width = sc.height = S;
+    var sx = sc.getContext("2d", {willReadFrequently:true}); sx.drawImage(src.c, 0, 0, S, S);
+    var px = sx.getImageData(0,0,S,S).data, corner = [px[0],px[1],px[2]], cornerA = px[3], pts = [];
+    for (var yy=0; yy<S; yy+=2) for (var xx=0; xx<S; xx+=2){
+      var o4 = (yy*S+xx)*4; if (px[o4+3] < 110) continue;
+      if (cornerA > 200 && Math.abs(px[o4]-corner[0]) + Math.abs(px[o4+1]-corner[1]) + Math.abs(px[o4+2]-corner[2]) < 60) continue;
+      pts.push(xx, yy);
+    }
+    if (pts.length < 60){ pts = []; for (yy=0; yy<S; yy+=4) for (xx=0; xx<S; xx+=4) pts.push(xx, yy); }
+    var np = pts.length/2, sxA = new Float32Array(n), syA = new Float32Array(n), col = new Array(n), cA = new Float32Array(n*2);
+    var bd = new Float32Array(n), bu = new Float32Array(n), bd2 = new Float32Array(n), bu2 = new Float32Array(n);
+    for (i=0;i<n;i++){
+      var pi = Math.floor(rnd()*np), ppx = pts[pi*2] + rnd()*2, ppy = pts[pi*2+1] + rnd()*2, p4 = ((pts[pi*2+1])*S + pts[pi*2])*4;
+      sxA[i] = .19 + .62*ppx/S; syA[i] = .19 + .62*ppy/S; col[i] = [px[p4], px[p4+1], px[p4+2]];
+      var ox = sxA[i] - .5, oy = syA[i] - .5, ol = Math.hypot(ox, oy) || .01, push = .22 + rnd()*.3, sw = (rnd() - .5)*.5;
+      cA[i*2] = sxA[i] + (ox/ol)*push - (oy/ol)*sw; cA[i*2+1] = syA[i] + (oy/ol)*push + (ox/ol)*sw;
+      bd[i] = .3 + rnd()*.2; bu[i] = .38; bd2[i] = .03 + rnd()*.3; bu2[i] = .38;
+    }
+    P.sx = sxA; P.sy = syA; P.col = col; P.cA = cA; P.d = bd; P.u = bu; P.d2 = bd2; P.u2 = bu2;
+    P.formEnd = Math.max(.88, IMG_AF[1]); P.disStart = IMG_AD[0];
+  }
+  M.plans[pk] = P;
+  return P;
+}
+function drawPhoto(ctx, src, id, W, f, G){
+  /* f: 0 = crisp photo, 1 = module-grid mosaic */
+  if (f <= 0){ ctx.imageSmoothingEnabled = true; ctx.drawImage(src, 0, 0, W, W); return; }
+  var steps = [Math.min(512, G*8), Math.min(512, G*5), G*3, G*2, Math.round(G*1.4), G], g = steps[Math.min(5, Math.floor(f*6))];
+  ctx.imageSmoothingEnabled = false; ctx.drawImage(getPix(src, id, g), 0, 0, W, W); ctx.imageSmoothingEnabled = true;
+}
+function drawImageBox(ctx, img, W, alpha, scale){
+  if (alpha <= 0) return;
+  var s = W*.62*scale; ctx.save(); ctx.globalAlpha = alpha; ctx.imageSmoothingEnabled = true; ctx.drawImage(img, (W-s)/2, (W-s)/2, s, s); ctx.restore();
+}
+var IMGR = {
+  photodots: function(env){
+    var ctx = env.ctx, M = env.M, P = env.P, o = env.o, N = env.N, c = env.c, Q = env.Q, ph = env.ph, box = env.box, i, k;
+    var formed = env.formed, still = o.still;
+    /* light mosaic */
+    if (formed || (ph.ph === "form" && ph.s >= P.ltEnd)){
+      ctx.imageSmoothingEnabled = false; ctx.drawImage(P.ltc, Q*c, Q*c, N*c, N*c); ctx.imageSmoothingEnabled = true;
+    } else if (ph.ph === "form" || ph.ph === "dis"){
+      for (k=0;k<N*N;k++){
+        var a = ph.ph === "form" ? clamp01((ph.s - P.dl[k])/.18) : 1 - clamp01((ph.s - P.dl2[k])/.2);
+        if (a <= 0) continue;
+        ctx.globalAlpha = a; ctx.fillStyle = P.lt[k]; ctx.fillRect((Q + k % N)*c, (Q + ((k / N) | 0))*c, c, c);
+      }
+      ctx.globalAlpha = 1;
+    }
+    if (ph.ph === "gap") return;
+    var dis = ph.ph === "dis";
+    for (i=0;i<M.mods.length;i++){
+      var m = M.mods[i]; if (box && inBox(box, m.x, m.y)) continue;
+      var cx = (Q + m.x + .5)*c, cy = (Q + m.y + .5)*c, p;
+      ctx.fillStyle = P.dk[i];
+      if (formed || still || ph.ph === "hold"){ dot(ctx, cx, cy, c, o.shape, 0); continue; }
+      if (!dis){ p = clamp01((ph.s - P.d[i])/P.u[i]); if (p <= 0) continue; if (p >= 1){ dot(ctx, cx, cy, c, o.shape, 0); continue; } }
+      else { p = clamp01((ph.s - P.d2[i])/P.u2[i]); if (p <= 0){ dot(ctx, cx, cy, c, o.shape, 0); continue; } }
+      var f = FX.assemble(i, m, P.R, p, dis, env); if (!f || f[3] <= 0) continue;
+      ctx.globalAlpha = Math.min(1, f[3]); dot(ctx, cx + f[0]*c, cy + f[1]*c, c*f[2], o.shape, f[4]); ctx.globalAlpha = 1;
+    }
+  },
+  morph: function(env){
+    var ctx = env.ctx, M = env.M, P = env.P, o = env.o, N = env.N, c = env.c, Q = env.Q, W = env.W, ph = env.ph, box = env.box, G = P.G, src = P.src;
+    var s = ph.s, mode, f = 0, rev = false;
+    if (env.formed || ph.ph === "hold" || o.still) mode = "cells";
+    else if (ph.ph === "gap") mode = "photo";
+    else if (ph.ph === "form"){ if (s < .18) mode = "photo"; else if (s < .46){ mode = "pix"; f = (s - .18)/.28; } else mode = "cells"; }
+    else { if (s < .5){ mode = "cells"; rev = true; } else if (s < .8){ mode = "pix"; f = 1 - (s - .5)/.3; } else mode = "photo"; }
+    if (mode === "photo"){ drawPhoto(ctx, src.c, src.id, W, 0, G); return; }
+    if (mode === "pix"){ drawPhoto(ctx, src.c, src.id, W, Math.max(.001, f), G); return; }
+    var batch = new Path2D(), allSet = env.formed || o.still || ph.ph === "hold";
+    for (var q=0;q<G*G;q++){
+      var gx = q % G, gy = (q / G) | 0, mx = gx - Q, my = gy - Q, inData = mx >= 0 && my >= 0 && mx < N && my < N;
+      var isDark = inData && M.dark[my*N+mx] && !M.amask[my*N+mx] && !inBox(box, mx, my);
+      var p = allSet ? 1 : rev ? 1 - clamp01((s - P.md2[q])/P.mu) : clamp01((s - P.md[q])/P.mu);
+      var x0 = gx*c, y0 = gy*c;
+      if (p >= 1){ if (isDark) addShape(batch, x0 + c/2, y0 + c/2, c, o.shape); continue; }
+      var e = eInOutCubic(p), pc = P.pc[q];
+      if (!isDark){ ctx.fillStyle = rgbStr(lerp3(pc, o.bgRGB, e)); ctx.fillRect(x0, y0, c+.5, c+.5); continue; }
+      ctx.fillStyle = rgbStr(lerp3(pc, o.bgRGB, e)); ctx.fillRect(x0, y0, c+.5, c+.5);
+      ctx.fillStyle = rgbStr(lerp3(pc, fillRGB(o, env.geo, x0 + c/2, y0 + c/2), e));
+      dot(ctx, x0 + c/2, y0 + c/2, c*(1 + .25*(1-e)), e < .5 ? "square" : o.shape, 0);
+    }
+    ctx.fillStyle = env.fill; ctx.fill(batch);
+  },
+  burst: function(env){
+    var ctx = env.ctx, M = env.M, P = env.P, o = env.o, c = env.c, Q = env.Q, W = env.W, ph = env.ph, box = env.box, s = ph.s, img = P.src.c;
+    var allSet = env.formed || o.still || ph.ph === "hold";
+    if (!allSet){
+      var ia = 0, sc = 1, pa = 0;
+      if (ph.ph === "gap"){ ia = 1; }
+      else if (ph.ph === "form"){ ia = s < .3 ? clamp01(s/.06) * (1 - clamp01((s - .26)/.05)) : 0; sc = 1 + .05*Math.sin(clamp01((s-.1)/.16)*Math.PI); pa = clamp01((s - .25)/.05); }
+      else { ia = clamp01((s - .72)/.12); pa = 1 - clamp01((s - .8)/.06); }
+      drawImageBox(ctx, img, W, ia, sc);
+      if (ph.ph === "gap" || pa <= 0) return;
+    }
+    var batch = new Path2D(), dis = ph.ph === "dis";
+    for (var i=0;i<M.mods.length;i++){
+      var m = M.mods[i]; if (box && inBox(box, m.x, m.y)) continue;
+      var tx = (Q + m.x + .5)*c, ty = (Q + m.y + .5)*c;
+      var q = allSet ? 1 : dis ? 1 - clamp01((s - P.d2[i])/P.u2[i]) : clamp01((s - P.d[i])/P.u[i]);
+      if (q >= 1){ addShape(batch, tx, ty, c, o.shape); continue; }
+      var e = eInOutCubic(q), sx = P.sx[i]*W, sy = P.sy[i]*W, cx = P.cA[i*2]*W, cy = P.cA[i*2+1]*W, k1 = (1-e)*(1-e), k2 = 2*(1-e)*e, k3 = e*e;
+      var x = k1*sx + k2*cx + k3*tx, y = k1*sy + k2*cy + k3*ty;
+      ctx.globalAlpha = dis ? pa : pa; ctx.fillStyle = rgbStr(lerp3(P.col[i], fillRGB(o, env.geo, tx, ty), e));
+      dot(ctx, x, y, c*(.55 + .45*e), e < .6 ? "round" : o.shape, 0);
+    }
+    ctx.globalAlpha = 1; ctx.fillStyle = env.fill; ctx.fill(batch);
+  }
+};
 
-/* render one frame. o = {cell, quiet, fg, bg, shape, still} */
+/* render the QR square (incl. quiet zone) with its top-left at (o.ox, o.oy). */
 function renderFrame(ctx, M, key, t, T, o){
-  var P = getPlan(M, key), fx = FX[key], N = M.N, c = o.cell, Q = o.quiet, W = (N + 2*Q)*c;
-  var ph = o.still ? {ph:"hold", s:.5, t:0} : phaseAt(t, T);
-  ctx.setTransform(1,0,0,1,0,0); ctx.globalAlpha = 1;
-  ctx.fillStyle = o.bg; ctx.fillRect(0, 0, W, W);
-  var env = {ctx:ctx, M:M, P:P, N:N, c:c, Q:Q, W:W, o:o, ph:ph, square:o.shape !== "round", tau:o.still ? -1 : ph.t / T.L};
-  ctx.fillStyle = o.fg;
-  if (ph.ph !== "gap" || P.always){
-    var batch = new Path2D(), mods = M.mods, n = mods.length, R = P.R, dis = ph.ph === "dis", round = o.shape === "round";
+  var isImg = IMGST.indexOf(key) >= 0, P = isImg ? imgPlan(M, key, o) : getPlan(M, key), fx = FX[key], N = M.N, c = o.cell, Q = o.quiet, W = (N + 2*Q)*c;
+  var ph = o.still ? {ph:"hold", s:.5, t:0, still:true} : phaseAt(t, T);
+  ctx.setTransform(1,0,0,1,o.ox||0,o.oy||0); ctx.globalAlpha = 1;
+  if (!o.transparent){ ctx.fillStyle = o.bg; ctx.fillRect(0, 0, W, W); }
+  var geo = gradGeom(o, c, Q, N), fill = makeFill(ctx, o, geo), box = logoBox(M, o), formed = isFormed(P, ph);
+  var env = {ctx:ctx, M:M, P:P, N:N, c:c, Q:Q, W:W, o:o, ph:ph, tau:o.still ? -1 : ph.t / T.L, fill:fill, geo:geo, box:box, formed:formed};
+  if (isImg){
+    IMGR[key](env);
+    if (!(ph.ph === "gap")){
+      for (var ka=0; ka<M.anchors.length; ka++){
+        var an0 = M.anchors[ka], st = imgAnchor(ph, ka);
+        drawAnchor(ctx, (Q + an0.x)*c, (Q + an0.y)*c, an0.s, c, o.shape, st[0], st[1], key === "photodots" || ka < 3 ? o.finder : fill);
+      }
+    }
+  } else if (ph.ph !== "gap" || P.always){
+    var batch = new Path2D(), mods = M.mods, n = mods.length, R = P.R, dis = ph.ph === "dis";
     var breathing = P.always && !o.still;
+    ctx.fillStyle = fill;
     for (var i=0;i<n;i++){
       var m = mods[i], px = (Q + m.x)*c, py = (Q + m.y)*c, p, settled;
+      if (box && inBox(box, m.x, m.y)) continue;
       if (breathing){ settled = false; p = 1; }
       else if (ph.ph === "form"){ p = clamp01((ph.s - P.d[i])/P.u[i]); settled = p >= 1; }
       else if (ph.ph === "hold"){ p = 1; settled = true; }
       else { p = clamp01((ph.s - P.d2[i])/P.u2[i]); settled = p <= 0; }
-      if (settled){
-        if (round){ batch.moveTo(px + c/2 + c*.47, py + c/2); batch.arc(px + c/2, py + c/2, c*.47, 0, TAU); }
-        else batch.rect(px, py, c, c);
-        continue;
-      }
+      if (settled){ addShape(batch, px + c/2, py + c/2, c, o.shape); continue; }
       if (!dis && !breathing && p <= 0) continue;
       var f = fx(i, m, R, p, dis, env); if (!f || f[3] <= 0 || f[2] <= 0) continue;
       ctx.globalAlpha = f[3] > 1 ? 1 : f[3];
       dot(ctx, px + c/2 + f[0]*c, py + c/2 + f[1]*c, c*f[2], o.shape, f[4]);
     }
-    ctx.globalAlpha = 1; ctx.fill(batch);
+    ctx.globalAlpha = 1; ctx.fillStyle = fill; ctx.fill(batch);
     for (var k=0;k<M.anchors.length;k++){
       var an = M.anchors[k], sc = 1, al = 1;
       if (!P.always && !o.still){
         if (ph.ph === "form"){ var pf = clamp01((ph.s - anchorD(k))/FIN_U); sc = .45 + .55*eOutBack(pf); al = pf <= 0 ? 0 : clamp01(pf*2.5); }
         else if (ph.ph === "dis"){ var qf = clamp01((ph.s - anchorD2(k))/FIN_U2); sc = 1 - .5*eInCubic(qf); al = 1 - qf; }
       }
-      drawAnchor(ctx, (Q + an.x)*c, (Q + an.y)*c, an.s, c, o.shape, sc, al);
+      drawAnchor(ctx, (Q + an.x)*c, (Q + an.y)*c, an.s, c, o.shape, sc, al, k < 3 ? o.finder : fill);
     }
   }
+  if (box){
+    var la = 0;
+    if (P.always || o.still || ph.ph === "hold") la = 1;
+    else if (ph.ph === "form") la = clamp01((ph.s - (P.formEnd - .1))/.1);
+    else if (ph.ph === "dis") la = 1 - clamp01((ph.s - P.disStart)/.12);
+    drawLogo(ctx, box, c, Q, o, la);
+  }
   if (!o.still && OVERLAY[key]) OVERLAY[key](env);
-  ctx.globalAlpha = 1;
+  ctx.globalAlpha = 1; ctx.setTransform(1,0,0,1,0,0);
+  ph.formed = formed;
+  return ph;
+}
+
+/* ---------------- layout: frame (aspect), caption, watermark ---------------- */
+function layoutFor(aspect, longSide, N, cap, wm){
+  var W, H, G = N + 2*QUIET;
+  if (aspect === "9:16"){ H = longSide; W = Math.round(longSide*9/16/2)*2; }
+  else if (aspect === "16:9"){ W = longSide; H = Math.round(longSide*9/16/2)*2; }
+  else { W = H = longSide; }
+  var unit = Math.min(W, H), qs, band;
+  if (aspect === "1:1"){ band = cap ? Math.round(H*.13) : wm ? Math.round(H*.06) : 0; qs = H - band; }
+  else if (aspect === "9:16"){ qs = Math.round(W*.86); band = cap ? Math.round(W*.2) : 0; }
+  else { qs = Math.round(H*(cap ? .76 : .86)); band = cap ? Math.round(H*.14) : 0; }
+  var cell = Math.max(1, Math.floor(qs/G)), size = cell*G, ox = Math.floor((W - size)/2), oy;
+  if (aspect === "1:1") oy = Math.floor((qs - size)/2);
+  else oy = Math.floor((H - size - band)/2);
+  return {W:W, H:H, cell:cell, ox:ox, oy:oy, size:size, cap:cap, capY:oy + size + band*.42, capSize:Math.round(unit*(aspect === "1:1" ? .052 : .06)), wm:wm, unit:unit, aspect:aspect};
+}
+var CAP_FONT = '"Nunito", ui-rounded, system-ui, -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", "Hiragino Sans", "Noto Sans JP", "PingFang SC", "Noto Sans SC", sans-serif';
+function composeFrame(ctx, lay, M, key, t, T, o){
+  ctx.setTransform(1,0,0,1,0,0); ctx.globalAlpha = 1;
+  if (o.transparent) ctx.clearRect(0, 0, lay.W, lay.H); else { ctx.fillStyle = o.bg; ctx.fillRect(0, 0, lay.W, lay.H); }
+  o.cell = lay.cell; o.ox = lay.ox; o.oy = lay.oy;
+  var ph = renderFrame(ctx, M, key, t, T, o);
+  if (lay.cap && o.capText){
+    var fs = lay.capSize; ctx.font = "800 " + fs + "px " + CAP_FONT;
+    var w = ctx.measureText(o.capText).width; if (w > lay.W*.9){ fs = Math.floor(fs*lay.W*.9/w); ctx.font = "800 " + fs + "px " + CAP_FONT; }
+    ctx.fillStyle = o.capColor; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(o.capText, lay.W/2, lay.capY);
+  }
+  if (lay.wm){
+    var ws = Math.max(11, Math.round(lay.unit*.024));
+    ctx.font = "700 " + ws + "px " + CAP_FONT; ctx.textAlign = "right"; ctx.textBaseline = "alphabetic";
+    ctx.fillStyle = lum(o.bg) > .4 ? "rgba(0,0,0,.42)" : "rgba(255,255,255,.55)";
+    ctx.fillText("Aesthetic QR Studio", lay.W - Math.round(lay.unit*.03), lay.H - Math.round(lay.unit*.022));
+  }
+  ctx.textAlign = "start";
   return ph;
 }
 
 /* ---------------- DOM ---------------- */
 var $ = function(id){ return document.getElementById(id); };
 var cv = $("cv"), ctx = cv.getContext("2d");
-var model = null, modelErr = null, recording = false;
+var model = null, modelErr = null, busy = false, previewLay = null;
 
-function cellFor(N, target){ return Math.max(2, Math.floor(target/(N + 2*QUIET)/2)*2); }
+function opts(){
+  var fin = state.finderSame ? state.fg : state.finder, lg = null;
+  if (state.logoKind !== "none" && state.logoCanvas) lg = {canvas:state.logoCanvas, size:state.logoSize/100};
+  return {
+    quiet:QUIET, fg:state.fg, fg2:state.fill === "solid" ? state.fg : state.fg2, fgRGB:hexRGB(state.fg), fg2RGB:hexRGB(state.fill === "solid" ? state.fg : state.fg2),
+    fillMode:state.fill, angle:state.angle, finder:fin, bg:state.bg, bgRGB:hexRGB(state.bg), padColor:state.bg, shape:state.shape,
+    logo:lg, lvl:state.lvl, capText:capText(), capColor:state.capColor, transparent:false
+  };
+}
+function capText(){ return state.capText == null ? tr("capDefault") : state.capText; }
 
 function rebuild(){
   var txt = state.text;
   if (!txt){ model = null; modelErr = "empty"; }
-  else {
-    try { model = buildModel(txt); modelErr = null; }
-    catch(e){ model = null; modelErr = "overflow"; }
-  }
-  if (model){
-    var cell = cellFor(model.N, 960), size = cell*(model.N + 2*QUIET);
-    if (cv.width !== size){ cv.width = size; cv.height = size; }
-    state.cell = cell;
-  }
-  updateMeta(); updateTimelineUI(); draw();
+  else { try { model = buildModel(txt); modelErr = null; } catch(e){ model = null; modelErr = "overflow"; } }
+  relayout(); updateMeta(); updateTimelineUI(); draw(); scheduleAC();
 }
-
-function opts(){ return {cell:state.cell, quiet:QUIET, fg:state.fg, bg:state.bg, shape:state.shape}; }
+function relayout(){
+  if (!model){ previewLay = null; return; }
+  previewLay = layoutFor(state.aspect, 960, model.N, state.caption, false);
+  if (cv.width !== previewLay.W || cv.height !== previewLay.H){ cv.width = previewLay.W; cv.height = previewLay.H; }
+  postHeightSoon();
+}
 
 var lastFormed = null, lastStatusKey = "";
 function draw(){
   if (!model){ ctx.setTransform(1,0,0,1,0,0); ctx.fillStyle = state.bg; ctx.fillRect(0,0,cv.width,cv.height); setStatus(false, "stBlank"); return; }
-  var T = timings(), ph = renderFrame(ctx, model, state.style, state.t, T, opts());
-  var P = getPlan(model, state.style), formed = isFormed(P, ph);
-  var key = P.always ? "stAlways" : formed ? "stFormed" : ph.ph === "form" ? "stForming" : ph.ph === "dis" ? "stDissolving" : "stBlank";
+  var T = timings(), ph = composeFrame(ctx, previewLay, model, state.style, state.t, T, opts());
+  var P = curPlan(), formed = ph.formed;
+  var showsImg = (state.style === "morph" || state.style === "burst") && !formed && (ph.ph === "gap" || (ph.ph === "form" && ph.s < .3) || (ph.ph === "dis" && ph.s > .8));
+  var key = P.always ? "stAlways" : formed ? "stFormed" : showsImg ? "stImage" : ph.ph === "form" ? "stForming" : ph.ph === "dis" ? "stDissolving" : "stBlank";
   setStatus(formed, key);
   $("timeText").textContent = (ph.t).toFixed(1) + "s / " + T.L.toFixed(1) + "s";
   $("tlHead").style.left = (ph.t / T.L * 100) + "%";
 }
+function curPlan(){ return IMGST.indexOf(state.style) >= 0 ? imgPlan(model, state.style, opts()) : getPlan(model, state.style); }
 function setStatus(on, key){
   if (key === lastStatusKey && on === lastFormed) return;
   lastStatusKey = key; lastFormed = on;
   $("status").classList.toggle("on", on);
   $("statusText").textContent = tr(key);
 }
-
 function updateTimelineUI(){
-  var T = timings(), L = T.L, pct = function(x){ return (x/L*100) + "%"; };
+  var T = timings(), Lp = T.L, pct = function(x){ return (x/Lp*100) + "%"; };
   $("tlF").style.left = "0"; $("tlF").style.width = pct(T.F);
   $("tlH").style.left = pct(T.F); $("tlH").style.width = pct(T.H);
   $("tlD").style.left = pct(T.F+T.H); $("tlD").style.width = pct(T.D);
   $("tFormOut").textContent = state.form.toFixed(1)+"s"; $("tHoldOut").textContent = state.hold.toFixed(1)+"s"; $("tDisOut").textContent = state.dis.toFixed(1)+"s";
   $("speedOut").textContent = state.speed.toFixed(2)+"×";
-  if (!model) { $("winText").textContent = ""; return; }
-  var P = getPlan(model, state.style), w = scanWindow(P, T);
-  var a = P.always ? 0 : (P.formEnd*T.F);
+  if (!model){ $("winText").textContent = ""; return; }
+  var P = curPlan(), w = scanWindow(P, T), a = P.always ? 0 : (P.formEnd*T.F);
   $("tlWin").style.left = pct(a); $("tlWin").style.width = pct(w);
-  $("winText").textContent = tr("win", {a:w.toFixed(1), b:L.toFixed(1), p:Math.round(w/L*100)});
+  $("winText").textContent = tr("win", {a:w.toFixed(1), b:Lp.toFixed(1), p:Math.round(w/Lp*100)});
   var hint = $("holdHint");
   if (P.always){ hint.textContent = tr("holdAlways"); hint.className = "hint"; }
   else if (T.H < 1.5){ hint.textContent = tr("holdWarn"); hint.className = "hint warn"; }
   else { hint.textContent = tr("holdOk", {h:w.toFixed(1)}); hint.className = "hint"; }
 }
-
-function lum(hex){
-  var n = parseInt(hex.slice(1),16), ch = [n>>16&255, n>>8&255, n&255].map(function(v){ v/=255; return v <= .03928 ? v/12.92 : Math.pow((v+.055)/1.055, 2.4); });
-  return .2126*ch[0] + .7152*ch[1] + .0722*ch[2];
+function updateColorsUI(){
+  $("fgHex").textContent = state.fg.toUpperCase(); $("fg2Hex").textContent = state.fg2.toUpperCase(); $("bgHex").textContent = state.bg.toUpperCase(); $("finHex").textContent = (state.finderSame ? state.fg : state.finder).toUpperCase();
+  $("fg").value = state.fg; $("fg2").value = state.fg2; $("bg").value = state.bg; $("finder").value = state.finderSame ? state.fg : state.finder; $("finSame").checked = state.finderSame; $("angle").value = state.angle; $("angleOut").textContent = state.angle + "°";
+  $("fg2Wrap").hidden = state.fill === "solid"; $("angleRow").hidden = state.fill !== "linear";
+  $("fgLab").textContent = tr(state.fill === "solid" ? "dots" : "dots1");
+  $("finWrap").classList.toggle("off", state.finderSame);
+  document.querySelectorAll("#fillSeg button").forEach(function(b){ b.setAttribute("aria-pressed", String(b.dataset.fill === state.fill)); });
+  document.querySelectorAll("#pals .pal").forEach(function(b){ b.setAttribute("aria-pressed", String(b.dataset.pal === state.pal)); });
+  var cols = [state.fg]; if (state.fill !== "solid") cols.push(state.fg2); if (!state.finderSame) cols.push(state.finder);
+  var worst = Math.min.apply(null, cols.map(function(cl){ return contrast(cl, state.bg); })), inv = cols.some(function(cl){ return lum(cl) > lum(state.bg); }), h = $("contrastHint");
+  if (worst < 4){ h.textContent = tr("lowContrast", {r:worst.toFixed(1)}); h.className = "hint warn"; }
+  else if (inv){ h.textContent = tr("inverted"); h.className = "hint warn"; }
+  else { h.textContent = tr("contrastOk", {r:worst.toFixed(1)}); h.className = "hint"; }
 }
-function updateContrast(){
-  var lf = lum(state.fg), lb = lum(state.bg), r = (Math.max(lf,lb)+.05)/(Math.min(lf,lb)+.05), h = $("contrastHint");
-  $("fgHex").textContent = state.fg.toUpperCase(); $("bgHex").textContent = state.bg.toUpperCase();
-  if (r < 4){ h.textContent = tr("lowContrast", {r:r.toFixed(1)}); h.className = "hint warn"; }
-  else if (lf > lb){ h.textContent = tr("inverted"); h.className = "hint warn"; }
-  else { h.textContent = tr("contrastOk", {r:r.toFixed(1)}); h.className = "hint"; }
+function colorsChanged(){ state.pal = matchPalette(); updateColorsUI(); if (state.logoKind === "text") rebuildTextLogo(); draw(); scheduleAC(); }
+function matchPalette(){
+  for (var i=0;i<PALETTES.length;i++){ var p = PALETTES[i];
+    if (p.fill === state.fill && p.fg === state.fg && (p.fill === "solid" || p.fg2 === state.fg2) && p.bg === state.bg && (state.finderSame ? p.finder === p.fg : p.finder === state.finder)) return p.k; }
+  return "";
 }
 function updateMeta(){
   var el = $("meta");
@@ -3105,41 +3924,103 @@ function updatePlayBtn(){
     : '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M4.5 2.8v10.4a.8.8 0 0 0 1.2.7l8.3-5.2a.8.8 0 0 0 0-1.4L5.7 2.1a.8.8 0 0 0-1.2.7z"/></svg><span>'+tr("play")+'</span>';
 }
 function buildChips(){
-  var box = $("chips"); box.innerHTML = "";
-  STYLE_KEYS.forEach(function(k){
-    var b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.dataset.style = k;
-    b.textContent = I18N[state.lang].styles[k][0]; b.setAttribute("aria-pressed", String(k === state.style));
-    b.onclick = function(){ setStyle(k); };
+  [["chips", BASIC], ["chipsImg", IMGST]].forEach(function(pair){
+    var box = $(pair[0]); box.innerHTML = "";
+    pair[1].forEach(function(k){
+      var b = document.createElement("button"); b.type = "button"; b.className = "chip" + (IMGST.indexOf(k) >= 0 ? " img" : ""); b.dataset.style = k;
+      b.textContent = L().styles[k][0]; b.setAttribute("aria-pressed", String(k === state.style));
+      b.onclick = function(){ setStyle(k); };
+      box.appendChild(b);
+    });
+  });
+  $("styleDesc").textContent = L().styles[state.style][1];
+  $("imgBox").classList.toggle("on", IMGST.indexOf(state.style) >= 0);
+  document.querySelectorAll("#sampleChips .chip").forEach(function(b){ b.setAttribute("aria-pressed", String(!state.photoCanvas && b.dataset.sample === state.sample)); });
+  updateImgHint();
+}
+function buildShapes(){
+  var box = $("shapeSeg"); box.innerHTML = "";
+  SHAPES.forEach(function(s){
+    var b = document.createElement("button"); b.type = "button"; b.dataset.shape = s; b.textContent = L().shapes[s]; b.setAttribute("aria-pressed", String(s === state.shape));
+    b.onclick = function(){ state.shape = s; buildShapes(); draw(); scheduleAC(); };
     box.appendChild(b);
   });
-  $("styleDesc").textContent = I18N[state.lang].styles[state.style][1];
 }
-function setStyle(k){
-  state.style = k; state.t = 0; buildChips(); updateTimelineUI(); draw();
+function buildPalettes(){
+  var box = $("pals"); box.innerHTML = "";
+  PALETTES.forEach(function(p){
+    var b = document.createElement("button"); b.type = "button"; b.className = "pal"; b.dataset.pal = p.k;
+    var nm = L().pals[p.k]; b.title = nm; b.setAttribute("aria-label", nm);
+    b.style.background = p.bg;
+    var i = document.createElement("i");
+    i.style.background = p.fill === "solid" ? p.fg : p.fill === "radial" ? "radial-gradient(circle," + p.fg + "," + p.fg2 + ")" : "linear-gradient(" + (p.angle + 90) + "deg," + p.fg + "," + p.fg2 + ")";
+    i.style.boxShadow = "0 0 0 3px " + p.finder + " inset";
+    b.appendChild(i);
+    b.onclick = function(){
+      state.fill = p.fill; state.fg = p.fg; state.fg2 = p.fg2; state.angle = p.angle; state.bg = p.bg;
+      state.finderSame = p.finder === p.fg; state.finder = p.finder; state.pal = p.k;
+      if (!state.capTouched) state.capColor = p.finder === p.fg ? p.fg : p.finder, $("capColor").value = state.capColor;
+      colorsChanged();
+    };
+    box.appendChild(b);
+  });
+}
+function setStyle(k){ state.style = k; state.t = 0; buildChips(); updateTimelineUI(); draw(); scheduleAC(); }
+function updateImgHint(){
+  var h = $("imgHint"), k = state.style;
+  if (k === "morph"){ h.textContent = tr("imgMorphNote"); h.className = "hint"; return; }
+  if (k === "burst"){ h.textContent = tr("imgBurstSrc", {s:tr(burstSource().k)}); h.className = "hint"; return; }
+  if (k !== "photodots"){ h.textContent = ""; return; }
+  var st = state.lvlState;
+  if (st === "check"){ h.textContent = tr("imgCheck"); h.className = "hint"; }
+  else if (st === "fail"){ h.textContent = tr("imgFail"); h.className = "hint warn"; }
+  else if (state.lvl > 0){ h.textContent = tr("imgBoost", {n:state.lvl}); h.className = "hint"; }
+  else if (st === "ok"){ h.textContent = tr("imgOk"); h.className = "hint good"; }
+  else h.textContent = "";
 }
 function applyLang(){
-  document.documentElement.lang = state.lang;
+  var d = document.documentElement; d.lang = state.lang;
+  document.title = tr("docTitle");
+  var md = document.querySelector('meta[name="description"]'); if (md) md.setAttribute("content", tr("docDesc"));
   document.querySelectorAll("[data-i18n]").forEach(function(el){ el.textContent = tr(el.getAttribute("data-i18n")); });
+  document.querySelectorAll("[data-i18n-aria]").forEach(function(el){ el.setAttribute("aria-label", tr(el.getAttribute("data-i18n-aria"))); });
+  document.querySelectorAll("[data-i18n-ph]").forEach(function(el){ el.setAttribute("placeholder", tr(el.getAttribute("data-i18n-ph"))); });
   document.querySelectorAll("[data-lang]").forEach(function(b){ b.setAttribute("aria-pressed", String(b.dataset.lang === state.lang)); });
-  lastStatusKey = ""; buildChips(); renderStats(); updatePlayBtn(); updateTimelineUI(); updateContrast(); updateMeta(); draw();
-  if (arState.msgKey) setArMsg(arState.msgKey, arState.msgVars);
+  if (state.capText == null) $("capText").value = tr("capDefault");
+  $("thMorph").textContent = L().styles.morph[0]; $("thPhotodots").textContent = L().styles.photodots[0]; $("thBurst").textContent = L().styles.burst[0];
+  lastStatusKey = ""; buildChips(); buildShapes(); buildPalettes(); renderStats(); updatePlayBtn(); updateTimelineUI(); updateColorsUI(); updateMeta(); updateLogoUI(); updateProNote(); draw();
+  if (arState.msgKey) setArMsg(arState.msgKey, arState.msgVars, arState.msgWarn);
   if (msgState.key) setMsg(msgState.key, msgState.vars, msgState.warn);
+  postHeightSoon();
 }
+function setLang(l){ if (!I18N[l]) return; state.lang = l; applyLang(); }
 var msgState = {};
 function setMsg(key, vars, warn){
   msgState = {key:key, vars:vars, warn:warn};
   var el = $("msg"); el.textContent = key ? tr(key, vars) : ""; el.className = "msg" + (warn ? " warn" : "");
 }
 
-/* measured in headless Chromium (see report): [decoded %, 360px %, formed %, formed decoded] */
-var STATS = {"assemble":[44.6,44.6,37.5,"69/69"],"ripple":[57.6,57.6,39.7,"73/73"],"scan":[52.2,52.7,41.3,"76/76"],"swarm":[43.5,43.5,37.5,"69/69"],"rain":[48.9,48.9,36.4,"67/67"],"radar":[53.8,53.8,39.1,"72/72"],"breathe":[100,100,100,"184/184"]};
+/* measured in headless Chromium (see report) */
+var STATS = /*STATS*/{"styles":{"assemble":[44.6,45.1,37.5,"69/69",true],"ripple":[57.6,57.6,39.7,"73/73",true],"scan":[52.7,52.7,41.3,"76/76",true],"swarm":[43.5,43.5,37.5,"69/69",true],"rain":[48.9,48.9,36.4,"67/67",true],"radar":[53.8,54.3,39.1,"72/72",true],"breathe":[100,100,100,"184/184",true],"morph":[46.2,47.3,41.3,"76/76",true],"photodots":[44,44,39.1,"72/72",true],"burst":[45.1,45.1,41.3,"76/76",true]},"samples":{"vivid":{"morph":{"dec":76,"formed":76,"lvl":2,"ok":true},"photodots":{"dec":72,"formed":72,"lvl":2,"ok":true},"burst":{"dec":76,"formed":76,"lvl":2,"ok":true}},"dark":{"morph":{"dec":76,"formed":76,"lvl":2,"ok":true},"photodots":{"dec":72,"formed":72,"lvl":2,"ok":true},"burst":{"dec":76,"formed":76,"lvl":2,"ok":true}},"bright":{"morph":{"dec":76,"formed":76,"lvl":2,"ok":true},"photodots":{"dec":72,"formed":72,"lvl":0,"ok":true},"burst":{"dec":76,"formed":76,"lvl":0,"ok":true}}}};
 function renderStats(){
   var tb = $("statRows"); if (!tb) return; tb.innerHTML = "";
+  var rows = STATS.styles || {};
   STYLE_KEYS.forEach(function(k){
-    var r = STATS[k]; if (!r) return;
+    var r = rows[k]; if (!r) return;
     var tr_ = document.createElement("tr");
-    tr_.innerHTML = "<td><b>" + I18N[state.lang].styles[k][0] + "</b></td><td>" + r[0] + "%</td><td>" + r[1] + "%</td><td>" + r[2] + "%</td><td><span class='verdict y'>" + r[3] + "</span></td>";
+    tr_.innerHTML = "<td><b>" + L().styles[k][0] + "</b></td><td>" + r[0] + "%</td><td>" + r[1] + "%</td><td>" + r[2] + "%</td><td><span class='verdict" + (r[4] ? " y" : "") + "'>" + r[3] + "</span></td>";
     tb.appendChild(tr_);
+  });
+  var ib = $("imgRows"); ib.innerHTML = "";
+  var smp = STATS.samples || {};
+  [["vivid","smpVivid"],["dark","smpDark"],["bright","smpBright"]].forEach(function(s){
+    var r = smp[s[0]]; if (!r) return;
+    var row = document.createElement("tr"), html = "<td><b>" + tr(s[1]) + "</b></td>";
+    ["morph","photodots","burst"].forEach(function(k){
+      var c = r[k]; if (!c){ html += "<td></td>"; return; }
+      html += "<td><span class='verdict" + (c.ok ? " y" : "") + "'>" + c.dec + "/" + c.formed + "</span>" + (k === "photodots" ? " <span class='mono'>" + tr("lvl", {n:c.lvl}) + "</span>" : "") + "</td>";
+    });
+    row.innerHTML = html; ib.appendChild(row);
   });
 }
 
@@ -3147,10 +4028,8 @@ function renderStats(){
 var lastNow = performance.now();
 function tick(now){
   var dt = Math.min(.1, (now - lastNow)/1000); lastNow = now;
-  if (!recording){
-    if (state.playing && model){ var L = timings().L; state.t = (state.t + dt) % L; }
-    draw();
-  }
+  if (state.playing && model){ var Lp = timings().L; state.t = (state.t + dt) % Lp; }
+  if (model && !document.hidden) draw();
   if (arState.running) arFrame();
   requestAnimationFrame(tick);
 }
@@ -3161,12 +4040,20 @@ $("text").addEventListener("input", function(e){
   clearTimeout(debounce);
   debounce = setTimeout(function(){ state.text = e.target.value.trim(); rebuild(); }, 160);
 });
-$("fg").addEventListener("input", function(e){ state.fg = e.target.value; updateContrast(); draw(); });
-$("bg").addEventListener("input", function(e){ state.bg = e.target.value; updateContrast(); draw(); });
-$("swapBtn").onclick = function(){ var t = state.fg; state.fg = state.bg; state.bg = t; $("fg").value = state.fg; $("bg").value = state.bg; updateContrast(); draw(); };
-document.querySelectorAll("#shapeSeg button").forEach(function(b){
-  b.onclick = function(){ state.shape = b.dataset.shape; document.querySelectorAll("#shapeSeg button").forEach(function(x){ x.setAttribute("aria-pressed", String(x === b)); }); draw(); };
-});
+$("fg").addEventListener("input", function(e){ state.fg = e.target.value; colorsChanged(); });
+$("fg2").addEventListener("input", function(e){ state.fg2 = e.target.value; colorsChanged(); });
+$("bg").addEventListener("input", function(e){ state.bg = e.target.value; colorsChanged(); });
+$("finder").addEventListener("input", function(e){ state.finder = e.target.value; state.finderSame = false; colorsChanged(); });
+$("finSame").addEventListener("change", function(e){ state.finderSame = e.target.checked; if (!state.finderSame && state.finder === state.fg) state.finder = state.fg; colorsChanged(); });
+$("angle").addEventListener("input", function(e){ state.angle = +e.target.value; colorsChanged(); });
+$("transp").addEventListener("change", function(e){ state.transparent = e.target.checked; });
+$("swapBtn").onclick = function(){ var t = state.fg; state.fg = state.bg; state.bg = t; colorsChanged(); };
+document.querySelectorAll("#fillSeg button").forEach(function(b){ b.onclick = function(){ state.fill = b.dataset.fill; colorsChanged(); }; });
+document.querySelectorAll("#fmtSeg button").forEach(function(b){ b.onclick = function(){ state.fmt = b.dataset.fmt; document.querySelectorAll("#fmtSeg button").forEach(function(x){ x.setAttribute("aria-pressed", String(x === b)); }); }; });
+document.querySelectorAll("#aspectSeg button").forEach(function(b){ b.onclick = function(){ state.aspect = b.dataset.aspect; document.querySelectorAll("#aspectSeg button").forEach(function(x){ x.setAttribute("aria-pressed", String(x === b)); }); relayout(); draw(); }; });
+$("capOn").addEventListener("change", function(e){ state.caption = e.target.checked; $("capRow").hidden = !state.caption; relayout(); draw(); });
+$("capText").addEventListener("input", function(e){ state.capText = e.target.value; draw(); });
+$("capColor").addEventListener("input", function(e){ state.capColor = e.target.value; state.capTouched = true; draw(); });
 function bindRange(id, prop){
   $(id).addEventListener("input", function(e){
     var oldL = timings().L, frac = state.t / oldL;
@@ -3178,7 +4065,7 @@ bindRange("speed","speed"); bindRange("tForm","form"); bindRange("tHold","hold")
 $("playBtn").onclick = function(){ state.playing = !state.playing; updatePlayBtn(); };
 $("replayBtn").onclick = function(){ state.t = 0; state.playing = true; updatePlayBtn(); draw(); };
 document.querySelectorAll("[data-lang]").forEach(function(b){
-  b.onclick = function(){ state.lang = b.dataset.lang; try { localStorage.setItem("mq-lang", state.lang); } catch(e){} applyLang(); };
+  b.onclick = function(){ try { localStorage.setItem("mq-lang", b.dataset.lang); } catch(e){} setLang(b.dataset.lang); };
 });
 (function(){
   var tl = $("timeline"), dragging = false;
@@ -3188,8 +4075,111 @@ document.querySelectorAll("[data-lang]").forEach(function(b){
   tl.addEventListener("pointerup", function(){ dragging = false; });
 })();
 document.addEventListener("keydown", function(e){
-  if (e.code === "Space" && !/INPUT|TEXTAREA|BUTTON/.test(document.activeElement.tagName)){ e.preventDefault(); $("playBtn").click(); }
+  if (e.code === "Space" && !/INPUT|TEXTAREA|BUTTON|SELECT/.test(document.activeElement.tagName)){ e.preventDefault(); $("playBtn").click(); }
 });
+
+/* image source */
+function setPhotoCanvas(c){ state.photoCanvas = c; state.srcVer++; cellCache = {}; pixCache = {}; thumb($("photoThumb"), srcCanvas()); buildChips(); updateTimelineUI(); draw(); scheduleAC(); }
+function thumb(el, c){ var t = document.createElement("canvas"); t.width = t.height = 88; t.getContext("2d").drawImage(c, 0, 0, 88, 88); el.style.backgroundImage = "url(" + t.toDataURL() + ")"; }
+$("photoFile").addEventListener("change", function(e){
+  var f = e.target.files && e.target.files[0]; if (!f) return;
+  loadImageFile(f).then(function(img){ setPhotoCanvas(coverSquare(img, 512)); }, function(){ setMsg("imgBad", null, true); });
+  e.target.value = "";
+});
+document.querySelectorAll("#sampleChips .chip").forEach(function(b){
+  b.onclick = function(){ state.sample = b.dataset.sample; setPhotoCanvas(null); };
+});
+
+/* logo */
+function rebuildTextLogo(){ if (state.logoKind !== "text") return; state.logoCanvas = textLogoCanvas(state.logoText); state.logoVer++; }
+function updateLogoUI(){
+  var k = state.logoKind;
+  document.querySelectorAll("#logoSeg button").forEach(function(b){ b.setAttribute("aria-pressed", String(b.dataset.logo === k)); });
+  $("logoImgRow").hidden = k !== "image"; $("logoTextRow").hidden = k !== "text"; $("logoSizeRow").hidden = k === "none"; $("logoHint").hidden = k === "none";
+  $("logoSize").max = LOGO_MAX; $("logoSize").min = LOGO_MIN; $("logoSize").value = state.logoSize; $("logoSizeOut").textContent = state.logoSize + "%";
+  $("logoHint").textContent = tr("logoHint", {m:LOGO_MAX});
+  if (k === "image" && state.logoImgCanvas) thumb($("logoThumb"), state.logoImgCanvas);
+}
+function logoChanged(){ updateLogoUI(); updateImgHint(); updateTimelineUI(); draw(); scheduleAC(); }
+document.querySelectorAll("#logoSeg button").forEach(function(b){
+  b.onclick = function(){
+    state.logoKind = b.dataset.logo;
+    if (state.logoKind === "text") rebuildTextLogo();
+    else if (state.logoKind === "image"){ state.logoCanvas = state.logoImgCanvas; state.logoVer++; if (!state.logoImgCanvas) $("logoFile").click(); }
+    else { state.logoCanvas = null; state.logoVer++; }
+    logoChanged();
+  };
+});
+$("logoFile").addEventListener("change", function(e){
+  var f = e.target.files && e.target.files[0]; if (!f) return;
+  loadImageFile(f).then(function(img){ state.logoImgCanvas = containSquare(img, 256); state.logoKind = "image"; state.logoCanvas = state.logoImgCanvas; state.logoVer++; logoChanged(); }, function(){ setMsg("imgBad", null, true); });
+  e.target.value = "";
+});
+$("logoTextIn").addEventListener("input", function(e){ state.logoText = e.target.value; rebuildTextLogo(); logoChanged(); });
+$("logoSize").addEventListener("input", function(e){ state.logoSize = Math.min(LOGO_MAX, +e.target.value); $("logoSizeOut").textContent = state.logoSize + "%"; draw(); scheduleAC(); });
+
+/* ---------------- contrast safeguard for photo dots ---------------- */
+var acTimer = null, acToken = 0, acPromise = Promise.resolve(), acCanvas = document.createElement("canvas");
+function scheduleAC(){
+  if (state.style !== "photodots" || !model) return;
+  clearTimeout(acTimer); state.lvlState = "check"; updateImgHint();
+  acPromise = new Promise(function(res){ acTimer = setTimeout(function(){ runAC().then(res, res); }, 180); });
+}
+function decodesAt(lib, lvl){
+  var o = opts(); o.lvl = lvl; o.still = true; o.quiet = QUIET; o.cell = 8; o.ox = o.oy = 0;
+  var G = model.N + 2*QUIET, W = G*8; acCanvas.width = acCanvas.height = W;
+  var x = acCanvas.getContext("2d", {willReadFrequently:true});
+  renderFrame(x, model, "photodots", 0, timings(), o);
+  var a = lib(x.getImageData(0,0,W,W).data, W, W, {inversionAttempts:"dontInvert"});
+  if (!a || a.data !== model.text) return false;
+  var s = document.createElement("canvas"), S = Math.max(200, G*5); s.width = s.height = S; var sx = s.getContext("2d", {willReadFrequently:true});
+  sx.drawImage(acCanvas, 0, 0, S, S);
+  var b = lib(sx.getImageData(0,0,S,S).data, S, S, {inversionAttempts:"dontInvert"});
+  if (!(b && b.data === model.text)) return false;
+  /* camera-like copy: ~4 px per module, slight blur, contrast squeezed to 70% */
+  var S3 = G*4; s.width = s.height = S3; sx = s.getContext("2d", {willReadFrequently:true});
+  sx.fillStyle = "#808080"; sx.fillRect(0,0,S3,S3);
+  try { sx.filter = "blur(0.8px) contrast(0.7)"; } catch(e){}
+  sx.drawImage(acCanvas, 0, 0, S3, S3); try { sx.filter = "none"; } catch(e){}
+  var c3 = lib(sx.getImageData(0,0,S3,S3).data, S3, S3, {inversionAttempts:"dontInvert"});
+  return !!(c3 && c3.data === model.text);
+}
+function runAC(){
+  var token = ++acToken;
+  return loadJsQR().then(function(lib){
+    if (token !== acToken || !model) return;
+    if (state.lvlForce != null){ state.lvl = state.lvlForce; state.lvlState = decodesAt(lib, state.lvl) ? "ok" : "fail"; updateImgHint(); draw(); return; }
+    var found = -1;
+    for (var l=0; l<LV.length; l++){ if (decodesAt(lib, l)){ found = l; break; } }
+    state.lvl = found < 0 ? LV.length-1 : found; state.lvlState = found < 0 ? "fail" : "ok";
+    updateImgHint(); draw();
+  }, function(){ if (token !== acToken) return; state.lvl = 2; state.lvlState = "ok"; updateImgHint(); draw(); });
+}
+
+/* ---------------- Pro (soft gate for video watermark) ---------------- */
+var pro = false;
+function readPro(){
+  var k = null; try { k = localStorage.getItem(PROKEY); } catch(e){}
+  k = (k || "").trim().toUpperCase();
+  pro = !!k; updateProNote();
+  if (!k) return;
+  /* mirror the main app: verify with the license API; if unreachable, accept the DEV key format */
+  if (/^https?:$/.test(location.protocol) && window.fetch){
+    fetch("/api/validate", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({license_key:k})})
+      .then(function(r){ return r.json(); })
+      .then(function(d){ pro = !!(d && (d.valid === true || d.activated === true || (d.license_key && d.license_key.status === "active"))); updateProNote(); })
+      .catch(function(){ pro = /^QRPRO-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(k); updateProNote(); });
+  } else { pro = /^QRPRO-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(k); updateProNote(); }
+}
+function updateProNote(){
+  var el = $("proNote"); if (!el) return;
+  el.className = "pronote" + (pro ? " on" : "");
+  el.textContent = "";
+  if (pro){ el.textContent = tr("proOn"); return; }
+  el.appendChild(document.createTextNode(tr("proFree") + " "));
+  var a = document.createElement("a"); a.href = UPGRADE_URL; a.target = "_top"; a.textContent = tr("proLink"); el.appendChild(a);
+}
+window.addEventListener("storage", function(e){ if (e.key === PROKEY) readPro(); });
 
 /* ---------------- export: PNG ---------------- */
 function download(blob, name){
@@ -3197,64 +4187,141 @@ function download(blob, name){
   a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
 }
-function slug(){ return "motion-qr-" + state.style; }
+function slug(){ return "motion-qr-" + state.style + (state.aspect !== "1:1" ? "-" + state.aspect.replace(":","x") : ""); }
+function renderPNG(){
+  var lay = layoutFor(state.aspect, state.aspect === "1:1" ? 1440 : 1920, model.N, state.caption, false), c2 = document.createElement("canvas");
+  c2.width = lay.W; c2.height = lay.H;
+  var o = opts(); o.still = true; o.transparent = state.transparent;
+  composeFrame(c2.getContext("2d"), lay, model, state.style, 0, timings(), o);
+  return c2;
+}
 $("pngBtn").onclick = function(){
   if (!model) return;
-  var cell = Math.max(8, Math.round(1200/(model.N + 2*QUIET))), c2 = document.createElement("canvas");
-  c2.width = c2.height = cell*(model.N + 2*QUIET);
-  var o = opts(); o.cell = cell; o.still = true;
-  renderFrame(c2.getContext("2d"), model, state.style, 0, timings(), o);
-  c2.toBlob(function(b){ var f = slug() + ".png"; download(b, f); setMsg("pngDone", {f:f}); }, "image/png");
+  renderPNG().toBlob(function(b){ var f = slug() + ".png"; download(b, f); setMsg("pngDone", {f:f}); }, "image/png");
 };
 
 /* ---------------- export: video ---------------- */
-function pickMime(){
+function loadScript(src, test){
+  return new Promise(function(res, rej){ var s = document.createElement("script"); s.src = src; s.async = true; s.onload = function(){ test() ? res(test()) : rej(new Error("missing")); }; s.onerror = function(){ s.remove(); rej(new Error("load failed")); }; document.head.appendChild(s); });
+}
+function loadMuxer(){
+  if (window.Mp4Muxer) return Promise.resolve(window.Mp4Muxer);
+  var t = function(){ return window.Mp4Muxer; };
+  return loadScript("vendor/mp4-muxer.js", t).catch(function(){ return loadScript("https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.2/build/mp4-muxer.js", t); });
+}
+function exportSetup(){
+  var lay = layoutFor(state.aspect, state.aspect === "1:1" ? 1080 : 1920, model.N, state.caption, !pro), c = $("xcv");
+  if (!c){ c = document.createElement("canvas"); c.id = "xcv"; c.setAttribute("aria-hidden", "true"); document.body.appendChild(c); }
+  c.width = lay.W; c.height = lay.H;
+  return {lay:lay, c:c, x:c.getContext("2d"), o:opts(), M:model, key:state.style, T:timings()};
+}
+function setBusy(b){ busy = b; ["vidBtn","pngBtn"].forEach(function(id){ $(id).disabled = b; }); }
+var CODECS = [
+  {c:"avc1.640028", m:"avc", n:"H.264"}, {c:"avc1.4d0028", m:"avc", n:"H.264"}, {c:"avc1.420028", m:"avc", n:"H.264"},
+  {c:"vp09.00.40.08", m:"vp9", n:"VP9"}, {c:"av01.0.08M.08", m:"av1", n:"AV1"}
+];
+function pickCodec(w, h, br){
+  var i = 0;
+  function next(){
+    if (i >= CODECS.length) return Promise.resolve(null);
+    var k = CODECS[i++], cfg = {codec:k.c, width:w, height:h, bitrate:br, framerate:30};
+    if (k.m === "avc") cfg.avc = {format:"avc"};
+    return VideoEncoder.isConfigSupported(cfg).then(function(r){ return r && r.supported ? {k:k, cfg:cfg} : next(); }, next);
+  }
+  return next();
+}
+function exportWebCodecs(){
+  var S = exportSetup(), lay = S.lay, fps = 30, n = Math.max(1, Math.round(S.T.L*fps)), br = lay.W*lay.H > 1500000 ? 12e6 : 8e6;
+  setBusy(true); setMsg("encBusy", {p:0});
+  return Promise.all([loadMuxer(), pickCodec(lay.W, lay.H, br)]).then(function(r){
+    var Mux = r[0], pick = r[1];
+    if (!pick) throw new Error("no-codec");
+    var muxer = new Mux.Muxer({target:new Mux.ArrayBufferTarget(), video:{codec:pick.k.m, width:lay.W, height:lay.H, frameRate:fps}, fastStart:"in-memory"});
+    var encErr = null, enc = new VideoEncoder({output:function(chunk, meta){ muxer.addVideoChunk(chunk, meta); }, error:function(e){ encErr = e; }});
+    var cfg = pick.cfg; cfg.latencyMode = "quality"; enc.configure(cfg);
+    var i = 0;
+    function step(){
+      if (encErr) return Promise.reject(encErr);
+      var lim = Math.min(n, i + 6);
+      for (; i<lim; i++){
+        composeFrame(S.x, lay, S.M, S.key, i/fps, S.T, S.o);
+        var vf = new VideoFrame(S.c, {timestamp:Math.round(i*1e6/fps), duration:Math.round(1e6/fps)});
+        enc.encode(vf, {keyFrame:i % fps === 0}); vf.close();
+      }
+      setMsg("encBusy", {p:Math.round(i/n*100)});
+      if (i >= n) return enc.flush();
+      return new Promise(function(res){ (function wait(){ if (enc.encodeQueueSize > 8) setTimeout(wait, 4); else setTimeout(res, 0); })(); }).then(step);
+    }
+    return step().then(function(){
+      if (encErr) throw encErr;
+      enc.close(); muxer.finalize();
+      var blob = new Blob([muxer.target.buffer], {type:"video/mp4"}), f = slug() + ".mp4";
+      lastExport = {blob:blob, codec:pick.k.n, frames:n, w:lay.W, h:lay.H, wm:lay.wm};
+      download(blob, f);
+      setMsg("recDone", {f:f, kb:Math.round(blob.size/1024), fmt:"MP4 · " + pick.k.n + " · 30fps · " + lay.W + "×" + lay.H});
+      if (pick.k.m !== "avc") setTimeout(function(){ setMsg("vp9Note", null, false); }, 2600);
+    });
+  }).catch(function(e){
+    if (e && e.message === "no-codec") return recordMR("mp4", true);
+    setMsg("recFail", {e:(e && (e.message || e.name)) || "?"}, true);
+  }).then(function(){ setBusy(false); });
+}
+function pickMime(fmt){
   if (!window.MediaRecorder || !MediaRecorder.isTypeSupported) return null;
-  var list = ["video/webm;codecs=vp9","video/webm;codecs=vp8","video/webm","video/mp4;codecs=avc1.42E01E","video/mp4"];
+  var webm = ["video/webm;codecs=vp9","video/webm;codecs=vp8","video/webm"], mp4 = ["video/mp4;codecs=avc1.42E01E","video/mp4"];
+  var list = fmt === "mp4" ? mp4.concat(webm) : webm.concat(mp4);
   for (var i=0;i<list.length;i++) if (MediaRecorder.isTypeSupported(list[i])) return list[i];
   return null;
 }
+function recordMR(fmt, viaFallback){
+  return new Promise(function(done){
+    var mime = pickMime(fmt), S = exportSetup();
+    if (!S.c.captureStream || !mime){ setMsg("recNo", null, true); done(); return; }
+    var stream, rec, chunks = [];
+    try { stream = S.c.captureStream(30); rec = new MediaRecorder(stream, {mimeType:mime, videoBitsPerSecond:8000000}); }
+    catch(e){ setMsg("recFail", {e:e.message}, true); done(); return; }
+    var isMp4 = mime.indexOf("mp4") >= 0, ext = isMp4 ? "mp4" : "webm";
+    rec.ondataavailable = function(e){ if (e.data && e.data.size) chunks.push(e.data); };
+    rec.onstop = function(){
+      stream.getTracks().forEach(function(t){ t.stop(); });
+      var blob = new Blob(chunks, {type:mime.split(";")[0]}), f = slug() + "." + ext;
+      lastExport = {blob:blob, codec:mime, wm:S.lay.wm, w:S.lay.W, h:S.lay.H};
+      download(blob, f);
+      setMsg("recDone", {f:f, kb:Math.round(blob.size/1024), fmt:(isMp4 ? "MP4" : "WebM") + " · 30fps · " + S.lay.W + "×" + S.lay.H});
+      setBusy(false); done();
+    };
+    setBusy(true);
+    if (viaFallback || (fmt === "mp4" && !isMp4)) setMsg("mrNote");
+    composeFrame(S.x, S.lay, S.M, S.key, 0, S.T, S.o);
+    rec.start(250);
+    var t0 = performance.now();
+    (function step(){
+      var t = (performance.now() - t0)/1000;
+      if (t >= S.T.L){ composeFrame(S.x, S.lay, S.M, S.key, 0, S.T, S.o); setTimeout(function(){ rec.stop(); }, 60); return; }
+      composeFrame(S.x, S.lay, S.M, S.key, t, S.T, S.o);
+      if (!viaFallback || t > 2.5) setMsg("recBusy", {a:t.toFixed(1), b:S.T.L.toFixed(1)}, false);
+      requestAnimationFrame(step);
+    })();
+  });
+}
+var lastExport = null;
 $("vidBtn").onclick = function(){
-  if (!model || recording) return;
-  var mime = pickMime();
-  if (!cv.captureStream || !mime){ setMsg("recNo", null, true); return; }
-  var stream, rec, chunks = [];
-  try {
-    stream = cv.captureStream(30);
-    rec = new MediaRecorder(stream, {mimeType:mime, videoBitsPerSecond:8000000});
-  } catch(e){ setMsg("recFail", {e:e.message}, true); return; }
-  var T = timings(), isMp4 = mime.indexOf("mp4") >= 0, ext = isMp4 ? "mp4" : "webm";
-  rec.ondataavailable = function(e){ if (e.data && e.data.size) chunks.push(e.data); };
-  rec.onstop = function(){
-    recording = false; setBusy(false);
-    stream.getTracks().forEach(function(t){ t.stop(); });
-    var blob = new Blob(chunks, {type:mime.split(";")[0]}), f = slug() + "." + ext;
-    download(blob, f);
-    setMsg("recDone", {f:f, kb:Math.round(blob.size/1024), fmt:(isMp4 ? "MP4" : "WebM") + " · 30fps · " + cv.width + "px"});
-  };
-  recording = true; setBusy(true);
-  state.t = 0; draw();
-  rec.start(250);
-  var t0 = performance.now();
-  (function step(){
-    var t = (performance.now() - t0)/1000;
-    if (t >= T.L){ state.t = 0; draw(); setTimeout(function(){ rec.stop(); }, 60); return; }
-    state.t = t; draw();
-    setMsg("recBusy", {a:t.toFixed(1), b:T.L.toFixed(1)}, false);
-    requestAnimationFrame(step);
-  })();
+  if (!model || busy) return;
+  if (state.fmt === "mp4" && window.VideoEncoder && window.VideoFrame) return exportWebCodecs();
+  return recordMR(state.fmt, state.fmt === "mp4");
 };
-function setBusy(b){ ["vidBtn","pngBtn","playBtn","replayBtn"].forEach(function(id){ $(id).disabled = b; }); }
 
 /* ---------------- Camera AR ---------------- */
-var arState = {running:false, stream:null, lib:null, last:null, lostAt:0, overlayModel:null, overlayKey:"", msgKey:"", msgVars:null, scan:document.createElement("canvas")};
-function setArMsg(key, vars, warn){ arState.msgKey = key; arState.msgVars = vars; var el = $("arMsg"); el.textContent = key ? tr(key, vars) : ""; el.className = "msg" + (warn ? " warn" : ""); }
+var arState = {running:false, stream:null, lib:null, last:null, lostAt:0, overlayModel:null, overlayKey:"", msgKey:"", msgVars:null, msgWarn:false, scan:document.createElement("canvas")};
+function setArMsg(key, vars, warn){ arState.msgKey = key; arState.msgVars = vars; arState.msgWarn = warn; var el = $("arMsg"); el.textContent = key ? tr(key, vars) : ""; el.className = "msg" + (warn ? " warn" : ""); }
 function loadJsQR(){
   if (window.jsQR) return Promise.resolve(window.jsQR);
-  function load(src){ return new Promise(function(res, rej){ var s = document.createElement("script"); s.src = src; s.async = true; s.onload = function(){ window.jsQR ? res(window.jsQR) : rej(new Error("jsQR missing")); }; s.onerror = function(){ rej(new Error("load failed")); }; document.head.appendChild(s); }); }
-  return load("https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js").catch(function(){ return load("/vendor/jsQR.js"); });
+  var t = function(){ return window.jsQR; };
+  return loadScript("vendor/jsQR.js", t).catch(function(){ return loadScript("https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js", t); });
 }
 $("arStart").onclick = function(){
+  var pol = document.permissionsPolicy || document.featurePolicy;
+  if (EMBED && pol && pol.allowsFeature && !pol.allowsFeature("camera")){ window.open("motion.html?lang=" + state.lang + "#ar", "_blank", "noopener"); return; }
   if (!window.isSecureContext){ setArMsg("arInsecure", null, true); return; }
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ setArMsg("arNoCam", null, true); return; }
   setArMsg("arLoading");
@@ -3265,7 +4332,7 @@ $("arStart").onclick = function(){
     arState.stream = stream; var v = $("arVideo"); v.srcObject = stream;
     return v.play().then(function(){
       arState.running = true; $("arStage").classList.add("on"); $("arStart").disabled = true; $("arStop").disabled = false;
-      setArMsg("arHelp"); $("arBadge").textContent = tr("arSeek");
+      setArMsg("arHelp"); $("arBadge").textContent = tr("arSeek"); postHeightSoon();
     });
   }).catch(function(e){ if (e === null) return; setArMsg(e && e.name === "NotFoundError" ? "arNoCam" : "arDenied", {e:(e && (e.name || e.message)) || "?"}, true); });
 };
@@ -3273,7 +4340,7 @@ function arStop(){
   arState.running = false;
   if (arState.stream) arState.stream.getTracks().forEach(function(t){ t.stop(); });
   arState.stream = null; arState.last = null;
-  $("arStage").classList.remove("on"); $("arOv").classList.remove("on"); $("arStart").disabled = false; $("arStop").disabled = true; setArMsg("");
+  $("arStage").classList.remove("on"); $("arOv").classList.remove("on"); $("arStart").disabled = false; $("arStop").disabled = true; setArMsg(""); postHeightSoon();
 }
 $("arStop").onclick = arStop;
 
@@ -3308,13 +4375,13 @@ function arFrame(){
   var stage = $("arStage"), W = stage.clientWidth, H = stage.clientHeight, ds = Math.min(W/vw, H/vh), ox = (W - vw*ds)/2, oy = (H - vh*ds)/2;
   var ov = $("arOv"), now = performance.now();
   if (code && code.location){
-    var L = code.location, pts = [L.topLeftCorner, L.topRightCorner, L.bottomRightCorner, L.bottomLeftCorner].map(function(p){ return [ox + p.x/sc*ds, oy + p.y/sc*ds]; });
+    var Lc = code.location, pts = [Lc.topLeftCorner, Lc.topRightCorner, Lc.bottomRightCorner, Lc.bottomLeftCorner].map(function(p){ return [ox + p.x/sc*ds, oy + p.y/sc*ds]; });
     if (arState.last){ pts = pts.map(function(p, i){ var q = arState.last[i]; return [q[0] + (p[0]-q[0])*.55, q[1] + (p[1]-q[1])*.55]; }); }
     arState.last = pts; arState.lostAt = now;
     var M = overlayModelFor(code.data, code.version);
     var cell = Math.max(2, Math.floor(320/M.N)), size = cell*M.N;
     if (ov.width !== size){ ov.width = size; ov.height = size; }
-    var o = opts(); o.cell = cell; o.quiet = 0;
+    var o = opts(); o.cell = cell; o.quiet = 0; o.ox = o.oy = 0;
     renderFrame(ov.getContext("2d"), M, state.style, state.t, timings(), o);
     ov.style.transform = quadMatrix(size, size, pts);
     ov.classList.add("on");
@@ -3325,24 +4392,65 @@ function arFrame(){
   }
 }
 
+/* ---------------- embed: report height to the parent page ---------------- */
+var lastH = 0, hRaf = 0;
+function postHeight(){
+  hRaf = 0;
+  if (!EMBED || window.parent === window) return;
+  var h = Math.ceil(document.documentElement.getBoundingClientRect().height);
+  if (h === lastH) return; lastH = h;
+  try { parent.postMessage({type:"motionHeight", h:h}, "*"); } catch(e){}
+}
+function postHeightSoon(){ if (EMBED && !hRaf) hRaf = requestAnimationFrame(postHeight); }
+if (EMBED){
+  (function(){
+    var sec = $("feasibility"), h = sec.querySelector("h2");
+    h.setAttribute("role", "button"); h.tabIndex = 0; h.setAttribute("aria-expanded", "false");
+    function tog(){ var on = sec.classList.toggle("open"); h.setAttribute("aria-expanded", String(on)); postHeightSoon(); }
+    h.addEventListener("click", tog);
+    h.addEventListener("keydown", function(e){ if (e.key === "Enter" || e.key === " "){ e.preventDefault(); tog(); } });
+  })();
+  window.addEventListener("load", postHeightSoon);
+  window.addEventListener("resize", postHeightSoon);
+  if (window.ResizeObserver) new ResizeObserver(postHeightSoon).observe(document.body);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(postHeightSoon);
+}
+window.addEventListener("message", function(e){
+  var d = e.data; if (!d || typeof d !== "object") return;
+  if (d.type === "motionLang" && I18N[d.lang]) setLang(d.lang);
+  if (d.type === "motionPro") readPro();
+});
+
 /* ---------------- test hook ---------------- */
 window.__motionQR = {
-  styles: STYLE_KEYS.slice(),
+  styles: STYLE_KEYS.slice(), shapes: SHAPES.slice(), LV: LV, logoMax: LOGO_MAX,
   setStyle: function(k){ setStyle(k); },
-  setShape: function(s){ state.shape = s; draw(); },
+  setShape: function(s){ state.shape = s; buildShapes(); draw(); scheduleAC(); },
+  set: function(obj){ for (var k in obj) state[k] = obj[k]; if ("logoText" in obj || "logoKind" in obj){ if (state.logoKind === "text") rebuildTextLogo(); else if (state.logoKind === "none") state.logoCanvas = null; } relayout(); updateColorsUI(); updateLogoUI(); updateTimelineUI(); draw(); scheduleAC(); },
+  setText: function(t){ state.text = t; $("text").value = t; rebuild(); },
+  setSample: function(s){ state.sample = s; setPhotoCanvas(null); },
+  setPhotoURL: function(url){ return new Promise(function(res, rej){ var i = new Image(); i.onload = function(){ setPhotoCanvas(coverSquare(i, 512)); res(); }; i.onerror = rej; i.src = url; }); },
+  setLogoURL: function(url){ return new Promise(function(res, rej){ var i = new Image(); i.onload = function(){ state.logoImgCanvas = containSquare(i, 256); state.logoKind = "image"; state.logoCanvas = state.logoImgCanvas; state.logoVer++; logoChanged(); res(); }; i.onerror = rej; i.src = url; }); },
+  acDone: function(){ return acPromise.then(function(){ return {lvl:state.lvl, st:state.lvlState}; }); },
   pause: function(){ state.playing = false; updatePlayBtn(); },
-  seek: function(t){ state.t = t; draw(); return isFormed(getPlan(model, state.style), phaseAt(t, timings())); },
-  info: function(){ var T = timings(), P = getPlan(model, state.style); return {L:T.L, F:T.F, H:T.H, D:T.D, N:model.N, version:model.version, window:scanWindow(P, T), formEnd:P.formEnd, disStart:P.disStart}; },
-  stillPNG: function(){ var c2 = document.createElement("canvas"), cell = 12; c2.width = c2.height = cell*(model.N+2*QUIET); var o = opts(); o.cell = cell; o.still = true; renderFrame(c2.getContext("2d"), model, state.style, 0, timings(), o); return c2.toDataURL(); },
+  seek: function(t){ state.t = t; draw(); return lastFormed; },
+  info: function(){ var T = timings(), P = curPlan(); return {L:T.L, F:T.F, H:T.H, D:T.D, N:model.N, version:model.version, window:scanWindow(P, T), formEnd:P.formEnd, disStart:P.disStart}; },
+  stillPNG: function(){ var c2 = document.createElement("canvas"), cell = 12, o = opts(); c2.width = c2.height = cell*(model.N+2*QUIET); o.cell = cell; o.ox = o.oy = 0; o.still = true; renderFrame(c2.getContext("2d"), model, state.style, 0, timings(), o); return c2.toDataURL(); },
+  pngCanvas: function(){ return renderPNG(); },
+  exportMp4: function(){ return exportWebCodecs().then(function(){ return lastExport; }); },
+  lastExport: function(){ return lastExport; },
+  isPro: function(){ return pro; }, readPro: readPro,
   state: state
 };
 
 /* ---------------- init ---------------- */
 $("tForm").value = state.form; $("tHold").value = state.hold; $("tDis").value = state.dis;
 if (reduceMotion) state.t = state.form + state.hold/2;
-rebuild(); applyLang();
+thumb($("photoThumb"), srcCanvas());
+rebuild(); applyLang(); readPro();
 requestAnimationFrame(function(n){ lastNow = n; tick(n); });
 })();
+
 </script>
 </body>
 </html>
