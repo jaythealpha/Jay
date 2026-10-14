@@ -4348,11 +4348,15 @@ function render(g2, exportSize){
   // art background. Over art we always lay a white quiet-zone card so the object reads crisply and
   // the centre still scans (relies on ECC-H); otherwise the card honours the logoPad toggle.
   if (S.logo && !S.aiArt && S.artImg!==S.logo){   // skip centred draw when the logo IS the art pattern
-    var ls = (S.logoSize/100) * (n*unit);
+    // over art the QR zone is drawArtLayer's (centred 60% box), not the vector block — which shifts
+    // up when a label band is on — so anchor the logo to the art zone or it lands off-centre.
+    var artZone = S.artImg && !posterActive;
+    var qx0 = artZone ? size*0.2 : ox, qy0 = artZone ? size*0.2 : oy, qsz = artZone ? size*0.6 : n*unit;
+    var ls = (S.logoSize/100) * qsz;
     var liw = S.logo.naturalWidth||S.logo.width||1, lih = S.logo.naturalHeight||S.logo.height||1;
     var lscale = Math.min(ls/liw, ls/lih);
     var dw = liw*lscale, dh = lih*lscale;
-    var lx = ox + (n*unit-dw)/2, ly = oy + (n*unit-dh)/2;
+    var lx = qx0 + (qsz-dw)/2, ly = qy0 + (qsz-dh)/2;
     if (S.logoPad || S.artImg){
       var pad = ls*(S.artImg?0.09:0.12);
       g.fillStyle = (S.artImg || S.transparent) ? "#ffffff" : S.bg;
