@@ -647,7 +647,7 @@
                 <button data-ct="tel" data-i18n-tip="ct.tip.tel" data-tip="전화번호를 담습니다. 스캔하면 전화 앱에 번호가 떠서 바로 걸 수 있어요."><span class="ct-em">📞</span><span data-i18n="ct.tel">전화</span></button>
                 <button data-ct="sms" data-i18n-tip="ct.tip.sms" data-tip="받는 번호와 메시지를 미리 채워 문자 작성창을 엽니다(이벤트 참여 등)."><span class="ct-em">💬</span><span data-i18n="ct.sms">문자</span></button>
                 <button data-ct="email" data-i18n-tip="ct.tip.email" data-tip="받는사람·제목·내용을 채워 메일 작성창을 엽니다."><span class="ct-em">✉️</span><span data-i18n="ct.email">이메일</span></button>
-                <button data-ct="geo" data-i18n-tip="ct.tip.geo" data-tip="위도·경도를 담아 지도 앱에 위치 핀을 띄웁니다(매장 찾아오기)."><span class="ct-em">📍</span><span data-i18n="ct.geo">위치</span></button>
+                <button data-ct="geo" data-i18n-tip="ct.tip.geo" data-tip="장소 이름·주소로 네이버·카카오·구글 지도를 엽니다(매장 찾아오기)."><span class="ct-em">📍</span><span data-i18n="ct.geo">위치</span></button>
                 <button data-ct="event" data-i18n-tip="ct.tip.event" data-tip="제목·장소·시간을 담아, 스캔하면 캘린더에 일정을 추가합니다(iCalendar)."><span class="ct-em">📅</span><span data-i18n="ct.event">일정</span></button>
                 <button data-ct="instagram" data-i18n-tip="ct.tip.instagram" data-tip="인스타그램 사용자명을 담아 프로필로 바로 이동합니다."><span class="ct-em">📸</span>Instagram</button>
                 <button data-ct="youtube" data-i18n-tip="ct.tip.youtube" data-tip="유튜브 채널 핸들(@이름)로 채널을 엽니다."><span class="ct-em">▶️</span>YouTube</button>
@@ -713,11 +713,11 @@
               <label class="fld"><div class="lbl" data-i18n="lbl.emBody">내용 (선택)</div><input type="text" id="emBody" maxlength="200" /></label>
             </div>
             <div id="ctGeo" style="display:none">
-              <div class="row2">
-                <label class="fld"><div class="lbl" data-i18n="lbl.geoLat">위도</div><input type="text" id="geoLat" maxlength="20" placeholder="37.5665" /></label>
-                <label class="fld"><div class="lbl" data-i18n="lbl.geoLng">경도</div><input type="text" id="geoLng" maxlength="20" placeholder="126.9780" /></label>
-              </div>
-              <div class="hint" data-i18n="hint.geo">지도 앱에서 좌표 복사: 구글 지도에서 위치 길게 누르면 위도, 경도가 표시됩니다.</div>
+              <label class="fld"><div class="lbl" data-i18n="pst.lbl.place">장소 이름 또는 주소</div><input type="text" id="geoQ" maxlength="120" data-i18n-ph="pst.ph.place" placeholder="예: 서울 성수동 카페 어니언" /></label>
+              <label class="fld"><div class="lbl" data-i18n="pst.lbl.mapApp">지도 앱</div>
+                <div class="seg seg-wrap" id="geoAppSeg"><button data-m="pick" class="on"><span data-i18n="pst.m.pick">고를 수 있게 (추천)</span></button><button data-m="naver"><span data-i18n="pst.m.naver">네이버 지도</span></button><button data-m="kakao"><span data-i18n="pst.m.kakao">카카오맵</span></button><button data-m="google"><span data-i18n="pst.m.google">구글 지도</span></button></div></label>
+              <div class="hint" data-i18n="hint.geo">장소 이름·주소로 찾아요. 좌표(예: 37.5665, 126.9780)를 넣어도 됩니다. ‘고를 수 있게’는 스캔한 사람이 네이버·카카오·구글·애플 지도 중 골라 열어요.</div>
+              <a class="hint" id="geoTest" target="_blank" rel="noopener" style="display:inline-block;margin-top:6px;visibility:hidden" data-i18n="pst.mapTest">링크 미리 열어 보기 ↗</a>
             </div>
             <div id="ctWhatsapp" style="display:none">
               <label class="fld"><div class="lbl" data-i18n="lbl.waNum">전화번호 (국가코드 포함)</div><input type="text" id="waNum" maxlength="24" placeholder="+82 10 1234 5678" /></label>
@@ -1507,7 +1507,7 @@
     </nav>
     <div style="margin-top:10px">Aesthetic QR Studio · <span data-i18n="foot.tag">아름답고 스캔되는 QR을 만드는 스튜디오 · QR 생성·디자인은 브라우저에서 처리 (AI 기능만 서버 전송·저장 안 함)</span></div>
     <div style="margin-top:6px" data-i18n="foot.tm">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · <span data-i18n="foot.build">빌드</span> <b id="verTag">2026.10.14-h</b></div>
+    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · <span data-i18n="foot.build">빌드</span> <b id="verTag">2026.10.14-i</b></div>
   </footer>
 </div>
 
@@ -5342,6 +5342,16 @@ function socialHandle(raw){ return String(raw||"").trim().replace(/^@+/,"").repl
 function socialLabel(ct){ return SOCIAL[ct].name + " " + (t("lbl.handle")||"사용자명"); }
 function socialPh(ct){ return SOCIAL[ct].at ? tx("@핸들","@handle","@ハンドル","@用户名") : (t("ph.handle")||"사용자명 또는 @핸들"); }
 function linkLabel(ct){ return (t(LINKT[ct].lblKey)||LINKT[ct].lbl); }
+// Map links: public web URLs every map app accepts (no API key). "pick" = our chooser page (map.html).
+var MAP_SITE=/^https?:/.test(location.protocol)?location.origin:"https://jay-inky.vercel.app";
+function mapLinkUrl(q, app){ var e=encodeURIComponent(String(q||"").trim());
+  if(app==="naver") return "https://map.naver.com/p/search/"+e;
+  if(app==="kakao") return "https://map.kakao.com/link/search/"+e;
+  if(app==="google") return "https://www.google.com/maps/search/?api=1&query="+e;
+  return MAP_SITE+"/map.html?q="+e; }
+var GEOAPP="pick";
+document.addEventListener("click",function(e){ var b=e.target.closest("#geoAppSeg button"); if(!b) return;
+  Array.prototype.forEach.call(b.parentNode.children,function(x){x.classList.toggle("on",x===b);}); GEOAPP=b.dataset.m; buildContent(); });
 function buildContent(){
   var v = "";
   if (CT==="url" || CT==="text"){ v = $("content").value; }
@@ -5368,7 +5378,7 @@ function buildContent(){
     var q=[]; if(su) q.push("subject="+encodeURIComponent(su)); if(bo) q.push("body="+encodeURIComponent(bo));
     v = "mailto:" + to + (q.length ? "?"+q.join("&") : "");
   }
-  else if (CT==="geo"){ v = "geo:" + (parseFloat($("geoLat").value)||0) + "," + (parseFloat($("geoLng").value)||0); }
+  else if (CT==="geo"){ var gq=($("geoQ").value||"").trim(); v = gq ? mapLinkUrl(gq, GEOAPP) : ""; var gt=$("geoTest"); if(gt){ gt.href=v||"#"; gt.style.visibility=gq?"visible":"hidden"; } }
   else if (CT==="whatsapp"){ var wn=$("waNum").value.replace(/[^0-9]/g,""); var wm=$("waMsg").value; v = "https://wa.me/"+wn+(wm?"?text="+encodeURIComponent(wm):""); }
   else if (CT==="paypal"){ var pu=$("ppUser").value.trim().replace(/^@/,""); var pa=$("ppAmt").value.trim().replace(/[^0-9.]/g,""); var pc=document.querySelector("#ppCurSeg button.on").dataset.cur; v = "https://www.paypal.com/paypalme/"+encodeURIComponent(pu)+(pa?"/"+pa+pc:""); }
   else if (CT==="crypto"){ var ca=$("cyAddr").value.trim(); var cm=$("cyAmt").value.trim().replace(/[^0-9.]/g,""); v = "bitcoin:"+ca+(cm?"?amount="+cm:""); }
@@ -5405,7 +5415,7 @@ $("ctypeSeg").addEventListener("click", function(e){
   try{ b.blur(); }catch(x){}  // don't leave the button focused (would keep its tooltip showing)
 });
 $("ppCurSeg").addEventListener("click", function(e){ var b=e.target.closest("button"); if(!b) return; Array.prototype.forEach.call(this.children,function(x){x.classList.toggle("on",x===b);}); buildContent(); });
-["content","wifiSsid","wifiPass","vcName","vcTel","vcEmail","vcOrg","vcUrl","vcInsta","vcYt","telNum","smsNum","smsMsg","emTo","emSubj","emBody","geoLat","geoLng","waNum","waMsg","ppUser","ppAmt","cyAddr","cyAmt","evTitle","evLoc","evStart","evEnd","socialUser","linkUrl"].forEach(function(id){
+["content","wifiSsid","wifiPass","vcName","vcTel","vcEmail","vcOrg","vcUrl","vcInsta","vcYt","telNum","smsNum","smsMsg","emTo","emSubj","emBody","geoQ","waNum","waMsg","ppUser","ppAmt","cyAddr","cyAmt","evTitle","evLoc","evStart","evEnd","socialUser","linkUrl"].forEach(function(id){
   $(id).addEventListener("input", buildContent);
 });
 $("wifiHidden").addEventListener("change", buildContent);
@@ -7209,7 +7219,7 @@ var CATS = {
     {name:"전화 문의",tag:"스캔 → 바로 전화",s:{fill:"solid",fg1:"#15803d",bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"📞",centerScale:28,frameOn:true,frameStyle:"card",frameMode:"solid",frameBg1:"#15803d"},ct:"tel",fields:{telNum:"010-1234-5678"}},
     {name:"문자로 참여",tag:"스캔 → 문자 작성",s:{fill:"solid",fg1:"#6d28d9",bg:"#ffffff",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"💬",centerScale:28},ct:"sms",fields:{smsNum:"010-1234-5678",smsMsg:"이벤트 참여합니다"}},
     {name:"이메일 문의",tag:"스캔 → 메일 작성",s:{fill:"solid",fg1:"#0e7490",bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"✉️",centerScale:28},ct:"email",fields:{emTo:"contact@company.com",emSubj:"문의드립니다"}},
-    {name:"매장 위치",tag:"스캔 → 지도 열기",s:{fill:"solid",fg1:"#b91c1c",bg:"#ffffff",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"📍",centerScale:28,frameOn:true,frameStyle:"card",frameMode:"solid",frameBg1:"#b91c1c"},ct:"geo",fields:{geoLat:"37.5665",geoLng:"126.9780"}},
+    {name:"매장 위치",tag:"스캔 → 지도 열기",s:{fill:"solid",fg1:"#b91c1c",bg:"#ffffff",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"📍",centerScale:28,frameOn:true,frameStyle:"card",frameMode:"solid",frameBg1:"#b91c1c"},ct:"geo",fields:{geoQ:"서울특별시청"}},
     {name:"쿠폰 코드",tag:"스캔 → 쿠폰 코드 표시",s:{fill:"linear",fg1:"#db2777",fg2:"#f97316",angle:120,dot:"rounded",eye:"rounded",bg:"#ffffff",centerMode:"emoji",centerText:"🎁",centerScale:26},ct:"text",fields:{content:"10% 할인 쿠폰: WELCOME10"}},
     {name:"리뷰 남기기",tag:"스캔 → 리뷰 페이지",s:{fill:"solid",fg1:"#b45309",bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"⭐",centerScale:22,ecc:"H",labelOn:true,labelText:"REVIEW US ★"},ct:"url",fields:{content:"https://jay-inky.vercel.app"}},
     {name:"인스타 프로필",tag:"스캔 → 인스타그램",s:{fill:"linear",fg1:"#e1306c",fg2:"#f77737",angle:120,bg:"#ffffff",dot:"rounded",eye:"circle",centerMode:"none",centerLogoUrl:brandLogoUrl("instagram"),logoSize:24,logoPad:true,ecc:"H",labelOn:true,labelText:"@FOLLOW"},ct:"instagram",fields:{socialUser:"my.brand"}},
@@ -7616,6 +7626,7 @@ var I18N = {
   "pst.hint.map":{ko:"‘고를 수 있게’를 고르면 스캔한 사람이 네이버·카카오·구글·애플 지도 중 쓰는 앱을 골라 열 수 있어요. 앱 설치나 API 키는 필요 없어요.",en:"“Let them choose” opens a small page where the visitor picks Naver, Kakao, Google or Apple Maps. No app or API key needed.",ja:"「選べるように」を選ぶと、読み取った人がNAVER・カカオ・Google・Appleの地図から使うアプリを選べます。アプリやAPIキーは不要です。",zh:"选择“让对方选择”后，扫码的人可以在 Naver、Kakao、谷歌或苹果地图中选择要用的应用。无需安装应用或 API 密钥。"},
   "pst.mapTest":{ko:"링크 미리 열어 보기 ↗",en:"Open the link to check ↗",ja:"リンクを開いて確認 ↗",zh:"打开链接检查 ↗"},
   "pst.ctaMap":{ko:"오시는 길",en:"Get directions",ja:"アクセス",zh:"到店路线"},
+  "hint.geo":{ko:"장소 이름·주소로 찾아요. 좌표(예: 37.5665, 126.9780)를 넣어도 됩니다. ‘고를 수 있게’는 스캔한 사람이 네이버·카카오·구글·애플 지도 중 골라 열어요.",en:"Search by place name or address — coordinates (e.g. 37.5665, 126.9780) work too. “Let them choose” lets the visitor open Naver, Kakao, Google or Apple Maps.",ja:"場所の名前・住所で検索します。座標（例：37.5665, 126.9780）も使えます。「選べるように」は読み取った人がNAVER・カカオ・Google・Appleの地図から選べます。",zh:"按地点名称或地址查找，也可以输入坐标（例如 37.5665, 126.9780）。“让对方选择”可让扫码者在 Naver、Kakao、谷歌或苹果地图中选择。"},
   "foot.contact":{ko:"문의",en:"Contact",zh:"联系",ja:"お問い合わせ"},
   "foot.motion":{ko:"모션 QR 실험실",en:"Motion QR Lab",zh:"动态二维码实验室",ja:"モーションQRラボ"},
   "foot.tag":{ko:"아름답고 스캔되는 QR을 만드는 스튜디오 · QR 생성·디자인은 브라우저에서 처리 (AI 기능만 서버 전송·저장 안 함)",en:"A studio for beautiful, scannable QR codes · QR building & design run in your browser (only AI features send to a server, and aren't stored)",zh:"打造美观且可扫描二维码的工作室 · 二维码生成与设计在浏览器中处理（仅 AI 功能会发送到服务器，且不存储）",ja:"美しくスキャン可能なQRを作るスタジオ · QR生成・デザインはブラウザで処理（AI機能のみサーバー送信・保存なし）"},
@@ -7811,7 +7822,7 @@ var I18N = {
   "ct.tip.tel":{ko:"전화번호를 담습니다. 스캔하면 전화 앱에 번호가 떠서 바로 걸 수 있어요.",en:"Holds a phone number. On scan the dialer opens with it, ready to call.",zh:"存放电话号码。扫描后拨号界面自动填入，可直接拨打。",ja:"電話番号を格納。スキャンで電話アプリに番号が表示され即発信。"},
   "ct.tip.sms":{ko:"받는 번호와 메시지를 미리 채워 문자 작성창을 엽니다(이벤트 참여 등).",en:"Opens the SMS composer with recipient & message prefilled (event entries, etc.).",zh:"打开短信编辑，预填收件号码与内容（活动参与等）。",ja:"宛先と本文を事前入力してSMS作成画面を開きます（イベント参加など）。"},
   "ct.tip.email":{ko:"받는사람·제목·내용을 채워 메일 작성창을 엽니다.",en:"Opens the email composer with recipient, subject and body prefilled.",zh:"打开邮件编辑，预填收件人、主题与正文。",ja:"宛先・件名・本文を入力してメール作成画面を開きます。"},
-  "ct.tip.geo":{ko:"위도·경도를 담아 지도 앱에 위치 핀을 띄웁니다(매장 찾아오기).",en:"Stores latitude/longitude to drop a pin in the map app (find your shop).",zh:"存入经纬度，在地图应用中显示定位（引导到店）。",ja:"緯度・経度を格納し地図アプリにピンを表示（店舗案内）。"},
+  "ct.tip.geo":{ko:"장소 이름·주소로 네이버·카카오·구글 지도를 엽니다(매장 찾아오기).",en:"Opens Naver, Kakao or Google Maps from a place name or address (help people find you).",zh:"根据地点名称或地址打开 Naver、Kakao 或谷歌地图（引导到店）。",ja:"場所の名前・住所からNAVER・カカオ・Googleの地図を開きます（来店案内）。"},
   "grp.content":{ko:"콘텐츠",en:"Content",zh:"内容",ja:"コンテンツ"},
   "grp.art":{ko:"이미지 · 영상 · GIF 아트 QR",en:"Image · Video · GIF art QR",zh:"图片·视频·GIF 艺术二维码",ja:"画像・動画・GIFアートQR"},
   "grp.ai":{ko:"AI 아트 QR",en:"AI art QR",zh:"AI 艺术二维码",ja:"AIアートQR"},
@@ -7960,7 +7971,6 @@ var I18N = {
   "hint.artVis":{ko:'높을수록 그림이 더 드러나고, 낮을수록 스캔이 더 안정적입니다.',en:'Higher shows the picture more; lower makes scanning more reliable.',zh:'越高图案越明显，越低扫描越稳定。',ja:'高いほど絵が目立ち、低いほどスキャンが安定します。'},
   "hint.artDensity":{ko:'오른쪽일수록 모듈이 작고 촘촘해져 그림이 더 선명합니다(스캔엔 더 큰 화면/인쇄 권장).',en:'Further right = smaller, denser modules and a sharper picture (use a larger screen/print for scanning).',zh:'越往右模块越小越密、图案越清晰（扫描建议更大屏幕/打印）。',ja:'右にいくほどモジュールが小さく密になり絵が鮮明に（スキャンには大きめの画面/印刷を推奨）。'},
   "hint.labelOffset":{ko:'− 위로 / + 아래로. QR과 글자 사이 간격을 조절합니다.',en:'− up / + down. Adjusts the gap between the QR and the text.',zh:'− 上移 / + 下移。调整二维码与文字之间的间距。',ja:'− 上へ / + 下へ。QRと文字の間隔を調整します。'},
-  "hint.geo":{ko:'지도 앱에서 좌표 복사: 구글 지도에서 위치 길게 누르면 위도, 경도가 표시됩니다.',en:'Copy coordinates from a map app: long-press a spot in Google Maps to see latitude & longitude.',zh:'从地图应用复制坐标：在 Google 地图长按某处即可看到经纬度。',ja:'地図アプリで座標をコピー：Googleマップで場所を長押しすると緯度・経度が表示されます。'},
   "hint.myqrBar":{ko:'스튜디오에서 만든 디자인을 브라우저에 저장·관리합니다(기기 로컬 저장).',en:'Save and manage designs you made in the studio, right in your browser (stored locally on your device).',zh:'将在工作室创建的设计保存并管理在浏览器中（存储于本机）。',ja:'スタジオで作ったデザインをブラウザに保存・管理します（端末ローカル保存）。'},
   "hint.centerScale":{ko:'오류정정 <b>H</b>에 의존해 스캔됩니다. 크면(특히 픽토그램) 스캔 테스트를 권장합니다.',en:'Scanning relies on error-correction <b>H</b>. If it\'s large (especially pictograms), test the scan.',zh:'依赖纠错级别 <b>H</b> 才能扫描。较大时（尤其图标）建议先测试扫描。',ja:'誤り訂正 <b>H</b> に依存してスキャンされます。大きい場合（特にピクトグラム）はスキャンテストを推奨します。'},
   "hint.ecc":{ko:'오류가 나도 스스로 복원하는 여유량입니다. 높을수록 로고를 크게 넣어도 스캔돼요 — 로고·아트 사용 시 <b>H</b> 권장.',en:'Headroom that self-recovers from errors. Higher lets you add a bigger logo and still scan — use <b>H</b> for logos/art.',zh:'出错时可自我恢复的余量。越高即使放大 Logo 也能扫描 — 使用 Logo/艺术时建议 <b>H</b>。',ja:'エラーを自己復元する余裕量です。高いほど大きなロゴを入れてもスキャン可能 — ロゴ・アート使用時は <b>H</b> 推奨。'},
@@ -8102,8 +8112,6 @@ var I18N = {
   "lbl.evStart":{ko:'시작',en:'Start',zh:'开始',ja:'開始'},
   "lbl.evEnd":{ko:'종료',en:'End',zh:'结束',ja:'終了'},
   "hint.ev":{ko:'스캔하면 캘린더에 이 일정을 추가할 수 있습니다(iCalendar 표준).',en:'Scanning lets you add this event to the calendar (iCalendar standard).',zh:'扫描后可将此日程加入日历（iCalendar 标准）。',ja:'スキャンでこの予定をカレンダーに追加できます（iCalendar標準）。'},
-  "lbl.geoLat":{ko:'위도',en:'Latitude',zh:'纬度',ja:'緯度'},
-  "lbl.geoLng":{ko:'경도',en:'Longitude',zh:'经度',ja:'経度'},
   "ar.mode.qr":{ko:'🔲 QR 마커',en:'🔲 QR marker',zh:'🔲 二维码标记',ja:'🔲 QRマーカー'},
   "ar.mode.face":{ko:'🙂 얼굴 스티커',en:'🙂 Face sticker',zh:'🙂 面部贴纸',ja:'🙂 顔スタンプ'},
   "lbl.stickerPick":{ko:'스티커 고르기',en:'Pick a sticker',zh:'选择贴纸',ja:'スタンプを選ぶ'},
@@ -8866,6 +8874,11 @@ var POSTER=(function(){
     {img:"assets/poster/poster-08.webp",th:"assets/poster/t/poster-08.webp",acc:"#fde68a",t:["새 시즌, 새 스타일","New Season, New Style","新しい季節、新しいスタイル","新季新造型"],s:["첫 방문 컷·컬러 20% 할인","20% off cut & color on your first visit","初回カット・カラー20%オフ","首次到店剪染八折"],c:["예약하기","Book now","予約する","立即预约"]},
     {img:"assets/poster/poster-09.webp",th:"assets/poster/t/poster-09.webp",acc:"#f87171",t:["30일 바디 챌린지","30-Day Body Challenge","30日ボディチャレンジ","30 天塑形挑战"],s:["PT 1회 무료 체험 · 선착순 20명","Free PT trial · first 20 sign-ups","PT無料体験・先着20名","免费私教体验 · 限前 20 名"],c:["신청하기","Sign up","申し込む","立即报名"]},
     {img:"assets/poster/poster-10.webp",th:"assets/poster/t/poster-10.webp",acc:"#86efac",t:["아침 요가 리트릿","Morning Yoga Retreat","朝ヨガ・リトリート","晨间瑜伽静修"],s:["주말 1박 2일 · 산속 명상 클래스","Weekend stay · mountain meditation class","週末1泊2日・山の瞑想クラス","周末两天一夜 · 山间冥想课"],c:["자세히 보기","Learn more","詳しく見る","了解详情"]},
+    {img:"assets/poster/poster-13.webp",th:"assets/poster/t/poster-13.webp",acc:"#f9a8d4",t:["해피 버스데이","Happy Birthday","ハッピーバースデー","生日快乐"],s:["소중한 날에 초대합니다 · 12.6 SAT 1PM","You're invited · Sat 12.6, 1PM","大切な日にご招待します・12.6（土）13時","诚邀您参加 · 12.6 周六 13:00"],c:["참석 회신","RSVP","出欠を返信","回复出席"]},
+    {img:"assets/poster/poster-15.webp",th:"assets/poster/t/poster-15.webp",acc:"#c4b5fd",t:["라이브 인 서울","Live in Seoul","ライブ・イン・ソウル","首尔现场"],s:["전국 투어 · 12.13–14","National tour · Dec 13–14","全国ツアー・12.13–14","全国巡演 · 12.13–14"],c:["티켓 예매","Get tickets","チケット予約","立即购票"]},
+    {img:"assets/poster/poster-16.webp",th:"assets/poster/t/poster-16.webp",acc:"#fbbf24",t:["재즈 나이트","Jazz Night","ジャズ・ナイト","爵士之夜"],s:["라이브 쿼텟 · 매주 금 9PM","Live quartet · Fridays 9PM","ライブカルテット・毎週金曜21時","现场四重奏 · 每周五 21:00"],c:["좌석 예약","Reserve a table","席を予約","预订座位"]},
+    {img:"assets/poster/poster-18.webp",th:"assets/poster/t/poster-18.webp",acc:"#fdba74",t:["색의 언어","The Language of Color","色の言語","色彩的语言"],s:["현대 추상화전 · 무료 관람","Contemporary abstraction · free entry","現代抽象画展・入場無料","当代抽象画展 · 免费参观"],c:["전시 정보","Exhibition info","展示情報","展览信息"]},
+    {img:"assets/poster/poster-19.webp",th:"assets/poster/t/poster-19.webp",acc:"#fcd34d",t:["책 읽는 밤","A Night of Books","本を読む夜","读书之夜"],s:["북토크 & 중고책 마켓 · 매월 마지막 금요일","Book talks & used-book market · last Friday monthly","ブックトーク＆古本市・毎月最終金曜","读书会与二手书市 · 每月最后一个周五"],c:["참가 신청","Join us","参加申込","报名参加"]},
     {img:"assets/anim-1.webp",acc:"#67e8f9",t:["NEON NIGHTS","NEON NIGHTS","NEON NIGHTS","NEON NIGHTS"],s:["라이브 공연 · 11.08 SAT 8PM","Live show · Sat 11.08, 8PM","ライブ公演・11.08（土）20時","现场演出 · 11.08 周六 20:00"],c:["티켓 예매","Get tickets","チケット予約","立即购票"]},
     {img:"assets/anim-2.webp",acc:"#fcd34d",t:["우키요에: 큰 파도","Ukiyo-e: The Great Wave","浮世絵：大波","浮世绘：巨浪"],s:["기획전 · 10.24 – 11.30","Exhibition · Oct 24 – Nov 30","企画展・10.24 – 11.30","特展 · 10.24 – 11.30"],c:["전시 안내","Explore","展示案内","展览详情"]},
     {img:"assets/anim-9.webp",acc:"#fbbf24",t:["바로크 나이트","Baroque Night","バロック・ナイト","巴洛克之夜"],s:["클래식 콘서트 · 12.20","Classical concert · Dec 20","クラシックコンサート・12.20","古典音乐会 · 12.20"],c:["예매하기","Book now","予約する","立即预订"]},
@@ -8986,12 +8999,7 @@ var POSTER=(function(){
     Array.prototype.forEach.call($("pstEx").children,function(b,j){ b.classList.toggle("on", j===i); });
   }
   // map links: plain web URLs every map app accepts — no API key; "pick" = our chooser page
-  var SITE=/^https?:/.test(location.protocol)?location.origin:"https://jay-inky.vercel.app";
-  function mapUrl(q, app){ var e=encodeURIComponent(q);
-    if(app==="naver") return "https://map.naver.com/p/search/"+e;
-    if(app==="kakao") return "https://map.kakao.com/link/search/"+e;
-    if(app==="google") return "https://www.google.com/maps/search/?api=1&query="+e;
-    return SITE+"/map.html?q="+e; }
+  function mapUrl(q, app){ return mapLinkUrl(q, app); }
   function applyMap(){ var q=st.place.trim(); st.url=q?mapUrl(q,st.mapApp):""; $("pstUrl").value=st.url; var a=$("pstMapTest"); if(a){ a.href=st.url||"#"; a.style.visibility=q?"visible":"hidden"; }
     if(q && !st.edited.Cta){ st.cta=t("pst.ctaMap"); $("pstCta").value=st.cta; } frame(0); }
   function syncInputs(){ $("pstTitle").value=st.title; $("pstSub").value=st.sub; $("pstCta").value=st.cta; $("pstUrl").value=st.url||defUrl(); }
