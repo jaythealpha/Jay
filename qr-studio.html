@@ -378,6 +378,12 @@
   .fphoto-grid button img{width:100%;height:100%;object-fit:cover;display:block;border-radius:8px}
   .fphoto-grid button.on{border-color:var(--acc)}
   .fphoto-grid .grp{grid-column:1/-1;font-size:12px;color:var(--mut);margin:6px 0 0}
+  .pst-hold canvas{display:block;width:100%;max-width:440px;height:auto;margin:0 auto;border-radius:14px;box-shadow:0 0 0 1px var(--line)}
+  .pst-btns{display:flex;gap:10px;margin-top:14px} .pst-btns .btn{flex:1}
+  .pst-ex{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 2px;margin-top:8px;scrollbar-width:thin}
+  .pst-ex button{flex:none;width:64px;height:80px;padding:0;border:2px solid transparent;border-radius:10px;overflow:hidden;cursor:pointer;background:none}
+  .pst-ex button.on{border-color:var(--acc)} .pst-ex button img{width:100%;height:100%;object-fit:cover;display:block}
+  .pst-card{cursor:pointer}
   .ar-guide{max-width:720px;margin:0 auto 16px;border:1px solid var(--line);border-radius:var(--r);background:var(--bg2);padding:14px 16px}
   .ar-guide h3{margin:0 0 10px;font-size:16px}
   .ar-guide .seg{margin-bottom:12px}
@@ -566,6 +572,7 @@
       <button data-cat="logo" data-i18n-tip="cat.tip.logo" data-tip="중앙에 브랜드 텍스트가 들어간 로고형 QR. 클릭 후 문구를 바꾸거나 로고 이미지를 올릴 수 있어요."><span data-i18n="cat.logo">로고</span></button>
       <button data-cat="pictogram" data-i18n-tip="cat.tip.pictogram" data-tip="용도·업종별 픽토그램 QR. Wi-Fi·연락처·전화 같은 용도형은 클릭하면 입력폼이 예시값과 함께 열려요."><span data-i18n="cat.pictogram">픽토그램</span></button>
       <button data-cat="motion" class="cat-new" data-i18n-tip="cat.tip.motion" data-tip="QR 점들이 날아와 모이는 모션 QR. 색·로고·이미지를 넣고 영상(MP4·WebM)으로 저장할 수 있어요."><span data-i18n="cat.motion">모션</span></button>
+      <button data-cat="poster" class="cat-new" data-i18n-tip="cat.tip.poster" data-tip="내 이미지와 문구로 만드는 QR 포스터. 예시를 눌러 시작하세요."><span data-i18n="cat.poster">포스터</span></button>
       <button data-cat="frame" data-i18n-tip="cat.tip.frame" data-tip="영화 포스터·폴라로이드·명화 액자·여행지 테마의 이미지 프레임 50종. 가운데 창에 QR이 들어가요."><span data-i18n="cat.frame">프레임</span></button>
       <button data-cat="myqr" data-i18n-tip="cat.tip.myqr" data-tip="내가 저장한 QR 보관함. 스튜디오에서 ‘현재 디자인 저장’을 누르면 여기 쌓입니다."><span data-i18n="cat.myqr">★ My QR</span></button>
     </div>
@@ -1352,6 +1359,65 @@
   </section>
 
   <!-- ============ ABOUT / ANALYSIS ============ -->
+  <!-- ============ POSTER (image + text + QR card) ============ -->
+  <section class="view" id="view-poster">
+    <div class="hero" style="padding:22px 0 14px">
+      <h2 data-i18n-html="pst.h"></h2>
+      <p data-i18n="pst.p"></p>
+      <div class="lang-switch" role="group" aria-label="Language"><button data-lang="ko" translate="no">Korean</button><button data-lang="en" translate="no">English</button><button data-lang="ja" translate="no">Japanese</button><button data-lang="zh" translate="no">Chinese</button></div>
+    </div>
+    <div class="studio">
+      <div class="stage">
+        <div class="pst-hold"><canvas id="pstCanvas" width="1080" height="1350"></canvas></div>
+        <div class="pst-btns">
+          <button class="btn" id="pstPng" type="button" data-i18n="pst.btn.png">PNG 저장</button>
+          <button class="btn sec" id="pstVid" type="button" data-i18n="pst.btn.vid">영상 저장 (6초)</button>
+        </div>
+        <div class="hint" id="pstWmNote" style="text-align:center" data-i18n-html="pst.wmNote"></div>
+      </div>
+      <div class="panel">
+        <details class="grp" open>
+          <summary><span data-i18n="pst.grp.img">이미지</span></summary>
+          <div class="body">
+            <label class="file-btn" for="pstFile" data-i18n="pst.btn.upload">＋ 내 이미지 올리기</label>
+            <input type="file" id="pstFile" accept="image/*" style="display:none" />
+            <div class="hint" data-i18n="pst.hint.img"></div>
+            <div class="pst-ex" id="pstEx"></div>
+          </div>
+        </details>
+        <details class="grp" open>
+          <summary><span data-i18n="pst.grp.text">문구</span></summary>
+          <div class="body">
+            <label class="fld"><div class="lbl" data-i18n="pst.lbl.title">제목</div><input type="text" id="pstTitle" maxlength="40" /></label>
+            <label class="fld"><div class="lbl" data-i18n="pst.lbl.sub">부제</div><input type="text" id="pstSub" maxlength="60" /></label>
+            <label class="fld"><div class="lbl" data-i18n="pst.lbl.cta">안내 문구</div><input type="text" id="pstCta" maxlength="24" /></label>
+          </div>
+        </details>
+        <details class="grp" open>
+          <summary><span data-i18n="pst.grp.qr">QR</span></summary>
+          <div class="body">
+            <label class="fld"><div class="lbl" data-i18n="pst.lbl.url">QR에 담을 링크</div><input type="text" id="pstUrl" maxlength="400" placeholder="https://" /></label>
+            <label class="fld"><div class="lbl" data-i18n="pst.lbl.qrStyle">QR 스타일</div>
+              <div class="seg" id="pstQrSeg"><button data-q="ink" class="on"><span data-i18n="pst.q.ink">포스터 기본</span></button><button data-q="studio"><span data-i18n="pst.q.studio">스튜디오 디자인</span></button></div></label>
+            <div class="hint" data-i18n="pst.hint.qr"></div>
+            <button class="btn sec" id="pstToStudio" type="button" style="width:100%;margin-top:8px" data-i18n="pst.btn.toStudio">스튜디오에서 QR 꾸미기 →</button>
+          </div>
+        </details>
+        <details class="grp" open>
+          <summary><span data-i18n="pst.grp.layout">레이아웃</span></summary>
+          <div class="body">
+            <label class="fld"><div class="lbl" data-i18n="pst.lbl.ratio">비율</div>
+              <div class="seg" id="pstRatioSeg"><button data-r="45" class="on"><span data-i18n="pst.ratio.45">4:5 피드</span></button><button data-r="916"><span data-i18n="pst.ratio.916">9:16 스토리</span></button><button data-r="11"><span data-i18n="pst.ratio.11">1:1 정사각</span></button></div></label>
+            <label class="fld"><div class="lbl" data-i18n="pst.lbl.pos">QR 위치</div>
+              <div class="seg" id="pstPosSeg"><button data-p="right" class="on"><span data-i18n="pst.pos.right">오른쪽</span></button><button data-p="left"><span data-i18n="pst.pos.left">왼쪽</span></button></div></label>
+            <label class="fld"><div class="lbl" data-i18n="pst.lbl.acc">강조 색</div><input type="color" id="pstAcc" value="#67e8f9" /></label>
+            <div class="switch" style="margin-top:12px"><div class="lbl" data-i18n="pst.lbl.motion" style="margin:0">배경 천천히 움직이기</div><label class="toggle"><input type="checkbox" id="pstMotion" checked /><span></span></label></div>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
   <section class="view" id="view-about">
     <div class="about">
       <h2 style="font-size:26px;margin:8px 0 4px" data-i18n="gd.title">사용법 가이드</h2>
@@ -1428,7 +1494,7 @@
     </nav>
     <div style="margin-top:10px">Aesthetic QR Studio · <span data-i18n="foot.tag">아름답고 스캔되는 QR을 만드는 스튜디오 · QR 생성·디자인은 브라우저에서 처리 (AI 기능만 서버 전송·저장 안 함)</span></div>
     <div style="margin-top:6px" data-i18n="foot.tm">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · <span data-i18n="foot.build">빌드</span> <b id="verTag">2026.10.14-e</b></div>
+    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · <span data-i18n="foot.build">빌드</span> <b id="verTag">2026.10.14-f</b></div>
   </footer>
 </div>
 
@@ -5934,7 +6000,7 @@ $("tabs").addEventListener("click",function(e){
 });
 // Single entry point for switching views. Every switch is recorded in browser history (#studio,
 // #card, …) so the phone/browser Back button, the logo (home) and shared links all work.
-var VIEWS=["gallery","studio","card","ar","about"];
+var VIEWS=["gallery","studio","card","ar","about","poster"];
 function curView(){ for(var i=0;i<VIEWS.length;i++){ if($("view-"+VIEWS[i]).classList.contains("active")) return VIEWS[i]; } return "gallery"; }
 function gotoView(v, opt){
   opt=opt||{}; if(VIEWS.indexOf(v)<0) v="gallery";
@@ -5944,6 +6010,7 @@ function gotoView(v, opt){
   if(v==="studio") rerender();
   if(v==="card" && typeof CARD!=="undefined"){ CARD.enter(); }
   if(v==="ar") AR.refresh(); else AR.leave();
+  if(typeof POSTER!=="undefined") POSTER.onView(v);
   if(v==="gallery"){ if(typeof curCat!=="undefined" && curCat==="animation" && typeof startGalAnim==="function") startGalAnim(); }
   else if(typeof stopGalAnim==="function") stopGalAnim();
   if(!opt.noHistory && (prev!==v || (location.hash.slice(1)||"gallery")!==v)){
@@ -7285,6 +7352,7 @@ function buildGallery(){
   var grid=$("galGrid"), empty=$("galEmpty");
   showMotion(curCat==="motion");
   if(curCat==="motion"){ $("myqrBar").style.display="none"; empty.style.display="none"; if(typeof stopGalAnim==="function") stopGalAnim(); return; }
+  if(curCat==="poster"){ $("myqrBar").style.display="none"; empty.style.display="none"; grid.innerHTML=""; stopGalAnim(); galItems=[]; POSTER.buildGallery(grid); return; }
   $("myqrBar").style.display = (curCat==="myqr") ? "flex" : "none";
   grid.innerHTML=""; empty.style.display="none"; stopGalAnim(); galItems=[];
   if(curCat==="myqr"){ renderMyQr(); return; }
@@ -7478,6 +7546,40 @@ var I18N = {
   "seg.fstyle.photo":{ko:"이미지 프레임",en:"Image frame",zh:"图片边框",ja:"画像フレーム"},
   "lbl.framePhoto":{ko:"이미지 프레임 고르기",en:"Choose an image frame",zh:"选择图片边框",ja:"画像フレームを選ぶ"},
   "cat.tip.frame":{ko:"영화 포스터·폴라로이드·명화 액자·여행지 테마의 이미지 프레임 50종. 가운데 창에 QR이 들어가요.",en:"50 image frames — movie posters, Polaroids, fine-art frames and travel scenes. The QR sits in the centre window.",zh:"50 款图片边框——电影海报、拍立得、名画画框和旅行风景。二维码位于中间的窗口。",ja:"映画ポスター・ポラロイド・名画の額縁・旅先をテーマにした画像フレーム50種。中央の窓にQRが入ります。"},
+  "pst.h":{ko:"<span class=\"g\">포스터</span>로 QR 알리기",en:"Promote your QR with a <span class=\"g\">poster</span>",ja:"<span class=\"g\">ポスター</span>でQRを広めよう",zh:"用<span class=\"g\">海报</span>推广你的二维码"},
+  "pst.p":{ko:"내 이미지와 문구를 넣으면 QR 카드가 들어간 포스터가 완성돼요. 피드(4:5)·스토리(9:16)·정사각형(1:1)으로 저장할 수 있어요.",en:"Add your own image and text to get a poster with a QR card. Save it for feeds (4:5), stories (9:16) or square (1:1).",ja:"画像と文言を入れるだけで、QRカード入りのポスターが完成。フィード（4:5）・ストーリー（9:16）・正方形（1:1）で保存できます。",zh:"放入自己的图片和文字，即可生成带二维码卡片的海报。可保存为动态（4:5）、快拍（9:16）或方形（1:1）。"},
+  "pst.grp.img":{ko:"이미지",en:"Image",ja:"画像",zh:"图片"},
+  "pst.btn.upload":{ko:"＋ 내 이미지 올리기 (JPG·PNG·WebP)",en:"＋ Upload your image (JPG·PNG·WebP)",ja:"＋ 画像をアップロード（JPG・PNG・WebP）",zh:"＋ 上传图片（JPG·PNG·WebP）"},
+  "pst.hint.img":{ko:"또는 아래 예시에서 골라 시작하세요. 이미지는 기기 안에서만 처리돼요.",en:"Or start from an example below. Your image never leaves your device.",ja:"または下の例から選んで始めましょう。画像は端末内だけで処理されます。",zh:"也可以从下方示例开始。图片仅在你的设备上处理。"},
+  "pst.grp.text":{ko:"문구",en:"Text",ja:"テキスト",zh:"文字"},
+  "pst.lbl.title":{ko:"제목",en:"Title",ja:"タイトル",zh:"标题"},
+  "pst.lbl.sub":{ko:"부제",en:"Subtitle",ja:"サブタイトル",zh:"副标题"},
+  "pst.lbl.cta":{ko:"안내 문구",en:"Call to action",ja:"案内文",zh:"引导文字"},
+  "pst.grp.qr":{ko:"QR",en:"QR",ja:"QR",zh:"二维码"},
+  "pst.lbl.url":{ko:"QR에 담을 링크",en:"Link in the QR",ja:"QRに入れるリンク",zh:"二维码链接"},
+  "pst.lbl.qrStyle":{ko:"QR 스타일",en:"QR style",ja:"QRスタイル",zh:"二维码样式"},
+  "pst.q.ink":{ko:"포스터 기본",en:"Poster default",ja:"ポスター標準",zh:"海报默认"},
+  "pst.q.studio":{ko:"스튜디오 디자인",en:"Studio design",ja:"スタジオのデザイン",zh:"工作室设计"},
+  "pst.hint.qr":{ko:"‘스튜디오 디자인’을 고르면 스튜디오에서 꾸민 QR(색·모양·로고)이 그대로 들어가요.",en:"Choose “Studio design” to use the QR you styled in the Studio (colors, shapes, logo).",ja:"「スタジオのデザイン」を選ぶと、スタジオで作ったQR（色・形・ロゴ）がそのまま入ります。",zh:"选择“工作室设计”即可使用你在工作室设计的二维码（颜色、形状、标志）。"},
+  "pst.btn.toStudio":{ko:"스튜디오에서 QR 꾸미기 →",en:"Style the QR in Studio →",ja:"スタジオでQRをデザイン →",zh:"在工作室设计二维码 →"},
+  "pst.grp.layout":{ko:"레이아웃",en:"Layout",ja:"レイアウト",zh:"版式"},
+  "pst.lbl.ratio":{ko:"비율",en:"Size",ja:"比率",zh:"比例"},
+  "pst.ratio.45":{ko:"4:5 피드",en:"4:5 Feed",ja:"4:5 フィード",zh:"4:5 动态"},
+  "pst.ratio.916":{ko:"9:16 스토리",en:"9:16 Story",ja:"9:16 ストーリー",zh:"9:16 快拍"},
+  "pst.ratio.11":{ko:"1:1 정사각",en:"1:1 Square",ja:"1:1 正方形",zh:"1:1 方形"},
+  "pst.lbl.pos":{ko:"QR 위치",en:"QR position",ja:"QRの位置",zh:"二维码位置"},
+  "pst.pos.right":{ko:"오른쪽",en:"Right",ja:"右",zh:"右侧"},
+  "pst.pos.left":{ko:"왼쪽",en:"Left",ja:"左",zh:"左侧"},
+  "pst.lbl.acc":{ko:"강조 색",en:"Accent color",ja:"アクセント色",zh:"强调色"},
+  "pst.lbl.motion":{ko:"배경 천천히 움직이기",en:"Slow background motion",ja:"背景をゆっくり動かす",zh:"背景缓慢移动"},
+  "pst.btn.png":{ko:"PNG 저장",en:"Save PNG",ja:"PNG保存",zh:"保存 PNG"},
+  "pst.btn.vid":{ko:"영상 저장 (6초)",en:"Save video (6s)",ja:"動画を保存（6秒）",zh:"保存视频（6秒）"},
+  "pst.wmNote":{ko:"무료 버전은 저장한 이미지·영상 오른쪽 위에 작은 워터마크가 들어가요. <a href=\"#\">Pro</a>에서 없앨 수 있어요.",en:"Free saves include a small watermark in the top-right corner. <a href=\"#\">Pro</a> removes it.",ja:"無料版では保存した画像・動画の右上に小さな透かしが入ります。<a href=\"#\">Pro</a>で消せます。",zh:"免费版保存的图片和视频右上角会带有小水印。<a href=\"#\">Pro</a> 可去除。"},
+  "pst.recording":{ko:"영상 녹화 중… 6초 걸려요",en:"Recording… takes 6 seconds",ja:"録画中…6秒かかります",zh:"录制中… 需要 6 秒"},
+  "pst.saved":{ko:"저장했어요",en:"Saved",ja:"保存しました",zh:"已保存"},
+  "pst.noRec":{ko:"이 브라우저는 영상 저장을 지원하지 않아요. PNG로 저장해 주세요.",en:"This browser can't record video. Please save a PNG instead.",ja:"このブラウザは動画保存に対応していません。PNGで保存してください。",zh:"此浏览器不支持保存视频，请改为保存 PNG。"},
+  "cat.poster":{ko:"포스터",en:"Poster",ja:"ポスター",zh:"海报"},
+  "cat.tip.poster":{ko:"내 이미지와 문구로 만드는 QR 포스터. 예시를 눌러 시작하세요.",en:"QR posters from your own image and text. Tap an example to start.",ja:"自分の画像と文言で作るQRポスター。例をタップして始めましょう。",zh:"用自己的图片和文字制作二维码海报。点击示例开始。"},
   "foot.contact":{ko:"문의",en:"Contact",zh:"联系",ja:"お問い合わせ"},
   "foot.motion":{ko:"모션 QR 실험실",en:"Motion QR Lab",zh:"动态二维码实验室",ja:"モーションQRラボ"},
   "foot.tag":{ko:"아름답고 스캔되는 QR을 만드는 스튜디오 · QR 생성·디자인은 브라우저에서 처리 (AI 기능만 서버 전송·저장 안 함)",en:"A studio for beautiful, scannable QR codes · QR building & design run in your browser (only AI features send to a server, and aren't stored)",zh:"打造美观且可扫描二维码的工作室 · 二维码生成与设计在浏览器中处理（仅 AI 功能会发送到服务器，且不存储）",ja:"美しくスキャン可能なQRを作るスタジオ · QR生成・デザインはブラウザで処理（AI機能のみサーバー送信・保存なし）"},
@@ -8029,6 +8131,7 @@ function applyLang(lang){
   try{ var dt=t("doc.title"); if(dt) document.title=dt; }catch(e){}
   document.querySelectorAll("[data-i18n-ph]").forEach(function(el){ var v=t(el.getAttribute("data-i18n-ph")); if(v!=null) el.setAttribute("placeholder",v); });
   try{ if($("galGrid") && ($("galGrid").children.length || curCat==="motion")) buildGallery(); }catch(e){}
+  try{ if(typeof POSTER!=="undefined") POSTER.onLang(); }catch(e){}
   try{ updateMeta(); }catch(e){}
   try{ centerUIvis(); }catch(e){}
   try{ if(typeof refreshProUI==="function") refreshProUI(); }catch(e){}
@@ -8712,6 +8815,135 @@ function pushArLinkToStudio(url){
   toast(t("toast.arShareOk"));
 }
 
+// ---------- POSTER: user image + text + a QR card (layout "B": headline left, QR card right) ----------
+var POSTER=(function(){
+  var EX=[
+    {img:"assets/anim-1.webp",acc:"#67e8f9",t:["NEON NIGHTS","NEON NIGHTS","NEON NIGHTS","NEON NIGHTS"],s:["라이브 공연 · 11.08 SAT 8PM","Live show · Sat 11.08, 8PM","ライブ公演・11.08（土）20時","现场演出 · 11.08 周六 20:00"],c:["티켓 예매","Get tickets","チケット予約","立即购票"]},
+    {img:"assets/anim-2.webp",acc:"#fcd34d",t:["우키요에: 큰 파도","Ukiyo-e: The Great Wave","浮世絵：大波","浮世绘：巨浪"],s:["기획전 · 10.24 – 11.30","Exhibition · Oct 24 – Nov 30","企画展・10.24 – 11.30","特展 · 10.24 – 11.30"],c:["전시 안내","Explore","展示案内","展览详情"]},
+    {img:"assets/anim-9.webp",acc:"#fbbf24",t:["바로크 나이트","Baroque Night","バロック・ナイト","巴洛克之夜"],s:["클래식 콘서트 · 12.20","Classical concert · Dec 20","クラシックコンサート・12.20","古典音乐会 · 12.20"],c:["예매하기","Book now","予約する","立即预订"]},
+    {img:"assets/anim-15.webp",acc:"#a5b4fc",t:["우주 정원","Cosmic Garden","宇宙の庭","宇宙花园"],s:["몰입형 전시 · 지금 오픈","Immersive exhibition · Now open","没入型展示・開催中","沉浸式展览 · 现已开放"],c:["입장권 구매","Get passes","入場券を買う","购买门票"]},
+    {img:"assets/anim-13.webp",acc:"#fda4af",t:["디저트 시티","Dessert City","デザートシティ","甜品之城"],s:["신메뉴 출시 · 첫 주 10% 할인","New menu · 10% off launch week","新メニュー・初週10%オフ","新品上市 · 首周九折"],c:["메뉴 보기","See the menu","メニューを見る","查看菜单"]},
+    {img:"assets/anim-16.webp",acc:"#f9a8d4",t:["마법의 숲","Enchanted Forest","魔法の森","魔法森林"],s:["향수 팝업스토어 · 성수","Fragrance pop-up · Seongsu","香水ポップアップ・聖水","香水快闪店 · 圣水"],c:["위치 보기","Find us","場所を見る","查看位置"]}
+  ];
+  var LI={ko:0,en:1,ja:2,zh:3};
+  var st={ex:0,img:null,own:false,title:"",sub:"",cta:"",url:"",ratio:"45",pos:"right",acc:"#67e8f9",motion:true,qr:"ink",edited:{}};
+  var raf=null, t0=0, qrCv=null, qrKey="", active=false, rec=false;
+  var FONT='-apple-system,BlinkMacSystemFont,"Pretendard","Noto Sans KR","Noto Sans JP","Noto Sans SC",sans-serif';
+  function li(){ return LI[(typeof LANG!=="undefined"&&LANG)||"ko"]||0; }
+  function dims(r){ return r==="916"?[1080,1920]:r==="11"?[1080,1080]:[1080,1350]; }
+  function defUrl(){ var c=(S.content||"").trim(); return c&&c!==" " ? c : "https://jay-inky.vercel.app"; }
+  function rr(g,x,y,w,h,r){ g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath(); }
+  // the QR card uses the Studio design (colours / module & eye shape / logo), drawn clean (no frame/label/art)
+  function qrCanvas(url, px, mode){
+    var key=[url,px,mode,S.fill,S.fg1,S.fg2,S.angle,S.dot,S.eye,S.eyeColorOn,S.eyeColor,S.ecc,S.logo&&S.logo.src,S.logoSize,S.bg].join("|");
+    if(qrCv && key===qrKey) return qrCv;
+    var sv={content:S.content,frameOn:S.frameOn,labelOn:S.labelOn,centerMode:S.centerMode,aiArt:S.aiArt,artImg:S.artImg,anim:S.anim,transparent:S.transparent,margin:S.margin,bg:S.bg};
+    var sv2=null;
+    if(mode!=="studio"){ sv2={fill:S.fill,fg1:S.fg1,fg2:S.fg2,dot:S.dot,eye:S.eye,eyeColorOn:S.eyeColorOn,logo:S.logo,ecc:S.ecc};
+      S.fill="solid"; S.fg1="#141a2e"; S.fg2="#141a2e"; S.dot="dots"; S.eye="rounded"; S.eyeColorOn=false; S.logo=null; S.ecc="M"; }
+    S.content=url; S.frameOn=false; S.labelOn=false; S.centerMode="none"; S.aiArt=null; S.artImg=null; S.anim=false; S.transparent=false; S.margin=1; S.bg="#ffffff";
+    var c=document.createElement("canvas"); c.width=c.height=px;
+    try{ render(c.getContext("2d"), px); }catch(e){}
+    for(var k in sv) S[k]=sv[k];
+    if(sv2) for(var k2 in sv2) S[k2]=sv2[k2];
+    qrCv=c; qrKey=key; return c;
+  }
+  function cover(g,img,W,H,z,px,py){ var iw=img.naturalWidth||img.width, ih=img.naturalHeight||img.height; if(!iw) return;
+    var sc=Math.max(W/iw,H/ih)*z, dw=iw*sc, dh=ih*sc; g.drawImage(img,(W-dw)/2+px*W,(H-dh)/2+py*H,dw,dh); }
+  function fit(g,text,maxW,size,weight,minSize,lines){
+    var fs=size; while(fs>minSize){ g.font=weight+" "+fs+"px "+FONT; var L=wrap(g,text,maxW); if(L.length<=lines) return {fs:fs,L:L}; fs-=2; }
+    g.font=weight+" "+minSize+"px "+FONT; return {fs:minSize,L:wrap(g,text,maxW).slice(0,lines)};
+  }
+  function wrap(g,text,maxW){ var words=String(text||"").split(/(\s+)/), out=[], cur="";
+    words.forEach(function(w){ var tst=cur+w; if(g.measureText(tst).width>maxW && cur.trim()){ out.push(cur.trim()); cur=w.trimStart(); } else cur=tst; });
+    if(cur.trim()) out.push(cur.trim());
+    // CJK without spaces: hard-break by characters
+    var res=[]; out.forEach(function(l){ if(g.measureText(l).width<=maxW){ res.push(l); return; } var b=""; for(var i=0;i<l.length;i++){ if(g.measureText(b+l[i]).width>maxW){ res.push(b); b=l[i]; } else b+=l[i]; } if(b) res.push(b); });
+    return res; }
+  function draw(g,W,H,P,o){
+    o=o||st; var TAU=6.28318, t=P*TAU, img=o.img;
+    g.clearRect(0,0,W,H); g.fillStyle="#0b0d12"; g.fillRect(0,0,W,H);
+    if(img){ if(o.motion) cover(g,img,W,H,1.07+0.04*Math.sin(t),0.015*Math.cos(t),0.008*Math.sin(t)); else cover(g,img,W,H,1.0,0,0); }
+    var gr=g.createLinearGradient(0,H*0.42,0,H); gr.addColorStop(0,"rgba(6,8,14,0)"); gr.addColorStop(.45,"rgba(6,8,14,.5)"); gr.addColorStop(1,"rgba(6,8,14,.82)"); g.fillStyle=gr; g.fillRect(0,0,W,H);
+    var tall=H/W>1.5, cs=W*(tall?0.34:0.30), m=W*0.06, right=o.pos!=="left";
+    var cx=right?W-cs-m:m, cy=H-cs-m*(tall?1.6:1);
+    g.save(); g.shadowColor="rgba(0,0,0,.35)"; g.shadowBlur=W*0.03; g.fillStyle="#fff"; rr(g,cx,cy,cs,cs,W*0.025); g.fill(); g.restore();
+    var qs=Math.round(cs*0.88); g.drawImage(qrCanvas(o.url||defUrl(), qs, o.qr||"ink"), cx+(cs-qs)/2, cy+(cs-qs)/2, qs, qs);
+    // text block, bottom-aligned with the card, on the opposite side
+    var tw=W-cs-m*3, tx0=right?m:W-m, al=right?"left":"right";
+    g.textAlign=al; g.textBaseline="alphabetic"; g.shadowColor="rgba(0,0,0,.55)"; g.shadowBlur=W*0.012;
+    var y=cy+cs;
+    if(o.cta){ g.font="700 "+Math.round(W*0.026)+"px "+FONT; g.fillStyle=o.acc; g.fillText(o.cta+(right?"  →":""), tx0, y-W*0.005); y-=W*0.06; }
+    if(o.sub){ var sb=fit(g,o.sub,tw,Math.round(W*0.032),"500",Math.round(W*0.022),2); g.fillStyle="rgba(255,255,255,.9)";
+      for(var i=sb.L.length-1;i>=0;i--){ g.fillText(sb.L[i],tx0,y); y-=sb.fs*1.3; } y-=W*0.012; }
+    if(o.title){ var tt=fit(g,o.title,tw,Math.round(W*(tall?0.08:0.072)),"800",Math.round(W*0.042),3); g.fillStyle="#fff";
+      for(var j=tt.L.length-1;j>=0;j--){ g.fillText(tt.L[j],tx0,y); y-=tt.fs*1.12; } }
+    g.shadowBlur=0;
+    if(o.wm){ var wf=Math.round(W*0.02); g.font="600 "+wf+"px "+FONT; var wt="Aesthetic QR Studio", ww=g.measureText(wt).width+wf*1.4;
+      g.fillStyle="rgba(0,0,0,.35)"; rr(g,W-ww-m*0.5,m*0.5,ww,wf*1.9,wf*0.95); g.fill(); g.fillStyle="rgba(255,255,255,.9)"; g.textAlign="center"; g.fillText(wt,W-ww/2-m*0.5,m*0.5+wf*1.32); }
+  }
+  function cv(){ return $("pstCanvas"); }
+  function frame(P, wm){ var c=cv(), d=dims(st.ratio); if(c.width!==d[0]||c.height!==d[1]){ c.width=d[0]; c.height=d[1]; }
+    draw(c.getContext("2d"),d[0],d[1],P,Object.assign({},st,{wm:!!wm})); }
+  function loop(ts){ if(!active){ raf=null; return; } if(!t0) t0=ts; var P=st.motion?(((ts-t0)%6000)/6000):0; frame(P, rec && !isPro()); raf=requestAnimationFrame(loop); }
+  function start(){ if(!raf){ t0=0; raf=requestAnimationFrame(loop); } }
+  function loadEx(i, keepText){
+    var e=EX[i]; st.ex=i; st.own=false; st.acc=e.acc; $("pstAcc").value=e.acc;
+    if(!keepText){ var k=li(); st.title=e.t[k]; st.sub=e.s[k]; st.cta=e.c[k]; st.edited={}; syncInputs(); }
+    var im=new Image(); im.onload=function(){ if(!st.own && st.ex===i){ st.img=im; frame(0); } }; im.src=e.img;
+    Array.prototype.forEach.call($("pstEx").children,function(b,j){ b.classList.toggle("on", j===i); });
+  }
+  function syncInputs(){ $("pstTitle").value=st.title; $("pstSub").value=st.sub; $("pstCta").value=st.cta; $("pstUrl").value=st.url||defUrl(); }
+  function buildEx(){ var box=$("pstEx"); box.innerHTML="";
+    EX.forEach(function(e,i){ var b=document.createElement("button"); b.type="button"; b.innerHTML='<img loading="lazy" alt="" src="'+e.img+'">'; b.addEventListener("click",function(){ loadEx(i,false); }); box.appendChild(b); });
+  }
+  function save(name, url){ download(url, name); toast(t("pst.saved")); }
+  function exportPng(){ frame(st.motion?0.25:0, !isPro()); var c=cv(); save("aesthetic-qr-poster.png", c.toDataURL("image/png")); track && track("poster_png"); }
+  function exportVid(){
+    var c=cv(); if(!c.captureStream || typeof MediaRecorder==="undefined"){ toast(t("pst.noRec")); return; }
+    var types=["video/mp4;codecs=avc1","video/mp4","video/webm;codecs=vp9","video/webm"], mt=""; for(var i=0;i<types.length;i++){ if(MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(types[i])){ mt=types[i]; break; } }
+    var r; try{ r=new MediaRecorder(c.captureStream(30), mt?{mimeType:mt,videoBitsPerSecond:8e6}:undefined); }catch(e){ toast(t("pst.noRec")); return; }
+    var chunks=[]; r.ondataavailable=function(e){ if(e.data&&e.data.size) chunks.push(e.data); };
+    r.onstop=function(){ rec=false; $("pstVid").disabled=false; var ext=(mt.indexOf("mp4")>=0)?"mp4":"webm"; save("aesthetic-qr-poster."+ext, URL.createObjectURL(new Blob(chunks,{type:mt||"video/webm"}))); };
+    rec=true; $("pstVid").disabled=true; t0=0; toast(t("pst.recording")); r.start(); setTimeout(function(){ try{ r.stop(); }catch(e){} }, 6050);
+    if(typeof track==="function") track("poster_video");
+  }
+  function segWire(id,key,fn){ $(id).addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return;
+    Array.prototype.forEach.call(this.children,function(x){x.classList.toggle("on",x===b);}); fn(b.dataset[key]); frame(0); }); }
+  var inited=false;
+  function init(){ if(inited) return; inited=true;
+    buildEx(); loadEx(0,false);
+    ["Title","Sub","Cta"].forEach(function(k){ $("pst"+k).addEventListener("input",function(){ st[k.toLowerCase()]=this.value; st.edited[k]=true; frame(0); }); });
+    $("pstUrl").addEventListener("input",function(){ st.url=this.value.trim(); frame(0); });
+    $("pstAcc").addEventListener("input",function(){ st.acc=this.value; });
+    $("pstMotion").addEventListener("change",function(){ st.motion=this.checked; });
+    segWire("pstRatioSeg","r",function(v){ st.ratio=v; });
+    segWire("pstPosSeg","p",function(v){ st.pos=v; });
+    segWire("pstQrSeg","q",function(v){ st.qr=v; });
+    $("pstFile").addEventListener("change",function(e){ var f=e.target.files&&e.target.files[0]; if(!f) return;
+      var rd=new FileReader(); rd.onload=function(){ var im=new Image(); im.onload=function(){ st.img=im; st.own=true; Array.prototype.forEach.call($("pstEx").children,function(b){b.classList.remove("on");}); frame(0); }; im.src=rd.result; }; rd.readAsDataURL(f); });
+    $("pstPng").addEventListener("click",exportPng);
+    $("pstVid").addEventListener("click",exportVid);
+    $("pstToStudio").addEventListener("click",function(){ if(st.url){ selectCType("url"); $("content").value=st.url; buildContent(); } gotoView("studio"); });
+    var wl=$("pstWmNote"); if(wl) wl.addEventListener("click",function(e){ if(e.target.closest("a")){ e.preventDefault(); openPro("poster"); } });
+  }
+  return {
+    onView:function(v){ active=(v==="poster"); if(active){ init(); qrKey=""; if(!st.url) $("pstUrl").value=defUrl(); $("pstWmNote").style.display=isPro()?"none":"block"; start(); } },
+    open:function(i){ init(); loadEx(i,false); gotoView("poster"); },
+    onLang:function(){ if(!inited) return; if(!st.own && !st.edited.Title && !st.edited.Sub && !st.edited.Cta){ loadEx(st.ex,false); } },
+    buildGallery:function(grid){
+      EX.forEach(function(e,i){
+        var card=document.createElement("div"); card.className="gal-card pst-card";
+        var k=li(); card.innerHTML='<span class="use">'+t("gal.edit")+'</span><canvas width="300" height="375" style="aspect-ratio:4/5;height:auto"></canvas><div class="name"></div><div class="tag"></div>';
+        card.querySelector(".name").textContent=e.t[k]; card.querySelector(".tag").textContent=e.s[k];
+        var c=card.querySelector("canvas"), im=new Image();
+        im.onload=function(){ draw(c.getContext("2d"),300,375,0,{img:im,title:e.t[k],sub:e.s[k],cta:e.c[k],acc:e.acc,pos:"right",motion:false,url:defUrl()}); };
+        im.src=e.img; card.addEventListener("click",function(){ POSTER.open(i); });
+        grid.appendChild(card);
+      });
+    }
+  };
+})();
 // ---- AR guide: live demo QR (opens this page in AR mode) + one-click "make AR QR" ----
 (function(){
   var seg=$("arGuideSeg"); if(!seg) return;
