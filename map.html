@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko" translate="no" class="notranslate">
+<head>
+<meta charset="UTF-8" />
+<meta name="google" content="notranslate" />
+<meta name="robots" content="noindex" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Open in Maps</title>
+<style>
+  :root{--bg:#f6f6f4;--card:#ffffff;--txt:#14161c;--mut:#6b7080;--line:#e6e6e2}
+  @media (prefers-color-scheme: dark){ :root{--bg:#0e1014;--card:#181b22;--txt:#f3f4f6;--mut:#9aa1b0;--line:#2a2e38} }
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Pretendard","Noto Sans KR","Noto Sans JP","Noto Sans SC",sans-serif;display:flex;align-items:center;justify-content:center;padding:24px 16px}
+  .card{width:100%;max-width:420px;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:24px 20px}
+  .pin{width:44px;height:44px;border-radius:50%;background:#ef4444;display:grid;place-items:center;margin-bottom:14px}
+  h1{font-size:13px;font-weight:600;color:var(--mut);margin:0 0 4px}
+  .place{font-size:22px;font-weight:800;margin:0 0 20px;word-break:keep-all;overflow-wrap:anywhere}
+  a.app{display:flex;align-items:center;gap:12px;padding:15px 16px;border:1px solid var(--line);border-radius:14px;margin-top:10px;color:var(--txt);text-decoration:none;font-size:16px;font-weight:600}
+  a.app:active{transform:scale(.99)}
+  .dot{width:28px;height:28px;border-radius:8px;flex:none;display:grid;place-items:center;color:#fff;font-weight:800;font-size:15px}
+  .arrow{margin-left:auto;color:var(--mut)}
+  .foot{margin-top:18px;font-size:12px;color:var(--mut);text-align:center}
+  .foot a{color:var(--mut)}
+</style>
+</head>
+<body>
+  <main class="card">
+    <div class="pin"><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg></div>
+    <h1 id="lead"></h1>
+    <p class="place" id="place"></p>
+    <a class="app" id="naver" rel="noopener"><span class="dot" style="background:#03c75a">N</span><span id="lNaver"></span><span class="arrow">›</span></a>
+    <a class="app" id="kakao" rel="noopener"><span class="dot" style="background:#fee500;color:#3c1e1e">K</span><span id="lKakao"></span><span class="arrow">›</span></a>
+    <a class="app" id="google" rel="noopener"><span class="dot" style="background:#4285f4">G</span><span id="lGoogle"></span><span class="arrow">›</span></a>
+    <a class="app" id="apple" rel="noopener"><span class="dot" style="background:#111">A</span><span id="lApple"></span><span class="arrow">›</span></a>
+    <div class="foot"><a href="/" id="made">Aesthetic QR Studio</a></div>
+  </main>
+<script>
+(function(){
+  var qp=new URLSearchParams(location.search), q=(qp.get("q")||"").slice(0,200);
+  var nav=(navigator.language||"ko").toLowerCase();
+  var L=qp.get("lang")||(nav.indexOf("ko")===0?"ko":nav.indexOf("ja")===0?"ja":nav.indexOf("zh")===0?"zh":"en");
+  var T={
+    ko:{lead:"어떤 지도로 열까요?",naver:"네이버 지도",kakao:"카카오맵",google:"구글 지도",apple:"Apple 지도",none:"장소 정보가 없어요",title:"지도에서 열기"},
+    en:{lead:"Open this place in",naver:"Naver Map",kakao:"KakaoMap",google:"Google Maps",apple:"Apple Maps",none:"No place given",title:"Open in Maps"},
+    ja:{lead:"どの地図で開きますか？",naver:"NAVER地図",kakao:"カカオマップ",google:"Googleマップ",apple:"Appleマップ",none:"場所の情報がありません",title:"地図で開く"},
+    zh:{lead:"用哪个地图打开？",naver:"Naver 地图",kakao:"Kakao 地图",google:"谷歌地图",apple:"苹果地图",none:"没有地点信息",title:"在地图中打开"}
+  }[L]||null;
+  if(!T){ L="en"; T={lead:"Open this place in",naver:"Naver Map",kakao:"KakaoMap",google:"Google Maps",apple:"Apple Maps",none:"No place given",title:"Open in Maps"}; }
+  document.documentElement.lang=L; document.title=T.title;
+  document.getElementById("lead").textContent=T.lead;
+  document.getElementById("place").textContent=q||T.none;
+  var e=encodeURIComponent(q);
+  var links={naver:"https://map.naver.com/p/search/"+e, kakao:"https://map.kakao.com/link/search/"+e,
+             google:"https://www.google.com/maps/search/?api=1&query="+e, apple:"https://maps.apple.com/?q="+e};
+  ["naver","kakao","google","apple"].forEach(function(k){
+    var a=document.getElementById(k); a.href=links[k];
+    document.getElementById("l"+k.charAt(0).toUpperCase()+k.slice(1)).textContent=T[k];
+    if(!q) a.style.display="none";
+  });
+})();
+</script>
+</body>
+</html>

@@ -1395,7 +1395,16 @@
         <details class="grp" open>
           <summary><span data-i18n="pst.grp.qr">QR</span></summary>
           <div class="body">
-            <label class="fld"><div class="lbl" data-i18n="pst.lbl.url">QR에 담을 링크</div><input type="text" id="pstUrl" maxlength="400" placeholder="https://" /></label>
+            <label class="fld"><div class="lbl" data-i18n="pst.lbl.linkType">링크 종류</div>
+              <div class="seg" id="pstLinkSeg"><button data-lk="url" class="on"><span data-i18n="pst.lk.url">직접 입력</span></button><button data-lk="map"><span data-i18n="pst.lk.map">지도 링크</span></button></div></label>
+            <label class="fld" id="pstUrlWrap"><div class="lbl" data-i18n="pst.lbl.url">QR에 담을 링크</div><input type="text" id="pstUrl" maxlength="400" placeholder="https://" /></label>
+            <div id="pstMapWrap" style="display:none">
+              <label class="fld"><div class="lbl" data-i18n="pst.lbl.place">장소 이름 또는 주소</div><input type="text" id="pstPlace" maxlength="120" data-i18n-ph="pst.ph.place" placeholder="예: 성수동 카페 어니언" /></label>
+              <label class="fld"><div class="lbl" data-i18n="pst.lbl.mapApp">지도 앱</div>
+                <div class="seg seg-wrap" id="pstMapSeg"><button data-m="pick" class="on"><span data-i18n="pst.m.pick">고를 수 있게 (추천)</span></button><button data-m="naver"><span data-i18n="pst.m.naver">네이버 지도</span></button><button data-m="kakao"><span data-i18n="pst.m.kakao">카카오맵</span></button><button data-m="google"><span data-i18n="pst.m.google">구글 지도</span></button></div></label>
+              <div class="hint" data-i18n="pst.hint.map"></div>
+              <a class="hint" id="pstMapTest" target="_blank" rel="noopener" style="display:inline-block;margin-top:6px" data-i18n="pst.mapTest">링크 미리 열어 보기 ↗</a>
+            </div>
             <label class="fld"><div class="lbl" data-i18n="pst.lbl.qrStyle">QR 스타일</div>
               <div class="seg" id="pstQrSeg"><button data-q="ink" class="on"><span data-i18n="pst.q.ink">포스터 기본</span></button><button data-q="studio"><span data-i18n="pst.q.studio">스튜디오 디자인</span></button></div></label>
             <div class="hint" data-i18n="pst.hint.qr"></div>
@@ -1498,7 +1507,7 @@
     </nav>
     <div style="margin-top:10px">Aesthetic QR Studio · <span data-i18n="foot.tag">아름답고 스캔되는 QR을 만드는 스튜디오 · QR 생성·디자인은 브라우저에서 처리 (AI 기능만 서버 전송·저장 안 함)</span></div>
     <div style="margin-top:6px" data-i18n="foot.tm">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · <span data-i18n="foot.build">빌드</span> <b id="verTag">2026.10.14-g</b></div>
+    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · <span data-i18n="foot.build">빌드</span> <b id="verTag">2026.10.14-h</b></div>
   </footer>
 </div>
 
@@ -7594,6 +7603,19 @@ var I18N = {
   "pst.lbl.motion":{ko:"배경 움직임",en:"Background movement",ja:"背景の動き",zh:"背景动态"},
   "pst.hint.motion":{ko:"켜면 배경 이미지가 천천히 확대·이동해요. 영상으로 저장할 때 적용되고, QR은 움직이지 않아요.",en:"When on, the background slowly zooms and drifts. Applies to video saves; the QR never moves.",ja:"オンにすると背景がゆっくりズーム・移動します。動画保存に反映され、QRは動きません。",zh:"开启后背景会缓慢缩放和平移，保存视频时生效，二维码保持不动。"},
   "pst.hint.small":{ko:"QR이 작아요. 인쇄물은 2cm 이상이 되도록 크게 해 주세요.",en:"The QR is small — keep it at least 2 cm wide in print.",ja:"QRが小さめです。印刷物では2cm以上になるようにしてください。",zh:"二维码偏小，印刷时请保证至少 2 厘米宽。"},
+  "pst.lbl.linkType":{ko:"링크 종류",en:"Link type",ja:"リンクの種類",zh:"链接类型"},
+  "pst.lk.url":{ko:"직접 입력",en:"Enter a link",ja:"リンクを入力",zh:"输入链接"},
+  "pst.lk.map":{ko:"지도 링크",en:"Map link",ja:"地図リンク",zh:"地图链接"},
+  "pst.lbl.place":{ko:"장소 이름 또는 주소",en:"Place name or address",ja:"場所の名前または住所",zh:"地点名称或地址"},
+  "pst.ph.place":{ko:"예: 서울 성수동 카페 어니언",en:"e.g. Blue Bottle Coffee Shibuya",ja:"例：渋谷 ブルーボトルコーヒー",zh:"例如：上海 武康路 咖啡馆"},
+  "pst.lbl.mapApp":{ko:"지도 앱",en:"Map app",ja:"地図アプリ",zh:"地图应用"},
+  "pst.m.pick":{ko:"고를 수 있게 (추천)",en:"Let them choose (recommended)",ja:"選べるように（おすすめ）",zh:"让对方选择（推荐）"},
+  "pst.m.naver":{ko:"네이버 지도",en:"Naver Map",ja:"NAVER地図",zh:"Naver 地图"},
+  "pst.m.kakao":{ko:"카카오맵",en:"KakaoMap",ja:"カカオマップ",zh:"Kakao 地图"},
+  "pst.m.google":{ko:"구글 지도",en:"Google Maps",ja:"Googleマップ",zh:"谷歌地图"},
+  "pst.hint.map":{ko:"‘고를 수 있게’를 고르면 스캔한 사람이 네이버·카카오·구글·애플 지도 중 쓰는 앱을 골라 열 수 있어요. 앱 설치나 API 키는 필요 없어요.",en:"“Let them choose” opens a small page where the visitor picks Naver, Kakao, Google or Apple Maps. No app or API key needed.",ja:"「選べるように」を選ぶと、読み取った人がNAVER・カカオ・Google・Appleの地図から使うアプリを選べます。アプリやAPIキーは不要です。",zh:"选择“让对方选择”后，扫码的人可以在 Naver、Kakao、谷歌或苹果地图中选择要用的应用。无需安装应用或 API 密钥。"},
+  "pst.mapTest":{ko:"링크 미리 열어 보기 ↗",en:"Open the link to check ↗",ja:"リンクを開いて確認 ↗",zh:"打开链接检查 ↗"},
+  "pst.ctaMap":{ko:"오시는 길",en:"Get directions",ja:"アクセス",zh:"到店路线"},
   "foot.contact":{ko:"문의",en:"Contact",zh:"联系",ja:"お問い合わせ"},
   "foot.motion":{ko:"모션 QR 실험실",en:"Motion QR Lab",zh:"动态二维码实验室",ja:"モーションQRラボ"},
   "foot.tag":{ko:"아름답고 스캔되는 QR을 만드는 스튜디오 · QR 생성·디자인은 브라우저에서 처리 (AI 기능만 서버 전송·저장 안 함)",en:"A studio for beautiful, scannable QR codes · QR building & design run in your browser (only AI features send to a server, and aren't stored)",zh:"打造美观且可扫描二维码的工作室 · 二维码生成与设计在浏览器中处理（仅 AI 功能会发送到服务器，且不存储）",ja:"美しくスキャン可能なQRを作るスタジオ · QR生成・デザインはブラウザで処理（AI機能のみサーバー送信・保存なし）"},
@@ -8834,6 +8856,16 @@ function pushArLinkToStudio(url){
 // Add more examples by appending to EX (image in assets/, texts as [ko,en,ja,zh]).
 var POSTER=(function(){
   var EX=[
+    {img:"assets/poster/poster-01.webp",th:"assets/poster/t/poster-01.webp",acc:"#fcd34d",t:["그랜드 오픈","Grand Opening","グランドオープン","盛大开业"],s:["스페셜티 커피 · 첫 주 아메리카노 1+1","Specialty coffee · BOGO americano all opening week","スペシャルティコーヒー・初週アメリカーノ1+1","精品咖啡 · 开业首周美式买一送一"],c:["오시는 길","Get directions","アクセス","到店路线"]},
+    {img:"assets/poster/poster-02.webp",th:"assets/poster/t/poster-02.webp",acc:"#fdba74",t:["갓 구운 빵, 매일 아침 8시","Fresh Bread, Every Morning at 8","焼きたてパン、毎朝8時","新鲜出炉，每天早上8点"],s:["사워도우 · 크루아상 · 바게트","Sourdough · croissants · baguettes","サワードウ・クロワッサン・バゲット","酸面包 · 可颂 · 法棍"],c:["메뉴 보기","See the menu","メニューを見る","查看菜单"]},
+    {img:"assets/poster/poster-03.webp",th:"assets/poster/t/poster-03.webp",acc:"#fca5a5",t:["오늘의 한상","Today's Korean Table","本日の韓定食","今日韩式套餐"],s:["점심 11:30–14:30 · 예약 환영","Lunch 11:30–2:30 · reservations welcome","ランチ11:30–14:30・予約歓迎","午餐 11:30–14:30 · 欢迎预约"],c:["예약하기","Book a table","予約する","预约座位"]},
+    {img:"assets/poster/poster-04.webp",th:"assets/poster/t/poster-04.webp",acc:"#5eead4",t:["골든 아워","Golden Hour","ゴールデンアワー","黄金时刻"],s:["시그니처 칵테일 · 매일 6–8PM 반값","Signature cocktails · half price 6–8PM daily","シグネチャーカクテル・毎日18–20時半額","招牌鸡尾酒 · 每天 18–20 点半价"],c:["위치 보기","Find us","場所を見る","查看位置"]},
+    {img:"assets/poster/poster-05.webp",th:"assets/poster/t/poster-05.webp",acc:"#fda4af",t:["와인 테이스팅 나이트","Wine Tasting Night","ワインテイスティング・ナイト","品酒之夜"],s:["6종 페어링 · 11.22 SAT 7PM","6 pairings · Sat 11.22, 7PM","6種ペアリング・11.22（土）19時","6 款配餐 · 11.22 周六 19:00"],c:["예약하기","Reserve a seat","予約する","预约席位"]},
+    {img:"assets/poster/poster-06.webp",th:"assets/poster/t/poster-06.webp",acc:"#f9a8d4",t:["봄을 담은 꽃다발","Spring in a Bouquet","春を束ねたブーケ","装满春天的花束"],s:["당일 배송 · 오후 2시 전 주문","Same-day delivery · order before 2PM","当日配送・14時までのご注文","当日配送 · 14 点前下单"],c:["주문하기","Order now","注文する","立即订购"]},
+    {img:"assets/poster/poster-07.webp",th:"assets/poster/t/poster-07.webp",acc:"#fbcfe8",t:["글로우 세럼 런칭","Glow Serum Launch","グロウセラム発売","焕亮精华上市"],s:["출시 기념 샘플 증정 · 한정 수량","Free samples at launch · while supplies last","発売記念サンプル進呈・数量限定","上市赠送试用装 · 数量有限"],c:["자세히 보기","Learn more","詳しく見る","了解详情"]},
+    {img:"assets/poster/poster-08.webp",th:"assets/poster/t/poster-08.webp",acc:"#fde68a",t:["새 시즌, 새 스타일","New Season, New Style","新しい季節、新しいスタイル","新季新造型"],s:["첫 방문 컷·컬러 20% 할인","20% off cut & color on your first visit","初回カット・カラー20%オフ","首次到店剪染八折"],c:["예약하기","Book now","予約する","立即预约"]},
+    {img:"assets/poster/poster-09.webp",th:"assets/poster/t/poster-09.webp",acc:"#f87171",t:["30일 바디 챌린지","30-Day Body Challenge","30日ボディチャレンジ","30 天塑形挑战"],s:["PT 1회 무료 체험 · 선착순 20명","Free PT trial · first 20 sign-ups","PT無料体験・先着20名","免费私教体验 · 限前 20 名"],c:["신청하기","Sign up","申し込む","立即报名"]},
+    {img:"assets/poster/poster-10.webp",th:"assets/poster/t/poster-10.webp",acc:"#86efac",t:["아침 요가 리트릿","Morning Yoga Retreat","朝ヨガ・リトリート","晨间瑜伽静修"],s:["주말 1박 2일 · 산속 명상 클래스","Weekend stay · mountain meditation class","週末1泊2日・山の瞑想クラス","周末两天一夜 · 山间冥想课"],c:["자세히 보기","Learn more","詳しく見る","了解详情"]},
     {img:"assets/anim-1.webp",acc:"#67e8f9",t:["NEON NIGHTS","NEON NIGHTS","NEON NIGHTS","NEON NIGHTS"],s:["라이브 공연 · 11.08 SAT 8PM","Live show · Sat 11.08, 8PM","ライブ公演・11.08（土）20時","现场演出 · 11.08 周六 20:00"],c:["티켓 예매","Get tickets","チケット予約","立即购票"]},
     {img:"assets/anim-2.webp",acc:"#fcd34d",t:["우키요에: 큰 파도","Ukiyo-e: The Great Wave","浮世絵：大波","浮世绘：巨浪"],s:["기획전 · 10.24 – 11.30","Exhibition · Oct 24 – Nov 30","企画展・10.24 – 11.30","特展 · 10.24 – 11.30"],c:["전시 안내","Explore","展示案内","展览详情"]},
     {img:"assets/anim-9.webp",acc:"#fbbf24",t:["바로크 나이트","Baroque Night","バロック・ナイト","巴洛克之夜"],s:["클래식 콘서트 · 12.20","Classical concert · Dec 20","クラシックコンサート・12.20","古典音乐会 · 12.20"],c:["예매하기","Book now","予約する","立即预订"]},
@@ -8852,7 +8884,7 @@ var POSTER=(function(){
   ];
   var LI={ko:0,en:1,ja:2,zh:3};
   // QR card: qx/qy = top-left as a fraction of width/height, qs = side as a fraction of width
-  var st={ex:0,img:null,own:false,title:"",sub:"",cta:"",url:"",ratio:"45",acc:"#67e8f9",motion:true,qr:"ink",
+  var st={ex:0,img:null,own:false,title:"",sub:"",cta:"",url:"",link:"url",place:"",mapApp:"pick",ratio:"45",acc:"#67e8f9",motion:true,qr:"ink",
           qs:0.30,qx:0,qy:0,anchor:"br",tp:"bottom",edited:{}};
   var raf=null, t0=0, qrCv=null, qrKey="", active=false, rec=false, drag=null;
   var FONT='-apple-system,BlinkMacSystemFont,"Pretendard","Noto Sans KR","Noto Sans JP","Noto Sans SC",sans-serif';
@@ -8953,9 +8985,18 @@ var POSTER=(function(){
     var im=new Image(); im.onload=function(){ if(!st.own && st.ex===i){ st.img=im; frame(0); } }; im.src=e.img;
     Array.prototype.forEach.call($("pstEx").children,function(b,j){ b.classList.toggle("on", j===i); });
   }
+  // map links: plain web URLs every map app accepts — no API key; "pick" = our chooser page
+  var SITE=/^https?:/.test(location.protocol)?location.origin:"https://jay-inky.vercel.app";
+  function mapUrl(q, app){ var e=encodeURIComponent(q);
+    if(app==="naver") return "https://map.naver.com/p/search/"+e;
+    if(app==="kakao") return "https://map.kakao.com/link/search/"+e;
+    if(app==="google") return "https://www.google.com/maps/search/?api=1&query="+e;
+    return SITE+"/map.html?q="+e; }
+  function applyMap(){ var q=st.place.trim(); st.url=q?mapUrl(q,st.mapApp):""; $("pstUrl").value=st.url; var a=$("pstMapTest"); if(a){ a.href=st.url||"#"; a.style.visibility=q?"visible":"hidden"; }
+    if(q && !st.edited.Cta){ st.cta=t("pst.ctaMap"); $("pstCta").value=st.cta; } frame(0); }
   function syncInputs(){ $("pstTitle").value=st.title; $("pstSub").value=st.sub; $("pstCta").value=st.cta; $("pstUrl").value=st.url||defUrl(); }
   function buildEx(){ var box=$("pstEx"); box.innerHTML="";
-    EX.forEach(function(e,i){ var b=document.createElement("button"); b.type="button"; b.innerHTML='<img loading="lazy" alt="" src="'+e.img+'">'; b.addEventListener("click",function(){ loadEx(i,false); }); box.appendChild(b); });
+    EX.forEach(function(e,i){ var b=document.createElement("button"); b.type="button"; b.innerHTML='<img loading="lazy" alt="" src="'+(e.th||e.img)+'">'; b.addEventListener("click",function(){ loadEx(i,false); }); box.appendChild(b); });
   }
   function save(name, url){ download(url, name); toast(t("pst.saved")); }
   function exportPng(){ var d0=drag; drag=null; frame(st.motion?0.25:0, !isPro()); drag=d0; save("aesthetic-qr-poster.png", cv().toDataURL("image/png")); if(typeof track==="function") track("poster_png"); }
@@ -8990,6 +9031,10 @@ var POSTER=(function(){
     segWire("pstPosSeg","p",function(v){ place(v); });
     segWire("pstTextSeg","tp",function(v){ st.tp=v; });
     segWire("pstQrSeg","q",function(v){ st.qr=v; });
+    segWire("pstLinkSeg","lk",function(v){ st.link=v; $("pstMapWrap").style.display=v==="map"?"block":"none"; $("pstUrlWrap").style.display=v==="map"?"none":"block";
+      if(v==="map") applyMap(); else { st.url=$("pstUrl").value.trim(); } });
+    segWire("pstMapSeg","m",function(v){ st.mapApp=v; applyMap(); });
+    $("pstPlace").addEventListener("input",function(){ st.place=this.value; applyMap(); });
     $("pstSize").addEventListener("input",function(){ var c=cv(), old=st.qs*c.width, cxm=st.qx*c.width+old/2, cym=st.qy*c.height+old/2;
       st.qs=(+this.value)/100; if(st.anchor) place(st.anchor); else { var n=st.qs*c.width; st.qx=Math.max(0,Math.min(c.width-n,cxm-n/2))/c.width; st.qy=Math.max(0,Math.min(c.height-n,cym-n/2))/c.height; }
       sizeUI(); frame(0); });
@@ -9018,7 +9063,7 @@ var POSTER=(function(){
         card.querySelector(".name").textContent=e.t[k]; card.querySelector(".tag").textContent=e.s[k];
         var c=card.querySelector("canvas"), im=new Image();
         im.onload=function(){ var o={img:im,title:e.t[k],sub:e.s[k],cta:e.c[k],acc:e.acc,motion:false,url:defUrl(),ratio:"45",qs:0.30,tp:"bottom"}; place("br",o); draw(c.getContext("2d"),300,375,0,o); };
-        im.src=e.img; card.addEventListener("click",function(){ POSTER.open(i); });
+        im.src=e.th||e.img; card.addEventListener("click",function(){ POSTER.open(i); });
         grid.appendChild(card);
       });
     }
