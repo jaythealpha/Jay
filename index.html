@@ -1345,6 +1345,8 @@
 
   <footer>
     <nav class="foot-links">
+      <a class="foot-link" href="motion.html" data-i18n="foot.motion">모션 QR 실험실</a>
+      <span class="foot-sep">·</span>
       <button type="button" class="foot-link" data-info="about" data-i18n="foot.about">소개</button>
       <span class="foot-sep">·</span>
       <button type="button" class="foot-link" data-info="privacy" data-i18n="foot.privacy">개인정보처리방침</button>
@@ -1355,7 +1357,7 @@
     </nav>
     <div style="margin-top:10px">Aesthetic QR Studio · <span data-i18n="foot.tag">아름답고 스캔되는 QR을 만드는 스튜디오 · QR 생성·디자인은 브라우저에서 처리 (AI 기능만 서버 전송·저장 안 함)</span></div>
     <div style="margin-top:6px" data-i18n="foot.tm">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · <span data-i18n="foot.build">빌드</span> <b id="verTag">2026.10.14-a</b></div>
+    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · <span data-i18n="foot.build">빌드</span> <b id="verTag">2026.10.14-b</b></div>
   </footer>
 </div>
 
@@ -6839,7 +6841,7 @@ var CATS = {
     {name:"이메일 문의",tag:"스캔 → 메일 작성",s:{fill:"solid",fg1:"#0e7490",bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"✉️",centerScale:28},ct:"email",fields:{emTo:"contact@company.com",emSubj:"문의드립니다"}},
     {name:"매장 위치",tag:"스캔 → 지도 열기",s:{fill:"solid",fg1:"#b91c1c",bg:"#ffffff",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"📍",centerScale:28,frameOn:true,frameStyle:"card",frameMode:"solid",frameBg1:"#b91c1c"},ct:"geo",fields:{geoLat:"37.5665",geoLng:"126.9780"}},
     {name:"쿠폰 코드",tag:"스캔 → 쿠폰 코드 표시",s:{fill:"linear",fg1:"#db2777",fg2:"#f97316",angle:120,dot:"rounded",eye:"rounded",bg:"#ffffff",centerMode:"emoji",centerText:"🎁",centerScale:26},ct:"text",fields:{content:"10% 할인 쿠폰: WELCOME10"}},
-    {name:"리뷰 남기기",tag:"스캔 → 리뷰 페이지",s:{fill:"solid",fg1:"#d97706",bg:"#ffffff",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"⭐",centerScale:28,labelOn:true,labelText:"REVIEW US ★"},ct:"url",fields:{content:"https://jay-inky.vercel.app"}},
+    {name:"리뷰 남기기",tag:"스캔 → 리뷰 페이지",s:{fill:"solid",fg1:"#b45309",bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"⭐",centerScale:22,ecc:"H",labelOn:true,labelText:"REVIEW US ★"},ct:"url",fields:{content:"https://jay-inky.vercel.app"}},
     {name:"인스타 프로필",tag:"스캔 → 인스타그램",s:{fill:"linear",fg1:"#e1306c",fg2:"#f77737",angle:120,bg:"#ffffff",dot:"rounded",eye:"circle",centerMode:"emoji",centerText:"📸",centerScale:28,labelOn:true,labelText:"@FOLLOW"},ct:"instagram",fields:{socialUser:"my.brand"}},
     {name:"유튜브 채널",tag:"스캔 → 채널 구독",s:{fill:"solid",fg1:"#c1121f",bg:"#ffffff",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"▶️",centerScale:28,frameOn:true,frameStyle:"card",frameMode:"solid",frameBg1:"#c1121f",labelOn:true,labelText:"SUBSCRIBE"},ct:"youtube",fields:{socialUser:"mychannel"}},
     {name:"틱톡",tag:"스캔 → 틱톡 프로필",s:{fill:"linear",fg1:"#25f4ee",fg2:"#fe2c55",angle:120,bg:"#0b0d12",dot:"dots",eye:"circle",centerMode:"emoji",centerText:"🎵",centerScale:28},ct:"tiktok",fields:{socialUser:"mybrand"}},
@@ -7180,6 +7182,7 @@ var I18N = {
   "foot.privacy":{ko:"개인정보처리방침",en:"Privacy Policy",zh:"隐私政策",ja:"プライバシー"},
   "foot.terms":{ko:"이용약관",en:"Terms of Use",zh:"使用条款",ja:"利用規約"},
   "foot.contact":{ko:"문의",en:"Contact",zh:"联系",ja:"お問い合わせ"},
+  "foot.motion":{ko:"모션 QR 실험실",en:"Motion QR Lab",zh:"动态二维码实验室",ja:"モーションQRラボ"},
   "foot.tag":{ko:"아름답고 스캔되는 QR을 만드는 스튜디오 · QR 생성·디자인은 브라우저에서 처리 (AI 기능만 서버 전송·저장 안 함)",en:"A studio for beautiful, scannable QR codes · QR building & design run in your browser (only AI features send to a server, and aren't stored)",zh:"打造美观且可扫描二维码的工作室 · 二维码生成与设计在浏览器中处理（仅 AI 功能会发送到服务器，且不存储）",ja:"美しくスキャン可能なQRを作るスタジオ · QR生成・デザインはブラウザで処理（AI機能のみサーバー送信・保存なし）"},
   "ct.appstore":{ko:"앱 설치",en:"App",zh:"应用",ja:"アプリ"},
   "ct.review":{ko:"리뷰",en:"Review",zh:"评价",ja:"レビュー"},
