@@ -373,6 +373,11 @@
   /* about */
   /* AR */
   .ar-wrap{max-width:720px;margin:0 auto}
+  .fphoto-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px;max-height:300px;overflow:auto;padding:2px;margin-top:6px}
+  .fphoto-grid button{padding:0;border:2px solid transparent;border-radius:10px;background:none;cursor:pointer;aspect-ratio:1;overflow:hidden}
+  .fphoto-grid button img{width:100%;height:100%;object-fit:cover;display:block;border-radius:8px}
+  .fphoto-grid button.on{border-color:var(--acc)}
+  .fphoto-grid .grp{grid-column:1/-1;font-size:12px;color:var(--mut);margin:6px 0 0}
   .ar-guide{max-width:720px;margin:0 auto 16px;border:1px solid var(--line);border-radius:var(--r);background:var(--bg2);padding:14px 16px}
   .ar-guide h3{margin:0 0 10px;font-size:16px}
   .ar-guide .seg{margin-bottom:12px}
@@ -561,7 +566,7 @@
       <button data-cat="logo" data-i18n-tip="cat.tip.logo" data-tip="중앙에 브랜드 텍스트가 들어간 로고형 QR. 클릭 후 문구를 바꾸거나 로고 이미지를 올릴 수 있어요."><span data-i18n="cat.logo">로고</span></button>
       <button data-cat="pictogram" data-i18n-tip="cat.tip.pictogram" data-tip="용도·업종별 픽토그램 QR. Wi-Fi·연락처·전화 같은 용도형은 클릭하면 입력폼이 예시값과 함께 열려요."><span data-i18n="cat.pictogram">픽토그램</span></button>
       <button data-cat="motion" class="cat-new" data-i18n-tip="cat.tip.motion" data-tip="QR 점들이 날아와 모이는 모션 QR. 색·로고·이미지를 넣고 영상(MP4·WebM)으로 저장할 수 있어요."><span data-i18n="cat.motion">모션</span></button>
-      <button data-cat="frame" data-i18n-tip="cat.tip.frame" data-tip="우드·골드·폴라로이드 등 실제 액자 프레임 디자인."><span data-i18n="cat.frame">프레임</span></button>
+      <button data-cat="frame" data-i18n-tip="cat.tip.frame" data-tip="영화 포스터·폴라로이드·명화 액자·여행지 테마의 이미지 프레임 50종. 가운데 창에 QR이 들어가요."><span data-i18n="cat.frame">프레임</span></button>
       <button data-cat="myqr" data-i18n-tip="cat.tip.myqr" data-tip="내가 저장한 QR 보관함. 스튜디오에서 ‘현재 디자인 저장’을 누르면 여기 쌓입니다."><span data-i18n="cat.myqr">★ My QR</span></button>
     </div>
     <div id="myqrBar" style="display:none;margin:0 0 14px;display:none;align-items:center;gap:10px;flex-wrap:wrap">
@@ -1015,8 +1020,13 @@
                   <button data-fstyle="shell"><span class="ct-em">🐚</span><span data-i18n="seg.fstyle.shell">조개 장식</span></button>
                   <button data-fstyle="poster"><span class="ct-em">🪧</span><span data-i18n="seg.fstyle.poster">포스터</span></button>
                   <button data-fstyle="circle"><span class="ct-em">⭕</span><span data-i18n="seg.fstyle.circle">서클아트</span></button>
+                  <button data-fstyle="photo"><span class="ct-em">🎞️</span><span data-i18n="seg.fstyle.photo">이미지 프레임</span></button>
                 </div>
               </label>
+              <div id="framePhotoFields" style="display:none">
+                <div class="lbl" data-i18n="lbl.framePhoto">이미지 프레임 고르기</div>
+                <div id="framePhotoPick" class="fphoto-grid"></div>
+              </div>
               <div id="frameBgFields">
                 <label class="fld">
                   <div class="lbl" data-i18n="lbl.frameFill">배경 채우기</div>
@@ -1418,7 +1428,7 @@
     </nav>
     <div style="margin-top:10px">Aesthetic QR Studio · <span data-i18n="foot.tag">아름답고 스캔되는 QR을 만드는 스튜디오 · QR 생성·디자인은 브라우저에서 처리 (AI 기능만 서버 전송·저장 안 함)</span></div>
     <div style="margin-top:6px" data-i18n="foot.tm">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · <span data-i18n="foot.build">빌드</span> <b id="verTag">2026.10.14-d</b></div>
+    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · <span data-i18n="foot.build">빌드</span> <b id="verTag">2026.10.14-e</b></div>
   </footer>
 </div>
 
@@ -3823,6 +3833,7 @@ var S = {
   artDensity: 6,       // min QR version for art (higher = more, smaller modules; finer look)
   // ---- framed background (card on a coloured backdrop) ----
   frameOn: false,      // draw an outer backdrop + white rounded card around the QR
+  frameImg: "", frameHole: null,   // photo frame id + white-window rect (frameStyle "photo")
   frameStyle: "card",  // card | wood | gold | polaroid | shadow | neon
   frameMode: "solid",  // solid | linear | radial  (backdrop fill)
   frameBg1: "#0e7a3b",
@@ -4353,6 +4364,23 @@ function render(g2, exportSize){
   var topPad = frameInset + ((S.labelOn && S.labelPos==="top") ? labelSpace : 0);
   var xoff = frameInset + (region - avail)/2;     // centre the QR block horizontally
   var ox = xoff + quiet*unit, oy = topPad + quiet*unit;
+  // photo frame: the QR sits in the largest centred square inside the artwork's white window
+  var lblTop = frameInset, lblBot = size - frameInset, lblCx = size/2;
+  var photoFrame = S.frameOn && S.frameStyle==="photo" && S.frameImg && S.frameHole && !posterActive;
+  var fimg = null, fh = null;
+  if (photoFrame){
+    var fu = frameUrl(S.frameImg, size<=420);
+    fimg = getArtImg(fu);                       // cached → use now; else re-render once it arrives
+    if (!fimg) getArtImg(fu, function(){ if(typeof rerender==="function") rerender(); });
+    fh = [S.frameHole[0]*size, S.frameHole[1]*size, S.frameHole[2]*size, S.frameHole[3]*size];
+    region = Math.min(fh[2], fh[3]) * 0.97;
+    avail = region - labelSpace; unit = avail/total;
+    var fTop = fh[1] + (fh[3]-region)/2;
+    topPad = fTop + ((S.labelOn && S.labelPos==="top") ? labelSpace : 0);
+    xoff = fh[0] + (fh[2]-avail)/2;
+    ox = xoff + quiet*unit; oy = topPad + quiet*unit;
+    lblTop = fTop; lblBot = fTop + region; lblCx = fh[0] + fh[2]/2;
+  }
 
   // background
   g.clearRect(0,0,size,size);
@@ -4364,6 +4392,10 @@ function render(g2, exportSize){
     var ppad=Math.round(avail*0.055), pr=Math.round(avail*0.05);
     g.save(); g.shadowColor="rgba(0,0,0,0.28)"; g.shadowBlur=avail*0.045; g.shadowOffsetY=avail*0.012;
     g.fillStyle="#ffffff"; roundRect(g, xoff-ppad, topPad-ppad, avail+ppad*2, avail+ppad*2, pr); g.fill(); g.restore();
+  } else if (photoFrame){
+    if (fimg){ try{ g.drawImage(fimg, 0, 0, size, size); }catch(e){} }
+    else { g.fillStyle="#e9e6e1"; g.fillRect(0,0,size,size); }
+    g.fillStyle = S.transparent ? "#ffffff" : S.bg; g.fillRect(fh[0], fh[1], fh[2], fh[3]);
   } else if (S.frameOn){
     drawFrameBackground(g, size, frameInset, region);
   } else if (!S.transparent){ g.fillStyle = S.bg; g.fillRect(0,0,size,size); }
@@ -4556,21 +4588,22 @@ function render(g2, exportSize){
   // pixel position every frame (nothing here is put through the art's zoom/pan transform), so the
   // caption always reads as a crisp, static plate rather than wobbling with the artwork.
   if (S.labelOn && S.labelText){
-    var bandY = (S.labelPos==="top") ? frameInset : (frameInset + avail);
+    var bandY = (S.labelPos==="top") ? lblTop : (lblTop + avail);
     if (S.artImg){
       // solid backing plate keeps the caption legible over a busy/moving image
       g.fillStyle = "#ffffff";
-      g.fillRect(0, bandY, size, labelSpace);
+      if (photoFrame) g.fillRect(fh[0], bandY, fh[2], labelSpace); else g.fillRect(0, bandY, size, labelSpace);
       g.fillStyle = S.fg1 || "#111111";
     } else {
       g.fillStyle = S.transparent ? "#111111" : (luminance(S.bg)>140 ? "#111111" : "#ffffff");
     }
     g.font = "700 "+labelFont+"px -apple-system,'Noto Sans KR',sans-serif";
     g.textAlign="center"; g.textBaseline="middle";
-    var baseY = frameInset + ((S.labelPos==="top") ? (labelSpace*0.5) : (avail + labelSpace*0.5));
+    var baseY = lblTop + ((S.labelPos==="top") ? (labelSpace*0.5) : (avail + labelSpace*0.5));
     var offPx = (S.labelOffset/100) * (size*0.14);   // fine up/down nudge (negative=up)
-    var ly = Math.max(frameInset+labelFont*0.65, Math.min(size - frameInset - labelFont*0.65, baseY + offPx));
-    g.fillText(S.labelText, size/2, ly);
+    var ly = Math.max(lblTop+labelFont*0.65, Math.min(lblBot - labelFont*0.65, baseY + offPx));
+    if (photoFrame && !S.artImg) g.fillStyle = S.transparent ? "#111111" : (luminance(S.bg)>140 ? "#111111" : "#ffffff");
+    g.fillText(S.labelText, lblCx, ly);
   }
 }
 
@@ -5658,7 +5691,22 @@ $("labelOffset").addEventListener("input",function(e){S.labelOffset=+e.target.va
 // ---- frame background & centre content (text logo / emoji pictogram) ----
 $("frameOn").addEventListener("change",function(e){ S.frameOn=e.target.checked; $("frameControls").style.display=e.target.checked?"block":"none"; rerender(); });
 // only "card"/"shadow"/"neon" use the backdrop colour fields; wood/gold/polaroid are self-styled
+function buildFramePhotoPick(){
+  var box=$("framePhotoPick"); if(!box) return; box.innerHTML=""; var last="";
+  FRAMES.forEach(function(f){
+    if(f.cat!==last){ last=f.cat; var h=document.createElement("div"); h.className="grp"; h.textContent=gtr(FRAME_TAG[f.cat]); box.appendChild(h); }
+    var b=document.createElement("button"); b.type="button"; b.title=gtr(f.ko); b.dataset.fid=f.id;
+    b.innerHTML='<img loading="lazy" alt="" src="'+frameUrl(f.id,true)+'">';
+    if(S.frameImg===f.id) b.classList.add("on");
+    b.addEventListener("click",function(){ S.frameImg=f.id; S.frameHole=f.hole; S.frameStyle="photo"; S.frameOn=true;
+      Array.prototype.forEach.call(box.querySelectorAll("button"),function(x){x.classList.toggle("on",x===b);}); rerender(); });
+    box.appendChild(b);
+  });
+}
 function frameStyleVis(){ var s=S.frameStyle||"card";
+  if($("framePhotoFields")){ $("framePhotoFields").style.display=(s==="photo")?"block":"none";
+    if(s==="photo"){ if(!S.frameImg){ S.frameImg=FRAMES[0].id; S.frameHole=FRAMES[0].hole; } if(!$("framePhotoPick").children.length) buildFramePhotoPick();
+      Array.prototype.forEach.call($("framePhotoPick").querySelectorAll("button"),function(x){x.classList.toggle("on",x.dataset.fid===S.frameImg);}); } }
   var showBg=(s==="card"||s==="shadow"||s==="neon"||s==="circle"||s==="stamp"||s==="shell"||s==="poster");
   $("frameBgFields").style.display=showBg?"block":"none";
   $("frameBg2Wrap").style.display=(S.frameMode!=="solid"&&(s==="card"||s==="shadow"||s==="poster"))?"block":"none";
@@ -6513,8 +6561,8 @@ $("featureChips").addEventListener("click",function(e){
 });
 
 // ---------- gallery: categorised presets ----------
-var DKEYS=["fill","fg1","fg2","angle","transparent","bg","dot","eye","eyeColorOn","eyeColor","margin","ecc","anim","animKind","animSpeed","frameOn","frameStyle","frameMode","frameBg1","frameBg2","frameAngle","centerMode","centerText","centerColor","centerScale","centerBadge","centerMark","artVisibility","artDensity","artInvert","posterOn","labelOn","labelText","labelSize","labelPos","labelOffset"];
-var DDEF={fill:"solid",fg1:"#111111",fg2:"#111111",angle:45,transparent:false,bg:"#ffffff",dot:"square",eye:"square",eyeColorOn:false,eyeColor:"#e11d48",margin:4,ecc:"H",anim:false,animKind:"shine",animSpeed:1,frameOn:false,frameStyle:"card",frameMode:"solid",frameBg1:"#0e7a3b",frameBg2:"#0b3d22",frameAngle:135,centerMode:"none",centerText:"",centerColor:"#111111",centerScale:24,centerBadge:"pill",centerMark:"monogram",artVisibility:70,artDensity:6,artInvert:false,posterOn:false,labelOn:false,labelText:"SCAN ME",labelSize:100,labelPos:"bottom",labelOffset:0};
+var DKEYS=["fill","fg1","fg2","angle","transparent","bg","dot","eye","eyeColorOn","eyeColor","margin","ecc","anim","animKind","animSpeed","frameOn","frameStyle","frameMode","frameBg1","frameBg2","frameAngle","frameImg","frameHole","centerMode","centerText","centerColor","centerScale","centerBadge","centerMark","artVisibility","artDensity","artInvert","posterOn","labelOn","labelText","labelSize","labelPos","labelOffset"];
+var DDEF={fill:"solid",fg1:"#111111",fg2:"#111111",angle:45,transparent:false,bg:"#ffffff",dot:"square",eye:"square",eyeColorOn:false,eyeColor:"#e11d48",margin:4,ecc:"H",anim:false,animKind:"shine",animSpeed:1,frameOn:false,frameStyle:"card",frameMode:"solid",frameBg1:"#0e7a3b",frameBg2:"#0b3d22",frameAngle:135,frameImg:"",frameHole:null,centerMode:"none",centerText:"",centerColor:"#111111",centerScale:24,centerBadge:"pill",centerMark:"monogram",artVisibility:70,artDensity:6,artInvert:false,posterOn:false,labelOn:false,labelText:"SCAN ME",labelSize:100,labelPos:"bottom",labelOffset:0};
 function resetDesign(fullArt){ for(var k in DDEF) S[k]=DDEF[k]; S.logo=null; S.artImg=null; S.artIsVideo=false; S.artIsGif=false; S.aiArt=null; if(fullArt && typeof removeArtVid==="function") removeArtVid(); }
 // load real web images (CORS-enabled host) for image-based gallery presets
 var IMGCACHE={};
@@ -6615,6 +6663,60 @@ function makeScene(kind){
 }
 
 var GAL_TR = {
+  '할리우드 골드 마키':{en:'Hollywood Gold Marquee',zh:'好莱坞金色灯牌',ja:'ハリウッド・ゴールドマーキー'},
+  '아르데코 에메랄드 시사회':{en:'Art Deco Emerald Premiere',zh:'装饰艺术翡翠首映',ja:'アールデコ・エメラルドプレミア'},
+  '누아르 레인 시티':{en:'Noir Rainy City',zh:'黑色电影雨夜城市',ja:'ノワール・レイニーシティ'},
+  '크림슨 벨벳 극장':{en:'Crimson Velvet Theatre',zh:'绯红丝绒剧院',ja:'クリムゾンベルベット劇場'},
+  '레트로 SF 스페이스':{en:'Retro Sci-Fi Space',zh:'复古科幻太空',ja:'レトロSFスペース'},
+  '미드나잇 천문대':{en:'Midnight Observatory',zh:'午夜天文台',ja:'ミッドナイト天文台'},
+  '빈티지 웨스턴':{en:'Vintage Western',zh:'复古西部',ja:'ヴィンテージ・ウエスタン'},
+  '파스텔 파리 시네마':{en:'Pastel Paris Cinema',zh:'粉彩巴黎影院',ja:'パステル・パリシネマ'},
+  '재패니즈 애니메이션 극장':{en:'Japanese Anime Theatre',zh:'日式动画剧场',ja:'和風アニメ劇場'},
+  '실버 사이버펑크':{en:'Silver Cyberpunk',zh:'银色赛博朋克',ja:'シルバー・サイバーパンク'},
+  '트로피컬 어드벤처':{en:'Tropical Adventure',zh:'热带冒险',ja:'トロピカル・アドベンチャー'},
+  '크림 페스티벌 포스터':{en:'Cream Festival Poster',zh:'奶油色电影节海报',ja:'クリーム・フェスティバルポスター'},
+  '블러시 데이지 스크랩북':{en:'Blush Daisy Scrapbook',zh:'腮红雏菊手账',ja:'ブラッシュ・デイジースクラップ'},
+  '아이보리 세이지 테이프':{en:'Ivory Sage Tape',zh:'象牙鼠尾草胶带',ja:'アイボリー・セージテープ'},
+  '비치 조개 메모리':{en:'Beach Shell Memory',zh:'海滩贝壳回忆',ja:'ビーチ貝殻メモリー'},
+  '가을 단풍 크라프트':{en:'Autumn Maple Kraft',zh:'秋日枫叶牛皮纸',ja:'秋のもみじクラフト'},
+  '포근한 겨울 니트':{en:'Cozy Winter Knit',zh:'温暖冬日针织',ja:'ぬくもり冬ニット'},
+  '봄 벚꽃 핑크':{en:'Spring Cherry Blossom',zh:'春日樱花粉',ja:'春の桜ピンク'},
+  '데님 여행 저널':{en:'Denim Travel Journal',zh:'牛仔旅行手账',ja:'デニム旅ジャーナル'},
+  '웨딩 실크 리본':{en:'Wedding Silk Ribbon',zh:'婚礼丝带珍珠',ja:'ウェディング・シルクリボン'},
+  '보태니컬 고사리':{en:'Botanical Fern',zh:'植物蕨叶',ja:'ボタニカル・シダ'},
+  '생일 파스텔 컨페티':{en:'Birthday Pastel Confetti',zh:'生日粉彩彩纸',ja:'バースデー・パステル紙吹雪'},
+  '커피 빈티지 저널':{en:'Coffee Vintage Journal',zh:'咖啡复古手账',ja:'コーヒー・ヴィンテージ手帳'},
+  '모노크롬 어반 스크랩':{en:'Monochrome Urban Scrap',zh:'黑白城市剪贴',ja:'モノクロ・アーバンスクラップ'},
+  '바로크 골드 아이리스':{en:'Baroque Gold Iris',zh:'巴洛克金色鸢尾',ja:'バロック・ゴールドアイリス'},
+  '로코코 펄 로즈':{en:'Rococo Pearl Rose',zh:'洛可可珍珠玫瑰',ja:'ロココ・パールローズ'},
+  '월넛 정물화 액자':{en:'Walnut Still-Life Frame',zh:'胡桃木静物画框',ja:'ウォルナット静物画額'},
+  '아르누보 수련':{en:'Art Nouveau Water Lily',zh:'新艺术睡莲',ja:'アールヌーヴォー睡蓮'},
+  '실버 인상파 정원':{en:'Silver Impressionist Garden',zh:'银色印象派花园',ja:'シルバー印象派ガーデン'},
+  '비잔틴 주얼 모자이크':{en:'Byzantine Jewel Mosaic',zh:'拜占庭宝石马赛克',ja:'ビザンチン宝石モザイク'},
+  '에보니 레드 벨벳':{en:'Ebony Red Velvet',zh:'乌木红丝绒',ja:'エボニー・レッドベルベット'},
+  '마블 월계수 부조':{en:'Marble Laurel Relief',zh:'大理石月桂浮雕',ja:'大理石ローレル浮彫'},
+  '블루 델프트 도자기':{en:'Blue Delft Ceramic',zh:'蓝色代尔夫特瓷',ja:'ブルー・デルフト陶器'},
+  '흑칠 금단풍':{en:'Black Lacquer Gold Maple',zh:'黑漆金枫',ja:'黒漆金もみじ'},
+  '피렌체 르네상스':{en:'Florentine Renaissance',zh:'佛罗伦萨文艺复兴',ja:'フィレンツェ・ルネサンス'},
+  '아르데코 제이드':{en:'Art Deco Jade',zh:'装饰艺术翡翠',ja:'アールデコ・ジェイド'},
+  '프로방스 라벤더 우드':{en:'Provence Lavender Wood',zh:'普罗旺斯薰衣草木框',ja:'プロヴァンス・ラベンダーウッド'},
+  '아말피 레몬 타일':{en:'Amalfi Lemon Tiles',zh:'阿马尔菲柠檬瓷砖',ja:'アマルフィ・レモンタイル'},
+  '파리 봄 카페':{en:'Paris Spring Café',zh:'巴黎春日咖啡馆',ja:'パリ春のカフェ'},
+  '교토 단풍 신사':{en:'Kyoto Maple Shrine',zh:'京都红叶神社',ja:'京都もみじ神社'},
+  '산토리니 블루 돔':{en:'Santorini Blue Domes',zh:'圣托里尼蓝顶',ja:'サントリーニ・ブルードーム'},
+  '스위스 알프스 샬레':{en:'Swiss Alpine Chalet',zh:'瑞士阿尔卑斯木屋',ja:'スイス・アルプスシャレー'},
+  '뉴욕 스카이라인':{en:'New York Skyline',zh:'纽约天际线',ja:'ニューヨーク・スカイライン'},
+  '런던 레드 부스':{en:'London Red Booth',zh:'伦敦红色电话亭',ja:'ロンドン・レッドブース'},
+  '베네치아 카니발':{en:'Venice Carnival',zh:'威尼斯狂欢节',ja:'ヴェネツィア・カーニバル'},
+  '마라케시 모자이크':{en:'Marrakech Mosaic',zh:'马拉喀什马赛克',ja:'マラケシュ・モザイク'},
+  '발리 트로피컬 사원':{en:'Bali Tropical Temple',zh:'巴厘岛热带神庙',ja:'バリ・トロピカル寺院'},
+  '서울 한옥 단청':{en:'Seoul Hanok Dancheong',zh:'首尔韩屋丹青',ja:'ソウル韓屋・丹青'},
+  '아이슬란드 오로라':{en:'Iceland Aurora',zh:'冰岛极光',ja:'アイスランド・オーロラ'},
+  '상하이 와이탄 야경':{en:'Shanghai Bund Night',zh:'上海外滩夜景',ja:'上海外灘の夜景'},
+  '영화 포스터':{en:'Movie poster',zh:'电影海报',ja:'映画ポスター'},
+  '폴라로이드':{en:'Polaroid',zh:'拍立得',ja:'ポラロイド'},
+  '명화 액자':{en:'Art frame',zh:'名画画框',ja:'名画の額縁'},
+  '여행지':{en:'Travel',zh:'旅行地',ja:'旅先'},
   '페이스북 페이지':{en:'Facebook page',zh:'Facebook 主页',ja:'Facebookページ'},
   '스캔 → 페이스북':{en:'Scan → Facebook',zh:'扫描 → Facebook',ja:'スキャン → Facebook'},
   'X 프로필':{en:'X profile',zh:'X 主页',ja:'Xプロフィール'},
@@ -6890,6 +6992,65 @@ var GAL_TR = {
   '크림슨':{en:'Crimson',zh:'深红',ja:'クリムゾン'}
 };
 function gtr(str){ var e=GAL_TR[str]; return (e && e[LANG]) ? e[LANG] : str; }
+// Photo frames (assets/frames/*.webp, 1080px; t/ = 360px thumbs). hole = the white window [x,y,w,h]
+// as canvas fractions — the QR is placed in the largest centred square inside it.
+var FRAME_TAG={cinema:"영화 포스터",polaroid:"폴라로이드",gallery:"명화 액자",travel:"여행지"};
+var FRAME_LOOK={cinema:["rounded","rounded"],polaroid:["dots","circle"],gallery:["classy","leaf"],travel:["rounded","rounded"]};
+var FRAMES=[
+  {id:"cinema_01",cat:"cinema",ko:"할리우드 골드 마키",acc:"#420b03",hole:[0.1847,0.1783,0.6306,0.6051]},
+  {id:"cinema_02",cat:"cinema",ko:"아르데코 에메랄드 시사회",acc:"#0c1a0d",hole:[0.1847,0.1592,0.6306,0.6146]},
+  {id:"cinema_03",cat:"cinema",ko:"누아르 레인 시티",acc:"#040303",hole:[0.1911,0.1815,0.621,0.6178]},
+  {id:"cinema_04",cat:"cinema",ko:"크림슨 벨벳 극장",acc:"#2b0201",hole:[0.2166,0.1815,0.5669,0.5605]},
+  {id:"cinema_05",cat:"cinema",ko:"레트로 SF 스페이스",acc:"#4b1c0f",hole:[0.1911,0.1879,0.6146,0.586]},
+  {id:"cinema_06",cat:"cinema",ko:"미드나잇 천문대",acc:"#0e1a2f",hole:[0.2166,0.1847,0.5701,0.5541]},
+  {id:"cinema_07",cat:"cinema",ko:"빈티지 웨스턴",acc:"#33170c",hole:[0.1847,0.1688,0.6306,0.621]},
+  {id:"cinema_08",cat:"cinema",ko:"파스텔 파리 시네마",acc:"#472113",hole:[0.2293,0.2006,0.5414,0.5446]},
+  {id:"cinema_09",cat:"cinema",ko:"재패니즈 애니메이션 극장",acc:"#321314",hole:[0.2229,0.2357,0.5541,0.5287]},
+  {id:"cinema_10",cat:"cinema",ko:"실버 사이버펑크",acc:"#333334",hole:[0.1975,0.1624,0.6051,0.6146]},
+  {id:"cinema_11",cat:"cinema",ko:"트로피컬 어드벤처",acc:"#241b0a",hole:[0.2102,0.2038,0.5796,0.5732]},
+  {id:"cinema_12",cat:"cinema",ko:"크림 페스티벌 포스터",acc:"#571f0f",hole:[0.1783,0.1943,0.6433,0.6083]},
+  {id:"polaroid_01",cat:"polaroid",ko:"블러시 데이지 스크랩북",acc:"#af7c5a",hole:[0.2197,0.1624,0.5701,0.5701]},
+  {id:"polaroid_02",cat:"polaroid",ko:"아이보리 세이지 테이프",acc:"#817151",hole:[0.1975,0.1656,0.6051,0.5764]},
+  {id:"polaroid_03",cat:"polaroid",ko:"비치 조개 메모리",acc:"#aa7a50",hole:[0.2166,0.1592,0.5732,0.5701]},
+  {id:"polaroid_04",cat:"polaroid",ko:"가을 단풍 크라프트",acc:"#8b3816",hole:[0.1911,0.1529,0.6146,0.5637]},
+  {id:"polaroid_05",cat:"polaroid",ko:"포근한 겨울 니트",acc:"#6b3725",hole:[0.2102,0.1624,0.5828,0.5541]},
+  {id:"polaroid_06",cat:"polaroid",ko:"봄 벚꽃 핑크",acc:"#c67b6d",hole:[0.2134,0.1561,0.5764,0.5541]},
+  {id:"polaroid_07",cat:"polaroid",ko:"데님 여행 저널",acc:"#464747",hole:[0.2038,0.1465,0.5955,0.5892]},
+  {id:"polaroid_08",cat:"polaroid",ko:"웨딩 실크 리본",acc:"#b59877",hole:[0.2038,0.172,0.5955,0.551]},
+  {id:"polaroid_09",cat:"polaroid",ko:"보태니컬 고사리",acc:"#716034",hole:[0.1975,0.1401,0.6051,0.5987]},
+  {id:"polaroid_10",cat:"polaroid",ko:"생일 파스텔 컨페티",acc:"#e09983",hole:[0.1879,0.1369,0.6242,0.6019]},
+  {id:"polaroid_11",cat:"polaroid",ko:"커피 빈티지 저널",acc:"#683f20",hole:[0.207,0.1529,0.5987,0.5796]},
+  {id:"polaroid_12",cat:"polaroid",ko:"모노크롬 어반 스크랩",acc:"#29201a",hole:[0.2611,0.207,0.4968,0.4777]},
+  {id:"gallery_01",cat:"gallery",ko:"바로크 골드 아이리스",acc:"#573816",hole:[0.2134,0.2166,0.5732,0.5541]},
+  {id:"gallery_02",cat:"gallery",ko:"로코코 펄 로즈",acc:"#bd976f",hole:[0.1943,0.1943,0.6115,0.586]},
+  {id:"gallery_03",cat:"gallery",ko:"월넛 정물화 액자",acc:"#362012",hole:[0.207,0.1879,0.586,0.586]},
+  {id:"gallery_04",cat:"gallery",ko:"아르누보 수련",acc:"#563f1f",hole:[0.1975,0.207,0.6051,0.5701]},
+  {id:"gallery_05",cat:"gallery",ko:"실버 인상파 정원",acc:"#7b6c4d",hole:[0.207,0.2038,0.586,0.5701]},
+  {id:"gallery_06",cat:"gallery",ko:"비잔틴 주얼 모자이크",acc:"#653f1e",hole:[0.1975,0.1879,0.6051,0.5924]},
+  {id:"gallery_07",cat:"gallery",ko:"에보니 레드 벨벳",acc:"#260604",hole:[0.2102,0.2038,0.5796,0.5573]},
+  {id:"gallery_08",cat:"gallery",ko:"마블 월계수 부조",acc:"#966d37",hole:[0.2006,0.1879,0.5987,0.5892]},
+  {id:"gallery_09",cat:"gallery",ko:"블루 델프트 도자기",acc:"#475e95",hole:[0.207,0.2102,0.586,0.5669]},
+  {id:"gallery_10",cat:"gallery",ko:"흑칠 금단풍",acc:"#211308",hole:[0.207,0.1943,0.5828,0.5764]},
+  {id:"gallery_11",cat:"gallery",ko:"피렌체 르네상스",acc:"#69431a",hole:[0.1975,0.1975,0.6051,0.5732]},
+  {id:"gallery_12",cat:"gallery",ko:"아르데코 제이드",acc:"#203e22",hole:[0.2038,0.1975,0.5924,0.5605]},
+  {id:"gallery_13",cat:"gallery",ko:"프로방스 라벤더 우드",acc:"#8c7364",hole:[0.1943,0.1943,0.6115,0.586]},
+  {id:"travel_01",cat:"travel",ko:"아말피 레몬 타일",acc:"#635e54",hole:[0.2389,0.2389,0.5255,0.5255]},
+  {id:"travel_02",cat:"travel",ko:"파리 봄 카페",acc:"#71451e",hole:[0.2038,0.2102,0.5924,0.5637]},
+  {id:"travel_03",cat:"travel",ko:"교토 단풍 신사",acc:"#853118",hole:[0.2102,0.2038,0.5796,0.5701]},
+  {id:"travel_04",cat:"travel",ko:"산토리니 블루 돔",acc:"#6d5273",hole:[0.2134,0.2166,0.5732,0.5669]},
+  {id:"travel_05",cat:"travel",ko:"스위스 알프스 샬레",acc:"#5f4b35",hole:[0.2102,0.1815,0.5955,0.5764]},
+  {id:"travel_06",cat:"travel",ko:"뉴욕 스카이라인",acc:"#724727",hole:[0.2134,0.2293,0.5732,0.5446]},
+  {id:"travel_07",cat:"travel",ko:"런던 레드 부스",acc:"#591e10",hole:[0.2261,0.2102,0.5478,0.5478]},
+  {id:"travel_08",cat:"travel",ko:"베네치아 카니발",acc:"#622618",hole:[0.2229,0.1975,0.5541,0.5414]},
+  {id:"travel_09",cat:"travel",ko:"마라케시 모자이크",acc:"#6e5125",hole:[0.2293,0.2102,0.5414,0.5382]},
+  {id:"travel_10",cat:"travel",ko:"발리 트로피컬 사원",acc:"#5b491e",hole:[0.2261,0.2261,0.551,0.5478]},
+  {id:"travel_11",cat:"travel",ko:"서울 한옥 단청",acc:"#774d33",hole:[0.2134,0.2006,0.5732,0.5669]},
+  {id:"travel_12",cat:"travel",ko:"아이슬란드 오로라",acc:"#31364c",hole:[0.242,0.2102,0.5127,0.5255]},
+  {id:"travel_13",cat:"travel",ko:"상하이 와이탄 야경",acc:"#1e2640",hole:[0.207,0.1783,0.586,0.5987]}
+];
+function frameUrl(id, thumb){ return "assets/frames/"+(thumb?"t/":"")+id+".webp"; }
+function framePreset(f){ var lk=FRAME_LOOK[f.cat];
+  return {name:f.ko,tag:FRAME_TAG[f.cat],s:{fill:"solid",fg1:darkenForScan(f.acc,60),bg:"#ffffff",dot:lk[0],eye:lk[1],margin:2,ecc:"H",frameOn:true,frameStyle:"photo",frameImg:f.id,frameHole:f.hole}}; }
 var CATS = {
   standard:[
     {name:"네온 펄스",tag:"사이버·다크",s:{fill:"linear",fg1:"#7c5cff",fg2:"#22d3ee",angle:45,dot:"rounded",eye:"rounded",bg:"#0b0d12"}},
@@ -7016,32 +7177,7 @@ var CATS = {
     {name:"패션·의류",tag:"리테일",s:{fill:"solid",fg1:"#111111",bg:"#ffffff",dot:"square",eye:"square",centerMode:"emoji",centerText:"👗",centerScale:32,frameOn:true,frameStyle:"poster",frameMode:"solid",frameBg1:"#111111"}},
     {name:"주얼리",tag:"리테일",s:{fill:"solid",fg1:"#8a6d1e",bg:"#fffdf5",dot:"classy",eye:"leaf",centerMode:"emoji",centerText:"💍",centerScale:32,frameOn:true,frameStyle:"gold"}}
   ],
-  frame:[
-    {name:"골드 액자",tag:"미술관 액자",s:{fill:"solid",fg1:"#3a2a06",bg:"#fffdf5",dot:"classy",eye:"leaf",frameOn:true,frameStyle:"gold"}},
-    {name:"우드 프레임",tag:"원목 액자",s:{fill:"solid",fg1:"#5b3a1a",bg:"#fffaf2",dot:"rounded",eye:"rounded",frameOn:true,frameStyle:"wood"}},
-    {name:"폴라로이드",tag:"인생네컷 감성",s:{fill:"solid",fg1:"#111111",bg:"#ffffff",dot:"rounded",eye:"rounded",frameOn:true,frameStyle:"polaroid"}},
-    {name:"네온 프레임",tag:"글로우 액자",s:{fill:"linear",fg1:"#22d3ee",fg2:"#7c5cff",angle:120,bg:"#0b0d12",dot:"dots",eye:"circle",frameOn:true,frameStyle:"neon",frameBg1:"#22d3ee"}},
-    {name:"핑크 네온",tag:"글로우 액자",s:{fill:"linear",fg1:"#ff2fd0",fg2:"#ffb347",angle:120,bg:"#0b0712",dot:"dots",eye:"circle",frameOn:true,frameStyle:"neon",frameBg1:"#ff2fd0"}},
-    {name:"섀도우박스",tag:"파스파르투",s:{fill:"solid",fg1:"#0b3d22",bg:"#ffffff",dot:"rounded",eye:"rounded",frameOn:true,frameStyle:"shadow",frameMode:"linear",frameBg1:"#16a34a",frameBg2:"#0b3d22",frameAngle:135}},
-    {name:"블루 섀도우박스",tag:"파스파르투",s:{fill:"solid",fg1:"#0b2a6b",bg:"#ffffff",dot:"dots",eye:"circle",frameOn:true,frameStyle:"shadow",frameMode:"linear",frameBg1:"#1d4ed8",frameBg2:"#0b2a6b",frameAngle:120}},
-    {name:"우드 픽토",tag:"원목+픽토그램",s:{fill:"solid",fg1:"#5b3a1a",bg:"#fffaf2",dot:"rounded",eye:"rounded",frameOn:true,frameStyle:"wood",centerMode:"emoji",centerText:"🌿",centerScale:26}},
-    {name:"골드 브랜드",tag:"액자+로고",s:{fill:"solid",fg1:"#6b4e12",bg:"#fffdf5",dot:"classy",eye:"leaf",frameOn:true,frameStyle:"gold",centerMode:"text",centerText:"LUXE",centerColor:"#6b4e12",centerScale:22}},
-    {name:"에메랄드 카드",tag:"컬러 카드",s:{fill:"solid",fg1:"#0b3d22",bg:"#ffffff",dot:"rounded",eye:"rounded",frameOn:true,frameStyle:"card",frameMode:"linear",frameBg1:"#16a34a",frameBg2:"#0b3d22",frameAngle:135}},
-    {name:"선셋 카드",tag:"컬러 카드",s:{fill:"solid",fg1:"#7c2d12",bg:"#ffffff",dot:"rounded",eye:"rounded",frameOn:true,frameStyle:"card",frameMode:"linear",frameBg1:"#fb7185",frameBg2:"#f97316",frameAngle:120}},
-    {name:"모노 카드",tag:"컬러 카드",s:{fill:"solid",fg1:"#111111",bg:"#ffffff",dot:"square",eye:"square",frameOn:true,frameStyle:"card",frameMode:"solid",frameBg1:"#111111"}},
-    {name:"서클아트 그린",tag:"도트 링 배지",s:{fill:"linear",fg1:"#2fb56f",fg2:"#1a8a52",angle:120,bg:"#ffffff",dot:"rounded",eye:"rounded",frameOn:true,frameStyle:"circle",frameMode:"solid",frameBg1:"#1fae63"}},
-    {name:"서클아트 바이올렛",tag:"도트 링 배지",s:{fill:"linear",fg1:"#7c5cff",fg2:"#5b3adb",angle:120,bg:"#ffffff",dot:"hexagon",eye:"rounded",frameOn:true,frameStyle:"circle",frameMode:"solid",frameBg1:"#7c5cff"}},
-    {name:"우표 · 에어메일",tag:"빈티지 우표",s:{fill:"solid",fg1:"#1e3a8a",bg:"#fffdf7",dot:"dots",eye:"square",frameOn:true,frameStyle:"stamp",labelOn:true,labelText:"AIR MAIL"}},
-    {name:"우표 · 로즈",tag:"빈티지 우표",s:{fill:"solid",fg1:"#9d174d",bg:"#fffaf7",dot:"dots",eye:"square",frameOn:true,frameStyle:"stamp"}},
-    {name:"조개 도일리",tag:"레이스 프레임",s:{fill:"solid",fg1:"#0e7490",bg:"#f4fbfd",dot:"rounded",eye:"rounded",frameOn:true,frameStyle:"shell"}},
-    {name:"포스터 · 스캔미",tag:"헤드라인 포스터",s:{fill:"solid",fg1:"#111111",bg:"#ffffff",dot:"square",eye:"square",frameOn:true,frameStyle:"poster",frameMode:"linear",frameBg1:"#111111",frameBg2:"#3f3f46",frameAngle:135,labelOn:true,labelText:"SCAN ME"}},
-    {name:"포스터 · 선셋",tag:"헤드라인 포스터",s:{fill:"solid",fg1:"#7c2d12",bg:"#ffffff",dot:"rounded",eye:"rounded",frameOn:true,frameStyle:"poster",frameMode:"linear",frameBg1:"#fb7185",frameBg2:"#f97316",frameAngle:120,labelOn:true,labelText:"OPEN ME"}},
-    {name:"폴라로이드 · 메모",tag:"손글씨 감성",s:{fill:"solid",fg1:"#1f2937",bg:"#ffffff",dot:"rounded",eye:"rounded",frameOn:true,frameStyle:"polaroid",labelOn:true,labelText:"Hello :)"}},
-    {name:"네온 · 그린",tag:"글로우 액자",s:{fill:"linear",fg1:"#4ade80",fg2:"#22d3ee",angle:120,bg:"#06120b",dot:"dots",eye:"circle",frameOn:true,frameStyle:"neon",frameBg1:"#4ade80"}},
-    {name:"우드 · 다크월넛",tag:"원목 액자",s:{fill:"solid",fg1:"#3b2412",bg:"#fdf8f0",dot:"rounded",eye:"rounded",frameOn:true,frameStyle:"wood"}},
-    {name:"서클아트 골드",tag:"도트 링 배지",s:{fill:"linear",fg1:"#d4af37",fg2:"#8a6d1e",angle:120,bg:"#ffffff",dot:"classy",eye:"leaf",frameOn:true,frameStyle:"circle",frameMode:"solid",frameBg1:"#c9a227"}},
-    {name:"모노 카드 · 라이트",tag:"컬러 카드",s:{fill:"solid",fg1:"#0f172a",bg:"#ffffff",dot:"square",eye:"square",frameOn:true,frameStyle:"card",frameMode:"linear",frameBg1:"#e5e7eb",frameBg2:"#94a3b8",frameAngle:135}}
-  ]
+  frame: FRAMES.map(framePreset)
 };
 var curCat="standard";
 // gallery labels added with the Animation / Symbol Mark refresh (kept here, next to CATS, so the
@@ -7161,6 +7297,7 @@ function buildGallery(){
     var cv=card.querySelector("canvas");
     renderPreset(cv, p.s);
     if(animate) galItems.push({cv:cv, ps:p.s});
+    else if(p.s.frameImg){ (function(cvv,pss){ getArtImg(frameUrl(pss.frameImg,true), function(){ renderPreset(cvv,pss); }); })(cv,p.s); }
     else if(p.s.artUrl || p.s.centerLogoUrl){ (function(cvv,pss){ function rr(){ renderPreset(cvv, pss); } if(pss.artUrl) getArtImg(pss.artUrl, rr); if(pss.centerLogoUrl) getArtImg(pss.centerLogoUrl, rr); })(cv,p.s); }
     card.addEventListener("click",function(){ applyPreset(p.s, p); });
   });
@@ -7338,6 +7475,9 @@ var I18N = {
   "doc.desc":{ko:"스캔되는 예술. 색상·그라디언트·모듈 형태·로고·애니메이션까지 커스터마이즈하는 미적 QR 코드 생성기. 브라우저에서 바로 동작합니다.",en:"Scannable art. Design beautiful QR codes with colors, gradients, module shapes, logos and animation — right in your browser.",ja:"読み取れるアート。色・グラデーション・モジュール形状・ロゴ・アニメーションまで自在にデザインできるQRコードジェネレーター。ブラウザですぐ使えます。",zh:"可扫描的艺术。自定义颜色、渐变、模块形状、标志和动画的美观二维码生成器，直接在浏览器中使用。"},
   "cat.motion":{ko:"모션",en:"Motion",zh:"动态",ja:"モーション"},
   "cat.tip.motion":{ko:"QR 점들이 날아와 모이는 모션 QR. 색·로고·이미지를 넣고 영상(MP4·WebM)으로 저장할 수 있어요.",en:"Motion QR: the dots fly in and assemble. Add colors, a logo or an image and save it as a video (MP4/WebM).",zh:"动态二维码：码点飞入并组合成形。可添加颜色、标志或图片，并保存为视频（MP4/WebM）。",ja:"QRのドットが飛んできて組み上がるモーションQR。色・ロゴ・画像を入れて動画（MP4・WebM）で保存できます。"},
+  "seg.fstyle.photo":{ko:"이미지 프레임",en:"Image frame",zh:"图片边框",ja:"画像フレーム"},
+  "lbl.framePhoto":{ko:"이미지 프레임 고르기",en:"Choose an image frame",zh:"选择图片边框",ja:"画像フレームを選ぶ"},
+  "cat.tip.frame":{ko:"영화 포스터·폴라로이드·명화 액자·여행지 테마의 이미지 프레임 50종. 가운데 창에 QR이 들어가요.",en:"50 image frames — movie posters, Polaroids, fine-art frames and travel scenes. The QR sits in the centre window.",zh:"50 款图片边框——电影海报、拍立得、名画画框和旅行风景。二维码位于中间的窗口。",ja:"映画ポスター・ポラロイド・名画の額縁・旅先をテーマにした画像フレーム50種。中央の窓にQRが入ります。"},
   "foot.contact":{ko:"문의",en:"Contact",zh:"联系",ja:"お問い合わせ"},
   "foot.motion":{ko:"모션 QR 실험실",en:"Motion QR Lab",zh:"动态二维码实验室",ja:"モーションQRラボ"},
   "foot.tag":{ko:"아름답고 스캔되는 QR을 만드는 스튜디오 · QR 생성·디자인은 브라우저에서 처리 (AI 기능만 서버 전송·저장 안 함)",en:"A studio for beautiful, scannable QR codes · QR building & design run in your browser (only AI features send to a server, and aren't stored)",zh:"打造美观且可扫描二维码的工作室 · 二维码生成与设计在浏览器中处理（仅 AI 功能会发送到服务器，且不存储）",ja:"美しくスキャン可能なQRを作るスタジオ · QR生成・デザインはブラウザで処理（AI機能のみサーバー送信・保存なし）"},
@@ -7477,7 +7617,6 @@ var I18N = {
   "cat.tip.animation":{ko:"이미지가 살아 움직이는 아트 QR. 카드를 클릭하면 그 이미지가 적용된 채 편집할 수 있어요.",en:"Living, animated art QRs. Click a card to edit with that image applied.",zh:"会动的艺术二维码。点击卡片即可在应用该图像的状态下编辑。",ja:"画像が動くアートQR。カードをクリックするとその画像が適用された状態で編集できます。"},
   "cat.tip.logo":{ko:"중앙에 브랜드 텍스트가 들어간 로고형 QR. 클릭 후 문구를 바꾸거나 로고 이미지를 올릴 수 있어요.",en:"Logo-style QRs with brand text in the center. Click to change the text or upload a logo.",zh:"中心带品牌文字的 Logo 型二维码。点击后可改文字或上传 Logo。",ja:"中央にブランド文字が入るロゴ型QR。クリック後に文言変更やロゴ画像のアップロードが可能。"},
   "cat.tip.pictogram":{ko:"용도·업종별 픽토그램 QR. Wi-Fi·연락처·전화 같은 용도형은 클릭하면 입력폼이 예시값과 함께 열려요.",en:"Pictogram QRs by purpose and business type. Purpose ones (Wi-Fi, contact, call…) open their form pre-filled with examples.",zh:"按用途和行业分类的图标二维码。Wi-Fi、联系人、电话等用途类点击后会打开带示例值的表单。",ja:"用途・業種別のピクトグラムQR。Wi-Fi・連絡先・電話などの用途型はクリックすると入力フォームが例文付きで開きます。"},
-  "cat.tip.frame":{ko:"우드·골드·폴라로이드 등 실제 액자 프레임 디자인.",en:"Real picture-frame styles — wood, gold, polaroid and more.",zh:"木质、金色、宝丽来等真实相框设计。",ja:"ウッド・ゴールド・ポラロイドなど本物の額縁デザイン。"},
   "cat.tip.myqr":{ko:"내가 저장한 QR 보관함. 스튜디오에서 ‘현재 디자인 저장’을 누르면 여기 쌓입니다.",en:"Your saved QR library. Press “Save current design” in the studio to add here.",zh:"你保存的二维码库。在工作室点击“保存当前设计”即可加入。",ja:"保存したQRの保管庫。スタジオで「現在のデザインを保存」を押すとここに貯まります。"},
   "btn.saveMyQr":{ko:"＋ 현재 디자인 저장",en:"＋ Save current design",zh:"＋ 保存当前设计",ja:"＋ 現在のデザインを保存"},
   "btn.png":{ko:"PNG 저장",en:"Save PNG",zh:"保存 PNG",ja:"PNG保存"},
