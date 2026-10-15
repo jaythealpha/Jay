@@ -405,6 +405,7 @@
   .ev-out canvas{width:150px;height:150px;flex:none;background:#fff;border-radius:12px;border:1px solid var(--line2)}
   .ev-out>div{flex:1;min-width:0}
   .ev-lab{max-width:1100px;margin:22px auto 0}
+  .ev-prize{display:flex;gap:6px;align-items:center;margin-top:6px} .ev-prize input[type=text]{flex:1;min-width:0} .ev-prize input[type=number]{width:74px;flex:none} .ev-prize span{color:var(--mut);font-size:13px}
   @media(max-width:760px){ .ev-types{grid-template-columns:repeat(2,minmax(0,1fr))} .ev-types button:last-child{grid-column:1/-1} .ev-out{flex-direction:column;align-items:stretch} .ev-out canvas{align-self:center} }
   .ar-guide{max-width:720px;margin:0 auto 16px;border:1px solid var(--line);border-radius:var(--r);background:var(--bg2);padding:14px 16px}
   .ar-guide h3{margin:0 0 10px;font-size:16px}
@@ -1343,8 +1344,11 @@
           <div class="body">
             <label class="fld" data-ev="photo"><div class="lbl" data-i18n="ev.lbl.rewardWhen">혜택 주는 시점</div>
               <div class="seg" id="evRmSeg"><button data-v="none"><span data-i18n="ev.rm.none">혜택 없음</span></button><button data-v="capture" class="on"><span data-i18n="ev.rm.capture">사진 찍으면</span></button><button data-v="share"><span data-i18n="ev.rm.share">공유하면</span></button></div></label>
-            <label class="fld" data-ev="lucky"><div class="lbl"><span data-i18n="ev.lbl.prob">당첨 확률</span> <b id="evPOut">20%</b></div><input type="range" id="evP" min="1" max="100" step="1" value="20" /></label>
-            <label class="fld" data-ev="lucky"><div class="lbl" data-i18n="ev.lbl.win">당첨 문구</div><input type="text" id="evWx" maxlength="30" /></label>
+            <div class="fld" data-ev="lucky"><div class="lbl" data-i18n="ev.lbl.prizes">상품과 당첨 확률 (최대 3개)</div>
+              <div class="ev-prize"><input type="text" id="evPr1" maxlength="20" /><input type="number" id="evPp1" min="0" max="100" value="5" /><span>%</span></div>
+              <div class="ev-prize"><input type="text" id="evPr2" maxlength="20" /><input type="number" id="evPp2" min="0" max="100" value="15" /><span>%</span></div>
+              <div class="ev-prize"><input type="text" id="evPr3" maxlength="20" /><input type="number" id="evPp3" min="0" max="100" value="0" /><span>%</span></div>
+              <div class="hint" id="evPrSum"></div></div>
             <label class="fld" data-ev="lucky"><div class="lbl" data-i18n="ev.lbl.lose">꽝 문구</div><input type="text" id="evLx" maxlength="30" /></label>
             <label class="fld" data-ev="photo coupon"><div class="lbl" data-i18n="ev.lbl.reward">혜택 내용</div><input type="text" id="evRx" maxlength="30" /></label>
             <div class="row2">
@@ -1352,6 +1356,12 @@
               <label class="fld"><div class="lbl" data-i18n="ev.lbl.until">유효기간 (선택)</div><input type="text" id="evRu" maxlength="16" placeholder="12.31" /></label>
             </div>
             <div class="hint" data-ev="lucky" data-i18n="ev.hint.lucky"></div>
+            <div class="row2">
+              <label class="fld"><div class="lbl" data-i18n="ev.lbl.sd">시작일 (선택)</div><input type="date" id="evSd" /></label>
+              <label class="fld"><div class="lbl" data-i18n="ev.lbl.ed">종료일 (선택)</div><input type="date" id="evEd" /></label>
+            </div>
+            <label class="fld"><div class="lbl" data-i18n="ev.lbl.pin">직원 확인 PIN (선택, 숫자 4자리)</div><input type="text" id="evPin" inputmode="numeric" maxlength="6" placeholder="1234" /></label>
+            <div class="hint" data-i18n="ev.hint.pin"></div>
           </div>
         </details>
         <details class="grp" open data-ev="coupon lucky confetti info">
@@ -1515,6 +1525,7 @@
           <div class="body">
             <div class="seg seg-wrap" id="pstArSeg"><button data-a="" class="on"><span data-i18n="ev.none">없음</span></button><button data-a="coupon">🎁 <span data-i18n="ev.k.coupon">쿠폰 공개</span></button><button data-a="lucky">🍀 <span data-i18n="ev.k.lucky">행운 뽑기</span></button><button data-a="confetti">🎉 <span data-i18n="ev.k.confetti">축하 효과</span></button><button data-a="info">ℹ️ <span data-i18n="ev.k.info">정보 카드</span></button><button data-a="photo">📸 <span data-i18n="ev.k.photo">포토 필터</span></button></div>
             <div class="hint" data-i18n="pst.hint.ar"></div>
+            <a class="hint" href="#ar" style="display:inline-block;margin:4px 0 6px" data-i18n="pst.arMore">상품·기간·직원 확인까지 설정하려면 AR 이벤트 탭에서 만들어 ‘포스터로 만들기’를 누르세요 →</a>
             <label class="fld" data-pa="coupon photo"><div class="lbl" data-i18n="ev.lbl.reward">혜택 내용</div><input type="text" id="pstArRx" maxlength="30" /></label>
             <label class="fld" data-pa="lucky"><div class="lbl"><span data-i18n="ev.lbl.prob">당첨 확률</span> <b id="pstArPOut">20%</b></div><input type="range" id="pstArP" min="1" max="100" value="20" /></label>
             <label class="fld" data-pa="lucky"><div class="lbl" data-i18n="ev.lbl.win">당첨 문구</div><input type="text" id="pstArWx" maxlength="30" /></label>
@@ -1620,7 +1631,7 @@
     </nav>
     <div style="margin-top:10px">Aesthetic QR Studio · <span data-i18n="foot.tag">아름답고 스캔되는 QR을 만드는 스튜디오 · QR 생성·디자인은 브라우저에서 처리 (AI 기능만 서버 전송·저장 안 함)</span></div>
     <div style="margin-top:6px" data-i18n="foot.tm">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · <span data-i18n="foot.build">빌드</span> <b id="verTag">2026.10.15-d</b></div>
+    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · <span data-i18n="foot.build">빌드</span> <b id="verTag">2026.10.15-e</b></div>
   </footer>
 </div>
 
@@ -7790,8 +7801,6 @@ var I18N = {
   "ev.rm.none":{ko:"혜택 없음",en:"No reward",ja:"特典なし",zh:"无福利"},
   "ev.rm.capture":{ko:"사진 찍으면",en:"After a photo",ja:"撮影したら",zh:"拍照后"},
   "ev.rm.share":{ko:"공유하면",en:"After sharing",ja:"シェアしたら",zh:"分享后"},
-  "ev.lbl.prob":{ko:"당첨 확률",en:"Win chance",ja:"当選確率",zh:"中奖率"},
-  "ev.lbl.win":{ko:"당첨 문구",en:"Win message",ja:"当選メッセージ",zh:"中奖文字"},
   "ev.lbl.lose":{ko:"꽝 문구",en:"Lose message",ja:"ハズレのメッセージ",zh:"未中奖文字"},
   "ev.lbl.reward":{ko:"혜택 내용",en:"Reward",ja:"特典内容",zh:"福利内容"},
   "ev.lbl.code":{ko:"쿠폰 코드 (선택)",en:"Coupon code (optional)",ja:"クーポンコード（任意）",zh:"优惠码（可选）"},
@@ -7832,6 +7841,15 @@ var I18N = {
   "ev.ct.accent":{ko:"강조 색",en:"Accent",ja:"アクセント色",zh:"强调色"},
   "ev.lbl.ic":{ko:"카드 아이콘 (이모지)",en:"Card icon (emoji)",ja:"カードのアイコン（絵文字）",zh:"卡片图标（表情）"},
   "pst.ctaPhoto":{ko:"QR을 찍고 사진을 남겨 보세요",en:"Scan and snap a photo",ja:"QRを読み取って写真を撮ろう",zh:"扫码拍张照吧"},
+  "ev.lbl.prizes":{ko:"상품과 당첨 확률 (최대 3개)",en:"Prizes and odds (up to 3)",ja:"景品と当選確率（最大3つ）",zh:"奖品与中奖率（最多3个）"},
+  "ev.prSum":{ko:"당첨 {w}% · 꽝 {l}%",en:"Win {w}% · lose {l}%",ja:"当たり {w}%・ハズレ {l}%",zh:"中奖 {w}% · 未中奖 {l}%"},
+  "ev.lbl.sd":{ko:"시작일 (선택)",en:"Start date (optional)",ja:"開始日（任意）",zh:"开始日期（可选）"},
+  "ev.lbl.ed":{ko:"종료일 (선택)",en:"End date (optional)",ja:"終了日（任意）",zh:"结束日期（可选）"},
+  "ev.lbl.pin":{ko:"직원 확인 PIN (선택, 숫자 4자리)",en:"Staff PIN (optional, 4 digits)",ja:"スタッフ確認PIN（任意・4桁）",zh:"店员确认 PIN（可选，4位数字）"},
+  "ev.hint.pin":{ko:"PIN을 정하면 혜택 화면에 ‘직원 확인’ 버튼이 생겨요. 직원이 PIN을 넣으면 그 휴대폰에서 ‘사용 완료’로 바뀌어 다시 쓸 수 없어요. PIN 자체는 링크에 담기지 않아요.",en:"Set a PIN and the reward screen gets a “Staff” button. When staff enter it, the reward turns “Used” on that phone. The PIN itself is not stored in the link.",ja:"PINを設定すると特典画面に「スタッフ確認」ボタンが出ます。スタッフが入力すると、その端末で「使用済み」になります。PIN自体はリンクに入りません。",zh:"设置 PIN 后，福利页面会出现“店员确认”按钮。店员输入后，该手机上的福利会变为“已使用”。PIN 本身不会写入链接。"},
+  "pst.arMore":{ko:"상품·기간·직원 확인까지 설정하려면 AR 이벤트 탭에서 만들어 ‘포스터로 만들기’를 누르세요 →",en:"For prizes, dates and staff checks, build it in the AR Events tab and tap “Make a poster” →",ja:"景品・期間・スタッフ確認まで設定するには、ARイベントタブで作って「ポスターにする」を押してください →",zh:"如需设置奖品、日期和店员确认，请在 AR 活动标签中创建并点击“制作海报”→"},
+  "ev.lbl.prob":{ko:"당첨 확률",en:"Win chance",ja:"当選確率",zh:"中奖率"},
+  "ev.lbl.win":{ko:"당첨 문구",en:"Win message",ja:"当選メッセージ",zh:"中奖文字"},
   "foot.contact":{ko:"문의",en:"Contact",zh:"联系",ja:"お問い合わせ"},
   "foot.motion":{ko:"모션 QR 실험실",en:"Motion QR Lab",zh:"动态二维码实验室",ja:"モーションQRラボ"},
   "foot.tag":{ko:"아름답고 스캔되는 QR을 만드는 스튜디오 · QR 생성·디자인은 브라우저에서 처리 (AI 기능만 서버 전송·저장 안 함)",en:"A studio for beautiful, scannable QR codes · QR building & design run in your browser (only AI features send to a server, and aren't stored)",zh:"打造美观且可扫描二维码的工作室 · 二维码生成与设计在浏览器中处理（仅 AI 功能会发送到服务器，且不存储）",ja:"美しくスキャン可能なQRを作るスタジオ · QR生成・デザインはブラウザで処理（AI機能のみサーバー送信・保存なし）"},
@@ -9068,13 +9086,15 @@ var EVB=(function(){
   var DEF={
     photo:{t:["포토존 이벤트","Photo Booth","フォトブース","拍照打卡"],h:["우리가게포토존","myshopphoto","myshopphoto","myshopphoto"],rx:["음료 1잔 무료","Free drink","ドリンク1杯無料","免费饮品一杯"],rd:"PHOTO1"},
     coupon:{t:["숨은 쿠폰 찾기","Find the hidden coupon","隠れクーポンを探そう","寻找隐藏优惠券"],rx:["전 메뉴 10% 할인","10% off everything","全品10%オフ","全场九折"],rd:"SCAN10"},
-    lucky:{t:["행운 뽑기","Lucky draw","ラッキー抽選","幸运抽奖"],wx:["음료 1잔 당첨!","You won a free drink!","ドリンク1杯当選！","赢得免费饮品一杯！"],lx:["다음 기회에!","Better luck next time!","また挑戦してね！","下次好运！"],rd:"LUCKY"},
+    lucky:{t:["행운 뽑기","Lucky draw","ラッキー抽選","幸运抽奖"],pr1:["1등 · 케이크 교환권","1st · Free cake","1等・ケーキ引換券","一等奖 · 蛋糕券"],pr2:["2등 · 음료 1잔","2nd · Free drink","2等・ドリンク1杯","二等奖 · 饮品一杯"],lx:["다음 기회에!","Better luck next time!","また挑戦してね！","下次好运！"],rd:"LUCKY"},
     confetti:{t:["GRAND OPEN","GRAND OPEN","GRAND OPEN","GRAND OPEN"],s:["오픈을 축하해 주세요","Celebrate our opening","オープンを祝ってね","一起庆祝开业"]},
     info:{t:["영업 안내","Store info","営業案内","营业信息"],it:["영업 시간","Opening hours","営業時間","营业时间"],i1:["평일 10:00–21:00","Weekdays 10:00–21:00","平日 10:00–21:00","工作日 10:00–21:00"],i2:["주말 11:00–20:00","Weekends 11:00–20:00","週末 11:00–20:00","周末 11:00–20:00"]}
   };
   var LI={ko:0,en:1,ja:2,zh:3};
   function li(){ return LI[(typeof LANG!=="undefined"&&LANG)||"ko"]||0; }
-  var IDS={t:"evT",s:"evS",h:"evH",rx:"evRx",rd:"evRd",wx:"evWx",lx:"evLx",it:"evIt",i1:"evI1",i2:"evI2",i3:"evI3"};
+  var IDS={t:"evT",s:"evS",h:"evH",rx:"evRx",rd:"evRd",pr1:"evPr1",pr2:"evPr2",pr3:"evPr3",lx:"evLx",it:"evIt",i1:"evI1",i2:"evI2",i3:"evI3"};
+  // same FNV-1a hash as event.html — the PIN itself never goes into the link
+  function pinHash(pin,title){ var h=2166136261, x=String(pin).trim()+"|"+(title||""); for(var i=0;i<x.length;i++){ h^=x.charCodeAt(i); h=Math.imul(h,16777619); } return (h>>>0).toString(16); }
   function fillDefaults(){ var d=DEF[K]||{}, k=li();
     for(var f in IDS){ if(dirty[f]) continue; var v=d[f]; $(IDS[f]).value = v==null ? "" : (Array.isArray(v)?v[k]:v); }
     if(!dirty.lt) $("evLt").value=""; }
@@ -9083,7 +9103,10 @@ var EVB=(function(){
       if(F.e==="custom") c.es=$("evEs").value.trim(); var ss=+$("evSs").value; if(ss!==100) c.ss=ss/100; if(F.rm!=="none"){ c.rx=$("evRx").value.trim(); c.rd=$("evRd").value.trim(); c.ru=$("evRu").value.trim(); } }
     if(K!=="photo"){ c.pk=F.pk; c.ft=F.ft; if(K!=="confetti"){ c.ct=F.ct; c.ic=$("evIc").value.trim(); } }
     if(K==="photo"){} else if(K==="coupon"){ c.rx=$("evRx").value.trim(); c.rd=$("evRd").value.trim(); c.ru=$("evRu").value.trim(); }
-    else if(K==="lucky"){ c.p=+$("evP").value; c.wx=$("evWx").value.trim(); c.lx=$("evLx").value.trim(); c.rd=$("evRd").value.trim(); c.ru=$("evRu").value.trim(); }
+    else if(K==="lucky"){ var pr=[]; [1,2,3].forEach(function(i){ var n=$("evPr"+i).value.trim(), pc=Math.max(0,Math.min(100,+$("evPp"+i).value||0)); if(n&&pc>0) pr.push([n,pc]); });
+      c.pr=pr; c.lx=$("evLx").value.trim(); c.rd=$("evRd").value.trim(); c.ru=$("evRu").value.trim();
+      var sum=pr.reduce(function(a,b){return a+b[1];},0); $("evPrSum").textContent=t("ev.prSum").replace("{w}",Math.min(100,sum)).replace("{l}",Math.max(0,100-sum)); }
+    if(K!=="info" && K!=="confetti" || K==="photo"){ c.sd=$("evSd").value; c.ed=$("evEd").value; var pin=$("evPin").value.trim(); if(pin) c.pn=pinHash(pin,c.t); }
     else if(K==="info"){ c.it=$("evIt").value.trim(); c.i=[$("evI1").value,$("evI2").value,$("evI3").value].map(function(x){return x.trim();}).filter(Boolean).join("|"); }
     return c; }
   function link(){ return evLink(cfg()); }
@@ -9107,7 +9130,7 @@ var EVB=(function(){
     $("evSs").addEventListener("input",function(){ $("evSsOut").textContent=this.value+"%"; update(); });
     Object.keys(IDS).forEach(function(f){ $(IDS[f]).addEventListener("input",function(){ dirty[f]=true; update(); }); });
     ["evB","evS","evL","evLt","evRu","evC"].forEach(function(id){ $(id).addEventListener("input",function(){ if(id==="evLt") dirty.lt=true; update(); }); });
-    $("evP").addEventListener("input",function(){ $("evPOut").textContent=this.value+"%"; update(); });
+    ["evPp1","evPp2","evPp3","evSd","evEd","evPin"].forEach(function(id){ $(id).addEventListener("input",update); });
     $("evToStudio").addEventListener("click",function(){ pushArLinkToStudio(link()); });
     $("evToPoster").addEventListener("click",function(){ var c=cfg(); POSTER.useLink(link(),{title:c.t,sub:c.s,acc:"#"+c.c,cta:t(K==="photo"?"pst.ctaPhoto":"pst.ctaAR")}); });
     $("evQrPng").addEventListener("click",function(){ download($("evQr").toDataURL("image/png"),"aesthetic-qr-event.png"); if(typeof track==="function") track("event_qr",{k:K}); });
