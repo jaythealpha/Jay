@@ -1292,7 +1292,7 @@
       <button data-k="coupon"><b>🎁</b><span data-i18n="ev.k.coupon">쿠폰 공개</span><small data-i18n="ev.kd.coupon"></small></button>
       <button data-k="lucky"><b>🍀</b><span data-i18n="ev.k.lucky">행운 뽑기</span><small data-i18n="ev.kd.lucky"></small></button>
       <button data-k="confetti"><b>🎉</b><span data-i18n="ev.k.confetti">축하 효과</span><small data-i18n="ev.kd.confetti"></small></button>
-      <button data-k="info"><b>ℹ️</b><span data-i18n="ev.k.info">정보 카드</span><small data-i18n="ev.kd.info"></small></button>
+      <button data-k="scene"><b>✨</b><span data-i18n="ev.k.scene">움직이는 포스터</span><small data-i18n="ev.kd.scene"></small></button>
     </div>
     <div class="hint ev-typehint" data-i18n-html="ev.typeHint"></div>
     <div class="studio" id="evBuilder">
@@ -1364,14 +1364,26 @@
             <div class="hint" data-i18n="ev.hint.pin"></div>
           </div>
         </details>
-        <details class="grp" open data-ev="coupon lucky confetti info">
+        <details class="grp" open data-ev="scene">
+          <summary><span data-i18n="ev.grp.scene">포스터 연출</span></summary>
+          <div class="body">
+            <label class="fld"><div class="lbl" data-i18n="ev.lbl.sc">연출</div>
+              <div class="seg seg-wrap" id="evScSeg"><button data-v="balloons" class="on">🎈 <span data-i18n="ev.sc.balloons">풍선</span></button><button data-v="petals">🌸 <span data-i18n="ev.sc.petals">꽃잎</span></button><button data-v="snow">❄️ <span data-i18n="ev.sc.snow">눈</span></button><button data-v="hearts">💖 <span data-i18n="ev.sc.hearts">하트</span></button><button data-v="sparkle">✨ <span data-i18n="ev.sc.sparkle">반짝임</span></button><button data-v="mascot">🐻 <span data-i18n="ev.sc.mascot">캐릭터</span></button></div></label>
+            <label class="fld" id="evMsWrap" style="display:none"><div class="lbl" data-i18n="ev.lbl.ms">캐릭터</div>
+              <div class="seg seg-wrap" id="evMsSeg"><button data-v="🐻" class="on">🐻</button><button data-v="🐰">🐰</button><button data-v="🐶">🐶</button><button data-v="🐱">🐱</button><button data-v="🦊">🦊</button><button data-v="🐥">🐥</button><button data-v="🎅">🎅</button></div></label>
+            <label class="fld"><div class="lbl" data-i18n="ev.lbl.si">강도</div>
+              <div class="seg" id="evSiSeg"><button data-v="1"><span data-i18n="ev.si.1">은은하게</span></button><button data-v="2" class="on"><span data-i18n="ev.si.2">보통</span></button><button data-v="3"><span data-i18n="ev.si.3">화려하게</span></button></div></label>
+            <div class="hint" data-i18n="ev.hint.scene"></div>
+          </div>
+        </details>
+        <details class="grp" open data-ev="coupon lucky confetti">
           <summary><span data-i18n="ev.grp.fx">효과 꾸미기</span></summary>
           <div class="body">
             <label class="fld"><div class="lbl" data-i18n="ev.lbl.pk">터지는 모양</div>
               <div class="seg seg-wrap" id="evPkSeg"><button data-v="" class="on"><span data-i18n="ev.pk.confetti">색종이</span></button><button data-v="hearts">💖</button><button data-v="stars">⭐</button><button data-v="snow">❄️</button><button data-v="petals">🌸</button><button data-v="coins">🪙</button></div></label>
-            <label class="fld" data-ev="coupon lucky info"><div class="lbl" data-i18n="ev.lbl.ct">카드 스타일</div>
+            <label class="fld" data-ev="coupon"><div class="lbl" data-i18n="ev.lbl.ct">카드 스타일</div>
               <div class="seg" id="evCtSeg"><button data-v="" class="on"><span data-i18n="ev.ct.light">밝게</span></button><button data-v="dark"><span data-i18n="ev.ct.dark">어둡게</span></button><button data-v="accent"><span data-i18n="ev.ct.accent">강조 색</span></button></div></label>
-            <label class="fld" data-ev="coupon lucky info"><div class="lbl" data-i18n="ev.lbl.ic">카드 아이콘 (이모지)</div><input type="text" id="evIc" maxlength="4" placeholder="🎁" /></label>
+            <label class="fld" data-ev="coupon"><div class="lbl" data-i18n="ev.lbl.ic">카드 아이콘 (이모지)</div><input type="text" id="evIc" maxlength="4" placeholder="🎁" /></label>
             <label class="fld"><div class="lbl" data-i18n="ev.lbl.font">글꼴</div>
               <div class="seg" id="evFt2Seg"><button data-v="" class="on"><span data-i18n="ev.ft.sans">고딕</span></button><button data-v="serif"><span data-i18n="ev.ft.serif">명조</span></button><button data-v="round"><span data-i18n="ev.ft.round">둥근</span></button></div></label>
           </div>
@@ -1523,13 +1535,15 @@
         <details class="grp">
           <summary><span data-i18n="pst.grp.ar">AR 경험 (선택)</span> <span class="cat-new-pill">NEW</span></summary>
           <div class="body">
-            <div class="seg seg-wrap" id="pstArSeg"><button data-a="" class="on"><span data-i18n="ev.none">없음</span></button><button data-a="coupon">🎁 <span data-i18n="ev.k.coupon">쿠폰 공개</span></button><button data-a="lucky">🍀 <span data-i18n="ev.k.lucky">행운 뽑기</span></button><button data-a="confetti">🎉 <span data-i18n="ev.k.confetti">축하 효과</span></button><button data-a="info">ℹ️ <span data-i18n="ev.k.info">정보 카드</span></button><button data-a="photo">📸 <span data-i18n="ev.k.photo">포토 필터</span></button></div>
+            <div class="seg seg-wrap" id="pstArSeg"><button data-a="" class="on"><span data-i18n="ev.none">없음</span></button><button data-a="coupon">🎁 <span data-i18n="ev.k.coupon">쿠폰 공개</span></button><button data-a="lucky">🍀 <span data-i18n="ev.k.lucky">행운 뽑기</span></button><button data-a="confetti">🎉 <span data-i18n="ev.k.confetti">축하 효과</span></button><button data-a="scene">✨ <span data-i18n="ev.k.scene">움직이는 포스터</span></button><button data-a="photo">📸 <span data-i18n="ev.k.photo">포토 필터</span></button></div>
             <div class="hint" data-i18n="pst.hint.ar"></div>
             <a class="hint" href="#ar" style="display:inline-block;margin:4px 0 6px" data-i18n="pst.arMore">상품·기간·직원 확인까지 설정하려면 AR 이벤트 탭에서 만들어 ‘포스터로 만들기’를 누르세요 →</a>
             <label class="fld" data-pa="coupon photo"><div class="lbl" data-i18n="ev.lbl.reward">혜택 내용</div><input type="text" id="pstArRx" maxlength="30" /></label>
             <label class="fld" data-pa="lucky"><div class="lbl"><span data-i18n="ev.lbl.prob">당첨 확률</span> <b id="pstArPOut">20%</b></div><input type="range" id="pstArP" min="1" max="100" value="20" /></label>
             <label class="fld" data-pa="lucky"><div class="lbl" data-i18n="ev.lbl.win">당첨 문구</div><input type="text" id="pstArWx" maxlength="30" /></label>
-            <label class="fld" data-pa="info"><div class="lbl" data-i18n="ev.lbl.line">내용 (최대 3줄)</div><input type="text" id="pstArI1" maxlength="34" /><input type="text" id="pstArI2" maxlength="34" style="margin-top:6px" /></label>
+            <label class="fld" data-pa="scene"><div class="lbl" data-i18n="ev.lbl.sc">연출</div>
+              <div class="seg seg-wrap" id="pstArScSeg"><button data-v="balloons" class="on">🎈</button><button data-v="petals">🌸</button><button data-v="snow">❄️</button><button data-v="hearts">💖</button><button data-v="sparkle">✨</button><button data-v="mascot">🐻</button></div></label>
+            <input type="hidden" id="pstArI1" /><input type="hidden" id="pstArI2" />
             <label class="fld" data-pa="coupon lucky photo"><div class="lbl" data-i18n="ev.lbl.code">쿠폰 코드 (선택)</div><input type="text" id="pstArRd" maxlength="16" /></label>
             <label class="fld" data-pa="photo"><div class="lbl" data-i18n="ev.lbl.hashtag">해시태그</div><input type="text" id="pstArH" maxlength="30" /></label>
             <a class="hint" id="pstArTry" target="_blank" rel="noopener" style="display:none" data-i18n="ev.try">내 휴대폰처럼 체험해 보기 ↗</a>
@@ -1631,7 +1645,7 @@
     </nav>
     <div style="margin-top:10px">Aesthetic QR Studio · <span data-i18n="foot.tag">아름답고 스캔되는 QR을 만드는 스튜디오 · QR 생성·디자인은 브라우저에서 처리 (AI 기능만 서버 전송·저장 안 함)</span></div>
     <div style="margin-top:6px" data-i18n="foot.tm">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · <span data-i18n="foot.build">빌드</span> <b id="verTag">2026.10.15-e</b></div>
+    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · <span data-i18n="foot.build">빌드</span> <b id="verTag">2026.10.15-f</b></div>
   </footer>
 </div>
 
@@ -7817,7 +7831,6 @@ var I18N = {
   "pst.grp.ar":{ko:"AR 경험 (선택)",en:"AR experience (optional)",ja:"AR体験（任意）",zh:"AR 体验（可选）"},
   "pst.hint.ar":{ko:"켜면 포스터 QR을 찍은 고객이 카메라로 포스터를 비출 때 쿠폰·추첨·축하 효과가 나타나고, 그다음 위 링크로 이어져요.",en:"When on, customers who scan the poster QR point their camera at the poster to see a coupon, draw or celebration — then continue to your link.",ja:"オンにすると、ポスターのQRを読み取ったお客様がカメラでポスターを映すとクーポン・抽選・お祝い演出が現れ、その後リンクへ進みます。",zh:"开启后，顾客扫描海报二维码并用相机对准海报，会出现优惠券、抽奖或庆祝效果，然后再跳转到你的链接。"},
   "pst.ctaAR":{ko:"QR을 찍고 포스터를 비춰 보세요",en:"Scan, then point at the poster",ja:"QRを読み取ってポスターを映してね",zh:"扫码后对准海报"},
-  "ev.typeHint":{ko:"<b>📸 포토 필터</b>는 QR을 찍으면 셀카 카메라가 열려요. <b>쿠폰·뽑기·축하·정보 카드</b>는 QR을 찍은 뒤 카메라로 <b>포스터를 비추면</b> QR 위에 효과가 나타나요.",en:"<b>📸 Photo filter</b> opens a selfie camera after the scan. With <b>coupon, lucky draw, celebration and info card</b>, customers scan and then <b>point the camera at the poster</b> to see the effect over the QR.",ja:"<b>📸 フォトフィルター</b>はQRを読み取るとセルフィーカメラが開きます。<b>クーポン・抽選・お祝い・情報カード</b>は読み取った後、カメラで<b>ポスターを映す</b>とQRの上に演出が現れます。",zh:"<b>📸 拍照滤镜</b>扫码后会打开自拍相机。<b>优惠券、抽奖、庆祝、信息卡片</b>需在扫码后用相机<b>对准海报</b>，二维码上方就会出现效果。"},
   "ev.pv.fx":{ko:"효과 미리보기",en:"Effect preview",ja:"演出プレビュー",zh:"效果预览"},
   "ev.pv.land":{ko:"고객 첫 화면",en:"Customer's first screen",ja:"お客様の最初の画面",zh:"顾客首屏"},
   "ev.f.magazine":{ko:"매거진",en:"Magazine",ja:"マガジン",zh:"杂志"},
@@ -7850,6 +7863,23 @@ var I18N = {
   "pst.arMore":{ko:"상품·기간·직원 확인까지 설정하려면 AR 이벤트 탭에서 만들어 ‘포스터로 만들기’를 누르세요 →",en:"For prizes, dates and staff checks, build it in the AR Events tab and tap “Make a poster” →",ja:"景品・期間・スタッフ確認まで設定するには、ARイベントタブで作って「ポスターにする」を押してください →",zh:"如需设置奖品、日期和店员确认，请在 AR 活动标签中创建并点击“制作海报”→"},
   "ev.lbl.prob":{ko:"당첨 확률",en:"Win chance",ja:"当選確率",zh:"中奖率"},
   "ev.lbl.win":{ko:"당첨 문구",en:"Win message",ja:"当選メッセージ",zh:"中奖文字"},
+  "ev.k.scene":{ko:"움직이는 포스터",en:"Moving poster",ja:"動くポスター",zh:"动态海报"},
+  "ev.kd.scene":{ko:"비추면 포스터 위로 풍선·꽃잎·눈이 날리고 캐릭터가 튀어나와요",en:"Point at the poster: balloons, petals or snow fly and a character pops out",ja:"映すとポスターに風船・花びら・雪が舞い、キャラクターが飛び出します",zh:"对准海报，气球、花瓣、雪花飞舞，角色跳出来"},
+  "ev.grp.scene":{ko:"포스터 연출",en:"Poster animation",ja:"ポスター演出",zh:"海报动效"},
+  "ev.lbl.sc":{ko:"연출",en:"Animation",ja:"演出",zh:"动效"},
+  "ev.sc.balloons":{ko:"풍선",en:"Balloons",ja:"風船",zh:"气球"},
+  "ev.sc.petals":{ko:"꽃잎",en:"Petals",ja:"花びら",zh:"花瓣"},
+  "ev.sc.snow":{ko:"눈",en:"Snow",ja:"雪",zh:"雪花"},
+  "ev.sc.hearts":{ko:"하트",en:"Hearts",ja:"ハート",zh:"爱心"},
+  "ev.sc.sparkle":{ko:"반짝임",en:"Sparkle",ja:"きらめき",zh:"闪光"},
+  "ev.sc.mascot":{ko:"캐릭터",en:"Character",ja:"キャラクター",zh:"角色"},
+  "ev.lbl.ms":{ko:"캐릭터",en:"Character",ja:"キャラクター",zh:"角色"},
+  "ev.lbl.si":{ko:"강도",en:"Intensity",ja:"強さ",zh:"强度"},
+  "ev.si.1":{ko:"은은하게",en:"Subtle",ja:"控えめ",zh:"轻柔"},
+  "ev.si.2":{ko:"보통",en:"Normal",ja:"ふつう",zh:"适中"},
+  "ev.si.3":{ko:"화려하게",en:"Full",ja:"華やか",zh:"华丽"},
+  "ev.hint.scene":{ko:"글자 없이 움직임만 보여 주는 연출이에요. 포스터 편집기에서 만든 포스터라면 QR 위치를 알고 있어 포스터 전체를 덮는 연출이 나와요.",en:"Motion only — no text. Posters made in the poster editor know where their QR sits, so the animation covers the whole poster.",ja:"文字なし、動きだけの演出です。ポスターエディターで作ったポスターはQRの位置が分かるので、ポスター全体に演出が広がります。",zh:"只有动效、没有文字。用海报编辑器制作的海报知道二维码的位置，动效会覆盖整张海报。"},
+  "ev.typeHint":{ko:"<b>📸 포토 필터</b>는 QR을 찍으면 셀카 카메라가 열려요. <b>쿠폰·뽑기·축하·움직이는 포스터</b>는 QR을 찍은 뒤 카메라로 <b>포스터를 비추면</b> 움직이는 연출이 나타나고, 쿠폰 코드 같은 글자는 연출이 끝난 뒤 카드로 보여 줘요.",en:"<b>📸 Photo filter</b> opens a selfie camera. With <b>coupon, lucky draw, celebration and moving poster</b>, customers scan and <b>point the camera at the poster</b> to see the animation — text such as coupon codes appears on a card afterwards.",ja:"<b>📸 フォトフィルター</b>はQRを読むとセルフィーカメラが開きます。<b>クーポン・抽選・お祝い・動くポスター</b>は読み取り後に<b>ポスターを映す</b>と動きの演出が現れ、クーポンコードなどの文字は演出の後にカードで表示されます。",zh:"<b>📸 拍照滤镜</b>扫码后打开自拍相机。<b>优惠券、抽奖、庆祝、动态海报</b>在扫码后<b>对准海报</b>即可看到动效，优惠码等文字会在动效结束后以卡片显示。"},
   "foot.contact":{ko:"문의",en:"Contact",zh:"联系",ja:"お問い合わせ"},
   "foot.motion":{ko:"모션 QR 실험실",en:"Motion QR Lab",zh:"动态二维码实验室",ja:"モーションQRラボ"},
   "foot.tag":{ko:"아름답고 스캔되는 QR을 만드는 스튜디오 · QR 생성·디자인은 브라우저에서 처리 (AI 기능만 서버 전송·저장 안 함)",en:"A studio for beautiful, scannable QR codes · QR building & design run in your browser (only AI features send to a server, and aren't stored)",zh:"打造美观且可扫描二维码的工作室 · 二维码生成与设计在浏览器中处理（仅 AI 功能会发送到服务器，且不存储）",ja:"美しくスキャン可能なQRを作るスタジオ · QR生成・デザインはブラウザで処理（AI機能のみサーバー送信・保存なし）"},
@@ -9082,12 +9112,13 @@ function pushArLinkToStudio(url){
 
 // ---------- AR EVENTS builder (AR tab) ----------
 var EVB=(function(){
-  var K="photo", F={f:"polaroid",e:"party",fs:"",rm:"capture",ft:"",pk:"",ct:"",pv:"fx"}, dirty={}, timer=null, inited=false;
+  var K="photo", F={f:"polaroid",e:"party",fs:"",rm:"capture",ft:"",pk:"",ct:"",pv:"fx",sc:"balloons",ms:"🐻",si:"2"}, dirty={}, timer=null, inited=false;
   var DEF={
     photo:{t:["포토존 이벤트","Photo Booth","フォトブース","拍照打卡"],h:["우리가게포토존","myshopphoto","myshopphoto","myshopphoto"],rx:["음료 1잔 무료","Free drink","ドリンク1杯無料","免费饮品一杯"],rd:"PHOTO1"},
     coupon:{t:["숨은 쿠폰 찾기","Find the hidden coupon","隠れクーポンを探そう","寻找隐藏优惠券"],rx:["전 메뉴 10% 할인","10% off everything","全品10%オフ","全场九折"],rd:"SCAN10"},
     lucky:{t:["행운 뽑기","Lucky draw","ラッキー抽選","幸运抽奖"],pr1:["1등 · 케이크 교환권","1st · Free cake","1等・ケーキ引換券","一等奖 · 蛋糕券"],pr2:["2등 · 음료 1잔","2nd · Free drink","2等・ドリンク1杯","二等奖 · 饮品一杯"],lx:["다음 기회에!","Better luck next time!","また挑戦してね！","下次好运！"],rd:"LUCKY"},
     confetti:{t:["GRAND OPEN","GRAND OPEN","GRAND OPEN","GRAND OPEN"],s:["오픈을 축하해 주세요","Celebrate our opening","オープンを祝ってね","一起庆祝开业"]},
+    scene:{t:["움직이는 포스터","Moving poster","動くポスター","动态海报"]},
     info:{t:["영업 안내","Store info","営業案内","营业信息"],it:["영업 시간","Opening hours","営業時間","营业时间"],i1:["평일 10:00–21:00","Weekdays 10:00–21:00","平日 10:00–21:00","工作日 10:00–21:00"],i2:["주말 11:00–20:00","Weekends 11:00–20:00","週末 11:00–20:00","周末 11:00–20:00"]}
   };
   var LI={ko:0,en:1,ja:2,zh:3};
@@ -9101,12 +9132,13 @@ var EVB=(function(){
   function cfg(){ var c={k:K,b:$("evB").value.trim(),t:$("evT").value.trim(),s:$("evS").value.trim(),c:$("evC").value.replace("#",""),l:$("evL").value.trim(),lt:$("evLt").value.trim()};
     if(K==="photo"){ c.h=$("evH").value.trim().replace(/^#/,""); c.f=F.f; c.e=F.e; c.fs=F.fs; c.rm=F.rm; c.ft=F.ft; if($("evD").checked) c.d=1;
       if(F.e==="custom") c.es=$("evEs").value.trim(); var ss=+$("evSs").value; if(ss!==100) c.ss=ss/100; if(F.rm!=="none"){ c.rx=$("evRx").value.trim(); c.rd=$("evRd").value.trim(); c.ru=$("evRu").value.trim(); } }
-    if(K!=="photo"){ c.pk=F.pk; c.ft=F.ft; if(K!=="confetti"){ c.ct=F.ct; c.ic=$("evIc").value.trim(); } }
+    if(K==="scene"){ c.sc=F.sc; if(F.sc==="mascot") c.ms=F.ms; if(F.si!=="2") c.si=+F.si; }
+    else if(K!=="photo"){ c.pk=F.pk; c.ft=F.ft; if(K==="coupon"){ c.ct=F.ct; c.ic=$("evIc").value.trim(); } }
     if(K==="photo"){} else if(K==="coupon"){ c.rx=$("evRx").value.trim(); c.rd=$("evRd").value.trim(); c.ru=$("evRu").value.trim(); }
     else if(K==="lucky"){ var pr=[]; [1,2,3].forEach(function(i){ var n=$("evPr"+i).value.trim(), pc=Math.max(0,Math.min(100,+$("evPp"+i).value||0)); if(n&&pc>0) pr.push([n,pc]); });
       c.pr=pr; c.lx=$("evLx").value.trim(); c.rd=$("evRd").value.trim(); c.ru=$("evRu").value.trim();
       var sum=pr.reduce(function(a,b){return a+b[1];},0); $("evPrSum").textContent=t("ev.prSum").replace("{w}",Math.min(100,sum)).replace("{l}",Math.max(0,100-sum)); }
-    if(K!=="info" && K!=="confetti" || K==="photo"){ c.sd=$("evSd").value; c.ed=$("evEd").value; var pin=$("evPin").value.trim(); if(pin) c.pn=pinHash(pin,c.t); }
+    if(K==="photo"||K==="coupon"||K==="lucky"){ c.sd=$("evSd").value; c.ed=$("evEd").value; var pin=$("evPin").value.trim(); if(pin) c.pn=pinHash(pin,c.t); }
     else if(K==="info"){ c.it=$("evIt").value.trim(); c.i=[$("evI1").value,$("evI2").value,$("evI3").value].map(function(x){return x.trim();}).filter(Boolean).join("|"); }
     return c; }
   function link(){ return evLink(cfg()); }
@@ -9123,6 +9155,8 @@ var EVB=(function(){
   function init(){ if(inited) return; inited=true;
     $("evTypes").addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return; Array.prototype.forEach.call(this.children,function(x){x.classList.toggle("on",x===b);}); K=b.dataset.k; fillDefaults(); vis(); update(); });
     segWire("evFSeg","f"); segWire("evESeg","e"); segWire("evFsSeg","fs"); segWire("evRmSeg","rm");
+    segWire("evScSeg","sc"); segWire("evMsSeg","ms"); segWire("evSiSeg","si");
+    $("evScSeg").addEventListener("click",function(){ $("evMsWrap").style.display=F.sc==="mascot"?"":"none"; });
     segWire("evFtSeg","ft"); segWire("evFt2Seg","ft"); segWire("evPkSeg","pk"); segWire("evCtSeg","ct"); segWire("evPvSeg","pv");
     $("evESeg").addEventListener("click",function(){ $("evEsWrap").style.display=F.e==="custom"?"":"none"; });
     ["evEs","evIc"].forEach(function(id){ $(id).addEventListener("input",update); });
@@ -9132,7 +9166,7 @@ var EVB=(function(){
     ["evB","evS","evL","evLt","evRu","evC"].forEach(function(id){ $(id).addEventListener("input",function(){ if(id==="evLt") dirty.lt=true; update(); }); });
     ["evPp1","evPp2","evPp3","evSd","evEd","evPin"].forEach(function(id){ $(id).addEventListener("input",update); });
     $("evToStudio").addEventListener("click",function(){ pushArLinkToStudio(link()); });
-    $("evToPoster").addEventListener("click",function(){ var c=cfg(); POSTER.useLink(link(),{title:c.t,sub:c.s,acc:"#"+c.c,cta:t(K==="photo"?"pst.ctaPhoto":"pst.ctaAR")}); });
+    $("evToPoster").addEventListener("click",function(){ var c=cfg(); POSTER.useLink(link(),{title:c.t,sub:c.s,acc:"#"+c.c,cta:t(K==="photo"?"pst.ctaPhoto":"pst.ctaAR")},c); });
     $("evQrPng").addEventListener("click",function(){ download($("evQr").toDataURL("image/png"),"aesthetic-qr-event.png"); if(typeof track==="function") track("event_qr",{k:K}); });
     fillDefaults(); vis(); update();
   }
@@ -9275,13 +9309,18 @@ var POSTER=(function(){
   function cv(){ return $("pstCanvas"); }
   // with an AR experience the QR opens event.html, which then links on to the poster's own link
   function arField(id){ var e=$(id); return e?e.value.trim():""; }
-  function effUrl(){ var dest=st.url||defUrl(); if(!st.ar) return dest;
+  // where the QR sits on this poster → lets the AR page cover the whole poster with motion
+  function geom(){ var d=dims(st.ratio), W=d[0], H=d[1], cs=st.qs*W, x=Math.max(0,Math.min(W-cs,st.qx*W)), y=Math.max(0,Math.min(H-cs,st.qy*H)), sym=cs*0.88*0.93;
+    function r3(v){ return Math.round(v*1000)/1000; } return [r3((x+cs/2)/W), r3((y+cs/2)/H), r3(sym/W), r3(H/W)]; }
+  function effUrl(){ var dest=st.url||defUrl();
+    if(st.evCfg) return evLink(Object.assign({},st.evCfg,{pg:geom()}));
+    if(!st.ar) return dest;
     var c={k:st.ar,t:st.title,s:st.sub,c:st.acc.replace("#",""),l:dest};   // event page labels its own "continue" button
     if(st.ar==="coupon"){ c.rx=arField("pstArRx"); c.rd=arField("pstArRd"); }
     else if(st.ar==="lucky"){ c.p=+$("pstArP").value; c.wx=arField("pstArWx"); c.rd=arField("pstArRd"); }
-    else if(st.ar==="info"){ c.it=st.title; c.i=[arField("pstArI1"),arField("pstArI2")].filter(Boolean).join("|"); }
+    else if(st.ar==="scene"){ c.sc=st.arSc||"balloons"; }
     else if(st.ar==="photo"){ c.f="polaroid"; c.e="party"; c.h=arField("pstArH").replace(/^#/,""); c.rx=arField("pstArRx"); c.rd=arField("pstArRd"); c.rm=c.rx?"capture":"none"; }
-    return evLink(c); }
+    c.pg=geom(); return evLink(c); }
   function frame(P, wm){ var c=cv(), d=dims(st.ratio); if(c.width!==d[0]||c.height!==d[1]){ c.width=d[0]; c.height=d[1]; }
     draw(c.getContext("2d"),d[0],d[1],P,Object.assign({},st,{url:effUrl(),wm:!!wm,guide:!!drag})); }
   function curP(ts){ return st.motion?(((ts-t0)%6000)/6000):0; }
@@ -9330,7 +9369,7 @@ var POSTER=(function(){
     $("pstSize").parentNode.appendChild(hs);
     buildEx(); place("br"); loadEx(0,false); sizeUI();
     ["Title","Sub","Cta"].forEach(function(k){ $("pst"+k).addEventListener("input",function(){ st[k.toLowerCase()]=this.value; st.edited[k]=true; frame(0); }); });
-    $("pstUrl").addEventListener("input",function(){ st.url=this.value.trim(); frame(0); });
+    $("pstUrl").addEventListener("input",function(){ st.url=this.value.trim(); st.evCfg=null; frame(0); });
     $("pstAcc").addEventListener("input",function(){ st.acc=this.value; });
     $("pstMotion").addEventListener("change",function(){ st.motion=this.checked; });
     segWire("pstRatioSeg","r",function(v){ st.ratio=v; if(st.anchor) place(st.anchor); else { st.qy=Math.min(st.qy, 1-st.qs*dims(v)[0]/dims(v)[1]); } });
@@ -9341,9 +9380,10 @@ var POSTER=(function(){
       info:{i1:["평일 10:00–21:00","Weekdays 10:00–21:00","平日 10:00–21:00","工作日 10:00–21:00"],i2:["주말 11:00–20:00","Weekends 11:00–20:00","週末 11:00–20:00","周末 11:00–20:00"]},photo:{h:["우리가게포토존","myshopphoto","myshopphoto","myshopphoto"]}};
     function arVis(){ document.querySelectorAll("#view-poster [data-pa]").forEach(function(el){ el.style.display = st.ar && el.getAttribute("data-pa").split(" ").indexOf(st.ar)>=0 ? "" : "none"; });
       var a=$("pstArTry"); a.style.display=st.ar?"inline-block":"none"; a.href=effUrl(); }
-    segWire("pstArSeg","a",function(v){ st.ar=v; var d=AD[v]||{}, k=li(), map={rx:"pstArRx",rd:"pstArRd",wx:"pstArWx",i1:"pstArI1",i2:"pstArI2",h:"pstArH"};
+    segWire("pstArSeg","a",function(v){ st.ar=v; st.evCfg=null; var d=AD[v]||{}, k=li(), map={rx:"pstArRx",rd:"pstArRd",wx:"pstArWx",i1:"pstArI1",i2:"pstArI2",h:"pstArH"};
       for(var f in map){ var el=$(map[f]); if(el && !el.value && d[f]!=null) el.value=Array.isArray(d[f])?d[f][k]:d[f]; }
       if(v && !st.edited.Cta){ st.cta=t(v==="photo"?"pst.ctaPhoto":"pst.ctaAR"); $("pstCta").value=st.cta; } arVis(); });
+    $("pstArScSeg").addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return; Array.prototype.forEach.call(this.children,function(x){x.classList.toggle("on",x===b);}); st.arSc=b.dataset.v; arVis(); frame(0); });
     ["pstArRx","pstArRd","pstArWx","pstArI1","pstArI2","pstArH"].forEach(function(id){ $(id).addEventListener("input",function(){ arVis(); frame(0); }); });
     $("pstArP").addEventListener("input",function(){ $("pstArPOut").textContent=this.value+"%"; arVis(); frame(0); });
     arVis();
@@ -9372,7 +9412,7 @@ var POSTER=(function(){
     onView:function(v){ active=(v==="poster"); if(active){ init(); qrKey=""; if(!st.url) $("pstUrl").value=defUrl(); $("pstWmNote").style.display=isPro()?"none":"block"; start(); } },
     open:function(i){ init(); loadEx(i,false); gotoView("poster"); },
     // AR Events → "Make a poster": the event link becomes the poster QR
-    useLink:function(u,o){ init(); o=o||{}; st.link="url"; st.url=u; $("pstUrl").value=u; $("pstMapWrap").style.display="none"; $("pstUrlWrap").style.display="block";
+    useLink:function(u,o,cfg){ init(); o=o||{}; st.link="url"; st.evCfg=cfg||null; st.url=cfg?"":u; $("pstUrl").value=u; $("pstMapWrap").style.display="none"; $("pstUrlWrap").style.display="block";
       Array.prototype.forEach.call($("pstLinkSeg").children,function(x){x.classList.toggle("on",x.dataset.lk==="url");});
       if(o.title){ st.title=o.title; st.edited.Title=true; } if(o.sub!=null){ st.sub=o.sub; st.edited.Sub=true; } if(o.acc){ st.acc=o.acc; $("pstAcc").value=o.acc; }
       st.cta=o.cta||t("pst.ctaAR"); st.edited.Cta=true; $("pstTitle").value=st.title; $("pstSub").value=st.sub; $("pstCta").value=st.cta; gotoView("poster"); frame(0); },
