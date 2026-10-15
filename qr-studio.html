@@ -166,9 +166,12 @@
 
   /* studio layout */
   .studio{display:grid;grid-template-columns:1fr 390px;gap:22px;align-items:start}
-  @media(max-width:900px){.studio{grid-template-columns:minmax(0,1fr)} .stage{position:static}}
+  @media(max-width:900px){.studio{grid-template-columns:minmax(0,1fr)}}
 
   .stage{position:sticky;top:80px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:24px;box-shadow:none}
+  /* single-column (phone/tablet): the preview must scroll with the page — a sticky preview
+     lets the controls slide over it. Must come AFTER the base .stage rule to win. */
+  @media(max-width:900px){.stage{position:static;top:auto}}
   .canvas-hold{position:relative;display:grid;place-items:center;min-height:420px;overflow:hidden;
     background:
       linear-gradient(45deg,var(--line) 25%,transparent 25%,transparent 75%,var(--line) 75%) 0 0/22px 22px,
@@ -434,6 +437,7 @@
   .ob-mask{overscroll-behavior:contain}
   .ob-card{overscroll-behavior:contain;max-height:88dvh}
   html.modal-open,html.modal-open body{overflow:hidden}
+  @media (hover:none){ .hover-only{display:none} }
   .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--dark);border:0;
     color:var(--on-dark);padding:11px 22px;border-radius:var(--pill);font-size:13px;font-weight:500;opacity:0;transition:.25s;pointer-events:none;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.18)}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -1461,7 +1465,7 @@
       <div class="guide-grid">
         <div class="guide-card"><div data-i18n-html="gd.f1"><span class="tag2">갤러리</span>
           <div class="ic-badge">🖼️</div><h4>디자인 갤러리</h4>
-          <p>Standard·Animation·Logo·Pictogram·Frame·활용 카테고리의 예시를 클릭하면 그 디자인이 스튜디오로 <b>그대로 불러와져</b> 편집됩니다. 상단 탭에 마우스를 올리면 각 카테고리 설명이 나와요.</p></div></div>
+          <p>기본·포스터·로고·픽토그램·모션·프레임 탭의 예시를 클릭하면 그 디자인이 스튜디오(포스터는 포스터 편집기)로 <b>그대로 불러와져</b> 편집됩니다.</p></div></div>
         <div class="guide-card"><div data-i18n-html="gd.f2"><span class="tag2">아트 QR</span>
           <div class="ic-badge">📷</div><h4>이미지·영상·GIF 아트 QR</h4>
           <p>사진을 올리면 QR 전체에 깔립니다. <b>아트 노출도</b> 슬라이더로 사진 선명도 ↔ 스캔 안정성을 조절해요. <b>영상·GIF</b>를 올리거나 정적 이미지에 <b>애니메이션</b>을 켜면 움직이는 QR이 됩니다.</p></div></div>
@@ -1507,7 +1511,7 @@
     </nav>
     <div style="margin-top:10px">Aesthetic QR Studio · <span data-i18n="foot.tag">아름답고 스캔되는 QR을 만드는 스튜디오 · QR 생성·디자인은 브라우저에서 처리 (AI 기능만 서버 전송·저장 안 함)</span></div>
     <div style="margin-top:6px" data-i18n="foot.tm">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · <span data-i18n="foot.build">빌드</span> <b id="verTag">2026.10.15-a</b></div>
+    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · <span data-i18n="foot.build">빌드</span> <b id="verTag">2026.10.15-b</b></div>
   </footer>
 </div>
 
@@ -5838,7 +5842,7 @@ var CT_ICON={
   spotify:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#1DB954"/><path d="M7 10.4c3-.8 6.6-.5 9.2 1.1M7.6 13.4c2.4-.6 5.1-.4 7.2 1M8.1 16.1c1.9-.5 3.9-.3 5.5.7" stroke="#fff" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>',
   paypal:'<svg viewBox="0 0 24 24"><path d="M9.3 4h5.9c2.4 0 4 1.5 3.6 4-.4 2.6-2.3 4-4.9 4h-2.7l-.8 4H7.6L9.3 4z" fill="#002991"/><path d="M8 7h5.4c1.9 0 3 1.1 2.7 3-.4 2-2 3-4 3H9.9L9.2 20H6.5L8 7z" fill="#009CDE"/></svg>'
 };
-["instagram","youtube","tiktok","x","facebook","linkedin","telegram","github","whatsapp","spotify","paypal","appstore"].forEach(function(b){ if(BRAND_SVG[b]) CT_ICON[b]=BRAND_SVG[b]; });
+["instagram","youtube","tiktok","x","facebook","linkedin","telegram","github","whatsapp","spotify","paypal","appstore"].forEach(function(b){ if(BRAND_SVG[b]) CT_ICON[b]=BRAND_SVG[b].replace(/fill="#(000|000000|181717)"/g,'fill="currentColor"'); });
 function applyCtIcons(){
   var seg=$("ctypeSeg"); if(!seg) return;
   Array.prototype.forEach.call(seg.children,function(b){
@@ -7807,7 +7811,7 @@ var I18N = {
   "btn.webm":{ko:"애니메이션 저장",en:"Save animation",zh:"保存动画",ja:"アニメ保存"},
   "btn.copy":{ko:"클립보드 복사",en:"Copy to clipboard",zh:"复制到剪贴板",ja:"クリップボードにコピー"},
   "ct.label":{ko:"QR 연결 유형",en:"QR action type",zh:"二维码类型",ja:"QRの動作タイプ"},
-  "ct.hint":{ko:"각 버튼에 <b>마우스를 올리면</b> 설명이 나옵니다. 스캔하면 바로 실행 — Wi-Fi 접속, 연락처 저장, 전화·문자·메일, 지도 열기.",en:"<b>Hover</b> each button for details. On scan it runs instantly — join Wi-Fi, save a contact, call, text, email, open a map.",zh:"将<b>鼠标悬停</b>在按钮上查看说明。扫描即执行——连 Wi-Fi、存联系人、拨号、短信、邮件、打开地图。",ja:"各ボタンに<b>マウスを乗せる</b>と説明が出ます。スキャンで即実行 — Wi-Fi接続・連絡先保存・電話・SMS・メール・地図。"},
+  "ct.hint":{ko:"<span class=\"hover-only\">각 버튼에 <b>마우스를 올리면</b> 설명이 나옵니다. </span>스캔하면 바로 실행 — Wi-Fi 접속, 연락처 저장, 전화·문자·메일, 지도 열기.",en:"<span class=\"hover-only\"><b>Hover</b> each button for details. </span>On scan it runs instantly — join Wi-Fi, save a contact, call, text, email, open a map.",zh:"<span class=\"hover-only\">将<b>鼠标悬停</b>在按钮上查看说明。</span>扫描即执行——连 Wi-Fi、存联系人、拨号、短信、邮件、打开地图。",ja:"<span class=\"hover-only\">各ボタンに<b>マウスを乗せる</b>と説明が出ます。</span>スキャンで即実行 — Wi-Fi接続・連絡先保存・電話・SMS・メール・地図。"},
   "ct.text":{ko:"텍스트",en:"Text",zh:"文本",ja:"テキスト"},
   "ct.wifi":{ko:"Wi-Fi",en:"Wi-Fi",zh:"Wi-Fi",ja:"Wi-Fi"},
   "ct.vcard":{ko:"연락처",en:"Contact",zh:"联系人",ja:"連絡先"},
@@ -7843,7 +7847,7 @@ var I18N = {
   "ob.title":{ko:"QR 스튜디오에 오신 걸 환영합니다 👋",en:"Welcome to QR Studio 👋",zh:"欢迎来到 QR 工作室 👋",ja:"QRスタジオへようこそ 👋"},
   "ob.sub":{ko:"아름답고 실제로 스캔되는 QR 코드를 몇 분 만에 만들어 보세요.",en:"Create beautiful, genuinely scannable QR codes in minutes.",zh:"几分钟即可创建美观且真正可扫描的二维码。",ja:"美しく、実際にスキャンできるQRコードを数分で作成。"},
   "ob.s1h":{ko:"연결 유형 고르기",en:"Pick an action type",zh:"选择类型",ja:"動作タイプを選ぶ"},
-  "ob.s1p":{ko:"<b>콘텐츠</b>에서 URL·Wi-Fi·연락처·전화·문자·이메일·위치 중 QR이 할 일을 고릅니다. 버튼에 마우스를 올리면 설명이 떠요.",en:"In <b>Content</b>, choose what the QR does — URL, Wi-Fi, contact, phone, SMS, email or location. Hover a button for details.",zh:"在<b>内容</b>中选择二维码的用途——网址、Wi-Fi、联系人、电话、短信、邮件或位置。悬停按钮查看说明。",ja:"<b>コンテンツ</b>でURL・Wi-Fi・連絡先・電話・SMS・メール・位置からQRの動作を選択。ボタンに乗せると説明が出ます。"},
+  "ob.s1p":{ko:"<b>콘텐츠</b>에서 URL·Wi-Fi·연락처·전화·문자·이메일·위치 중 QR이 할 일을 고릅니다.<span class=\"hover-only\"> 버튼에 마우스를 올리면 설명이 떠요.</span>",en:"In <b>Content</b>, choose what the QR does — URL, Wi-Fi, contact, phone, SMS, email or location.<span class=\"hover-only\"> Hover a button for details.</span>",zh:"在<b>内容</b>中选择二维码的用途——网址、Wi-Fi、联系人、电话、短信、邮件或位置。<span class=\"hover-only\">悬停按钮查看说明。</span>",ja:"<b>コンテンツ</b>でURL・Wi-Fi・連絡先・電話・SMS・メール・位置からQRの動作を選択。<span class=\"hover-only\">ボタンに乗せると説明が出ます。</span>"},
   "ob.s2h":{ko:"디자인 입히기",en:"Apply a design",zh:"套用设计",ja:"デザインを適用"},
   "ob.s2p":{ko:"<b>갤러리</b>에서 예시를 클릭하거나, <b>스튜디오</b>에서 색상·모듈·이미지 아트·로고·프레임을 직접 꾸밉니다.",en:"Click an example in the <b>Gallery</b>, or design it yourself in the <b>Studio</b> — colors, modules, image art, logo, frame.",zh:"在<b>图库</b>点击示例，或在<b>工作室</b>自定义颜色、模块、图像艺术、Logo、边框。",ja:"<b>ギャラリー</b>で例をクリック、または<b>スタジオ</b>で色・モジュール・画像アート・ロゴ・フレームを自作。"},
   "ob.s3h":{ko:"저장 & 활용",en:"Save & use",zh:"保存与使用",ja:"保存＆活用"},
@@ -7872,10 +7876,10 @@ var I18N = {
     zh:'<h4>保存与使用</h4><p>用预览下方的按钮导出并保存。</p><ul><li>下载 <b>PNG / SVG</b></li><li>动画导出为 <b>WebM 视频</b></li><li>保存到 <b>我的二维码</b> 随时再编辑</li></ul>',
     ja:'<h4>保存＆活用</h4><p>プレビュー下のボタンで書き出し・保存します。</p><ul><li><b>PNG / SVG</b> ダウンロード</li><li>アニメは <b>WebM動画</b> で</li><li><b>マイQR</b> に保存していつでも再編集</li></ul>'},
   "gd.f1":{
-    ko:'<span class="tag2">갤러리</span><div class="ic-badge">🖼️</div><h4>디자인 갤러리</h4><p>Standard·Animation·Logo·Pictogram·Frame·활용 카테고리의 예시를 클릭하면 그 디자인이 스튜디오로 <b>그대로 불러와져</b> 편집됩니다. 상단 탭에 마우스를 올리면 각 카테고리 설명이 나와요.</p>',
-    en:'<span class="tag2">Gallery</span><div class="ic-badge">🖼️</div><h4>Design gallery</h4><p>Click an example in Standard · Animation · Logo · Pictogram · Frame · Use Cases and it <b>loads into the Studio as-is</b> for editing. Hover a category tab for its description.</p>',
-    zh:'<span class="tag2">图库</span><div class="ic-badge">🖼️</div><h4>设计图库</h4><p>点击 Standard·Animation·Logo·Pictogram·Frame·用途 分类中的示例，即<b>原样载入工作室</b>编辑。悬停顶部标签查看分类说明。</p>',
-    ja:'<span class="tag2">ギャラリー</span><div class="ic-badge">🖼️</div><h4>デザインギャラリー</h4><p>Standard・Animation・Logo・Pictogram・Frame・活用 の例をクリックすると、そのデザインが<b>そのままスタジオに読み込まれ</b>編集できます。上部タブに乗せると各カテゴリの説明が出ます。</p>'},
+    ko:'<span class="tag2">갤러리</span><div class="ic-badge">🖼️</div><h4>디자인 갤러리</h4><p>기본·포스터·로고·픽토그램·모션·프레임 탭의 예시를 클릭하면 그 디자인이 스튜디오(포스터는 포스터 편집기)로 <b>그대로 불러와져</b> 편집됩니다.<span class="hover-only"> 상단 탭에 마우스를 올리면 각 카테고리 설명이 나와요.</span></p>',
+    en:'<span class="tag2">Gallery</span><div class="ic-badge">🖼️</div><h4>Design gallery</h4><p>Click an example in Standard · Poster · Logo · Pictogram · Motion · Frame and it <b>loads as-is</b> into the Studio (posters open in the poster editor) for editing.<span class="hover-only"> Hover a category tab for its description.</span></p>',
+    zh:'<span class="tag2">图库</span><div class="ic-badge">🖼️</div><h4>设计图库</h4><p>点击 标准·海报·标志·图标·动态·边框 分类中的示例，即<b>原样载入</b>工作室（海报会在海报编辑器中打开）编辑。<span class="hover-only">悬停顶部标签查看分类说明。</span></p>',
+    ja:'<span class="tag2">ギャラリー</span><div class="ic-badge">🖼️</div><h4>デザインギャラリー</h4><p>スタンダード・ポスター・ロゴ・ピクトグラム・モーション・フレーム の例をクリックすると、そのデザインが<b>そのまま</b>スタジオ（ポスターはポスターエディター）に読み込まれ編集できます。<span class="hover-only">上部タブに乗せると各カテゴリの説明が出ます。</span></p>'},
   "gd.f2":{
     ko:'<span class="tag2">아트 QR</span><div class="ic-badge">📷</div><h4>이미지·영상·GIF 아트 QR</h4><p>사진을 올리면 QR 전체에 깔립니다. <b>아트 노출도</b> 슬라이더로 사진 선명도 ↔ 스캔 안정성을 조절해요. <b>영상·GIF</b>를 올리거나 정적 이미지에 <b>애니메이션</b>을 켜면 움직이는 QR이 됩니다.</p>',
     en:'<span class="tag2">Art QR</span><div class="ic-badge">📷</div><h4>Image · Video · GIF art QR</h4><p>Upload a photo and it fills the whole code. The <b>art visibility</b> slider balances photo clarity ↔ scan reliability. Upload a <b>video/GIF</b>, or turn on <b>animation</b> for a still image, to get a moving QR.</p>',
