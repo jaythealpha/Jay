@@ -1645,7 +1645,7 @@
     </nav>
     <div style="margin-top:10px">Aesthetic QR Studio · <span data-i18n="foot.tag">아름답고 스캔되는 QR을 만드는 스튜디오 · QR 생성·디자인은 브라우저에서 처리 (AI 기능만 서버 전송·저장 안 함)</span></div>
     <div style="margin-top:6px" data-i18n="foot.tm">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · <span data-i18n="foot.build">빌드</span> <b id="verTag">2026.10.15-f</b></div>
+    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · <span data-i18n="foot.build">빌드</span> <b id="verTag">2026.10.16-a</b></div>
   </footer>
 </div>
 
@@ -6897,6 +6897,26 @@ function makeScene(kind){
 }
 
 var GAL_TR = {
+  '조형 레터링':{en:'Sculptural alphabet',zh:'雕塑字母',ja:'彫刻的レタリング'},
+  '캐릭터 워드마크':{en:'Character wordmark',zh:'角色文字标',ja:'キャラクターワードマーク'},
+  '프래그먼트':{en:'Fragment studio',zh:'碎片风格',ja:'フラグメント'},
+  '플루이드 브러시':{en:'Fluid brush',zh:'流畅笔刷',ja:'フルイドブラシ'},
+  '내러티브 목판화':{en:'Narrative woodcut',zh:'叙事木刻',ja:'物語風の木版画'},
+  '어스 토템':{en:'Earth totem',zh:'大地图腾',ja:'アーストーテム'},
+  '푸드 에디토리얼':{en:'Food editorial',zh:'美食编辑风',ja:'フードエディトリアル'},
+  '미니 낙서':{en:'Quiet doodle',zh:'简约涂鸦',ja:'控えめな落書き'},
+  '보태니컬 북':{en:'Literary botanical',zh:'文艺植物',ja:'文学ボタニカル'},
+  '오프셋 스크립트':{en:'Offset script',zh:'错位手写体',ja:'オフセットスクリプト'},
+  '레이어드 스크립트':{en:'Layered script',zh:'叠层手写体',ja:'レイヤードスクリプト'},
+  '라이프스타일 산세리프':{en:'Lifestyle sans',zh:'生活方式无衬线',ja:'ライフスタイル・サンセリフ'},
+  '리듬 모듈러':{en:'Rhythmic modular',zh:'律动模块',ja:'リズミック・モジュラー'},
+  '골든 빈티지':{en:'Golden vintage',zh:'金色复古',ja:'ゴールデン・ヴィンテージ'},
+  '스패니시 락업':{en:'Spanish lockup',zh:'西班牙式组合标',ja:'スパニッシュ・ロックアップ'},
+  '엉뚱한 마스코트':{en:'Absurd mascot',zh:'趣味吉祥物',ja:'ユニークなマスコット'},
+  '네거티브 스페이스 동물':{en:'Negative-space animal',zh:'负空间动物',ja:'ネガティブスペースの動物'},
+  '에디토리얼 합자':{en:'Editorial ligature',zh:'编辑风连字',ja:'エディトリアル合字'},
+  '건축 그리드':{en:'Architectural grid',zh:'建筑网格',ja:'建築グリッド'},
+  '소프트 페이퍼컷':{en:'Soft cut-paper',zh:'柔和剪纸',ja:'ソフト切り絵'},
   '할리우드 골드 마키':{en:'Hollywood Gold Marquee',zh:'好莱坞金色灯牌',ja:'ハリウッド・ゴールドマーキー'},
   '아르데코 에메랄드 시사회':{en:'Art Deco Emerald Premiere',zh:'装饰艺术翡翠首映',ja:'アールデコ・エメラルドプレミア'},
   '누아르 레인 시티':{en:'Noir Rainy City',zh:'黑色电影雨夜城市',ja:'ノワール・レイニーシティ'},
@@ -7285,6 +7305,114 @@ var FRAMES=[
 function frameUrl(id, thumb){ return "assets/frames/"+(thumb?"t/":"")+id+".webp"; }
 function framePreset(f){ var lk=FRAME_LOOK[f.cat];
   return {name:f.ko,tag:FRAME_TAG[f.cat],s:{fill:"solid",fg1:darkenForScan(f.acc,60),bg:"#ffffff",dot:lk[0],eye:lk[1],margin:2,ecc:"H",frameOn:true,frameStyle:"photo",frameImg:f.id,frameHole:f.hole}}; }
+// Logo Atlas (100 original concept logos, assets/logos/lNNN.webp — fictional brand names, shown
+// first in the Logo tab). Each sits in the QR centre as a badge; modules take the logo's ink colour.
+var LOGO_DOT={"조형 레터링": "rounded", "캐릭터 워드마크": "dots", "프래그먼트": "square", "플루이드 브러시": "classy", "내러티브 목판화": "rounded", "어스 토템": "dots", "푸드 에디토리얼": "rounded", "미니 낙서": "dots", "보태니컬 북": "classy", "오프셋 스크립트": "rounded", "레이어드 스크립트": "dots", "라이프스타일 산세리프": "square", "리듬 모듈러": "dots", "골든 빈티지": "classy", "스패니시 락업": "square", "엉뚱한 마스코트": "dots", "네거티브 스페이스 동물": "rounded", "에디토리얼 합자": "classy", "건축 그리드": "square", "소프트 페이퍼컷": "dots"};
+var LOGO_ATLAS=[
+  {n:1,nm:"ORVENA",fam:"조형 레터링",ink:"#f01739",sz:38},
+  {n:2,nm:"TALURI",fam:"조형 레터링",ink:"#f11e42",sz:38},
+  {n:3,nm:"VESKIA",fam:"조형 레터링",ink:"#f5163d",sz:38},
+  {n:4,nm:"MIRELO",fam:"조형 레터링",ink:"#f11338",sz:38},
+  {n:5,nm:"SOVANI",fam:"조형 레터링",ink:"#f7133b",sz:38},
+  {n:6,nm:"PELKO",fam:"캐릭터 워드마크",ink:"#014624",sz:31},
+  {n:7,nm:"TAVIO",fam:"캐릭터 워드마크",ink:"#054323",sz:27},
+  {n:8,nm:"BRUMO",fam:"캐릭터 워드마크",ink:"#193d24",sz:31},
+  {n:9,nm:"DOKKA",fam:"캐릭터 워드마크",ink:"#023f1b",sz:28},
+  {n:10,nm:"VIMBA",fam:"캐릭터 워드마크",ink:"#054025",sz:30},
+  {n:11,nm:"KORVEX",fam:"프래그먼트",ink:"#474747",sz:38},
+  {n:12,nm:"FOLDRA",fam:"프래그먼트",ink:"#252625",sz:27},
+  {n:13,nm:"VAKTOR",fam:"프래그먼트",ink:"#282828",sz:38},
+  {n:14,nm:"RIFTO",fam:"프래그먼트",ink:"#232322",sz:29},
+  {n:15,nm:"SKARNO",fam:"프래그먼트",ink:"#292928",sz:27},
+  {n:16,nm:"Meloria",fam:"플루이드 브러시",ink:"#5f5f5d",sz:38},
+  {n:17,nm:"Virelle",fam:"플루이드 브러시",ink:"#646361",sz:30},
+  {n:18,nm:"Osalie",fam:"플루이드 브러시",ink:"#51514f",sz:38},
+  {n:19,nm:"Navella",fam:"플루이드 브러시",ink:"#3b3b38",sz:38},
+  {n:20,nm:"Roveli",fam:"플루이드 브러시",ink:"#656461",sz:38},
+  {n:21,nm:"CASA LUMBRE",fam:"내러티브 목판화",ink:"#1c3857",sz:31},
+  {n:22,nm:"MESA CUENTO",fam:"내러티브 목판화",ink:"#163a60",sz:27},
+  {n:23,nm:"PATIO BRUMA",fam:"내러티브 목판화",ink:"#173a5b",sz:32},
+  {n:24,nm:"OLLA NIDO",fam:"내러티브 목판화",ink:"#143b5d",sz:27},
+  {n:25,nm:"CASA VELA",fam:"내러티브 목판화",ink:"#194262",sz:27},
+  {n:26,nm:"barrova",fam:"어스 토템",ink:"#52480e",sz:30},
+  {n:27,nm:"terruno",fam:"어스 토템",ink:"#52490c",sz:27},
+  {n:28,nm:"morko",fam:"어스 토템",ink:"#46400d",sz:31},
+  {n:29,nm:"talma",fam:"어스 토템",ink:"#433c09",sz:27},
+  {n:30,nm:"rudo",fam:"어스 토템",ink:"#51470b",sz:27},
+  {n:31,nm:"CRUMIO",fam:"푸드 에디토리얼",ink:"#914208",sz:27},
+  {n:32,nm:"DOUGHRA",fam:"푸드 에디토리얼",ink:"#8f5d3b",sz:27},
+  {n:33,nm:"BRISKO",fam:"푸드 에디토리얼",ink:"#bc5003",sz:27},
+  {n:34,nm:"MOLTA",fam:"푸드 에디토리얼",ink:"#693719",sz:27},
+  {n:35,nm:"CORTO",fam:"푸드 에디토리얼",ink:"#67351a",sz:27},
+  {n:36,nm:"inko",fam:"미니 낙서",ink:"#353533",sz:38},
+  {n:37,nm:"peeply",fam:"미니 낙서",ink:"#40403f",sz:31},
+  {n:38,nm:"scrivo",fam:"미니 낙서",ink:"#373535",sz:38},
+  {n:39,nm:"murno",fam:"미니 낙서",ink:"#4b4a4b",sz:38},
+  {n:40,nm:"dotta",fam:"미니 낙서",ink:"#686868",sz:38},
+  {n:41,nm:"FOLIA PRESS",fam:"보태니컬 북",ink:"#a4a99d",sz:38},
+  {n:42,nm:"QUIET FERN",fam:"보태니컬 북",ink:"#8b958a",sz:27},
+  {n:43,nm:"VELLUM HOUSE",fam:"보태니컬 북",ink:"#a7aca0",sz:37},
+  {n:44,nm:"ASTER LEAF",fam:"보태니컬 북",ink:"#78887c",sz:27},
+  {n:45,nm:"SLOW VERSE",fam:"보태니컬 북",ink:"#899583",sz:27},
+  {n:46,nm:"Bellora",fam:"오프셋 스크립트",ink:"#b16664",sz:38},
+  {n:47,nm:"Corvella",fam:"오프셋 스크립트",ink:"#a35e5f",sz:32},
+  {n:48,nm:"Solita",fam:"오프셋 스크립트",ink:"#b77475",sz:38},
+  {n:49,nm:"Marivo",fam:"오프셋 스크립트",ink:"#ac6061",sz:38},
+  {n:50,nm:"Rovella",fam:"오프셋 스크립트",ink:"#ae535a",sz:32},
+  {n:51,nm:"SOLARO",fam:"레이어드 스크립트",ink:"#9b5d4e",sz:38},
+  {n:52,nm:"RUMBA",fam:"레이어드 스크립트",ink:"#9c6e50",sz:31},
+  {n:53,nm:"VELUNO",fam:"레이어드 스크립트",ink:"#9a584d",sz:38},
+  {n:54,nm:"CORALO",fam:"레이어드 스크립트",ink:"#926454",sz:38},
+  {n:55,nm:"MONDO",fam:"레이어드 스크립트",ink:"#af7155",sz:38},
+  {n:56,nm:"AVORI",fam:"라이프스타일 산세리프",ink:"#002eae",sz:38},
+  {n:57,nm:"TILVO",fam:"라이프스타일 산세리프",ink:"#0030a1",sz:38},
+  {n:58,nm:"ROVIA",fam:"라이프스타일 산세리프",ink:"#002eae",sz:38},
+  {n:59,nm:"KIVEO",fam:"라이프스타일 산세리프",ink:"#0032c1",sz:38},
+  {n:60,nm:"OMERA",fam:"라이프스타일 산세리프",ink:"#02339d",sz:38},
+  {n:61,nm:"NUVIO",fam:"리듬 모듈러",ink:"#323b84",sz:38},
+  {n:62,nm:"ORBITA",fam:"리듬 모듈러",ink:"#52405f",sz:27},
+  {n:63,nm:"DOPPIO",fam:"리듬 모듈러",ink:"#783d63",sz:38},
+  {n:64,nm:"MODULO",fam:"리듬 모듈러",ink:"#ae4d36",sz:32},
+  {n:65,nm:"RITMO",fam:"리듬 모듈러",ink:"#af4242",sz:38},
+  {n:66,nm:"Honey Trail",fam:"골든 빈티지",ink:"#ebb6a3",sz:38},
+  {n:67,nm:"Amber Lane",fam:"골든 빈티지",ink:"#eec7b3",sz:30},
+  {n:68,nm:"Copper Day",fam:"골든 빈티지",ink:"#e9c1ac",sz:38},
+  {n:69,nm:"Sunny Vale",fam:"골든 빈티지",ink:"#f3cbb3",sz:34},
+  {n:70,nm:"Maple Hour",fam:"골든 빈티지",ink:"#ecc4b1",sz:33},
+  {n:71,nm:"CASA SABOR",fam:"스패니시 락업",ink:"#292929",sz:38},
+  {n:72,nm:"MESA ALEGRE",fam:"스패니시 락업",ink:"#2b2b2b",sz:27},
+  {n:73,nm:"BUEN RATO",fam:"스패니시 락업",ink:"#2a2a2a",sz:38},
+  {n:74,nm:"PAN CONTENTO",fam:"스패니시 락업",ink:"#2f2f2f",sz:38},
+  {n:75,nm:"PATIO RICO",fam:"스패니시 락업",ink:"#2a2a2a",sz:37},
+  {n:76,nm:"PETAL PUNK",fam:"엉뚱한 마스코트",ink:"#d8656a",sz:36},
+  {n:77,nm:"POT PAL",fam:"엉뚱한 마스코트",ink:"#8ba130",sz:29},
+  {n:78,nm:"HEART HAUL",fam:"엉뚱한 마스코트",ink:"#9f567a",sz:32},
+  {n:79,nm:"DROWSY CAP",fam:"엉뚱한 마스코트",ink:"#a19fb8",sz:27},
+  {n:80,nm:"GRUMPY SPROUT",fam:"엉뚱한 마스코트",ink:"#a4ba50",sz:31},
+  {n:81,nm:"FOXORA",fam:"네거티브 스페이스 동물",ink:"#c84d16",sz:38},
+  {n:82,nm:"OTTERO",fam:"네거티브 스페이스 동물",ink:"#0a233a",sz:27},
+  {n:83,nm:"FINCHLY",fam:"네거티브 스페이스 동물",ink:"#143624",sz:35},
+  {n:84,nm:"NOCTLI",fam:"네거티브 스페이스 동물",ink:"#171715",sz:31},
+  {n:85,nm:"HAREVA",fam:"네거티브 스페이스 동물",ink:"#141b25",sz:28},
+  {n:86,nm:"Aurelle",fam:"에디토리얼 합자",ink:"#4d223b",sz:38},
+  {n:87,nm:"Velisse",fam:"에디토리얼 합자",ink:"#471130",sz:38},
+  {n:88,nm:"Orielle",fam:"에디토리얼 합자",ink:"#4c213a",sz:38},
+  {n:89,nm:"Seravo",fam:"에디토리얼 합자",ink:"#45112f",sz:38},
+  {n:90,nm:"Merovi",fam:"에디토리얼 합자",ink:"#4f1d37",sz:38},
+  {n:91,nm:"AXORA",fam:"건축 그리드",ink:"#4e423d",sz:38},
+  {n:92,nm:"GRIDEN",fam:"건축 그리드",ink:"#604230",sz:27},
+  {n:93,nm:"KORDA",fam:"건축 그리드",ink:"#593f31",sz:36},
+  {n:94,nm:"TESSO",fam:"건축 그리드",ink:"#523a2e",sz:30},
+  {n:95,nm:"VECTRA",fam:"건축 그리드",ink:"#643d2a",sz:31},
+  {n:96,nm:"luppo",fam:"소프트 페이퍼컷",ink:"#d8491a",sz:38},
+  {n:97,nm:"wobli",fam:"소프트 페이퍼컷",ink:"#6b522a",sz:27},
+  {n:98,nm:"papero",fam:"소프트 페이퍼컷",ink:"#da5832",sz:33},
+  {n:99,nm:"gumli",fam:"소프트 페이퍼컷",ink:"#2e522e",sz:27},
+  {n:100,nm:"curvo",fam:"소프트 페이퍼컷",ink:"#dc441c",sz:27}
+];
+function atlasPreset(a){ var dot=LOGO_DOT[a.fam]||"rounded", eye={square:"square",rounded:"rounded",dots:"circle",classy:"leaf"}[dot];
+  return {name:a.nm,tag:a.fam,s:{fill:"solid",fg1:darkenForScan(a.ink,62),bg:"#ffffff",dot:dot,eye:eye,ecc:"H",margin:4,centerMode:"none",
+    centerLogoUrl:"assets/logos/l"+("00"+a.n).slice(-3)+".webp",logoSize:a.sz||27,logoPad:true}}; }
 var CATS = {
   standard:[
     {name:"네온 펄스",tag:"사이버·다크",s:{fill:"linear",fg1:"#7c5cff",fg2:"#22d3ee",angle:45,dot:"rounded",eye:"rounded",bg:"#0b0d12"}},
@@ -7322,7 +7450,7 @@ var CATS = {
     {name:"마법의 숲",tag:"플로럴 · 향수 광고",s:{artUrl:"assets/anim-16.webp",anim:true,animKind:"shine",fg1:"#5b2a3a",dot:"dots",eye:"leaf",artVisibility:56}},
     {name:"크리스탈",tag:"유리 판타지 · 빙결",s:{artUrl:"assets/anim-17.webp",anim:true,animKind:"pulse",fg1:"#2a3a6b",dot:"dots",eye:"circle",artVisibility:56}}
   ],
-  logo:[
+  logo: LOGO_ATLAS.map(atlasPreset).concat([
     // Symbol Mark — every brand here is ORIGINAL (no real-company marks). Each mark sits on a
     // matching "brand world" background from one shared recipe (tinted glow + one quiet motif).
     // ── F&B · 라이프스타일 ──
@@ -7356,7 +7484,7 @@ var CATS = {
     {name:"벨로스 런클럽",tag:"러닝 · 스피드 V",s:{artUrl:"assets/logo-velos-bg.webp",centerLogoUrl:"assets/logo-velos-obj.png",anim:true,animKind:"shine",fg1:"#0d7a44",dot:"dots",eye:"rounded",artVisibility:54,logoSize:30,logoPad:true,labelOn:true,labelText:"VELOS · RUN CLUB"}},
     {name:"프로스피드",tag:"트레이닝 · 셰브론 P",s:{artUrl:"assets/logo-prospeed-bg.webp",centerLogoUrl:"assets/logo-prospeed-obj.png",anim:true,animKind:"shine",fg1:"#a8460f",dot:"dots",eye:"rounded",artVisibility:54,logoSize:30,logoPad:true,labelOn:true,labelText:"PROSPEED · TRAINING"}},
     {name:"아이언피크",tag:"아웃도어 · 산 심벌",s:{artUrl:"assets/logo-ironpeak-bg.webp",centerLogoUrl:"assets/logo-ironpeak-obj.png",anim:true,animKind:"shine",fg1:"#2f3a4a",dot:"dots",eye:"rounded",artVisibility:54,logoSize:30,logoPad:true,labelOn:true,labelText:"IRONPEAK · OUTDOOR"}}
-  ],
+  ]),
   pictogram:[
     {name:"카페 Wi-Fi",tag:"스캔 → 와이파이 자동 접속",s:{fill:"solid",fg1:"#5b3a1a",bg:"#fffaf2",dot:"rounded",eye:"rounded",centerMode:"emoji",centerText:"☕",centerScale:26,frameOn:true,frameStyle:"wood"},ct:"wifi",fields:{wifiSsid:"MyCafe_WiFi",wifiPass:"cafe1234"}},
     {name:"디지털 명함",tag:"스캔 → 연락처 저장",s:{centerMode:"emoji",centerText:"📇",centerScale:24,ecc:"H",fill:"linear",fg1:"#2563eb",fg2:"#4f46e5",angle:120,dot:"dots",eye:"circle",bg:"#ffffff",frameOn:true,frameStyle:"shadow",frameMode:"linear",frameBg1:"#1d4ed8",frameBg2:"#0b2a6b",frameAngle:120},ct:"vcard",fields:{vcName:"홍길동",vcTel:"010-1234-5678",vcEmail:"hong@company.com",vcOrg:"회사명"}},
