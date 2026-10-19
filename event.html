@@ -93,37 +93,44 @@
 
 <script src="vendor/jsQR.js"></script>
 <script>
+// ---------- config: packed into the URL hash (#c=base64url(JSON)) by Aesthetic QR Studio, or saved on
+// the server and referenced by a short id (?e=…) — image-AR events always use the short form ----------
 (function(){
-"use strict";
-// ---------- config: packed into the URL hash (#c=base64url(JSON)) by Aesthetic QR Studio ----------
 function dec(s){ try{ s=s.replace(/-/g,"+").replace(/_/g,"/"); while(s.length%4) s+="="; return JSON.parse(decodeURIComponent(escape(atob(s)))); }catch(e){ return null; } }
-var raw=(location.hash.match(/[#&]c=([^&]+)/)||[])[1], C=raw?dec(raw):null;
-if(!C) C={k:"photo",t:"Photo Booth",b:"",h:"",c:"ff4d8d",f:"polaroid",e:"party"};
+var sid=(new URLSearchParams(location.search)).get("e"), raw=(location.hash.match(/[#&]c=([^&]+)/)||[])[1];
+if(sid && /^[a-z0-9]{6,16}$/.test(sid)){
+  fetch("/api/ar-asset?e="+sid).then(function(r){ return r.ok?r.json():null; }).then(function(c){ boot(c||null,"e:"+sid); }).catch(function(){ boot(null,"e:"+sid); });
+} else boot(raw?dec(raw):null, raw);
+})();
+function boot(C, raw){
+"use strict";
+var MISSING=!C && String(raw||"").indexOf("e:")===0;
+if(!C) C={k:MISSING?"info":"photo",t:MISSING?"":"Photo Booth",b:"",h:"",c:"ff4d8d",f:"polaroid",e:"party"};
 var KIND=C.k||"photo", ACC="#"+String(C.c||"ff4d8d").replace(/[^0-9a-f]/gi,"").slice(0,6);
 document.documentElement.style.setProperty("--acc",ACC);
 var nav=(navigator.language||"ko").toLowerCase();
 var QL=(new URLSearchParams(location.search)).get("lang");
 var L=C.lang||QL||(nav.indexOf("ko")===0?"ko":nav.indexOf("ja")===0?"ja":nav.indexOf("zh")===0?"zh":"en");
 var ALL={
- ko:{shoot:"📸 사진 찍기",scan:"📷 카메라 켜고 포스터 비추기",noCam:"카메라 없이 보기",open:"자세히 보기",saveP:"사진 저장",share:"공유하기",again:"다시 찍기",
+ ko:{notFound:"이벤트를 찾을 수 없어요. 링크가 바뀌었거나 종료된 이벤트일 수 있어요.",place:"🪄 내 공간에 놓기 (AR)",shoot:"📸 사진 찍기",scan:"📷 카메라 켜고 포스터 비추기",noCam:"카메라 없이 보기",open:"자세히 보기",saveP:"사진 저장",share:"공유하기",again:"다시 찍기",
      hintPhoto:"화면을 보고 셔터를 누르세요",hintScan:"포스터의 QR 코드를 화면 가운데에 비춰 주세요",found:"찾았어요!",
      rwCapture:"사진을 찍으면 선물을 드려요 🎁",rwShare:"사진을 공유하면 선물을 드려요 🎁",showStaff:"이 화면을 직원에게 보여주세요",until:"유효기간",
      win:"당첨!",lose:"아쉬워요",drawing:"두근두근…",already:"이미 참여한 이벤트예요 — 처음 결과를 보여 드려요",
      camErr:"카메라를 켤 수 없어요. 브라우저 설정에서 카메라 권한을 허용하거나 ‘카메라 없이 보기’를 눌러 주세요.",
      fine:"사진과 영상은 이 휴대폰 안에서만 처리되고 어디에도 전송되지 않아요.",shareText:"",infoTitle:"안내",notYet:"이벤트는 {d}부터 시작해요",ended:"종료된 이벤트예요 ({d}까지)",pinBtn:"직원 확인 (사용 처리)",pinAsk:"직원 확인 PIN을 입력하세요",pinWrong:"PIN이 맞지 않아요",used:"사용 완료",mine:"🎁 내 혜택 보기",closer:"더 가까이 — QR이 화면의 1/3 이상 차도록 비춰 주세요"},
- en:{shoot:"📸 Take a photo",scan:"📷 Open camera & scan the poster",noCam:"View without camera",open:"Learn more",saveP:"Save photo",share:"Share",again:"Retake",
+ en:{notFound:"We couldn't find this event. The link may have changed or the event has ended.",place:"🪄 Place in my space (AR)",shoot:"📸 Take a photo",scan:"📷 Open camera & scan the poster",noCam:"View without camera",open:"Learn more",saveP:"Save photo",share:"Share",again:"Retake",
      hintPhoto:"Look at the screen and tap the shutter",hintScan:"Point at the QR code on the poster",found:"Found it!",
      rwCapture:"Take a photo and get a gift 🎁",rwShare:"Share your photo and get a gift 🎁",showStaff:"Show this screen to the staff",until:"Valid until",
      win:"You won!",lose:"Not this time",drawing:"Drawing…",already:"You've already played — here is your first result",
      camErr:"Can't open the camera. Allow camera access in your browser settings, or tap “View without camera”.",
      fine:"Photos and video stay on this phone and are never uploaded.",shareText:"",infoTitle:"Info",notYet:"This event starts on {d}",ended:"This event has ended ({d})",pinBtn:"Staff: mark as used",pinAsk:"Staff PIN",pinWrong:"Wrong PIN",used:"Used",mine:"🎁 My reward",closer:"Move closer — let the QR fill about a third of the screen"},
- ja:{shoot:"📸 写真を撮る",scan:"📷 カメラでポスターを映す",noCam:"カメラなしで見る",open:"詳しく見る",saveP:"写真を保存",share:"シェア",again:"撮り直す",
+ ja:{notFound:"イベントが見つかりません。リンクが変更されたか、終了したイベントの可能性があります。",place:"🪄 自分の空間に置く（AR）",shoot:"📸 写真を撮る",scan:"📷 カメラでポスターを映す",noCam:"カメラなしで見る",open:"詳しく見る",saveP:"写真を保存",share:"シェア",again:"撮り直す",
      hintPhoto:"画面を見てシャッターを押してください",hintScan:"ポスターのQRコードを画面中央に映してください",found:"見つけました！",
      rwCapture:"写真を撮るとプレゼント 🎁",rwShare:"写真をシェアするとプレゼント 🎁",showStaff:"この画面をスタッフに見せてください",until:"有効期限",
      win:"当たり！",lose:"残念…",drawing:"ドキドキ…",already:"参加済みのイベントです — 最初の結果を表示します",
      camErr:"カメラを起動できません。ブラウザ設定でカメラを許可するか「カメラなしで見る」を押してください。",
      fine:"写真・映像はこのスマホ内だけで処理され、送信されません。",shareText:"",infoTitle:"ご案内",notYet:"イベントは{d}から始まります",ended:"終了したイベントです（{d}まで）",pinBtn:"スタッフ確認（使用済みにする）",pinAsk:"スタッフ確認用PINを入力",pinWrong:"PINが違います",used:"使用済み",mine:"🎁 特典を見る",closer:"もう少し近づけて、QRが画面の1/3以上になるように映してください"},
- zh:{shoot:"📸 拍照",scan:"📷 打开相机扫描海报",noCam:"不用相机查看",open:"了解详情",saveP:"保存照片",share:"分享",again:"重拍",
+ zh:{notFound:"找不到该活动。链接可能已更改或活动已结束。",place:"🪄 放到我的空间 (AR)",shoot:"📸 拍照",scan:"📷 打开相机扫描海报",noCam:"不用相机查看",open:"了解详情",saveP:"保存照片",share:"分享",again:"重拍",
      hintPhoto:"看着屏幕按下快门",hintScan:"请将海报上的二维码对准画面中央",found:"找到了！",
      rwCapture:"拍照即可领取礼物 🎁",rwShare:"分享照片即可领取礼物 🎁",showStaff:"请向店员出示此画面",until:"有效期至",
      win:"中奖啦！",lose:"差一点",drawing:"抽奖中…",already:"你已参加过此活动——显示首次结果",
@@ -362,7 +369,54 @@ function sceneMotion(P,el,dt){ var R=posterRect(P), s=dt/1000, rate={balloons:33
     g.fillStyle="#000"; g.translate(0,y0); g.rotate(Math.sin(el/300)*0.12); g.scale(1/sq,sq); g.font=Math.round(sz)+"px serif"; g.textAlign="center"; g.textBaseline="middle"; g.fillText(C.ms||"🐻",0,0);
     g.rotate(Math.sin(el/150)*0.5); g.font=Math.round(sz*0.38)+"px serif"; g.fillText("👋",sz*0.45,-sz*0.15); g.restore(); }
 }
-var SETTLE={coupon:1500,lucky:2500,confetti:1300,info:1400,scene:2600};
+// ---- "image AR": the organiser's own image (optionally background-removed) or a 3D model made from it ----
+// im = image URL, ia = motion (rise | float | spin | card), iz = size (0.6–1.8), gl = GLB model URL (optional)
+var IMG=null, imgOk=false, IA=C.ia||"rise", IZ=clamp(+C.iz||1,0.6,1.8);
+if(KIND==="image" && C.im){ IMG=new Image(); IMG.onload=function(){ imgOk=true; }; IMG.src=C.im; }
+function sceneImage(P,el){ if(MV.on && MV.ready) return;          // the 3D model overlay takes over once loaded
+  var s=P.s; if(!imgOk){ g.save(); g.strokeStyle="rgba(255,255,255,.8)"; g.lineWidth=4; g.beginPath(); g.arc(0,-s*1.1,s*0.18,el/200,el/200+4.2); g.stroke(); g.restore(); return; }
+  var iw=IMG.naturalWidth, ih=IMG.naturalHeight, k=s*1.45*IZ/Math.max(iw,ih), w=iw*k, h=ih*k, base=-s*0.52;   // stands on the QR's top edge
+  var t=el/1000, pop=eBack(el/700), sx=1, sy=1, rot=0, lift=0;
+  if(IA==="rise"){ lift=(1-pop)*-h*0.6+Math.sin(t*2.2)*s*0.03; sy=0.2+0.8*pop; sx=1+(1-pop)*0.15; rot=Math.sin(t*1.4)*0.03; }
+  else if(IA==="float"){ lift=s*0.18+Math.sin(t*1.8)*s*0.08; rot=Math.sin(t*1.1)*0.06; sx=sy=pop; }
+  else if(IA==="spin"){ sx=Math.cos(t*1.6)*pop; sy=pop; lift=Math.sin(t*1.6*2)*s*0.03; }
+  else if(IA==="card"){ sx=sy=pop; lift=s*0.1+Math.sin(t*1.5)*s*0.04; }
+  // ground shadow on the poster plane
+  var sh=Math.max(0.25,1-lift/(s*0.8)); g.save(); g.fillStyle="rgba(0,0,0,"+(0.28*sh*Math.min(1,pop))+")"; g.beginPath(); g.ellipse(0,base+s*0.02,w*0.38*Math.abs(sx)*sh+2,s*0.07*sh,0,0,7); g.fill(); g.restore();
+  g.save(); g.translate(0,base-lift); g.rotate(rot);
+  if(IA==="card"){ // thick card: the edge (extruded copies) shows on the side the card tilts away from
+    var tilt=Math.sin(t*1.3)*0.6, th=Math.max(6,s*0.09), n=10, cw=w*Math.cos(tilt*0.6);
+    for(var i=n;i>=1;i--){ g.save(); g.translate(-Math.sin(tilt)*th*i/n*2.2, th*i/n*0.5); g.fillStyle="rgba(0,0,0,"+(0.18+0.5*i/n)+")"; rr(-cw/2,-h,cw,h,Math.min(cw,h)*0.06); g.fill(); g.restore(); }
+    g.save(); rr(-cw/2,-h,cw,h,Math.min(cw,h)*0.06); g.clip(); g.drawImage(IMG,-cw/2,-h,cw,h);
+    var gx=-cw/2+((t*0.45)%1.6)*cw*1.25-cw*0.2, gg=g.createLinearGradient(gx-cw*0.2,0,gx+cw*0.2,0); gg.addColorStop(0,"rgba(255,255,255,0)"); gg.addColorStop(.5,"rgba(255,255,255,.35)"); gg.addColorStop(1,"rgba(255,255,255,0)"); g.fillStyle=gg; g.fillRect(-cw/2,-h,cw,h); g.restore();
+    glowStroke(function(){ rr(-cw/2,-h,cw,h,Math.min(cw,h)*0.06); },"rgba(255,255,255,.9)",2,10);
+  } else {
+    g.scale(Math.abs(sx)<0.02?0.02:sx, sy);
+    g.shadowColor="rgba(0,0,0,.35)"; g.shadowBlur=s*0.06; g.shadowOffsetY=s*0.02;
+    if(IA==="spin" && sx<0) g.filter="brightness(0.62)";   // back face reads darker
+    g.drawImage(IMG,-w/2,-h,w,h); g.shadowColor="transparent"; g.filter="none";
+  }
+  g.restore();
+  if(el<900){ g.save(); g.globalAlpha*=1-el/900; rays(0,base-h*0.5,Math.max(w,h)*0.8,1,el/1500); g.restore(); } }
+// 3D model: <model-viewer> overlay that follows the QR (auto-rotating), plus "place in my space" (WebXR / Scene Viewer / Quick Look)
+var MV={on:KIND==="image" && !!C.gl, el:null, ready:false, loading:false};
+function mvLoad(){ if(MV.loading||!MV.on) return; MV.loading=true;
+  var sc=document.createElement("script"); sc.type="module"; sc.src="vendor/model-viewer.min.js"; document.head.appendChild(sc);
+  var m=document.createElement("model-viewer"); m.setAttribute("src",C.gl); m.setAttribute("auto-rotate",""); m.setAttribute("rotation-per-second","40deg"); m.setAttribute("auto-rotate-delay","0");
+  m.setAttribute("interaction-prompt","none"); m.setAttribute("disable-zoom",""); m.setAttribute("shadow-intensity","1"); m.setAttribute("exposure","1.05"); m.setAttribute("camera-orbit","0deg 75deg auto");
+  m.setAttribute("ar",""); m.setAttribute("ar-modes","webxr scene-viewer quick-look"); m.setAttribute("ar-placement","floor"); if(C.t) m.setAttribute("alt",C.t);
+  m.style.cssText="position:absolute;left:0;top:0;width:200px;height:200px;pointer-events:none;background:transparent;opacity:0;transition:opacity .25s;--poster-color:transparent;--progress-bar-height:0px";
+  m.addEventListener("load",function(){ MV.ready=true; }); $("stage").appendChild(m); MV.el=m; }
+function mvPlace(P,alpha){ if(!MV.el) return; var st=$("stage").getBoundingClientRect(), cr=cv.getBoundingClientRect(), k=cr.width/cv.width;
+  var size=P.s*1.9*IZ*k, x=cr.left-st.left+P.cx*k, y=cr.top-st.top+(P.cy-P.s*0.5)*k;
+  MV.el.style.width=MV.el.style.height=Math.round(size)+"px"; MV.el.style.transform="translate("+Math.round(x-size/2)+"px,"+Math.round(y-size*0.92)+"px) rotate("+P.a+"rad)";
+  MV.el.style.opacity=MV.ready?alpha:0; }
+function mvHide(){ if(MV.el) MV.el.style.opacity=0; }
+window.__placeAR=function(){ mvLoad(); var go=function(){ if(MV.el && MV.el.canActivateAR){ MV.el.activateAR(); } else if(MV.el){ mvSheet(); } };
+  if(MV.ready) go(); else { var t0=Date.now(), iv=setInterval(function(){ if(MV.ready||Date.now()-t0>15000){ clearInterval(iv); go(); } },200); } };
+// no AR support on this phone (or no camera): an interactive 3D viewer in the sheet
+function mvSheet(){ var p=$("panel"); p.innerHTML='<div class="sheetwrap"><div class="sheet"><button class="x" onclick="__closeSheet(this)">✕</button><model-viewer src="'+esc(C.gl)+'" camera-controls auto-rotate ar ar-modes="webxr scene-viewer quick-look" shadow-intensity="1" style="width:100%;height:300px;background:#f4f4f5;border-radius:14px"></model-viewer>'+(C.t?'<h2>'+esc(C.t)+'</h2>':'')+linkBtn()+'</div></div>'; p.style.display="flex"; }
+var SETTLE={coupon:1500,lucky:2500,confetti:1300,info:1400,scene:2600,image:2200};
 function sceneCoupon(P,el){ var s=P.s, W=cv.width, col=themeCols();
   var boxY=-s*0.15-s*1.0*eBack(el/550), bw=s*0.62, bh=bw*0.62;
   rays(0,-s*1.35,s*1.5,clamp((el-350)/400,0,1)*(el<1300?1:0.55+0.15*Math.sin(el/300)),el/2600);
@@ -453,12 +507,14 @@ function loopScan(tm){ var W=cv.width,H=cv.height, dt=lastTm?Math.min(50,tm-last
   if(revealed && Q && vis>0){ var P=pose(), el=now-revealAt;
     reticle(P, now-revealAt);
     g.save(); g.globalAlpha=vis; g.translate(P.cx,P.cy); g.rotate(P.a);
-    if(KIND==="coupon") sceneCoupon(P,el); else if(KIND==="lucky") sceneLucky(P,el); else if(KIND==="scene") sceneMotion(P,el,dt); else if(KIND==="info") sceneInfo(P,el); else sceneConfetti(P,el);
+    if(KIND==="coupon") sceneCoupon(P,el); else if(KIND==="lucky") sceneLucky(P,el); else if(KIND==="scene") sceneMotion(P,el,dt); else if(KIND==="image") sceneImage(P,el); else if(KIND==="info") sceneInfo(P,el); else sceneConfetti(P,el);
     g.restore();
+    if(MV.on){ mvLoad(); mvPlace(P,vis); }
     if(KIND==="confetti" && tracked){ if(!loopScan.next || now>loopScan.next){ launch(P); loopScan.next=now+(el<1500?300:850); } }
     if(KIND==="lucky" && resultWin && el>2250 && !loopScan.coin){ loopScan.coin=1; var sv=PE; PE=PE||"🪙"; burst(P.cx,P.cy-P.s*1.3,60,11,20); PE=sv; if(navigator.vibrate) navigator.vibrate([60,40,120]); }
     if(KIND==="coupon" && el>620 && !loopScan.pop){ loopScan.pop=1; burst(P.cx,P.cy-P.s*1.15,50,9); if(navigator.vibrate) navigator.vibrate(40); }
   }
+  if(MV.on && (!revealed || !Q || vis<=0)) mvHide();
   stepRockets(dt); stepParts(dt);
   if(revealed && !sheetShown && now-revealAt>SETTLE[KIND]+(KIND==="info"?700:0) && !DEMO){ sheetShown=true; showPanel(prize?prize.again:false); }
   raf=requestAnimationFrame(loopScan); }
@@ -493,8 +549,11 @@ function sheetHTML(again){
   if(KIND==="lucky"){ if(resultWin) return (again?'<div class="sheet-note">'+esc(T.already)+'</div>':'')+rewardSheet("lucky");
     return '<div class="sheet">'+(again?'<p>'+esc(T.already)+'</p>':'')+'<div class="big">🍀</div><h2>'+esc(C.lx||T.lose)+'</h2>'+linkBtn()+'</div>'; }
   if(KIND==="info") return '<div class="sheet"><div class="big">'+esc(C.ic||"ℹ️")+'</div><h2>'+esc(C.it||C.t||T.infoTitle)+'</h2>'+String(C.i||"").split("|").filter(Boolean).map(function(l){return '<p>'+esc(l)+'</p>';}).join("")+linkBtn()+'</div>';
+  if(KIND==="image") return '<div class="sheet">'+(C.gl?'<model-viewer src="'+esc(C.gl)+'" camera-controls auto-rotate ar ar-modes="webxr scene-viewer quick-look" shadow-intensity="1" style="width:100%;height:300px;background:#f4f4f5;border-radius:14px"></model-viewer>':(C.im?'<img src="'+esc(C.im)+'" alt="" style="max-width:100%;max-height:300px;display:block;margin:0 auto">':''))+'<h2>'+esc(C.t||"")+'</h2>'+(C.s?'<p>'+esc(C.s)+'</p>':'')+linkBtn()+'</div>';
   return '<div class="sheet"><div class="big">🎉</div><h2>'+esc(C.t||"")+'</h2>'+(C.s?'<p>'+esc(C.s)+'</p>':'')+linkBtn()+'</div>'; }
 function showPanel(again){ var p=$("panel");
+  if(KIND==="image" && stream){ var hb=(MV.on?'<button class="btn main" style="max-width:320px;margin:0 0 8px" onclick="__placeAR()">'+esc(T.place)+'</button>':'')+(C.l?'<a class="btn ghost" style="display:block;text-decoration:none;max-width:320px;margin:0;background:rgba(0,0,0,.5)" target="_blank" rel="noopener" href="'+esc(safeUrl(C.l))+'">'+esc(C.lt||T.open)+'</a>':'');
+    if(hb){ p.innerHTML='<div class="sheetwrap">'+hb+'</div>'; p.style.display="flex"; } return; }
   if(KIND==="scene"){ if(C.l){ p.innerHTML='<a class="btn main" style="display:block;text-decoration:none;max-width:320px" target="_blank" rel="noopener" href="'+esc(safeUrl(C.l))+'">'+esc(C.lt||T.open)+'</a>'; p.style.display="flex"; } return; } p.innerHTML='<div class="sheetwrap">'+sheetHTML(again)+'</div>'; p.style.display="flex"; }
 function onReveal(){ if(navigator.vibrate) navigator.vibrate(50); $("cHint").textContent=T.found; if(!sheetShown){ $("panel").innerHTML=""; $("panel").style.display="none"; }
   loopScan.pop=0; loopScan.coin=0; loopScan.next=0;
@@ -517,12 +576,13 @@ if(DEMO){
   };
   demoImg.src=QP.get("bg")||(isPhoto?"assets/poster/poster-13.webp":"assets/poster/poster-01.webp");
 }
+if(MISSING){ $("lTeaser").style.display="none"; $("err").textContent=T.notFound; $("err").style.display="block"; isPage=false; }
 if(isPage){ var holder=document.createElement("div"); holder.className="sheetwrap"; holder.style.marginTop="20px"; holder.innerHTML=sheetHTML(false); $("lTeaser").after(holder); }
 // ---------- flow ----------
 $("go").addEventListener("click",async function(){ $("err").style.display="none"; show("cam"); if(!(await startCam())) return; sizeCanvas();
   $("cHint").textContent=isPhoto?T.hintPhoto:T.hintScan; $("snap").style.display=isPhoto?"block":"none"; $("flip").style.visibility="visible";
   if(isPhoto){ initFace(); raf=requestAnimationFrame(loopPhoto); } else { revealed=false; Q=null; vis=0; lostAt=0; sheetShown=false; parts.length=0; rockets.length=0; $("reopen").style.display="none"; scanStart=0; $("panel").innerHTML=""; $("panel").style.display="none"; $("cHint").textContent=T.hintScan; raf=requestAnimationFrame(loopScan); } });
-$("noCam").addEventListener("click",function(){ var again=false; if(KIND==="lucky"){ var r=luckyResult(); resultWin=r.win; prize=r; again=r.again; } sheetShown=true; show("cam"); $("stage").style.background=getComputedStyle(document.body).backgroundColor; cv.width=cv.height=1; $("cHint").textContent=""; $("snap").style.display="none"; $("flip").style.visibility="hidden"; showPanel(again); });
+$("noCam").addEventListener("click",function(){ var again=false; if(MV.on) mvLoad(); if(KIND==="lucky"){ var r=luckyResult(); resultWin=r.win; prize=r; again=r.again; } sheetShown=true; show("cam"); $("stage").style.background=getComputedStyle(document.body).backgroundColor; cv.width=cv.height=1; $("cHint").textContent=""; $("snap").style.display="none"; $("flip").style.visibility="hidden"; showPanel(again); });
 $("back").addEventListener("click",function(){ stopCam(); show("land"); });
 $("flip").addEventListener("click",async function(){ facing=facing==="user"?"environment":"user"; await startCam(); sizeCanvas(); if(isPhoto) raf=requestAnimationFrame(loopPhoto); else raf=requestAnimationFrame(loopScan); });
 window.addEventListener("resize",function(){ if(stream) sizeCanvas(); });
@@ -541,7 +601,7 @@ $("share").addEventListener("click",async function(){ if(!lastBlob) return; var 
        else { $("save").click(); }
        if(C.rm==="share") $("reward").innerHTML=rewardSheet("photo"); }catch(e){} });
 $("again").addEventListener("click",function(){ $("go").click(); });
-})();
+}
 </script>
 </body>
 </html>

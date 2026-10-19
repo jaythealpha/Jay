@@ -255,12 +255,12 @@
   .grp .body{padding:4px 17px 19px}
   .ic{width:19px;height:19px;color:var(--txt);flex:none}
 
-  label.fld{display:block;margin:14px 0 0}
+  label.fld, div.fld{display:block;margin:14px 0 0}
   label.fld:first-child{margin-top:6px}
   /* inside a 2-col row, BOTH columns must share the same top margin — otherwise the left
      column (being :first-child of the row) gets 6px and the right gets 14px → 8px misalignment */
   .row2 > label.fld:first-child{margin-top:14px}
-  label.fld .lbl{font-size:12px;color:var(--mut);margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:17px;white-space:nowrap;overflow:hidden}
+  label.fld .lbl, div.fld > .lbl, .switch.sm .lbl{font-size:12px;color:var(--mut);margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:17px;white-space:nowrap;overflow:hidden}
   label.fld .lbl b{color:var(--txt);font-weight:600;font-variant-numeric:tabular-nums}
   label.fld .lbl .soc-ic{width:16px;height:16px;flex:none;display:inline-flex}
   label.fld .lbl .soc-ic svg{width:16px;height:16px;display:block}
@@ -390,7 +390,8 @@
   .cat-new-pill{font-size:9px;font-weight:800;background:#ff4d8d;color:#fff;border-radius:6px;padding:1px 5px;margin-left:6px;vertical-align:middle}
   .ev-why{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:0 auto 16px;max-width:900px}
   .ev-why span{background:var(--bg2);border:1px solid var(--line);border-radius:999px;padding:7px 12px;font-size:13px}
-  .ev-types{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;max-width:1100px;margin:0 auto 18px}
+  .ev-im-row{display:flex;gap:12px;align-items:center;margin:4px 0 10px} .ev-im-row img{width:72px;height:72px;object-fit:contain;border-radius:10px;background:repeating-conic-gradient(#e5e7eb 0 25%,#fff 0 50%) 0 0/14px 14px;border:1px solid var(--line,#e5e7eb)} .ev-im-row .hint{margin:0}
+  .ev-types{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;max-width:1100px;margin:0 auto 18px}
   .ev-types button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 8px;border:1.5px solid var(--line);border-radius:16px;background:var(--card);color:var(--txt);cursor:pointer;font-family:inherit;text-align:center}
   .ev-types button b{font-size:26px;line-height:1}
   .ev-types button span{font-weight:700;font-size:14px}
@@ -406,7 +407,7 @@
   .ev-out>div{flex:1;min-width:0}
   .ev-lab{max-width:1100px;margin:22px auto 0}
   .ev-prize{display:flex;gap:6px;align-items:center;margin-top:6px} .ev-prize input[type=text]{flex:1;min-width:0} .ev-prize input[type=number]{width:74px;flex:none} .ev-prize span{color:var(--mut);font-size:13px}
-  @media(max-width:760px){ .ev-types{grid-template-columns:repeat(2,minmax(0,1fr))} .ev-types button:last-child{grid-column:1/-1} .ev-out{flex-direction:column;align-items:stretch} .ev-out canvas{align-self:center} }
+  @media(max-width:760px){ .ev-types{grid-template-columns:repeat(2,minmax(0,1fr))} .ev-out{flex-direction:column;align-items:stretch} .ev-out canvas{align-self:center} }
   .ar-guide{max-width:720px;margin:0 auto 16px;border:1px solid var(--line);border-radius:var(--r);background:var(--bg2);padding:14px 16px}
   .ar-guide h3{margin:0 0 10px;font-size:16px}
   .ar-guide .seg{margin-bottom:12px}
@@ -1293,6 +1294,7 @@
       <button data-k="lucky"><b>🍀</b><span data-i18n="ev.k.lucky">행운 뽑기</span><small data-i18n="ev.kd.lucky"></small></button>
       <button data-k="confetti"><b>🎉</b><span data-i18n="ev.k.confetti">축하 효과</span><small data-i18n="ev.kd.confetti"></small></button>
       <button data-k="scene"><b>✨</b><span data-i18n="ev.k.scene">움직이는 포스터</span><small data-i18n="ev.kd.scene"></small></button>
+      <button data-k="image"><b>🖼️</b><span data-i18n="ev.k.image">이미지 AR</span><small data-i18n="ev.kd.image"></small></button>
     </div>
     <div class="hint ev-typehint" data-i18n-html="ev.typeHint"></div>
     <div class="studio" id="evBuilder">
@@ -1374,6 +1376,24 @@
             <label class="fld"><div class="lbl" data-i18n="ev.lbl.si">강도</div>
               <div class="seg" id="evSiSeg"><button data-v="1"><span data-i18n="ev.si.1">은은하게</span></button><button data-v="2" class="on"><span data-i18n="ev.si.2">보통</span></button><button data-v="3"><span data-i18n="ev.si.3">화려하게</span></button></div></label>
             <div class="hint" data-i18n="ev.hint.scene"></div>
+          </div>
+        </details>
+        <details class="grp" open data-ev="image">
+          <summary><span data-i18n="ev.grp.image">이미지 AR</span></summary>
+          <div class="body">
+            <div class="hint" id="evImSrv" style="display:none"></div>
+            <label class="fld"><div class="lbl" data-i18n="ev.lbl.im">이미지 (캐릭터·제품·로고)</div>
+              <input type="file" id="evImFile" accept="image/png,image/jpeg,image/webp" /></label>
+            <div class="ev-im-row"><img id="evImThumb" alt="" style="display:none" /><div class="hint" id="evImStat"></div></div>
+            <div class="switch sm" style="margin:0 0 4px"><div class="lbl" data-i18n="ev.lbl.cut" style="margin:0">배경 지우기 (자동)</div><label class="toggle"><input type="checkbox" id="evCut" checked /><span></span></label></div>
+            <label class="fld"><div class="lbl" data-i18n="ev.lbl.ia">움직임</div>
+              <div class="seg seg-wrap" id="evIaSeg"><button data-v="rise" class="on">⬆️ <span data-i18n="ev.ia.rise">솟아오르기</span></button><button data-v="float">☁️ <span data-i18n="ev.ia.float">둥실 떠 있기</span></button><button data-v="spin">🔄 <span data-i18n="ev.ia.spin">회전</span></button><button data-v="card">🃏 <span data-i18n="ev.ia.card">입체 카드</span></button></div></label>
+            <label class="fld"><div class="lbl"><span data-i18n="ev.lbl.iz">크기</span> <b id="evIzOut">100%</b></div><input type="range" id="evIz" min="60" max="180" step="10" value="100" /></label>
+            <div class="fld"><div class="lbl" data-i18n="ev.lbl.3d">3D 모델 (선택)</div>
+              <button type="button" class="btn ghost" id="evMk3d" disabled>🧊 <span data-i18n="ev.mk3d">이미지로 3D 모델 만들기</span></button>
+              <div class="switch sm" id="evUse3dWrap" style="display:none;margin-top:10px"><div class="lbl" data-i18n="ev.lbl.use3d" style="margin:0">3D 모델로 보여주기 + 내 공간에 놓기</div><label class="toggle"><input type="checkbox" id="evUse3d" checked /><span></span></label></div>
+              <div class="hint" id="ev3dStat"></div></div>
+            <div class="hint" data-i18n="ev.hint.image"></div>
           </div>
         </details>
         <details class="grp" open data-ev="coupon lucky confetti">
@@ -1645,7 +1665,7 @@
     </nav>
     <div style="margin-top:10px">Aesthetic QR Studio · <span data-i18n="foot.tag">아름답고 스캔되는 QR을 만드는 스튜디오 · QR 생성·디자인은 브라우저에서 처리 (AI 기능만 서버 전송·저장 안 함)</span></div>
     <div style="margin-top:6px" data-i18n="foot.tm">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · <span data-i18n="foot.build">빌드</span> <b id="verTag">2026.10.16-a</b></div>
+    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · <span data-i18n="foot.build">빌드</span> <b id="verTag">2026.10.19-a</b></div>
   </footer>
 </div>
 
@@ -5364,7 +5384,7 @@ var INFO_PAGES = {
     "<p>본 서비스는 이용자의 개인정보를 최소한으로만 처리하며, 광고·트래킹 목적의 개인정보 수집을 하지 않습니다. 최종 수정일: 2026-09-22.</p>"+
     "<h4>1. 기본 원칙 — 브라우저 내 처리</h4><p>QR에 입력하는 내용(URL·연락처·Wi-Fi 비밀번호 등), 업로드하는 이미지, 명함 <b>무료 자동 인식</b>은 <b>브라우저 안에서만</b> 처리되며 서버로 전송·저장되지 않습니다. <b>단, 아래 3항의 AI 기능은 예외</b>입니다.</p>"+
     "<h4>2. 로컬 저장(localStorage)</h4><p>테마 설정, 온보딩 표시 여부, 'My QR'·'디지털 명함' 저장 항목, Pro 라이선스 상태 등은 이용자 <b>브라우저에만</b> 저장되며 외부로 전송되지 않습니다. 브라우저 데이터를 지우면 함께 삭제됩니다.</p>"+
-    "<h4>3. AI 기능(선택) — 서버 전송</h4><p><b>AI 아트 QR</b>과 <b>AI 고정밀 명함 인식</b>을 사용할 경우, 그 기능에 한해 입력값(프롬프트/QR 내용 또는 명함 사진)이 처리를 위해 서버 함수 및 해당 AI 제공사로 전송됩니다. 결과 생성·인식 후 본 서비스는 이를 저장하지 않습니다. 두 기능을 사용하지 않으면 전송은 발생하지 않습니다.</p>"+
+    "<h4>3. AI 기능(선택) — 서버 전송</h4><p><b>AI 아트 QR</b>과 <b>AI 고정밀 명함 인식</b>을 사용할 경우, 그 기능에 한해 입력값(프롬프트/QR 내용 또는 명함 사진)이 처리를 위해 서버 함수 및 해당 AI 제공사로 전송됩니다. 결과 생성·인식 후 본 서비스는 이를 저장하지 않습니다. 두 기능을 사용하지 않으면 전송은 발생하지 않습니다.</p><p><b>AR 이벤트의 이미지 AR</b>은 예외로, 고객에게 보여주기 위해 올린 이미지(배경 제거본·3D 모델 포함)와 이벤트 설정이 서버 저장소에 <b>공개 링크로 저장</b>됩니다. 사람 얼굴 등 개인정보가 담긴 이미지는 올리지 마세요. 삭제를 원하면 문의처로 연락해 주세요.</p>"+
     "<h4>4. 결제(해당 시)</h4><p>Pro 결제는 외부 결제대행(Merchant of Record)을 통해 처리되며, 카드정보는 본 서비스가 보관하지 않습니다. 결제 처리 관련 개인정보는 해당 결제사의 정책을 따릅니다.</p>"+
     "<h4>5. 문의</h4><p>개인정보 관련 문의: <a href=\"mailto:"+CONTACT_EMAIL+"\">"+CONTACT_EMAIL+"</a></p>" },
   terms:{ title:"이용약관", html:
@@ -5385,19 +5405,19 @@ var INFO_PAGES = {
 var INFO_I18N = {
   en:{
     about:"<p><b>Aesthetic QR Studio</b> is a web-based QR design studio that turns plain black-and-white QR codes into on-brand art. Adjust colors, gradients, module shapes, a center logo or pictogram, frames and animation — and still get a QR that <b>actually scans</b>.</p><h4>Highlights</h4><ul><li><b>Privacy first</b> — QR building, design and free business-card reading run entirely in your browser. Only when you use <b>AI art</b> or <b>AI precision card reading</b> is that input sent to a server (and it isn't stored afterwards). Nothing else leaves your device.</li><li><b>24 content types</b> — URL, Wi-Fi, contact, call, SMS, email, location, events, social (Instagram, YouTube, TikTok, X…), payments, crypto and more.</li><li><b>Design tools</b> — center logo/pictogram, decorative frames, animation (WebM), high-resolution export, bulk generation.</li><li><b>Languages</b> — Korean, English, Japanese, Chinese.</li></ul><h4>Technology</h4><p>Runs as a single HTML app using the open-source <code>qrcode-generator</code> encoder (MIT). QR Code® is a registered trademark of DENSO WAVE.</p>",
-    privacy:"<p>We process as little personal data as possible and do not collect personal data for advertising or tracking. Last updated: 2026-10-14.</p><h4>1. Principle — processing in your browser</h4><p>What you put into a QR (URLs, contacts, Wi-Fi passwords…), images you upload and <b>free card reading</b> are processed <b>only in your browser</b> and are never sent to or stored on a server. <b>The AI features in section 3 are the exception.</b></p><h4>2. Local storage (localStorage)</h4><p>Theme, onboarding state, saved 'My QR' and 'digital card' items, and your Pro license state are kept <b>only in your browser</b> and never transmitted. Clearing browser data deletes them.</p><h4>3. AI features (optional) — sent to a server</h4><p>When you use <b>AI art QR</b> or <b>AI precision card reading</b>, only that feature's input (prompt/QR content or the card photo) is sent to our server function and the AI provider for processing. We do not store it after generating or reading. If you don't use these two features, nothing is sent.</p><h4>4. Payments (if applicable)</h4><p>Pro payments are handled by an external Merchant of Record; we never store card details. Payment-related data follows that provider's policy.</p><h4>5. Contact</h4><p>Privacy questions: %EMAIL%</p>",
+    privacy:"<p>We process as little personal data as possible and do not collect personal data for advertising or tracking. Last updated: 2026-10-14.</p><h4>1. Principle — processing in your browser</h4><p>What you put into a QR (URLs, contacts, Wi-Fi passwords…), images you upload and <b>free card reading</b> are processed <b>only in your browser</b> and are never sent to or stored on a server. <b>The AI features in section 3 are the exception.</b></p><h4>2. Local storage (localStorage)</h4><p>Theme, onboarding state, saved 'My QR' and 'digital card' items, and your Pro license state are kept <b>only in your browser</b> and never transmitted. Clearing browser data deletes them.</p><h4>3. AI features (optional) — sent to a server</h4><p>When you use <b>AI art QR</b> or <b>AI precision card reading</b>, only that feature's input (prompt/QR content or the card photo) is sent to our server function and the AI provider for processing. We do not store it after generating or reading. If you don't use these two features, nothing is sent.</p><p>The exception is <b>Image AR in AR Events</b>: so customers can see it, the image you upload (including the cut-out and 3D model) and the event settings are <b>stored on our server at a public link</b>. Don't upload images containing personal data such as people's faces. Contact us to have them deleted.</p><h4>4. Payments (if applicable)</h4><p>Pro payments are handled by an external Merchant of Record; we never store card details. Payment-related data follows that provider's policy.</p><h4>5. Contact</h4><p>Privacy questions: %EMAIL%</p>",
     terms:"<p>These terms apply to your use of Aesthetic QR Studio (the 'Service'). By using the Service you agree to them. Last updated: 2026-10-14.</p><h4>1. The Service</h4><p>Core features are free; some advanced features may be offered as a paid upgrade (Pro). The Service may change or stop without notice.</p><h4>2. Your responsibilities</h4><ul><li>You are responsible for the content of the QR codes you create and how you use them.</li><li>Do not upload or use images or logos that infringe others' trademarks, copyrights or likeness rights.</li><li>Do not encode illegal, deceptive or malicious links.</li></ul><h4>3. Intellectual property</h4><p>All built-in gallery graphics and presets are original works; brand names shown as examples are fictional. No real trademarks are used.</p><h4>4. Disclaimer</h4><p>The Service is provided 'as is'. Scanning on every device and reader is not guaranteed — always test with a real phone before printing or publishing.</p><h4>5. Limitation of liability</h4><p>To the extent permitted by law, we are not liable for direct or indirect damages arising from use of the Service.</p><h4>6. Contact</h4><p>%EMAIL%</p>",
     contact:"<p>For questions, partnerships or bug reports, please reach us here.</p><h4>Email</h4><p>%EMAIL%</p>"
   },
   ja:{
     about:"<p><b>Aesthetic QR Studio</b> は、ありふれた白黒のQRをブランドらしいアートに変えるWebベースのQRデザインスタジオです。色・グラデーション・モジュール形状・中央のロゴ/ピクトグラム・フレーム・アニメーションまで調整しながら、<b>きちんと読み取れる</b>QRを作れます。</p><h4>主な特長</h4><ul><li><b>プライバシー優先</b> — QRの生成・デザイン・名刺の無料自動認識はすべてブラウザ内で処理します。<b>AIアート</b>・<b>AI高精度名刺認識</b>を使うときだけ、その入力がサーバーに送信されます（生成・認識後は保存しません）。それ以外のデータは送信されません。</li><li><b>24種類のコンテンツ</b> — URL・Wi-Fi・連絡先・電話・SMS・メール・位置・予定・SNS（Instagram/YouTube/TikTok/Xなど）・決済・暗号資産など。</li><li><b>デザインツール</b> — 中央ロゴ/ピクトグラム、装飾フレーム、アニメーション（WebM）、高解像度書き出し、一括生成。</li><li><b>多言語</b> — 韓国語・英語・日本語・中国語。</li></ul><h4>技術</h4><p>単一のHTMLアプリとして動作し、オープンソースのエンコーダー <code>qrcode-generator</code>（MIT）を使用しています。QR Code® は株式会社デンソーウェーブの登録商標です。</p>",
-    privacy:"<p>本サービスは個人情報の取り扱いを最小限にとどめ、広告・トラッキング目的での個人情報収集は行いません。最終更新日：2026-10-14。</p><h4>1. 基本方針 — ブラウザ内での処理</h4><p>QRに入力する内容（URL・連絡先・Wi-Fiパスワードなど）、アップロードする画像、名刺の<b>無料自動認識</b>は<b>ブラウザ内だけ</b>で処理され、サーバーへ送信・保存されません。<b>ただし、下記3のAI機能は例外</b>です。</p><h4>2. ローカル保存（localStorage）</h4><p>テーマ設定、オンボーディング表示、「My QR」「デジタル名刺」の保存項目、Proライセンス状態などは<b>お使いのブラウザにのみ</b>保存され、外部には送信されません。ブラウザのデータを削除すると一緒に削除されます。</p><h4>3. AI機能（任意）— サーバー送信</h4><p><b>AIアートQR</b>と<b>AI高精度名刺認識</b>を使う場合に限り、その入力（プロンプト/QRの内容または名刺写真）が処理のためにサーバー関数およびAI提供事業者へ送信されます。生成・認識後、本サービスはこれを保存しません。これらを使わなければ送信は発生しません。</p><h4>4. 決済（該当する場合）</h4><p>Proの決済は外部の販売代行事業者（Merchant of Record）が処理し、カード情報を本サービスが保管することはありません。決済に関する個人情報は当該事業者のポリシーに従います。</p><h4>5. お問い合わせ</h4><p>個人情報に関するお問い合わせ：%EMAIL%</p>",
+    privacy:"<p>本サービスは個人情報の取り扱いを最小限にとどめ、広告・トラッキング目的での個人情報収集は行いません。最終更新日：2026-10-14。</p><h4>1. 基本方針 — ブラウザ内での処理</h4><p>QRに入力する内容（URL・連絡先・Wi-Fiパスワードなど）、アップロードする画像、名刺の<b>無料自動認識</b>は<b>ブラウザ内だけ</b>で処理され、サーバーへ送信・保存されません。<b>ただし、下記3のAI機能は例外</b>です。</p><h4>2. ローカル保存（localStorage）</h4><p>テーマ設定、オンボーディング表示、「My QR」「デジタル名刺」の保存項目、Proライセンス状態などは<b>お使いのブラウザにのみ</b>保存され、外部には送信されません。ブラウザのデータを削除すると一緒に削除されます。</p><h4>3. AI機能（任意）— サーバー送信</h4><p><b>AIアートQR</b>と<b>AI高精度名刺認識</b>を使う場合に限り、その入力（プロンプト/QRの内容または名刺写真）が処理のためにサーバー関数およびAI提供事業者へ送信されます。生成・認識後、本サービスはこれを保存しません。これらを使わなければ送信は発生しません。</p><p>例外として<b>ARイベントの画像AR</b>では、お客様に表示するため、アップロードした画像（背景削除版・3Dモデルを含む）とイベント設定がサーバーのストレージに<b>公開リンクとして保存</b>されます。人の顔など個人情報を含む画像はアップロードしないでください。削除をご希望の場合はお問い合わせください。</p><h4>4. 決済（該当する場合）</h4><p>Proの決済は外部の販売代行事業者（Merchant of Record）が処理し、カード情報を本サービスが保管することはありません。決済に関する個人情報は当該事業者のポリシーに従います。</p><h4>5. お問い合わせ</h4><p>個人情報に関するお問い合わせ：%EMAIL%</p>",
     terms:"<p>本規約は Aesthetic QR Studio（以下「本サービス」）の利用に適用されます。本サービスを利用することで本規約に同意したものとみなします。最終更新日：2026-10-14。</p><h4>1. サービス</h4><p>基本機能は無料で提供され、一部の高度な機能は有料（Pro）で提供される場合があります。本サービスは予告なく変更・中止されることがあります。</p><h4>2. 利用者の責任</h4><ul><li>作成したQRの内容とその使用についての責任は利用者にあります。</li><li>他者の商標・著作権・肖像権を侵害する画像やロゴをアップロード・使用しないでください。</li><li>違法・欺瞞的・悪意のあるリンクをQRに含めないでください。</li></ul><h4>3. 知的財産権</h4><p>本サービスに内蔵されたギャラリーのグラフィック・プリセットはすべてオリジナル作品であり、例として表示されるブランド名は架空のものです。実在の商標は使用していません。</p><h4>4. 保証の否認</h4><p>本サービスは「現状のまま」提供されます。すべての端末・リーダーでの読み取りを保証するものではありません。印刷・公開の前に必ず実機でテストしてください。</p><h4>5. 責任の制限</h4><p>法律で認められる範囲において、本サービスの利用により生じた直接・間接の損害について責任を負いません。</p><h4>6. お問い合わせ</h4><p>%EMAIL%</p>",
     contact:"<p>サービスに関するお問い合わせ・提携・不具合のご報告は、以下までご連絡ください。</p><h4>メール</h4><p>%EMAIL%</p>"
   },
   zh:{
     about:"<p><b>Aesthetic QR Studio</b> 是一款网页版二维码设计工作室，能把普通的黑白二维码变成具有品牌感的艺术作品。可调整颜色、渐变、模块形状、中心标志/图标、边框和动画，同时生成<b>真正可以扫描</b>的二维码。</p><h4>主要特点</h4><ul><li><b>隐私优先</b> — 二维码生成、设计和名片免费自动识别全部在浏览器内完成。仅在使用 <b>AI 艺术</b>或 <b>AI 高精度名片识别</b>时，相关输入才会发送到服务器（生成或识别后不保存）。其他数据都不会离开你的设备。</li><li><b>24 种内容类型</b> — 网址、Wi-Fi、联系人、电话、短信、邮件、位置、日程、社交（Instagram/YouTube/TikTok/X 等）、支付、加密货币等。</li><li><b>设计工具</b> — 中心标志/图标、装饰边框、动画（WebM）、高分辨率导出、批量生成。</li><li><b>多语言</b> — 韩语、英语、日语、中文。</li></ul><h4>技术</h4><p>以单个 HTML 应用运行，使用开源编码器 <code>qrcode-generator</code>（MIT）。QR Code® 是 DENSO WAVE 的注册商标。</p>",
-    privacy:"<p>本服务仅最低限度地处理个人信息，不会出于广告或追踪目的收集个人信息。最后更新：2026-10-14。</p><h4>1. 基本原则 — 在浏览器内处理</h4><p>你在二维码中输入的内容（网址、联系人、Wi-Fi 密码等）、上传的图片以及名片<b>免费自动识别</b>，均<b>只在浏览器内</b>处理，不会发送或保存到服务器。<b>第 3 条所述的 AI 功能除外。</b></p><h4>2. 本地存储（localStorage）</h4><p>主题设置、引导显示状态、“My QR”和“电子名片”保存项目、Pro 许可状态等<b>仅保存在你的浏览器中</b>，不会对外传输。清除浏览器数据时会一并删除。</p><h4>3. AI 功能（可选）— 发送到服务器</h4><p>仅在使用 <b>AI 艺术二维码</b>和 <b>AI 高精度名片识别</b>时，该功能的输入（提示词/二维码内容或名片照片）才会发送到我们的服务器函数及相应 AI 服务商进行处理。生成或识别完成后，本服务不会保存。若不使用这两项功能，则不会发生任何传输。</p><h4>4. 付款（如适用）</h4><p>Pro 付款由外部代理商（Merchant of Record）处理，本服务不保存银行卡信息。与付款相关的个人信息遵循该服务商的政策。</p><h4>5. 联系</h4><p>个人信息相关咨询：%EMAIL%</p>",
+    privacy:"<p>本服务仅最低限度地处理个人信息，不会出于广告或追踪目的收集个人信息。最后更新：2026-10-14。</p><h4>1. 基本原则 — 在浏览器内处理</h4><p>你在二维码中输入的内容（网址、联系人、Wi-Fi 密码等）、上传的图片以及名片<b>免费自动识别</b>，均<b>只在浏览器内</b>处理，不会发送或保存到服务器。<b>第 3 条所述的 AI 功能除外。</b></p><h4>2. 本地存储（localStorage）</h4><p>主题设置、引导显示状态、“My QR”和“电子名片”保存项目、Pro 许可状态等<b>仅保存在你的浏览器中</b>，不会对外传输。清除浏览器数据时会一并删除。</p><h4>3. AI 功能（可选）— 发送到服务器</h4><p>仅在使用 <b>AI 艺术二维码</b>和 <b>AI 高精度名片识别</b>时，该功能的输入（提示词/二维码内容或名片照片）才会发送到我们的服务器函数及相应 AI 服务商进行处理。生成或识别完成后，本服务不会保存。若不使用这两项功能，则不会发生任何传输。</p><p>例外是 <b>AR 活动中的图片AR</b>：为向顾客展示，你上传的图片（含去背景版本和3D模型）及活动设置会以<b>公开链接保存在服务器存储</b>中。请勿上传含有人脸等个人信息的图片。如需删除，请与我们联系。</p><h4>4. 付款（如适用）</h4><p>Pro 付款由外部代理商（Merchant of Record）处理，本服务不保存银行卡信息。与付款相关的个人信息遵循该服务商的政策。</p><h4>5. 联系</h4><p>个人信息相关咨询：%EMAIL%</p>",
     terms:"<p>本条款适用于 Aesthetic QR Studio（以下简称“本服务”）的使用。使用本服务即表示你同意本条款。最后更新：2026-10-14。</p><h4>1. 服务</h4><p>基础功能免费提供，部分高级功能可能以付费（Pro）形式提供。本服务可能在不事先通知的情况下变更或停止。</p><h4>2. 用户责任</h4><ul><li>你需对所生成二维码的内容及其使用负责。</li><li>请勿上传或使用侵犯他人商标、著作权或肖像权的图片和标志。</li><li>请勿在二维码中包含违法、欺诈或恶意链接。</li></ul><h4>3. 知识产权</h4><p>本服务内置的图库图形和预设均为原创作品，示例中的品牌名称均为虚构，未使用任何真实商标。</p><h4>4. 免责声明</h4><p>本服务按“现状”提供，不保证在所有设备和扫描器上都能成功扫描。打印或发布前请务必用真机测试。</p><h4>5. 责任限制</h4><p>在法律允许的范围内，我们不对因使用本服务产生的直接或间接损失承担责任。</p><h4>6. 联系</h4><p>%EMAIL%</p>",
     contact:"<p>如有服务咨询、合作或问题反馈，请通过以下方式联系我们。</p><h4>邮箱</h4><p>%EMAIL%</p>"
   }
@@ -8008,6 +8028,35 @@ var I18N = {
   "ev.si.3":{ko:"화려하게",en:"Full",ja:"華やか",zh:"华丽"},
   "ev.hint.scene":{ko:"글자 없이 움직임만 보여 주는 연출이에요. 포스터 편집기에서 만든 포스터라면 QR 위치를 알고 있어 포스터 전체를 덮는 연출이 나와요.",en:"Motion only — no text. Posters made in the poster editor know where their QR sits, so the animation covers the whole poster.",ja:"文字なし、動きだけの演出です。ポスターエディターで作ったポスターはQRの位置が分かるので、ポスター全体に演出が広がります。",zh:"只有动效、没有文字。用海报编辑器制作的海报知道二维码的位置，动效会覆盖整张海报。"},
   "ev.typeHint":{ko:"<b>📸 포토 필터</b>는 QR을 찍으면 셀카 카메라가 열려요. <b>쿠폰·뽑기·축하·움직이는 포스터</b>는 QR을 찍은 뒤 카메라로 <b>포스터를 비추면</b> 움직이는 연출이 나타나고, 쿠폰 코드 같은 글자는 연출이 끝난 뒤 카드로 보여 줘요.",en:"<b>📸 Photo filter</b> opens a selfie camera. With <b>coupon, lucky draw, celebration and moving poster</b>, customers scan and <b>point the camera at the poster</b> to see the animation — text such as coupon codes appears on a card afterwards.",ja:"<b>📸 フォトフィルター</b>はQRを読むとセルフィーカメラが開きます。<b>クーポン・抽選・お祝い・動くポスター</b>は読み取り後に<b>ポスターを映す</b>と動きの演出が現れ、クーポンコードなどの文字は演出の後にカードで表示されます。",zh:"<b>📸 拍照滤镜</b>扫码后打开自拍相机。<b>优惠券、抽奖、庆祝、动态海报</b>在扫码后<b>对准海报</b>即可看到动效，优惠码等文字会在动效结束后以卡片显示。"},
+  "ev.k.image":{ko:"이미지 AR",en:"Image AR",ja:"画像AR",zh:"图片AR"},
+  "ev.kd.image":{ko:"내 캐릭터·제품 이미지가 포스터 위로 튀어나오고, 3D로 내 공간에 놓을 수도 있어요",en:"Your character or product pops out of the poster — or becomes 3D to place in your space",ja:"キャラクターや商品の画像がポスターから飛び出し、3Dで自分の空間に置くこともできます",zh:"你的角色或商品从海报中跳出，还能变成3D放进你的空间"},
+  "ev.grp.image":{ko:"이미지 AR",en:"Image AR",ja:"画像AR",zh:"图片AR"},
+  "ev.lbl.im":{ko:"이미지 (캐릭터·제품·로고)",en:"Image (character, product, logo)",ja:"画像（キャラクター・商品・ロゴ）",zh:"图片（角色、商品、标志）"},
+  "ev.lbl.cut":{ko:"배경 지우기 (자동)",en:"Remove background (auto)",ja:"背景を消す（自動）",zh:"去除背景（自动）"},
+  "ev.lbl.ia":{ko:"움직임",en:"Motion",ja:"動き",zh:"动效"},
+  "ev.ia.rise":{ko:"솟아오르기",en:"Pop up",ja:"飛び出す",zh:"弹出"},
+  "ev.ia.float":{ko:"둥실 떠 있기",en:"Float",ja:"ふわふわ浮く",zh:"漂浮"},
+  "ev.ia.spin":{ko:"회전",en:"Spin",ja:"回転",zh:"旋转"},
+  "ev.ia.card":{ko:"입체 카드",en:"3D card",ja:"立体カード",zh:"立体卡片"},
+  "ev.lbl.iz":{ko:"크기",en:"Size",ja:"サイズ",zh:"大小"},
+  "ev.lbl.3d":{ko:"3D 모델 (선택)",en:"3D model (optional)",ja:"3Dモデル（任意）",zh:"3D模型（可选）"},
+  "ev.mk3d":{ko:"이미지로 3D 모델 만들기",en:"Make a 3D model from the image",ja:"画像から3Dモデルを作る",zh:"用图片生成3D模型"},
+  "ev.lbl.use3d":{ko:"3D 모델로 보여주기 + 내 공간에 놓기",en:"Show as 3D + “place in my space”",ja:"3Dで表示＋自分の空間に置く",zh:"以3D展示 + 放到我的空间"},
+  "ev.hint.image":{ko:"배경이 단순한 사진일수록 결과가 좋아요. 3D 모델은 1~3분 걸리고, 단순한 물체·캐릭터가 가장 잘 나와요. 내 공간에 놓기는 AR을 지원하는 휴대폰(대부분의 최신 iPhone·Android)에서 동작해요. 올린 이미지는 고객에게 보여주기 위해 서버에 공개 저장돼요 (사람 얼굴 사진은 피해 주세요).",en:"Simple backgrounds give the best results. A 3D model takes 1–3 minutes and works best for simple objects and characters. “Place in my space” works on AR-capable phones (most recent iPhone and Android). Uploaded images are stored publicly on the server so customers can see them (avoid photos of people's faces).",ja:"背景がシンプルな写真ほどきれいに仕上がります。3Dモデルは1〜3分かかり、シンプルな物やキャラクターが最も得意です。「自分の空間に置く」はAR対応スマホ（最近のiPhone・Androidの多く）で使えます。 アップロードした画像はお客様に表示するためサーバーに公開保存されます（人の顔写真は避けてください）。",zh:"背景越简单效果越好。3D模型需要1–3分钟，简单物体和角色效果最好。“放到我的空间”适用于支持AR的手机（大多数新款 iPhone 和 Android）。上传的图片会公开保存在服务器上以便顾客查看（请避免人脸照片）。"},
+  "ev.im.need":{ko:"이미지를 먼저 올려 주세요",en:"Upload an image first",ja:"先に画像をアップロードしてください",zh:"请先上传图片"},
+  "ev.im.up":{ko:"올리는 중…",en:"Uploading…",ja:"アップロード中…",zh:"上传中…"},
+  "ev.im.cut":{ko:"배경 지우는 중… (5~20초)",en:"Removing background… (5–20 s)",ja:"背景を消しています…（5〜20秒）",zh:"正在去除背景…（5–20秒）"},
+  "ev.im.ok":{ko:"준비 완료 — 오른쪽 미리보기에서 확인하세요",en:"Ready — check the preview",ja:"準備完了 — プレビューで確認してください",zh:"完成 — 请查看预览"},
+  "ev.im.cutFail":{ko:"배경 지우기에 실패해 원본 이미지를 사용해요",en:"Background removal failed — using the original image",ja:"背景の削除に失敗したため、元の画像を使います",zh:"去除背景失败，将使用原图"},
+  "ev.im.err":{ko:"업로드에 실패했어요. 잠시 후 다시 시도해 주세요",en:"Upload failed. Please try again shortly",ja:"アップロードに失敗しました。しばらくして再度お試しください",zh:"上传失败，请稍后再试"},
+  "ev.im.local":{ko:"미리보기만 가능해요 — 고객용 QR을 만들려면 서버 이미지 저장소(Vercel Blob) 연결이 필요해요",en:"Preview only — connect image storage (Vercel Blob) on the server to make a customer QR",ja:"プレビューのみ — お客様用QRを作るにはサーバーの画像ストレージ（Vercel Blob）の接続が必要です",zh:"仅可预览 — 要生成顾客用二维码，需在服务器连接图片存储（Vercel Blob）"},
+  "ev.im.noAi":{ko:"배경 지우기·3D는 AI 서버 설정 후 사용할 수 있어요",en:"Background removal and 3D need the AI server to be set up",ja:"背景削除と3DはAIサーバーの設定後に使えます",zh:"去除背景和3D需要先配置AI服务器"},
+  "ev.3d.run":{ko:"3D 모델 만드는 중… {s}초 (보통 1~3분)",en:"Building the 3D model… {s}s (usually 1–3 min)",ja:"3Dモデルを作成中… {s}秒（通常1〜3分）",zh:"正在生成3D模型… {s}秒（通常1–3分钟）"},
+  "ev.3d.ok":{ko:"3D 모델 완성!",en:"3D model ready!",ja:"3Dモデル完成！",zh:"3D模型已完成！"},
+  "ev.3d.fail":{ko:"3D 모델을 만들지 못했어요. 배경이 단순한 다른 이미지로 시도해 보세요",en:"Couldn't build a 3D model. Try another image with a simple background",ja:"3Dモデルを作れませんでした。背景がシンプルな別の画像でお試しください",zh:"无法生成3D模型。请换一张背景简单的图片再试"},
+  "ev.3d.limit":{ko:"오늘 3D 생성 횟수를 모두 사용했어요",en:"You've used today's 3D generations",ja:"本日の3D生成回数を使い切りました",zh:"今天的3D生成次数已用完"},
+  "ev.qrLocal":{ko:"이미지 저장소가 연결되면 QR이 만들어져요",en:"The QR appears once image storage is connected",ja:"画像ストレージが接続されるとQRが作成されます",zh:"连接图片存储后将生成二维码"},
+  "ev.qrWait":{ko:"이미지를 올리면 QR이 만들어져요",en:"The QR appears once you upload an image",ja:"画像をアップロードするとQRが作成されます",zh:"上传图片后将生成二维码"},
   "foot.contact":{ko:"문의",en:"Contact",zh:"联系",ja:"お問い合わせ"},
   "foot.motion":{ko:"모션 QR 실험실",en:"Motion QR Lab",zh:"动态二维码实验室",ja:"モーションQRラボ"},
   "foot.tag":{ko:"아름답고 스캔되는 QR을 만드는 스튜디오 · QR 생성·디자인은 브라우저에서 처리 (AI 기능만 서버 전송·저장 안 함)",en:"A studio for beautiful, scannable QR codes · QR building & design run in your browser (only AI features send to a server, and aren't stored)",zh:"打造美观且可扫描二维码的工作室 · 二维码生成与设计在浏览器中处理（仅 AI 功能会发送到服务器，且不存储）",ja:"美しくスキャン可能なQRを作るスタジオ · QR生成・デザインはブラウザで処理（AI機能のみサーバー送信・保存なし）"},
@@ -9240,13 +9289,47 @@ function pushArLinkToStudio(url){
 
 // ---------- AR EVENTS builder (AR tab) ----------
 var EVB=(function(){
-  var K="photo", F={f:"polaroid",e:"party",fs:"",rm:"capture",ft:"",pk:"",ct:"",pv:"fx",sc:"balloons",ms:"🐻",si:"2"}, dirty={}, timer=null, inited=false;
+  var K="photo", F={f:"polaroid",e:"party",fs:"",rm:"capture",ft:"",pk:"",ct:"",pv:"fx",sc:"balloons",ms:"🐻",si:"2",ia:"rise"}, dirty={}, timer=null, inited=false;
+  // ---- image AR: the image lives in Vercel Blob (api/ar-asset.js); the event is saved there too → short link ----
+  var IM={local:"",orig:"",cut:"",gl:"",srv:null,short:null,st:null}, API=/^https?:/.test(location.protocol)?"/api/ar-asset":"";
+  function api(body){ return fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}).then(function(r){ return r.json().then(function(d){ if(!r.ok) throw d; return d; }); }); }
+  function poll(id,kind,onTick,maxMs){ var t0=Date.now(); return new Promise(function(res,rej){ (function tick(){
+    fetch(API+"?id="+encodeURIComponent(id)+"&kind="+kind).then(function(r){ return r.json(); }).then(function(d){
+      if(d.status==="succeeded" && d.url) return res(d.url);
+      if(d.status==="failed"||d.status==="canceled"||Date.now()-t0>maxMs) return rej(d);
+      if(onTick) onTick(Math.round((Date.now()-t0)/1000)); setTimeout(tick,kind==="model3d"?4000:1800);
+    }).catch(function(e){ if(Date.now()-t0>maxMs) rej(e); else setTimeout(tick,3000); }); })(); }); }
+  function srvCheck(){ if(IM.srv) return Promise.resolve(IM.srv); if(!API) return Promise.resolve(IM.srv={blob:false,ai:false});
+    return fetch(API+"?status=1").then(function(r){ return r.json(); }).then(function(d){ return IM.srv={blob:!!d.blob,ai:!!d.ai}; }).catch(function(){ return IM.srv={blob:false,ai:false}; }); }
+  function imStat(k){ $("evImStat").textContent=k?t(k):""; }
+  function imUrl(){ return ($("evCut").checked && IM.cut) || IM.orig || ""; }
+  function upd3d(){ $("evMk3d").disabled=!(IM.orig && IM.srv && IM.srv.ai) || !!IM.mk; $("evUse3dWrap").style.display=IM.gl?"":"none"; }
+  function prepImage(file){ return new Promise(function(res,rej){ var u=URL.createObjectURL(file), im=new Image();
+    im.onload=function(){ var k=Math.min(1,1280/Math.max(im.width,im.height)), c=document.createElement("canvas"); c.width=Math.round(im.width*k); c.height=Math.round(im.height*k);
+      c.getContext("2d").drawImage(im,0,0,c.width,c.height); URL.revokeObjectURL(u); var d=c.toDataURL("image/webp",0.9); if(d.indexOf("data:image/webp")!==0) d=c.toDataURL("image/png"); res(d); };
+    im.onerror=rej; im.src=u; }); }
+  function doCut(){ if(!IM.srv.ai){ imStat("ev.im.noAi"); return Promise.resolve(); } imStat("ev.im.cut"); var src=IM.orig;
+    return api({op:"cutout",url:src}).then(function(r){ return poll(r.id,"cutout",null,90000); })
+      .then(function(u){ if(IM.orig!==src) return; IM.cut=u; $("evImThumb").src=u; imStat("ev.im.ok"); update(); })
+      .catch(function(){ if(IM.orig===src) imStat("ev.im.cutFail"); }); }
+  function onFile(f){ if(!f) return; IM.orig=IM.cut=IM.gl=""; IM.short=null; $("ev3dStat").textContent="";
+    prepImage(f).then(function(d){ IM.local=d; $("evImThumb").src=d; $("evImThumb").style.display=""; update();
+      return srvCheck().then(function(sv){ if(!sv.blob){ imStat(""); return; }
+        imStat("ev.im.up"); return api({op:"upload",data:d}).then(function(r){ IM.orig=r.url; update(); upd3d();
+          if(!$("evCut").checked){ imStat("ev.im.ok"); return; } return doCut(); }); }); })
+    .catch(function(){ imStat("ev.im.err"); }).then(upd3d); }
+  function mk3d(){ if(!IM.orig) return; IM.mk=1; upd3d(); var st=$("ev3dStat"); st.textContent=t("ev.3d.run").replace("{s}","0");
+    api({op:"model3d",url:imUrl()}).then(function(r){ return poll(r.id,"model3d",function(sec){ st.textContent=t("ev.3d.run").replace("{s}",sec); },420000); })
+      .then(function(u){ IM.gl=u; $("evUse3d").checked=true; st.textContent=t("ev.3d.ok"); update(); })
+      .catch(function(e){ st.textContent=t(e && e.error==="limit"?"ev.3d.limit":"ev.3d.fail"); })
+      .then(function(){ IM.mk=0; upd3d(); }); }
   var DEF={
     photo:{t:["포토존 이벤트","Photo Booth","フォトブース","拍照打卡"],h:["우리가게포토존","myshopphoto","myshopphoto","myshopphoto"],rx:["음료 1잔 무료","Free drink","ドリンク1杯無料","免费饮品一杯"],rd:"PHOTO1"},
     coupon:{t:["숨은 쿠폰 찾기","Find the hidden coupon","隠れクーポンを探そう","寻找隐藏优惠券"],rx:["전 메뉴 10% 할인","10% off everything","全品10%オフ","全场九折"],rd:"SCAN10"},
     lucky:{t:["행운 뽑기","Lucky draw","ラッキー抽選","幸运抽奖"],pr1:["1등 · 케이크 교환권","1st · Free cake","1等・ケーキ引換券","一等奖 · 蛋糕券"],pr2:["2등 · 음료 1잔","2nd · Free drink","2等・ドリンク1杯","二等奖 · 饮品一杯"],lx:["다음 기회에!","Better luck next time!","また挑戦してね！","下次好运！"],rd:"LUCKY"},
     confetti:{t:["GRAND OPEN","GRAND OPEN","GRAND OPEN","GRAND OPEN"],s:["오픈을 축하해 주세요","Celebrate our opening","オープンを祝ってね","一起庆祝开业"]},
     scene:{t:["움직이는 포스터","Moving poster","動くポスター","动态海报"]},
+    image:{t:["새 친구를 만나보세요","Meet our new friend","新しい仲間に会おう","来认识新朋友"]},
     info:{t:["영업 안내","Store info","営業案内","营业信息"],it:["영업 시간","Opening hours","営業時間","营业时间"],i1:["평일 10:00–21:00","Weekdays 10:00–21:00","平日 10:00–21:00","工作日 10:00–21:00"],i2:["주말 11:00–20:00","Weekends 11:00–20:00","週末 11:00–20:00","周末 11:00–20:00"]}
   };
   var LI={ko:0,en:1,ja:2,zh:3};
@@ -9260,7 +9343,8 @@ var EVB=(function(){
   function cfg(){ var c={k:K,b:$("evB").value.trim(),t:$("evT").value.trim(),s:$("evS").value.trim(),c:$("evC").value.replace("#",""),l:$("evL").value.trim(),lt:$("evLt").value.trim()};
     if(K==="photo"){ c.h=$("evH").value.trim().replace(/^#/,""); c.f=F.f; c.e=F.e; c.fs=F.fs; c.rm=F.rm; c.ft=F.ft; if($("evD").checked) c.d=1;
       if(F.e==="custom") c.es=$("evEs").value.trim(); var ss=+$("evSs").value; if(ss!==100) c.ss=ss/100; if(F.rm!=="none"){ c.rx=$("evRx").value.trim(); c.rd=$("evRd").value.trim(); c.ru=$("evRu").value.trim(); } }
-    if(K==="scene"){ c.sc=F.sc; if(F.sc==="mascot") c.ms=F.ms; if(F.si!=="2") c.si=+F.si; }
+    if(K==="image"){ c.im=imUrl(); c.ia=F.ia; var iz=+$("evIz").value; if(iz!==100) c.iz=iz/100; if(IM.gl && $("evUse3d").checked) c.gl=IM.gl; }
+    else if(K==="scene"){ c.sc=F.sc; if(F.sc==="mascot") c.ms=F.ms; if(F.si!=="2") c.si=+F.si; }
     else if(K!=="photo"){ c.pk=F.pk; c.ft=F.ft; if(K==="coupon"){ c.ct=F.ct; c.ic=$("evIc").value.trim(); } }
     if(K==="photo"){} else if(K==="coupon"){ c.rx=$("evRx").value.trim(); c.rd=$("evRd").value.trim(); c.ru=$("evRu").value.trim(); }
     else if(K==="lucky"){ var pr=[]; [1,2,3].forEach(function(i){ var n=$("evPr"+i).value.trim(), pc=Math.max(0,Math.min(100,+$("evPp"+i).value||0)); if(n&&pc>0) pr.push([n,pc]); });
@@ -9269,21 +9353,32 @@ var EVB=(function(){
     if(K==="photo"||K==="coupon"||K==="lucky"){ c.sd=$("evSd").value; c.ed=$("evEd").value; var pin=$("evPin").value.trim(); if(pin) c.pn=pinHash(pin,c.t); }
     else if(K==="info"){ c.it=$("evIt").value.trim(); c.i=[$("evI1").value,$("evI2").value,$("evI3").value].map(function(x){return x.trim();}).filter(Boolean).join("|"); }
     return c; }
-  function link(){ return evLink(cfg()); }
+  // customer link: image events use the saved short link (/event.html?e=id) once it is stored, else the full link
+  function link(c){ c=c||cfg(); if(K!=="image") return evLink(c); if(!c.im) return "";
+    var key=JSON.stringify(c); if(IM.short && IM.short.key===key) return IM.short.url;
+    if(IM.srv && IM.srv.blob){ clearTimeout(IM.st); IM.st=setTimeout(function(){ api({op:"save",cfg:c}).then(function(r){ IM.short={key:key,url:MAP_SITE+"/event.html?e="+r.id}; if(JSON.stringify(cfg())===key) update(); }).catch(function(){}); },1200); }
+    return evLink(c); }
   function drawQr(u){ var cv=$("evQr"), g=cv.getContext("2d"), Z=cv.width; g.fillStyle="#fff"; g.fillRect(0,0,Z,Z);
+    if(!u){ $("evLen").textContent=t(K==="image"&&IM.local?"ev.qrLocal":"ev.qrWait"); return; }
     try{ var q=qrcode(0,"M"); q.addData(u); q.make(); var n=q.getModuleCount(), m=3, un=Z/(n+m*2); g.fillStyle="#111";
       for(var r=0;r<n;r++) for(var c=0;c<n;c++) if(q.isDark(r,c)) g.fillRect(Math.floor((c+m)*un),Math.floor((r+m)*un),Math.ceil(un),Math.ceil(un));
       $("evLen").textContent=t("ev.len").replace("{n}",u.length).replace("{v}",(n-17)/4) + (u.length>650?" "+t("ev.lenWarn"):"");
     }catch(e){ $("evLen").textContent=t("ev.tooLong"); } }
   function vis(){ document.querySelectorAll("#view-ar [data-ev]").forEach(function(el){ el.style.display = el.getAttribute("data-ev").split(" ").indexOf(K)>=0 ? "" : "none"; });
     var rw=(K==="photo"&&F.rm==="none"); ["evRx","evRd","evRu"].forEach(function(id){ var l=$(id).closest("label"); if(l && K==="photo") l.style.display=rw?"none":""; });
-    var row=$("evRd").closest(".row2"); if(row) row.style.display=(K==="photo"&&rw)||K==="confetti"||K==="info"?"none":""; }
-  function update(){ var u=link(); drawQr(u); $("evTry").href=u; clearTimeout(timer); timer=setTimeout(function(){ var f=$("evPrev"); f.src="event.html?pv="+Date.now()+(F.pv==="fx"?"&demo=1":"")+"&lang="+((typeof LANG!=="undefined"&&LANG)||"ko")+"#"+u.split("#")[1]; },350); }
+    var row=$("evRd").closest(".row2"); if(row) row.style.display=(K==="photo"&&rw)||K==="confetti"||K==="info"||K==="image"?"none":"";
+    if(K==="image") srvCheck().then(function(sv){ var m=!sv.blob?"ev.im.local":(!sv.ai?"ev.im.noAi":""); $("evImSrv").textContent=m?t(m):""; $("evImSrv").style.display=m?"":"none"; upd3d(); }); }
+  function update(){ var c=cfg(), u=link(c), pc=c; if(K==="image" && !c.im && IM.local){ pc=Object.assign({},c,{im:IM.local}); }
+    drawQr(u); $("evTry").href=u||"#"; clearTimeout(timer); timer=setTimeout(function(){ var f=$("evPrev"); f.src="event.html?pv="+Date.now()+(F.pv==="fx"?"&demo=1":"")+"&lang="+((typeof LANG!=="undefined"&&LANG)||"ko")+"#"+evLink(pc).split("#")[1]; },350); }
   function segWire(id,key){ $(id).addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return; Array.prototype.forEach.call(this.children,function(x){x.classList.toggle("on",x===b);}); F[key]=b.dataset.v; vis(); update(); }); }
   function init(){ if(inited) return; inited=true;
     $("evTypes").addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return; Array.prototype.forEach.call(this.children,function(x){x.classList.toggle("on",x===b);}); K=b.dataset.k; fillDefaults(); vis(); update(); });
     segWire("evFSeg","f"); segWire("evESeg","e"); segWire("evFsSeg","fs"); segWire("evRmSeg","rm");
-    segWire("evScSeg","sc"); segWire("evMsSeg","ms"); segWire("evSiSeg","si");
+    segWire("evScSeg","sc"); segWire("evMsSeg","ms"); segWire("evSiSeg","si"); segWire("evIaSeg","ia");
+    $("evImFile").addEventListener("change",function(){ onFile(this.files&&this.files[0]); });
+    $("evCut").addEventListener("change",function(){ if(this.checked && IM.orig && !IM.cut && IM.srv && IM.srv.ai) doCut(); $("evImThumb").src=imUrl()||IM.local; update(); });
+    $("evIz").addEventListener("input",function(){ $("evIzOut").textContent=this.value+"%"; update(); });
+    $("evUse3d").addEventListener("change",update); $("evMk3d").addEventListener("click",mk3d);
     $("evScSeg").addEventListener("click",function(){ $("evMsWrap").style.display=F.sc==="mascot"?"":"none"; });
     segWire("evFtSeg","ft"); segWire("evFt2Seg","ft"); segWire("evPkSeg","pk"); segWire("evCtSeg","ct"); segWire("evPvSeg","pv");
     $("evESeg").addEventListener("click",function(){ $("evEsWrap").style.display=F.e==="custom"?"":"none"; });
@@ -9293,8 +9388,8 @@ var EVB=(function(){
     Object.keys(IDS).forEach(function(f){ $(IDS[f]).addEventListener("input",function(){ dirty[f]=true; update(); }); });
     ["evB","evS","evL","evLt","evRu","evC"].forEach(function(id){ $(id).addEventListener("input",function(){ if(id==="evLt") dirty.lt=true; update(); }); });
     ["evPp1","evPp2","evPp3","evSd","evEd","evPin"].forEach(function(id){ $(id).addEventListener("input",update); });
-    $("evToStudio").addEventListener("click",function(){ pushArLinkToStudio(link()); });
-    $("evToPoster").addEventListener("click",function(){ var c=cfg(); POSTER.useLink(link(),{title:c.t,sub:c.s,acc:"#"+c.c,cta:t(K==="photo"?"pst.ctaPhoto":"pst.ctaAR")},c); });
+    $("evToStudio").addEventListener("click",function(){ var u=link(); if(!u){ alert(t("ev.im.need")); return; } pushArLinkToStudio(u); });
+    $("evToPoster").addEventListener("click",function(){ var c=cfg(); if(!link(c)){ alert(t("ev.im.need")); return; } POSTER.useLink(link(c),{title:c.t,sub:c.s,acc:"#"+c.c,cta:t(K==="photo"?"pst.ctaPhoto":"pst.ctaAR")},c); });
     $("evQrPng").addEventListener("click",function(){ download($("evQr").toDataURL("image/png"),"aesthetic-qr-event.png"); if(typeof track==="function") track("event_qr",{k:K}); });
     fillDefaults(); vis(); update();
   }
