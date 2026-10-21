@@ -390,7 +390,12 @@
   .cat-new-pill{font-size:9px;font-weight:800;background:#ff4d8d;color:#fff;border-radius:6px;padding:1px 5px;margin-left:6px;vertical-align:middle}
   .ev-why{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:0 auto 16px;max-width:900px}
   .ev-why span{background:var(--bg2);border:1px solid var(--line);border-radius:999px;padding:7px 12px;font-size:13px}
-  .ev-im-row{display:flex;gap:12px;align-items:center;margin:4px 0 10px} .ev-im-row img{width:72px;height:72px;object-fit:contain;border-radius:10px;background:repeating-conic-gradient(#e5e7eb 0 25%,#fff 0 50%) 0 0/14px 14px;border:1px solid var(--line,#e5e7eb)} .ev-im-row .hint{margin:0}
+  .ev-drop{display:flex;align-items:center;gap:14px;padding:16px;border:2px dashed var(--line2,#cfcfcf);border-radius:14px;cursor:pointer;transition:border-color .15s,background .15s;background:var(--bg2,transparent)} .ev-drop:hover,.ev-drop.over{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 6%,transparent)}
+  .ev-drop input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none} .ev-drop img{width:76px;height:76px;flex:none;object-fit:contain;border-radius:10px;background:repeating-conic-gradient(#e5e7eb 0 25%,#fff 0 50%) 0 0/14px 14px;border:1px solid var(--line)}
+  .ev-drop-tx{display:flex;flex-direction:column;gap:3px;min-width:0} .ev-drop-tx b{font-size:15px;color:var(--txt)} .ev-drop-tx small{font-size:12px;color:var(--mut)}
+  .ev-warn{background:#fff7e6;color:#8a5300;border:1px solid #f6d48b;border-radius:12px;padding:10px 12px;font-size:12.5px;line-height:1.5;margin:4px 0 6px} .ev-warn b{color:#6b3f00}
+  .ev-why3d{font-size:12px;color:var(--mut);margin-top:6px}
+  :root[data-theme="dark"] .ev-warn{background:#2b2108;color:#f6d48b;border-color:#5c4410} :root[data-theme="dark"] .ev-warn b{color:#ffe4a8}
   .ev-types{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;max-width:1100px;margin:0 auto 18px}
   .ev-types button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 8px;border:1.5px solid var(--line);border-radius:16px;background:var(--card);color:var(--txt);cursor:pointer;font-family:inherit;text-align:center}
   .ev-types button b{font-size:26px;line-height:1}
@@ -1381,16 +1386,18 @@
         <details class="grp" open data-ev="image">
           <summary><span data-i18n="ev.grp.image">이미지 AR</span></summary>
           <div class="body">
-            <div class="hint" id="evImSrv" style="display:none"></div>
-            <label class="fld"><div class="lbl" data-i18n="ev.lbl.im">이미지 (캐릭터·제품·로고)</div>
-              <input type="file" id="evImFile" accept="image/png,image/jpeg,image/webp" /></label>
-            <div class="ev-im-row"><img id="evImThumb" alt="" style="display:none" /><div class="hint" id="evImStat"></div></div>
+            <div class="ev-warn" id="evImSrv" style="display:none"></div>
+            <div class="fld"><div class="lbl" data-i18n="ev.lbl.im">이미지 (캐릭터·제품·로고)</div>
+              <label class="ev-drop" id="evDrop"><input type="file" id="evImFile" accept="image/png,image/jpeg,image/webp" />
+                <img id="evImThumb" alt="" style="display:none" />
+                <span class="ev-drop-tx"><b id="evDropT" data-i18n="ev.drop">📷 이미지 올리기</b><small data-i18n="ev.dropSub">클릭하거나 파일을 끌어다 놓으세요 · PNG·JPG·WEBP</small></span></label>
+              <div class="hint" id="evImStat"></div></div>
             <div class="switch sm" style="margin:0 0 4px"><div class="lbl" data-i18n="ev.lbl.cut" style="margin:0">배경 지우기 (자동)</div><label class="toggle"><input type="checkbox" id="evCut" checked /><span></span></label></div>
             <label class="fld"><div class="lbl" data-i18n="ev.lbl.ia">움직임</div>
               <div class="seg seg-wrap" id="evIaSeg"><button data-v="rise" class="on">⬆️ <span data-i18n="ev.ia.rise">솟아오르기</span></button><button data-v="float">☁️ <span data-i18n="ev.ia.float">둥실 떠 있기</span></button><button data-v="spin">🔄 <span data-i18n="ev.ia.spin">회전</span></button><button data-v="card">🃏 <span data-i18n="ev.ia.card">입체 카드</span></button></div></label>
             <label class="fld"><div class="lbl"><span data-i18n="ev.lbl.iz">크기</span> <b id="evIzOut">100%</b></div><input type="range" id="evIz" min="60" max="180" step="10" value="100" /></label>
             <div class="fld"><div class="lbl" data-i18n="ev.lbl.3d">3D 모델 (선택)</div>
-              <button type="button" class="btn ghost" id="evMk3d" disabled>🧊 <span data-i18n="ev.mk3d">이미지로 3D 모델 만들기</span></button>
+              <button type="button" class="btn ghost" id="evMk3d" disabled>🧊 <span data-i18n="ev.mk3d">이미지로 3D 모델 만들기</span></button><div class="ev-why3d" id="evWhy3d"></div>
               <div class="switch sm" id="evUse3dWrap" style="display:none;margin-top:10px"><div class="lbl" data-i18n="ev.lbl.use3d" style="margin:0">3D 모델로 보여주기 + 내 공간에 놓기</div><label class="toggle"><input type="checkbox" id="evUse3d" checked /><span></span></label></div>
               <div class="hint" id="ev3dStat"></div></div>
             <div class="hint" data-i18n="ev.hint.image"></div>
@@ -1665,7 +1672,7 @@
     </nav>
     <div style="margin-top:10px">Aesthetic QR Studio · <span data-i18n="foot.tag">아름답고 스캔되는 QR을 만드는 스튜디오 · QR 생성·디자인은 브라우저에서 처리 (AI 기능만 서버 전송·저장 안 함)</span></div>
     <div style="margin-top:6px" data-i18n="foot.tm">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · <span data-i18n="foot.build">빌드</span> <b id="verTag">2026.10.19-a</b></div>
+    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · <span data-i18n="foot.build">빌드</span> <b id="verTag">2026.10.21-a</b></div>
   </footer>
 </div>
 
@@ -8057,6 +8064,13 @@ var I18N = {
   "ev.3d.limit":{ko:"오늘 3D 생성 횟수를 모두 사용했어요",en:"You've used today's 3D generations",ja:"本日の3D生成回数を使い切りました",zh:"今天的3D生成次数已用完"},
   "ev.qrLocal":{ko:"이미지 저장소가 연결되면 QR이 만들어져요",en:"The QR appears once image storage is connected",ja:"画像ストレージが接続されるとQRが作成されます",zh:"连接图片存储后将生成二维码"},
   "ev.qrWait":{ko:"이미지를 올리면 QR이 만들어져요",en:"The QR appears once you upload an image",ja:"画像をアップロードするとQRが作成されます",zh:"上传图片后将生成二维码"},
+  "ev.drop":{ko:"📷 이미지 올리기",en:"📷 Upload an image",ja:"📷 画像をアップロード",zh:"📷 上传图片"},
+  "ev.dropAgain":{ko:"🔄 다른 이미지로 바꾸기",en:"🔄 Change image",ja:"🔄 別の画像に変更",zh:"🔄 更换图片"},
+  "ev.dropSub":{ko:"클릭하거나 파일을 끌어다 놓으세요 · PNG·JPG·WEBP",en:"Click or drag a file here · PNG, JPG, WEBP",ja:"クリックまたはファイルをドラッグ · PNG・JPG・WEBP",zh:"点击或拖入文件 · PNG、JPG、WEBP"},
+  "ev.warn.blob":{ko:"⚠️ <b>지금은 미리보기만 가능해요.</b> 서버에 이미지 저장소(Vercel Blob)가 아직 연결되지 않아 고객용 QR·배경 지우기·3D 모델을 만들 수 없어요. 사이트 관리자가 Vercel에서 Blob을 연결하면 바로 사용할 수 있어요.",en:"⚠️ <b>Preview only for now.</b> Image storage (Vercel Blob) isn't connected on the server yet, so the customer QR, background removal and 3D model aren't available. They work as soon as the site admin connects Blob in Vercel.",ja:"⚠️ <b>現在はプレビューのみです。</b>サーバーに画像ストレージ（Vercel Blob）がまだ接続されていないため、お客様用QR・背景削除・3Dモデルは作成できません。サイト管理者がVercelでBlobを接続するとすぐに使えます。",zh:"⚠️ <b>目前仅可预览。</b>服务器尚未连接图片存储（Vercel Blob），因此无法生成顾客用二维码、去除背景和3D模型。网站管理员在 Vercel 连接 Blob 后即可使用。"},
+  "ev.alert.blob":{ko:"이미지 저장소(Vercel Blob)가 아직 연결되지 않아 고객용 QR을 만들 수 없어요. 연결된 뒤 다시 시도해 주세요. (미리보기는 지금도 확인할 수 있어요)",en:"Image storage (Vercel Blob) isn't connected yet, so a customer QR can't be made. Please try again once it's connected. (The preview works now.)",ja:"画像ストレージ（Vercel Blob）がまだ接続されていないため、お客様用QRを作成できません。接続後にもう一度お試しください。（プレビューは今も確認できます）",zh:"图片存储（Vercel Blob）尚未连接，无法生成顾客用二维码。连接后请重试。（现在仍可预览）"},
+  "ev.im.wait":{ko:"이미지를 처리하는 중이에요. 잠시 후 다시 눌러 주세요",en:"Still processing the image — try again in a moment",ja:"画像を処理中です。少し待ってからもう一度押してください",zh:"图片处理中，请稍后再试"},
+  "ev.why.blob":{ko:"이미지 저장소가 연결되면 사용할 수 있어요",en:"Available once image storage is connected",ja:"画像ストレージの接続後に使えます",zh:"连接图片存储后可用"},
   "foot.contact":{ko:"문의",en:"Contact",zh:"联系",ja:"お問い合わせ"},
   "foot.motion":{ko:"모션 QR 실험실",en:"Motion QR Lab",zh:"动态二维码实验室",ja:"モーションQRラボ"},
   "foot.tag":{ko:"아름답고 스캔되는 QR을 만드는 스튜디오 · QR 생성·디자인은 브라우저에서 처리 (AI 기능만 서버 전송·저장 안 함)",en:"A studio for beautiful, scannable QR codes · QR building & design run in your browser (only AI features send to a server, and aren't stored)",zh:"打造美观且可扫描二维码的工作室 · 二维码生成与设计在浏览器中处理（仅 AI 功能会发送到服务器，且不存储）",ja:"美しくスキャン可能なQRを作るスタジオ · QR生成・デザインはブラウザで処理（AI機能のみサーバー送信・保存なし）"},
@@ -9303,7 +9317,8 @@ var EVB=(function(){
     return fetch(API+"?status=1").then(function(r){ return r.json(); }).then(function(d){ return IM.srv={blob:!!d.blob,ai:!!d.ai}; }).catch(function(){ return IM.srv={blob:false,ai:false}; }); }
   function imStat(k){ $("evImStat").textContent=k?t(k):""; }
   function imUrl(){ return ($("evCut").checked && IM.cut) || IM.orig || ""; }
-  function upd3d(){ $("evMk3d").disabled=!(IM.orig && IM.srv && IM.srv.ai) || !!IM.mk; $("evUse3dWrap").style.display=IM.gl?"":"none"; }
+  function upd3d(){ $("evMk3d").disabled=!(IM.orig && IM.srv && IM.srv.ai) || !!IM.mk; $("evUse3dWrap").style.display=IM.gl?"":"none";
+    var why=IM.mk?"":(!IM.srv||!IM.srv.blob)?"ev.why.blob":!IM.srv.ai?"ev.im.noAi":!IM.local?"ev.im.need":!IM.orig?"ev.im.up":""; $("evWhy3d").textContent=why?"ⓘ "+t(why):""; }
   function prepImage(file){ return new Promise(function(res,rej){ var u=URL.createObjectURL(file), im=new Image();
     im.onload=function(){ var k=Math.min(1,1280/Math.max(im.width,im.height)), c=document.createElement("canvas"); c.width=Math.round(im.width*k); c.height=Math.round(im.height*k);
       c.getContext("2d").drawImage(im,0,0,c.width,c.height); URL.revokeObjectURL(u); var d=c.toDataURL("image/webp",0.9); if(d.indexOf("data:image/webp")!==0) d=c.toDataURL("image/png"); res(d); };
@@ -9313,7 +9328,7 @@ var EVB=(function(){
       .then(function(u){ if(IM.orig!==src) return; IM.cut=u; $("evImThumb").src=u; imStat("ev.im.ok"); update(); })
       .catch(function(){ if(IM.orig===src) imStat("ev.im.cutFail"); }); }
   function onFile(f){ if(!f) return; IM.orig=IM.cut=IM.gl=""; IM.short=null; $("ev3dStat").textContent="";
-    prepImage(f).then(function(d){ IM.local=d; $("evImThumb").src=d; $("evImThumb").style.display=""; update();
+    prepImage(f).then(function(d){ IM.local=d; $("evImThumb").src=d; $("evImThumb").style.display=""; $("evDropT").textContent=t("ev.dropAgain"); update();
       return srvCheck().then(function(sv){ if(!sv.blob){ imStat(""); return; }
         imStat("ev.im.up"); return api({op:"upload",data:d}).then(function(r){ IM.orig=r.url; update(); upd3d();
           if(!$("evCut").checked){ imStat("ev.im.ok"); return; } return doCut(); }); }); })
@@ -9367,7 +9382,7 @@ var EVB=(function(){
   function vis(){ document.querySelectorAll("#view-ar [data-ev]").forEach(function(el){ el.style.display = el.getAttribute("data-ev").split(" ").indexOf(K)>=0 ? "" : "none"; });
     var rw=(K==="photo"&&F.rm==="none"); ["evRx","evRd","evRu"].forEach(function(id){ var l=$(id).closest("label"); if(l && K==="photo") l.style.display=rw?"none":""; });
     var row=$("evRd").closest(".row2"); if(row) row.style.display=(K==="photo"&&rw)||K==="confetti"||K==="info"||K==="image"?"none":"";
-    if(K==="image") srvCheck().then(function(sv){ var m=!sv.blob?"ev.im.local":(!sv.ai?"ev.im.noAi":""); $("evImSrv").textContent=m?t(m):""; $("evImSrv").style.display=m?"":"none"; upd3d(); }); }
+    if(K==="image") srvCheck().then(function(sv){ var m=!sv.blob?"ev.warn.blob":(!sv.ai?"ev.im.noAi":""); $("evImSrv").innerHTML=m?t(m):""; $("evImSrv").style.display=m?"":"none"; upd3d(); }); }
   function update(){ var c=cfg(), u=link(c), pc=c; if(K==="image" && !c.im && IM.local){ pc=Object.assign({},c,{im:IM.local}); }
     drawQr(u); $("evTry").href=u||"#"; clearTimeout(timer); timer=setTimeout(function(){ var f=$("evPrev"); f.src="event.html?pv="+Date.now()+(F.pv==="fx"?"&demo=1":"")+"&lang="+((typeof LANG!=="undefined"&&LANG)||"ko")+"#"+evLink(pc).split("#")[1]; },350); }
   function segWire(id,key){ $(id).addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return; Array.prototype.forEach.call(this.children,function(x){x.classList.toggle("on",x===b);}); F[key]=b.dataset.v; vis(); update(); }); }
@@ -9375,7 +9390,10 @@ var EVB=(function(){
     $("evTypes").addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return; Array.prototype.forEach.call(this.children,function(x){x.classList.toggle("on",x===b);}); K=b.dataset.k; fillDefaults(); vis(); update(); });
     segWire("evFSeg","f"); segWire("evESeg","e"); segWire("evFsSeg","fs"); segWire("evRmSeg","rm");
     segWire("evScSeg","sc"); segWire("evMsSeg","ms"); segWire("evSiSeg","si"); segWire("evIaSeg","ia");
-    $("evImFile").addEventListener("change",function(){ onFile(this.files&&this.files[0]); });
+    $("evImFile").addEventListener("change",function(){ onFile(this.files&&this.files[0]); this.value=""; });
+    var dz=$("evDrop"); ["dragenter","dragover"].forEach(function(ev){ dz.addEventListener(ev,function(e){ e.preventDefault(); dz.classList.add("over"); }); });
+    ["dragleave","drop"].forEach(function(ev){ dz.addEventListener(ev,function(e){ e.preventDefault(); dz.classList.remove("over"); }); });
+    dz.addEventListener("drop",function(e){ var f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0]; if(f && /^image\//.test(f.type)) onFile(f); });
     $("evCut").addEventListener("change",function(){ if(this.checked && IM.orig && !IM.cut && IM.srv && IM.srv.ai) doCut(); $("evImThumb").src=imUrl()||IM.local; update(); });
     $("evIz").addEventListener("input",function(){ $("evIzOut").textContent=this.value+"%"; update(); });
     $("evUse3d").addEventListener("change",update); $("evMk3d").addEventListener("click",mk3d);
@@ -9388,12 +9406,13 @@ var EVB=(function(){
     Object.keys(IDS).forEach(function(f){ $(IDS[f]).addEventListener("input",function(){ dirty[f]=true; update(); }); });
     ["evB","evS","evL","evLt","evRu","evC"].forEach(function(id){ $(id).addEventListener("input",function(){ if(id==="evLt") dirty.lt=true; update(); }); });
     ["evPp1","evPp2","evPp3","evSd","evEd","evPin"].forEach(function(id){ $(id).addEventListener("input",update); });
-    $("evToStudio").addEventListener("click",function(){ var u=link(); if(!u){ alert(t("ev.im.need")); return; } pushArLinkToStudio(u); });
-    $("evToPoster").addEventListener("click",function(){ var c=cfg(); if(!link(c)){ alert(t("ev.im.need")); return; } POSTER.useLink(link(c),{title:c.t,sub:c.s,acc:"#"+c.c,cta:t(K==="photo"?"pst.ctaPhoto":"pst.ctaAR")},c); });
-    $("evQrPng").addEventListener("click",function(){ download($("evQr").toDataURL("image/png"),"aesthetic-qr-event.png"); if(typeof track==="function") track("event_qr",{k:K}); });
+    function noLinkMsg(){ alert(t(IM.local && IM.srv && !IM.srv.blob ? "ev.alert.blob" : IM.local ? "ev.im.wait" : "ev.im.need")); }
+    $("evToStudio").addEventListener("click",function(){ var u=link(); if(!u){ noLinkMsg(); return; } pushArLinkToStudio(u); });
+    $("evToPoster").addEventListener("click",function(){ var c=cfg(); if(!link(c)){ noLinkMsg(); return; } POSTER.useLink(link(c),{title:c.t,sub:c.s,acc:"#"+c.c,cta:t(K==="photo"?"pst.ctaPhoto":"pst.ctaAR")},c); });
+    $("evQrPng").addEventListener("click",function(){ if(!link()){ noLinkMsg(); return; } download($("evQr").toDataURL("image/png"),"aesthetic-qr-event.png"); if(typeof track==="function") track("event_qr",{k:K}); });
     fillDefaults(); vis(); update();
   }
-  return { onView:function(v){ if(v==="ar") init(); }, onLang:function(){ if(inited){ fillDefaults(); update(); } } };
+  return { onView:function(v){ if(v==="ar") init(); }, onLang:function(){ if(inited){ fillDefaults(); update(); if(IM.local) $("evDropT").textContent=t("ev.dropAgain"); upd3d(); } } };
 })();
 // ---------- POSTER: user image + text + a freely placed QR card ----------
 // Examples are starting points; everything (image, text, link, QR position/size) is user-set.
