@@ -74,6 +74,22 @@ export default async function handler(req, res) {
     if (req.method === "GET") {
       const q = req.query || {};
       if (q.status) { res.status(200).json({ blob: hasBlob, ai: !!rtoken }); return; }
+      // TEMP self-test (removed after verification): blob put/read + start cutout / 3D on a sample image
+      if (q.selftest === "ar-check-1021") {
+        const out = { blob: hasBlob, ai: !!rtoken };
+        const img = await fetch("https://" + req.headers.host + "/assets/logos/l077.webp");
+        const buf = Buffer.from(await img.arrayBuffer());
+        out.put = await blobPut("ar/selftest-" + rid(6) + ".webp", buf, "image/webp", false);
+        out.read = (await fetch(out.put)).status;
+        if (q.run) {
+          const model = q.run === "3d" ? (process.env.AR_3D_MODEL || "firtoz/trellis") : (process.env.AR_CUTOUT_MODEL || "851-labs/background-remover");
+          const input = q.run === "3d" ? JSON.parse(('{"images":["{url}"],"generate_model":true,"generate_color":false,"generate_normal":false,"save_gaussian_ply":false,"texture_size":1024,"mesh_simplify":0.95}').split("{url}").join(out.put)) : { image: out.put };
+          const version = await replicateVersion(model, H);
+          const r = await fetch(RE + "/predictions", { method: "POST", headers: H, body: JSON.stringify({ version, input }) });
+          const d = await r.json(); out.pred = { ok: r.ok, id: d.id, status: d.status, detail: d.detail || d.title || null };
+        }
+        res.status(200).json(out); return;
+      }
       if (!hasBlob) { res.status(503).json({ error: "no_blob" }); return; }
       if (q.e) {   // short-link event config
         const id = String(q.e); if (!/^[a-z0-9]{6,16}$/.test(id)) { res.status(400).json({ error: "bad_id" }); return; }
