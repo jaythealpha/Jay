@@ -76,6 +76,8 @@ export default async function handler(req, res) {
       if (q.status) { res.status(200).json({ blob: hasBlob, ai: !!rtoken }); return; }
       // TEMP self-test (removed after verification): blob put/read + start cutout / 3D on a sample image
       if (q.selftest === "ar-check-1021") {
+        if (q.peek) { const d = await (await fetch(RE + "/predictions/" + String(q.peek).replace(/[^\w-]/g, ""), { headers: H })).json();
+          res.status(200).json({ status: d.status, error: d.error, output: d.output, model: d.model, logs: String(d.logs || "").slice(-600) }); return; }
         const out = { blob: hasBlob, ai: !!rtoken };
         const img = await fetch("https://" + req.headers.host + "/assets/logos/l077.webp");
         const buf = Buffer.from(await img.arrayBuffer());
