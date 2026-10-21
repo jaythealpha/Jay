@@ -1672,7 +1672,7 @@
     </nav>
     <div style="margin-top:10px">Aesthetic QR Studio · <span data-i18n="foot.tag">아름답고 스캔되는 QR을 만드는 스튜디오 · QR 생성·디자인은 브라우저에서 처리 (AI 기능만 서버 전송·저장 안 함)</span></div>
     <div style="margin-top:6px" data-i18n="foot.tm">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · <span data-i18n="foot.build">빌드</span> <b id="verTag">2026.10.21-a</b></div>
+    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · <span data-i18n="foot.build">빌드</span> <b id="verTag">2026.10.21-b</b></div>
   </footer>
 </div>
 
@@ -8049,7 +8049,7 @@ var I18N = {
   "ev.lbl.3d":{ko:"3D 모델 (선택)",en:"3D model (optional)",ja:"3Dモデル（任意）",zh:"3D模型（可选）"},
   "ev.mk3d":{ko:"이미지로 3D 모델 만들기",en:"Make a 3D model from the image",ja:"画像から3Dモデルを作る",zh:"用图片生成3D模型"},
   "ev.lbl.use3d":{ko:"3D 모델로 보여주기 + 내 공간에 놓기",en:"Show as 3D + “place in my space”",ja:"3Dで表示＋自分の空間に置く",zh:"以3D展示 + 放到我的空间"},
-  "ev.hint.image":{ko:"배경이 단순한 사진일수록 결과가 좋아요. 3D 모델은 1~3분 걸리고, 단순한 물체·캐릭터가 가장 잘 나와요. 내 공간에 놓기는 AR을 지원하는 휴대폰(대부분의 최신 iPhone·Android)에서 동작해요. 올린 이미지는 고객에게 보여주기 위해 서버에 공개 저장돼요 (사람 얼굴 사진은 피해 주세요).",en:"Simple backgrounds give the best results. A 3D model takes 1–3 minutes and works best for simple objects and characters. “Place in my space” works on AR-capable phones (most recent iPhone and Android). Uploaded images are stored publicly on the server so customers can see them (avoid photos of people's faces).",ja:"背景がシンプルな写真ほどきれいに仕上がります。3Dモデルは1〜3分かかり、シンプルな物やキャラクターが最も得意です。「自分の空間に置く」はAR対応スマホ（最近のiPhone・Androidの多く）で使えます。 アップロードした画像はお客様に表示するためサーバーに公開保存されます（人の顔写真は避けてください）。",zh:"背景越简单效果越好。3D模型需要1–3分钟，简单物体和角色效果最好。“放到我的空间”适用于支持AR的手机（大多数新款 iPhone 和 Android）。上传的图片会公开保存在服务器上以便顾客查看（请避免人脸照片）。"},
+  "ev.hint.image":{ko:"배경이 단순한 사진일수록 결과가 좋아요. 3D 모델은 보통 1~3분(처음엔 최대 10분) 걸리고, 단순한 물체·캐릭터가 가장 잘 나와요. 내 공간에 놓기는 AR을 지원하는 휴대폰(대부분의 최신 iPhone·Android)에서 동작해요. 올린 이미지는 고객에게 보여주기 위해 서버에 공개 저장돼요 (사람 얼굴 사진은 피해 주세요).",en:"Simple backgrounds give the best results. A 3D model usually takes 1–3 minutes (up to 10 the first time) and works best for simple objects and characters. “Place in my space” works on AR-capable phones (most recent iPhone and Android). Uploaded images are stored publicly on the server so customers can see them (avoid photos of people's faces).",ja:"背景がシンプルな写真ほどきれいに仕上がります。3Dモデルは通常1〜3分（初回は最大10分）かかり、シンプルな物やキャラクターが最も得意です。「自分の空間に置く」はAR対応スマホ（最近のiPhone・Androidの多く）で使えます。 アップロードした画像はお客様に表示するためサーバーに公開保存されます（人の顔写真は避けてください）。",zh:"背景越简单效果越好。3D模型通常需要1–3分钟（首次最多10分钟），简单物体和角色效果最好。“放到我的空间”适用于支持AR的手机（大多数新款 iPhone 和 Android）。上传的图片会公开保存在服务器上以便顾客查看（请避免人脸照片）。"},
   "ev.im.need":{ko:"이미지를 먼저 올려 주세요",en:"Upload an image first",ja:"先に画像をアップロードしてください",zh:"请先上传图片"},
   "ev.im.up":{ko:"올리는 중…",en:"Uploading…",ja:"アップロード中…",zh:"上传中…"},
   "ev.im.cut":{ko:"배경 지우는 중… (5~20초)",en:"Removing background… (5–20 s)",ja:"背景を消しています…（5〜20秒）",zh:"正在去除背景…（5–20秒）"},
@@ -8058,7 +8058,7 @@ var I18N = {
   "ev.im.err":{ko:"업로드에 실패했어요. 잠시 후 다시 시도해 주세요",en:"Upload failed. Please try again shortly",ja:"アップロードに失敗しました。しばらくして再度お試しください",zh:"上传失败，请稍后再试"},
   "ev.im.local":{ko:"미리보기만 가능해요 — 고객용 QR을 만들려면 서버 이미지 저장소(Vercel Blob) 연결이 필요해요",en:"Preview only — connect image storage (Vercel Blob) on the server to make a customer QR",ja:"プレビューのみ — お客様用QRを作るにはサーバーの画像ストレージ（Vercel Blob）の接続が必要です",zh:"仅可预览 — 要生成顾客用二维码，需在服务器连接图片存储（Vercel Blob）"},
   "ev.im.noAi":{ko:"배경 지우기·3D는 AI 서버 설정 후 사용할 수 있어요",en:"Background removal and 3D need the AI server to be set up",ja:"背景削除と3DはAIサーバーの設定後に使えます",zh:"去除背景和3D需要先配置AI服务器"},
-  "ev.3d.run":{ko:"3D 모델 만드는 중… {s}초 (보통 1~3분)",en:"Building the 3D model… {s}s (usually 1–3 min)",ja:"3Dモデルを作成中… {s}秒（通常1〜3分）",zh:"正在生成3D模型… {s}秒（通常1–3分钟）"},
+  "ev.3d.run":{ko:"3D 모델 만드는 중… {s}초 (보통 1~3분, 처음엔 최대 10분 — 창을 닫지 마세요)",en:"Building the 3D model… {s}s (usually 1–3 min, up to 10 min the first time — keep this tab open)",ja:"3Dモデルを作成中… {s}秒（通常1〜3分、初回は最大10分 — タブを閉じないでください）",zh:"正在生成3D模型… {s}秒（通常1–3分钟，首次最多10分钟——请勿关闭页面）"},
   "ev.3d.ok":{ko:"3D 모델 완성!",en:"3D model ready!",ja:"3Dモデル完成！",zh:"3D模型已完成！"},
   "ev.3d.fail":{ko:"3D 모델을 만들지 못했어요. 배경이 단순한 다른 이미지로 시도해 보세요",en:"Couldn't build a 3D model. Try another image with a simple background",ja:"3Dモデルを作れませんでした。背景がシンプルな別の画像でお試しください",zh:"无法生成3D模型。请换一张背景简单的图片再试"},
   "ev.3d.limit":{ko:"오늘 3D 생성 횟수를 모두 사용했어요",en:"You've used today's 3D generations",ja:"本日の3D生成回数を使い切りました",zh:"今天的3D生成次数已用完"},
@@ -9334,7 +9334,7 @@ var EVB=(function(){
           if(!$("evCut").checked){ imStat("ev.im.ok"); return; } return doCut(); }); }); })
     .catch(function(){ imStat("ev.im.err"); }).then(upd3d); }
   function mk3d(){ if(!IM.orig) return; IM.mk=1; upd3d(); var st=$("ev3dStat"); st.textContent=t("ev.3d.run").replace("{s}","0");
-    api({op:"model3d",url:imUrl()}).then(function(r){ return poll(r.id,"model3d",function(sec){ st.textContent=t("ev.3d.run").replace("{s}",sec); },420000); })
+    api({op:"model3d",url:imUrl()}).then(function(r){ return poll(r.id,"model3d",function(sec){ st.textContent=t("ev.3d.run").replace("{s}",sec); },900000); })
       .then(function(u){ IM.gl=u; $("evUse3d").checked=true; st.textContent=t("ev.3d.ok"); update(); })
       .catch(function(e){ st.textContent=t(e && e.error==="limit"?"ev.3d.limit":"ev.3d.fail"); })
       .then(function(){ IM.mk=0; upd3d(); }); }
