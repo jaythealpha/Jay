@@ -1,0 +1,32 @@
+// Image AR builder → customer flow with a mocked /api/ar-asset: consent gate, upload, cutout,
+// original deletion, short-link save, stats panel, event.html loading the short link.
+import { chromium } from 'playwright-core'; import path from 'path'; import { serve, findChrome, check, done, ROOT } from './_lib.mjs';
+const srv = await serve(8099); const B = 'http://127.0.0.1:8099';
+const br = await chromium.launch({ executablePath: findChrome(), args: ['--no-sandbox'] });
+const ops = []; let saved = null;
+const ctx = await br.newContext({ viewport: { width: 1280, height: 1600 } });
+await ctx.addInitScript(() => { try { localStorage.setItem('aqr_onboarded_v1', '1'); } catch (e) {} });
+await ctx.route('**/api/ar-asset**', (r) => { const u = new URL(r.request().url()); const J = (o) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(o) });
+  if (u.searchParams.get('status')) return J({ blob: true, ai: true, kv: true });
+  if (u.searchParams.get('e')) return saved ? J(saved) : r.fulfill({ status: 404, body: '{}' });
+  if (u.searchParams.get('stats')) return J({ kv: true, total: { land: 10, cam_start: 8, cam_ok: 7, found: 6, sheet: 5, redeem: 2 } });
+  if (u.searchParams.get('kind') === 'cutout') return J({ status: 'succeeded', url: B + '/assets/logos/l077.webp' });
+  const b = JSON.parse(r.request().postData() || '{}'); if (b.op === 'ev') return r.fulfill({ status: 204 }); ops.push(b.op);
+  if (b.op === 'upload') return J({ url: 'https://abc.public.blob.vercel-storage.com/ar/i-abcdefghij.webp' });
+  if (b.op === 'cutout') return J({ id: 'c1' }); if (b.op === 'delete') return J({ ok: true });
+  if (b.op === 'save') { saved = b.cfg; return J({ id: 'abcd1234' }); } return J({}); });
+const pg = await ctx.newPage(); const errs = []; pg.on('pageerror', (e) => errs.push(e.message));
+await pg.goto(B + '/qr-studio.html?lang=ko#ar'); await pg.waitForTimeout(700);
+await pg.click('#evTypes [data-k="image"]'); await pg.waitForTimeout(400);
+await pg.setInputFiles('#evImFile', path.join(ROOT, 'assets/logos/l076.webp')); await pg.waitForTimeout(1200);
+check('no upload before consent', !ops.includes('upload'));
+await pg.check('#evConsent'); await pg.waitForTimeout(4000);
+check('consent → upload, cutout, delete original, save', ['upload', 'cutout', 'delete', 'save'].every((o) => ops.includes(o)), ops.join(','));
+const href = await pg.getAttribute('#evTry', 'href'); check('short link used', /event\.html\?e=abcd1234$/.test(href), href);
+check('saved config uses the cut-out', saved && /l077\.webp$/.test(saved.im));
+await pg.click('#evStats summary'); await pg.waitForTimeout(600);
+check('stats panel renders funnel', /페이지 방문/.test(await pg.textContent('#evStatsBody')));
+const p2 = await ctx.newPage(); p2.on('pageerror', (e) => errs.push(e.message)); await p2.goto(B + '/event.html?e=abcd1234&lang=ko'); await p2.waitForTimeout(800);
+check('event.html loads short-link config', (await p2.textContent('#lTitle')) === saved.t);
+check('no page errors', !errs.length, errs.join(';'));
+await br.close(); srv.close(); done();

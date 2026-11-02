@@ -8,6 +8,9 @@
 //                                                                      copied to Blob so it never expires)
 //   POST /api/ar-asset {op:"save", cfg}        → {id}                 (event config → short link /event.html?e=id)
 //   GET  /api/ar-asset?e=…                     → cfg JSON
+//   POST /api/ar-asset {op:"ev", id, n, …}     → 204   (funnel event beacon from event.html; counted in KV when configured)
+//   GET  /api/ar-asset?stats=<eventId>         → {kv, total:{name:n}, days:{date:{name:n}}}  (last 14 days)
+//   POST /api/ar-asset {op:"delete", url}      → {ok} (removes an uploaded original — only ar/i-* in our store)
 //
 // Env vars (Vercel → Settings → Environment Variables):
 //   BLOB_READ_WRITE_TOKEN  (required) — added automatically when a Blob store is connected to the project
@@ -40,6 +43,15 @@ async function blobPut(pathname, body, contentType, random) {
   if (!r.ok || !d.url) throw new Error("blob_put " + r.status + " " + ((d.error && d.error.message) || ""));
   return d.url;
 }
+async function blobDel(url) {
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  const r = await fetch(BLOB_API + "/delete", { method: "POST",
+    headers: { authorization: "Bearer " + token, "x-api-version": "9", "content-type": "application/json" }, body: JSON.stringify({ urls: [url] }) });
+  return r.ok;
+}
+// funnel events (see docs/ar-concept.md §5). Names are whitelisted so the KV keyspace stays bounded.
+const EV_NAMES = ["land", "inapp", "escape", "cam_start", "cam_ok", "cam_fail", "found", "sheet", "nocam", "shot", "share", "save", "redeem", "place", "link"];
+const evDay = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);   // KST date
 async function blobFind(prefix) {
   const token = process.env.BLOB_READ_WRITE_TOKEN;
   const r = await fetch(BLOB_API + "/?" + new URLSearchParams({ prefix, limit: "1" }), {
@@ -73,7 +85,18 @@ export default async function handler(req, res) {
   try {
     if (req.method === "GET") {
       const q = req.query || {};
-      if (q.status) { res.status(200).json({ blob: hasBlob, ai: !!rtoken }); return; }
+      if (q.status) { res.status(200).json({ blob: hasBlob, ai: !!rtoken, kv: !!(KV_URL && KV_TOK) }); return; }
+      if (q.stats) {
+        const id = String(q.stats); if (!/^[a-z0-9]{6,16}$/.test(id)) { res.status(400).json({ error: "bad_id" }); return; }
+        if (!KV_URL || !KV_TOK) { res.status(200).json({ kv: false }); return; }
+        const days = []; for (let i = 0; i < 14; i++) days.push(new Date(Date.now() + 9 * 3600e3 - i * 864e5).toISOString().slice(0, 10));
+        const keys = EV_NAMES.map((n) => "evs:" + id + ":" + n).concat(...days.map((d) => EV_NAMES.map((n) => "evs:" + id + ":" + n + ":" + d)));
+        const vals = await kv("mget/" + keys.map(encodeURIComponent).join("/")) || [];
+        const total = {}, byDay = {};
+        EV_NAMES.forEach((n, i) => { total[n] = parseInt(vals[i] || "0", 10) || 0; });
+        days.forEach((d, di) => { const o = {}; let any = false; EV_NAMES.forEach((n, i) => { const v = parseInt(vals[EV_NAMES.length * (di + 1) + i] || "0", 10) || 0; if (v) { o[n] = v; any = true; } }); if (any) byDay[d] = o; });
+        res.setHeader("Cache-Control", "no-store"); res.status(200).json({ kv: true, total, days: byDay }); return;
+      }
       if (!hasBlob) { res.status(503).json({ error: "no_blob" }); return; }
       if (q.e) {   // short-link event config
         const id = String(q.e); if (!/^[a-z0-9]{6,16}$/.test(id)) { res.status(400).json({ error: "bad_id" }); return; }
@@ -96,8 +119,21 @@ export default async function handler(req, res) {
       res.status(200).json({ status: "succeeded", url }); return;
     }
     if (req.method !== "POST") { res.status(405).json({ error: "method" }); return; }
-    if (!hasBlob) { res.status(503).json({ error: "no_blob" }); return; }
     const b = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
+    if (b.op === "ev") {   // works without Blob; counted only when KV is configured
+      const id = String(b.id || ""), n = String(b.n || "");
+      if (/^[a-z0-9]{6,16}$/.test(id) && EV_NAMES.includes(n)) {
+        if (KV_URL && KV_TOK) { const k = "evs:" + id + ":" + n; await kv("incr/" + encodeURIComponent(k)); const kd = k + ":" + evDay(); const c = await kv("incr/" + encodeURIComponent(kd)); if (c === 1) await kv("expire/" + encodeURIComponent(kd) + "/" + 40 * 86400); }
+        else console.log("ar-ev", id, n, String(b.k || ""), String(b.ia || ""));
+      }
+      res.status(204).end(); return;
+    }
+    if (!hasBlob) { res.status(503).json({ error: "no_blob" }); return; }
+    if (b.op === "delete") {
+      const url = String(b.url || "");
+      if (!isOurBlob(url) || !/\/ar\/i-[a-z0-9]{10}\.(png|jpg|webp)$/.test(url)) { res.status(400).json({ error: "bad_url" }); return; }
+      res.status(200).json({ ok: await blobDel(url) }); return;
+    }
 
     if (b.op === "upload") {
       const m = /^data:(image\/(?:png|jpeg|webp));base64,([A-Za-z0-9+/=]+)$/.exec(String(b.data || ""));
