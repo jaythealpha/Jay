@@ -5,7 +5,7 @@
 
 - 라이브: https://jay-inky.vercel.app (Vercel 프로젝트 `jay`) — 아래 브랜치에 push하면 프로덕션으로 자동 배포된다.
 - 작업 브랜치: `claude/website-analysis-implementation-8rolis` (main 브랜치 없음).
-- 먼저 읽을 문서: **`docs/ar-concept.md`** (AR 컨셉·구조·설정 키·API·로드맵·검증), `HANDOFF.md`(앱 전반, 일부 오래됨), `docs/research/ar-qr-tech-research-2026-11.md`(기술 조사).
+- 먼저 읽을 문서: **`docs/ar-concept.md`** (AR 컨셉·구조·설정 키·API·로드맵·검증), **`docs/action-qr-concept.md`** (액션 키 QR — 웹→전용 앱 설계), `HANDOFF.md`(앱 전반, 일부 오래됨), `docs/research/ar-qr-tech-research-2026-11.md`(기술 조사).
 
 ## 구조
 | 파일 | 역할 |
