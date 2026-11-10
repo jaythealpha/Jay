@@ -146,18 +146,6 @@ export default async function handler(req, res) {
     if (req.method === "GET") {
       const q = req.query || {};
       if (q.status) { res.status(200).json({ blob: true, kv: hasKV() }); return; }
-      if (q.selftest === "aq-1110") {   // TEMP (removed after live verification)
-        const out = {}; const key = "selftest-key-0123456789abcdef"; const id = "zz" + newId().slice(2);
-        const d0 = clean({ t: "selftest", rules: [{ if: [{ k: "pass", p: "1234" }], do: [{ a: "show", title: "A" }] }, { if: [], do: [{ a: "show", title: "B" }] }] });
-        d0.owner = sha(key); await saveDef(id, d0);
-        out.load1 = (await loadDef(id)).rules.length;
-        out.scanNoPass = (await evaluate(id, await loadDef(id), "visitor", "dev-selftest01", {}, { commit: false })).need;
-        out.scanPass = (await evaluate(id, await loadDef(id), "visitor", "dev-selftest01", { pass: "1234" }, { commit: false })).run.do[0].title;
-        const d1 = clean({ t: "selftest2", rules: [{ if: [], do: [{ a: "show", title: "C" }] }] }, d0); d1.owner = d0.owner; await saveDef(id, d1);
-        const l = await loadDef(id); out.afterUpdate = l.t + ":" + l.rules[0].do[0].title; out.files = (await blobList("aq/" + id + "/d-")).length;
-        await blobDel((await blobList("aq/" + id + "/")).map((x) => x.url)); out.cleaned = (await blobList("aq/" + id + "/")).length === 0;
-        res.status(200).json(out); return;
-      }
       if (q.stats && ID_RE.test(String(q.stats))) {
         const def = await loadDef(q.stats);
         if (!def || sha(String(q.key || "")) !== def.owner) { res.status(403).json({ error: "owner_only" }); return; }
