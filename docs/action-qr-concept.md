@@ -1,7 +1,7 @@
 # 액션 키 QR — 컨셉 · 설계 · 로드맵 (웹 → 전용 앱)
 
 > 대상: 이 저장소를 이어 작업하는 개발자 / 코딩 에이전트. 작업 규칙은 루트 `AGENTS.md`.
-> 상태: **설계 확정 전 초안 (2026-11-09)** — §3 추가 기능 범위는 오너 확인 후 확정.
+> 상태: **P1 웹 MVP 구현 완료 (2026-11-10, 빌드 `2026.11.10-a`)** — 범위 확정: P1에 주인/방문자(2단계)·원격 관리·템플릿 포함, 멤버(공동 주인)와 나머지 추가 기능은 P2 이후.
 
 ---
 
@@ -118,7 +118,25 @@ QR은 무작위·추측 불가능한 ID를 갖고, 인쇄한 뒤에도 동작을
 
 ---
 
-## 5. 로드맵
+## 5. P1 구현 현황 (2026-11-10)
+
+| 구성 | 파일 | 내용 |
+|---|---|---|
+| 서버 | `api/action.js` | create / update / get / onoff / scan(규칙 평가) / vault.add / vault.list, `GET ?status`, `GET ?stats`. 정의는 Blob `aq/<id>/d-<time>.json`(저장마다 새 파일 + 이전 삭제 → CDN 캐시 문제 없음). 비밀번호·주인 키는 SHA-256 해시만 저장. 카운터(`count`, `once`)는 KV 없으면 해당 규칙을 건너뛰고 `nokv` 표시 |
+| 라우트 | `vercel.json` | `/a/:id` → `/action.html?i=:id` (QR에는 `/a/<id>`만) |
+| 런타임 | `action.html` | 스캔 → 서버 평가 → 행동 실행. 주인 바(방문자 화면 보기 / 편집하기), 비밀번호·위치 입력, 꺼짐·없음·오류 상태. 행동 10종: show, link, vault.add / vault.show(이 폰 IndexedDB 또는 공유 Blob), countdown, focus.start / focus.end(서약형 타이머, Wake Lock, 완료 횟수), wifi(복사), contact(.vcf), calendar(.ics + Google). 4개 언어 |
+| 빌더 | `qr-studio.html` "액션 QR" 탭 (`AQB` 모듈, `#view-action`) | 템플릿 8종(추억 상자·선물/타임캡슐·분실물 태그·디지털 디톡스·선착순 쿠폰·비밀 메시지·Wi-Fi+일정·직접 만들기), 규칙 카드 편집(조건 9종·행동 10종, 순서 이동), 저장 → QR·링크, 주인/방문자 미리보기 iframe, 켜기/끄기, 관리 링크 복사, 스캔 수(KV), 내 액션 QR 목록(`aq_mine`), `#action=<id>`로 바로 편집 |
+| 테스트 | `tools/tests/action-api.test.mjs`, `action-ui.test.mjs` (+ `_fakes.mjs`) | API 25항목(해시 저장, 주인/방문자, 비밀번호, 보관함 권한, 끄기, 선착순·1회용, 타임캡슐, 위치, KV 없음), UI 19항목(빌더→저장→주인 기록→방문자 열람→비밀번호→끄기→카운트다운→집중→선착순→편집 링크, 390px) |
+
+**클라이언트 저장 키**: `aq_dev`(무작위 기기 ID), `aqk_<id>`(주인 키), `aq_mine`(내 QR 목록), `aq_seen_<id>`(첫 스캔), `aq_focus`·`aq_focus_n`(집중 상태·완료 수), IndexedDB `aq/vault`(이 폰 보관함).
+
+**알려진 한계 / 다음 작업 후보**
+- Upstash Redis 미연결: `count`·`once` 규칙과 스캔 수가 비활성(화면에 이유 표시).
+- 주인 키를 잃으면(관리 링크도 없으면) 편집 불가 → P3 계정 로그인으로 해결. 지금은 관리 링크 보관 안내.
+- 공유 보관함 항목 삭제·신고 UI 없음(P2). 남용 방지 rate limit은 KV 연결 후 추가.
+- 이미지 업로드는 `api/ar-asset.js`의 `upload`를 재사용(공개 저장 동의 확인 창).
+
+## 6. 로드맵
 
 | 단계 | 내용 | 선행 조건 |
 |---|---|---|

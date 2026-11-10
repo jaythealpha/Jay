@@ -13,6 +13,7 @@
 | `qr-studio.html` | 메인 앱, 단일 HTML(CSS·JS 인라인). 빌드 단계 없음. |
 | `index.html` | `qr-studio.html`의 **복사본**. 수정 후 항상 `cp qr-studio.html index.html`. |
 | `event.html` | 고객용 AR 이벤트 런타임(단일 파일). |
+| `action.html` | 액션 키 QR 런타임(`/a/<id>` → rewrite). 서버는 `api/action.js`, 빌더는 `qr-studio.html`의 `AQB` 모듈. |
 | `map.html`, `motion.html` | 지도 앱 선택 페이지, 모션 실험실. |
 | `api/*.js` | Vercel 서버리스 함수(ESM `export default handler`, npm 의존성 없음, `fetch`만 사용). |
 | `vendor/` | 서드파티 JS를 직접 동봉(CDN 금지 — 일부 환경에서 차단됨). |

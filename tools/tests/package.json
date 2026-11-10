@@ -3,6 +3,6 @@
   "private": true,
   "type": "module",
   "description": "Headless browser tests for Aesthetic QR Studio. Install once: npm install --prefix tools/tests",
-  "scripts": { "test": "node ar-entry.test.mjs && node ar-image.test.mjs" },
+  "scripts": { "test": "node ar-entry.test.mjs && node ar-image.test.mjs && node action-api.test.mjs && node action-ui.test.mjs" },
   "devDependencies": { "playwright-core": "^1.48.0" }
 }

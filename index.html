@@ -400,6 +400,30 @@
   .ev-stats table{width:100%;border-collapse:collapse;margin-top:8px;font-size:12.5px;color:var(--txt)} .ev-stats td{padding:5px 4px;border-top:1px solid var(--line)} .ev-stats td:nth-child(2),.ev-stats td:nth-child(3){text-align:right;font-variant-numeric:tabular-nums}
   .ev-stats .bar{height:6px;border-radius:3px;background:var(--acc);opacity:.8}
   :root[data-theme="dark"] .ev-warn{background:#2b2108;color:#f6d48b;border-color:#5c4410} :root[data-theme="dark"] .ev-warn b{color:#ffe4a8}
+  /* ---- Action Key QR builder ---- */
+  .tabs button[data-view="action"]{position:relative;overflow:visible}
+  .tabs button[data-view="action"]::after{content:"NEW";position:absolute;top:-6px;right:-2px;font-size:7.5px;font-weight:700;letter-spacing:.4px;color:#fff;background:#ff4d8d;border-radius:6px;padding:1px 3px;line-height:1.25;pointer-events:none}
+  .aq-tpls{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;max-width:1100px;margin:0 auto 18px}
+  .aq-tpls button{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;padding:14px;border-radius:16px;border:1px solid var(--line);background:var(--card);color:var(--txt);cursor:pointer;font-family:inherit;transition:.15s}
+  .aq-tpls button:hover,.aq-tpls button.on{border-color:var(--txt)} .aq-tpls b{font-size:24px} .aq-tpls span{font-weight:700;font-size:14px} .aq-tpls small{font-size:12px;color:var(--mut);line-height:1.45}
+  .aq-mine{max-width:1100px;margin:0 auto 14px} .aq-mine .lbl{font-size:12px;color:var(--mut);margin-bottom:6px}
+  .aq-chips{display:flex;flex-wrap:wrap;gap:8px} .aq-chips button{border:1px solid var(--line);background:var(--card);color:var(--txt);border-radius:999px;padding:7px 12px;font:inherit;font-size:13px;cursor:pointer} .aq-chips button.on{border-color:var(--txt);font-weight:700}
+  .aq-phone{position:relative} .aq-phone iframe{width:100%;height:100%;border:0;background:#f6f6f4}
+  .aq-pvph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;color:#9aa1b0;font-size:13px;background:#0b0d12}
+  .aq-manage{margin-top:14px;border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+  .aq-rule{border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:10px;background:var(--bg2,transparent)}
+  .aq-rule-h{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;margin-bottom:8px} .aq-rule-h span{flex:1}
+  .aq-rule-h button,.aq-x{border:1px solid var(--line);background:var(--card);color:var(--txt);border-radius:999px;width:28px;height:28px;cursor:pointer;font-size:13px;line-height:1;padding:0}
+  .aq-sec{font-size:11px;color:var(--mut);margin:8px 0 4px;letter-spacing:.02em}
+  .aq-item{border:1px dashed var(--line2,#d4d4d4);border-radius:12px;padding:8px 10px;margin-top:6px}
+  .aq-item-h{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600} .aq-item-h span{flex:1}
+  .aq-f{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:6px} .aq-f .full{grid-column:1/-1}
+  .aq-f input,.aq-f select,.aq-f textarea{width:100%;font:inherit;font-size:13px;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--txt)}
+  .aq-f textarea{min-height:60px;resize:vertical} .aq-f label{font-size:11px;color:var(--mut);display:block} .aq-f label>*{margin-top:3px}
+  .aq-days{display:flex;gap:4px;flex-wrap:wrap} .aq-days label{display:flex;align-items:center;gap:3px;font-size:12px;color:var(--txt)}
+  .aq-add{display:flex;gap:6px;margin-top:6px} .aq-add select{flex:1;font:inherit;font-size:13px;padding:7px 10px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--txt)}
+  .aq-kvw{font-size:11px;color:#b45309;margin-top:4px}
+  @media(max-width:760px){ .aq-tpls{grid-template-columns:repeat(2,minmax(0,1fr))} }
   .ev-types{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;max-width:1100px;margin:0 auto 18px}
   .ev-types button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 8px;border:1.5px solid var(--line);border-radius:16px;background:var(--card);color:var(--txt);cursor:pointer;font-family:inherit;text-align:center}
   .ev-types button b{font-size:26px;line-height:1}
@@ -568,6 +592,7 @@
         <button data-view="studio" data-i18n="nav.studio">스튜디오</button>
         <button data-view="card" data-i18n="nav.card">명함</button>
         <button data-view="ar" data-i18n="nav.ar">AR</button>
+        <button data-view="action" data-i18n="nav.action">액션 QR</button>
         <button data-view="about" data-i18n="nav.guide">사용법</button>
       </nav>
       <button id="themeToggle" class="theme-toggle" type="button" aria-label="Toggle dark mode" data-tip="라이트 / 다크 테마 전환" data-i18n-tip="tip.theme">
@@ -1513,6 +1538,57 @@
 
   <!-- ============ ABOUT / ANALYSIS ============ -->
   <!-- ============ POSTER (image + text + QR card) ============ -->
+  <!-- ============ ACTION KEY QR (rules: who/time/password/place… → show/vault/countdown/focus…) ============ -->
+  <section class="view" id="view-action">
+    <div class="hero" style="padding:6px 0 16px">
+      <h2 data-i18n-html="aq.h">찍으면 <span class="g">일이 일어나는</span> QR</h2>
+      <p data-i18n="aq.p">QR 하나에 "누가·언제·어디서 찍으면 → 무엇을" 규칙을 담아요. 인쇄한 뒤에도 동작을 언제든 바꿀 수 있어요.</p>
+      <div class="lang-switch" role="group" aria-label="Language"><button data-lang="ko" translate="no">Korean</button><button data-lang="en" translate="no">English</button><button data-lang="ja" translate="no">Japanese</button><button data-lang="zh" translate="no">Chinese</button></div>
+    </div>
+    <div class="ev-warn" id="aqSrv" style="display:none;max-width:1100px;margin:0 auto 12px"></div>
+    <div class="aq-mine" id="aqMine" style="display:none"><div class="lbl" data-i18n="aq.mine">내 액션 QR</div><div class="aq-chips" id="aqMineList"></div></div>
+    <div class="aq-tpls" id="aqTpls"></div>
+    <div class="studio" id="aqBuilder" style="display:none">
+      <div class="stage">
+        <div class="seg mini" id="aqPvSeg" style="max-width:300px;margin:0 auto 10px"><button data-v="owner" class="on"><span data-i18n="aq.pv.owner">주인이 찍으면</span></button><button data-v="visitor"><span data-i18n="aq.pv.visitor">다른 사람이 찍으면</span></button></div>
+        <div class="ev-phone aq-phone"><iframe id="aqPrev" title="Preview" loading="lazy"></iframe><div class="aq-pvph" id="aqPvPh" data-i18n="aq.pvph">저장하면 여기에 미리보기가 나와요</div></div>
+        <div class="ev-out">
+          <canvas id="aqQr" width="480" height="480" aria-label="Action QR"></canvas>
+          <div>
+            <div class="hint" id="aqLink"></div>
+            <button class="btn" id="aqSave" type="button" style="width:100%" data-i18n="aq.save">저장하고 QR 만들기</button>
+            <button class="btn sec" id="aqToStudio" type="button" style="width:100%;margin-top:8px" data-i18n="ev.toStudio">스튜디오에서 QR 꾸미기</button>
+            <button class="btn sec" id="aqQrPng" type="button" style="width:100%;margin-top:8px" data-i18n="ev.qrPng">QR만 PNG로 저장</button>
+          </div>
+        </div>
+        <div class="aq-manage" id="aqManage" style="display:none">
+          <div class="switch sm"><div class="lbl" data-i18n="aq.on" style="margin:0">QR 켜기 (끄면 방문자에게 아무것도 안 보여요)</div><label class="toggle"><input type="checkbox" id="aqOn" checked /><span></span></label></div>
+          <button class="btn sec" id="aqKeyCopy" type="button" style="width:100%;margin-top:10px">🔑 <span data-i18n="aq.keyCopy">관리 링크 복사</span></button>
+          <div class="hint" data-i18n="aq.keyHint">관리 링크를 연 휴대폰은 주인이 돼요. 다른 폰이나 새 폰에서 관리하려면 이 링크를 안전한 곳에 보관하세요.</div>
+          <div class="hint" id="aqStats"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <details class="grp" open>
+          <summary><span data-i18n="aq.grp.basic">기본 정보</span></summary>
+          <div class="body">
+            <label class="fld"><div class="lbl" data-i18n="aq.lbl.t">이름 (찍은 화면 맨 위)</div><input type="text" id="aqT" maxlength="60" /></label>
+            <label class="fld"><div class="lbl" data-i18n="ev.lbl.color">강조 색</div><input type="color" id="aqC" value="#ff4d8d" /></label>
+          </div>
+        </details>
+        <details class="grp" open>
+          <summary><span data-i18n="aq.grp.rules">규칙</span></summary>
+          <div class="body">
+            <div class="hint" data-i18n="aq.rulesHint">위에서부터 확인해서, 조건을 모두 만족하는 첫 번째 규칙이 실행돼요. 조건이 없는 규칙은 "그 외 모두"예요.</div>
+            <div id="aqRules"></div>
+            <button class="btn sec" id="aqAddRule" type="button" style="width:100%;margin-top:10px">＋ <span data-i18n="aq.addRule">규칙 추가</span></button>
+          </div>
+        </details>
+        <div class="hint" data-i18n="aq.privacy">사진 보관함은 기본이 "이 휴대폰에만"이에요. "공유"를 고르면 QR을 찍는 사람들에게 공개되니 사람 얼굴 등 개인정보는 올리지 마세요.</div>
+      </div>
+    </div>
+  </section>
+
   <section class="view" id="view-poster">
     <div class="hero" style="padding:22px 0 14px">
       <h2 data-i18n-html="pst.h"></h2>
@@ -1678,7 +1754,7 @@
     </nav>
     <div style="margin-top:10px">Aesthetic QR Studio · <span data-i18n="foot.tag">아름답고 스캔되는 QR을 만드는 스튜디오 · QR 생성·디자인은 브라우저에서 처리 (AI 기능만 서버 전송·저장 안 함)</span></div>
     <div style="margin-top:6px" data-i18n="foot.tm">QR Code는 DENSO WAVE의 등록상표입니다 · 인코더: qrcode-generator (MIT, © Kazuhiko Arase)</div>
-    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · <span data-i18n="foot.build">빌드</span> <b id="verTag">2026.11.02-a</b></div>
+    <div style="margin-top:6px;opacity:.7">© 2026 Aesthetic QR Studio · <span data-i18n="foot.build">빌드</span> <b id="verTag">2026.11.10-a</b></div>
   </footer>
 </div>
 
@@ -6199,7 +6275,7 @@ $("tabs").addEventListener("click",function(e){
 });
 // Single entry point for switching views. Every switch is recorded in browser history (#studio,
 // #card, …) so the phone/browser Back button, the logo (home) and shared links all work.
-var VIEWS=["gallery","studio","card","ar","about","poster"];
+var VIEWS=["gallery","studio","card","ar","about","poster","action"];
 function curView(){ for(var i=0;i<VIEWS.length;i++){ if($("view-"+VIEWS[i]).classList.contains("active")) return VIEWS[i]; } return "gallery"; }
 function gotoView(v, opt){
   opt=opt||{}; if(VIEWS.indexOf(v)<0) v="gallery";
@@ -6211,6 +6287,7 @@ function gotoView(v, opt){
   if(v==="ar") AR.refresh(); else AR.leave();
   if(typeof POSTER!=="undefined") POSTER.onView(v);
   if(typeof EVB!=="undefined") EVB.onView(v);
+  if(typeof AQB!=="undefined") AQB.onView(v);
   if(v==="gallery"){ if(typeof curCat!=="undefined" && curCat==="animation" && typeof startGalAnim==="function") startGalAnim(); }
   else if(typeof stopGalAnim==="function") stopGalAnim();
   if(!opt.noHistory && (prev!==v || (location.hash.slice(1)||"gallery")!==v)){
@@ -8100,6 +8177,116 @@ var I18N = {
   "ev.st.noLink":{ko:"QR이 만들어지면 통계를 볼 수 있어요",en:"Stats appear once the QR is created",ja:"QRが作成されると統計を確認できます",zh:"生成二维码后即可查看统计"},
   "ev.st.loading":{ko:"불러오는 중…",en:"Loading…",ja:"読み込み中…",zh:"加载中…"},
   "ev.st.err":{ko:"통계를 불러오지 못했어요",en:"Couldn't load stats",ja:"統計を読み込めませんでした",zh:"无法加载统计"},
+  "nav.action":{ko:"액션 QR",en:"Action QR",ja:"アクションQR",zh:"动作二维码"},
+  "aq.h":{ko:"찍으면 <span class=\"g\">일이 일어나는</span> QR",en:"A QR that <span class=\"g\">makes things happen</span>",ja:"読み取ると<span class=\"g\">何かが起きる</span>QR",zh:"扫一扫就<span class=\"g\">发生事情</span>的二维码"},
+  "aq.p":{ko:"QR 하나에 “누가·언제·어디서 찍으면 → 무엇을” 규칙을 담아요. 인쇄한 뒤에도 동작을 언제든 바꿀 수 있어요.",en:"Put “who · when · where scans → what happens” rules into one QR. You can change what it does anytime, even after printing.",ja:"1つのQRに「誰が・いつ・どこで読み取ると→何をする」ルールを入れます。印刷後もいつでも動作を変えられます。",zh:"在一个二维码里设定“谁·何时·何地扫码→做什么”的规则。印出来之后也能随时更改。"},
+  "aq.mine":{ko:"내 액션 QR",en:"My action QRs",ja:"マイアクションQR",zh:"我的动作二维码"},
+  "aq.pv.owner":{ko:"주인이 찍으면",en:"When I scan",ja:"オーナーが読むと",zh:"主人扫码时"},
+  "aq.pv.visitor":{ko:"다른 사람이 찍으면",en:"When others scan",ja:"他の人が読むと",zh:"他人扫码时"},
+  "aq.pvph":{ko:"저장하면 여기에 미리보기가 나와요",en:"Save to see a preview here",ja:"保存するとここにプレビューが出ます",zh:"保存后这里会显示预览"},
+  "aq.save":{ko:"저장하고 QR 만들기",en:"Save & create QR",ja:"保存してQRを作成",zh:"保存并生成二维码"},
+  "aq.update":{ko:"변경 내용 저장",en:"Save changes",ja:"変更を保存",zh:"保存更改"},
+  "aq.on":{ko:"QR 켜기 (끄면 방문자에게 아무것도 안 보여요)",en:"QR on (when off, visitors see nothing)",ja:"QRをオン（オフにすると訪問者には何も表示されません）",zh:"开启二维码（关闭后访客看不到任何内容）"},
+  "aq.keyCopy":{ko:"관리 링크 복사",en:"Copy management link",ja:"管理リンクをコピー",zh:"复制管理链接"},
+  "aq.keyHint":{ko:"관리 링크를 연 휴대폰은 주인이 돼요. 다른 폰이나 새 폰에서 관리하려면 이 링크를 안전한 곳에 보관하세요 — 남에게 공유하지 마세요.",en:"Any phone that opens the management link becomes an owner. Keep it somewhere safe to manage from another or a new phone — don't share it.",ja:"管理リンクを開いたスマホはオーナーになります。別のスマホや新しいスマホで管理するには安全な場所に保管してください — 他人と共有しないでください。",zh:"打开管理链接的手机会成为主人。请妥善保存，以便在其他或新手机上管理——不要分享给他人。"},
+  "aq.grp.basic":{ko:"기본 정보",en:"Basics",ja:"基本情報",zh:"基本信息"},
+  "aq.lbl.t":{ko:"이름 (찍은 화면 맨 위)",en:"Name (top of the scanned page)",ja:"名前（読み取った画面の上部）",zh:"名称（扫码页面顶部）"},
+  "aq.grp.rules":{ko:"규칙",en:"Rules",ja:"ルール",zh:"规则"},
+  "aq.rulesHint":{ko:"위에서부터 확인해서, 조건을 모두 만족하는 첫 번째 규칙이 실행돼요. 조건이 없는 규칙은 “그 외 모두”예요.",en:"Rules are checked from the top; the first one whose conditions all match runs. A rule with no conditions means “everyone else”.",ja:"上から順に確認し、条件をすべて満たす最初のルールが実行されます。条件のないルールは「それ以外すべて」です。",zh:"从上往下检查，第一个满足全部条件的规则会执行。没有条件的规则表示“其他所有人”。"},
+  "aq.addRule":{ko:"규칙 추가",en:"Add rule",ja:"ルールを追加",zh:"添加规则"},
+  "aq.privacy":{ko:"사진 보관함은 기본이 “이 휴대폰에만”이에요. “공유”를 고르면 QR을 찍는 사람들에게 공개되니 사람 얼굴 등 개인정보는 올리지 마세요.",en:"The photo box saves “on this phone only” by default. “Shared” makes items visible to whoever scans the QR — don't upload personal data such as faces.",ja:"写真ボックスは標準で「このスマホのみ」に保存されます。「共有」を選ぶとQRを読み取る人に公開されるため、顔など個人情報はアップロードしないでください。",zh:"照片盒默认“仅保存在这部手机上”。选择“共享”后扫码的人都能看到，请勿上传人脸等个人信息。"},
+  "aq.rule":{ko:"규칙 {n}",en:"Rule {n}",ja:"ルール {n}",zh:"规则 {n}"},
+  "aq.else":{ko:"그 외 모두",en:"everyone else",ja:"それ以外すべて",zh:"其他所有人"},
+  "aq.when":{ko:"이럴 때",en:"WHEN",ja:"こんなとき",zh:"当"},
+  "aq.then":{ko:"이렇게",en:"DO",ja:"こうする",zh:"执行"},
+  "aq.always":{ko:"조건 없음 — 항상 (위 규칙에 해당하지 않으면)",en:"No conditions — always (if no rule above matched)",ja:"条件なし — 常に（上のルールに該当しない場合）",zh:"无条件——总是（上方规则都不匹配时）"},
+  "aq.addCond":{ko:"조건 추가",en:"Add condition",ja:"条件を追加",zh:"添加条件"},
+  "aq.addAct":{ko:"행동 추가",en:"Add action",ja:"アクションを追加",zh:"添加动作"},
+  "aq.c.who":{ko:"누가 찍었나",en:"Who scans",ja:"誰が読み取ったか",zh:"谁扫码"},
+  "aq.c.first":{ko:"처음 찍었나 (이 폰 기준)",en:"First scan on this phone",ja:"初めての読み取り（このスマホ）",zh:"首次扫码（以本机计）"},
+  "aq.c.once":{ko:"선착순 1명만 (그 사람은 계속)",en:"Only the first person (keeps it)",ja:"先着1名のみ（その人はずっと）",zh:"仅限第一位（此人可一直使用）"},
+  "aq.c.count":{ko:"전체 몇 번째 스캔인가",en:"Overall scan number",ja:"全体で何番目の読み取りか",zh:"总第几次扫码"},
+  "aq.c.time":{ko:"날짜·시각 사이",en:"Between dates",ja:"日時の範囲",zh:"日期时间区间"},
+  "aq.c.hours":{ko:"매일 시간대",en:"Daily hours",ja:"毎日の時間帯",zh:"每天时间段"},
+  "aq.c.days":{ko:"요일",en:"Weekdays",ja:"曜日",zh:"星期"},
+  "aq.c.pass":{ko:"비밀번호",en:"Password",ja:"パスワード",zh:"密码"},
+  "aq.c.near":{ko:"특정 장소에서",en:"At a place",ja:"特定の場所で",zh:"在特定地点"},
+  "aq.a.show":{ko:"내용 보여주기",en:"Show content",ja:"内容を表示",zh:"显示内容"},
+  "aq.a.link":{ko:"링크로 이동",en:"Open a link",ja:"リンクへ移動",zh:"打开链接"},
+  "aq.a.vault.add":{ko:"보관함에 남기기 (사진·메모)",en:"Add to box (photo · note)",ja:"ボックスに残す（写真・メモ）",zh:"存入盒子（照片·备注）"},
+  "aq.a.vault.show":{ko:"보관함 보여주기",en:"Show the box",ja:"ボックスを表示",zh:"显示盒子"},
+  "aq.a.countdown":{ko:"카운트다운",en:"Countdown",ja:"カウントダウン",zh:"倒计时"},
+  "aq.a.focus.start":{ko:"집중 시작 (디톡스)",en:"Start focus (detox)",ja:"集中を開始（デトックス）",zh:"开始专注（排毒）"},
+  "aq.a.focus.end":{ko:"집중 해제",en:"End focus",ja:"集中を解除",zh:"结束专注"},
+  "aq.a.wifi":{ko:"Wi-Fi 안내",en:"Wi-Fi details",ja:"Wi-Fi案内",zh:"Wi-Fi 信息"},
+  "aq.a.contact":{ko:"연락처 저장",en:"Save contact",ja:"連絡先を保存",zh:"保存联系人"},
+  "aq.a.calendar":{ko:"캘린더 일정 추가",en:"Add calendar event",ja:"カレンダーに予定を追加",zh:"添加日历日程"},
+  "aq.f.who":{ko:"누구",en:"Who",ja:"誰",zh:"谁"},
+  "aq.who.owner":{ko:"주인 (나)",en:"Owner (me)",ja:"オーナー（自分）",zh:"主人（我）"},
+  "aq.who.visitor":{ko:"다른 사람",en:"Someone else",ja:"他の人",zh:"其他人"},
+  "aq.f.first":{ko:"조건",en:"Condition",ja:"条件",zh:"条件"},
+  "aq.first.yes":{ko:"처음 찍을 때",en:"First time",ja:"初めてのとき",zh:"第一次"},
+  "aq.first.no":{ko:"두 번째부터",en:"From the second time",ja:"2回目以降",zh:"第二次起"},
+  "aq.f.from":{ko:"부터 (번째)",en:"From (#)",ja:"から（番目）",zh:"从（第几次）"},
+  "aq.f.to":{ko:"까지 (번째)",en:"To (#)",ja:"まで（番目）",zh:"到（第几次）"},
+  "aq.f.tfrom":{ko:"시작",en:"From",ja:"開始",zh:"开始"},
+  "aq.f.tto":{ko:"끝 (비우면 계속)",en:"Until (empty = forever)",ja:"終了（空欄＝無期限）",zh:"结束（留空=永久）"},
+  "aq.f.hfrom":{ko:"시작 시 (0–23)",en:"From hour (0–23)",ja:"開始時（0–23）",zh:"开始时（0–23）"},
+  "aq.f.hto":{ko:"끝 시 (1–24)",en:"To hour (1–24)",ja:"終了時（1–24）",zh:"结束时（1–24）"},
+  "aq.f.days":{ko:"요일 선택",en:"Pick days",ja:"曜日を選択",zh:"选择星期"},
+  "aq.dow.0":{ko:"일",en:"Sun",ja:"日",zh:"日"},
+  "aq.dow.1":{ko:"월",en:"Mon",ja:"月",zh:"一"},
+  "aq.dow.2":{ko:"화",en:"Tue",ja:"火",zh:"二"},
+  "aq.dow.3":{ko:"수",en:"Wed",ja:"水",zh:"三"},
+  "aq.dow.4":{ko:"목",en:"Thu",ja:"木",zh:"四"},
+  "aq.dow.5":{ko:"금",en:"Fri",ja:"金",zh:"五"},
+  "aq.dow.6":{ko:"토",en:"Sat",ja:"土",zh:"六"},
+  "aq.f.pass":{ko:"비밀번호",en:"Password",ja:"パスワード",zh:"密码"},
+  "aq.f.passKeep":{ko:"그대로 두면 기존 비밀번호 유지",en:"Leave empty to keep the current one",ja:"空欄なら現在のパスワードを維持",zh:"留空则保留原密码"},
+  "aq.f.lat":{ko:"위도",en:"Latitude",ja:"緯度",zh:"纬度"},
+  "aq.f.lng":{ko:"경도",en:"Longitude",ja:"経度",zh:"经度"},
+  "aq.f.r":{ko:"반경 (m)",en:"Radius (m)",ja:"半径（m）",zh:"半径（米）"},
+  "aq.f.here":{ko:"지금 위치로 설정",en:"Use my current location",ja:"現在地に設定",zh:"设为当前位置"},
+  "aq.f.title":{ko:"제목",en:"Title",ja:"タイトル",zh:"标题"},
+  "aq.f.body":{ko:"내용",en:"Text",ja:"内容",zh:"内容"},
+  "aq.f.img":{ko:"이미지 (선택)",en:"Image (optional)",ja:"画像（任意）",zh:"图片（可选）"},
+  "aq.f.imgDel":{ko:"이미지 지우기",en:"Remove image",ja:"画像を削除",zh:"删除图片"},
+  "aq.f.url":{ko:"링크 (https://, tel:, sms:)",en:"Link (https://, tel:, sms:)",ja:"リンク（https://, tel:, sms:）",zh:"链接（https://、tel:、sms:）"},
+  "aq.f.label":{ko:"버튼 문구",en:"Button text",ja:"ボタンの文言",zh:"按钮文字"},
+  "aq.f.scope":{ko:"저장 위치",en:"Saved to",ja:"保存先",zh:"保存位置"},
+  "aq.scope.device":{ko:"이 휴대폰에만",en:"This phone only",ja:"このスマホのみ",zh:"仅本机"},
+  "aq.scope.shared":{ko:"공유 (QR을 찍는 사람들)",en:"Shared (people who scan)",ja:"共有（読み取る人）",zh:"共享（扫码的人）"},
+  "aq.f.mode":{ko:"보여주기",en:"Show",ja:"表示方法",zh:"显示方式"},
+  "aq.mode.all":{ko:"전체",en:"All",ja:"すべて",zh:"全部"},
+  "aq.mode.latest":{ko:"가장 최근 1개",en:"Latest one",ja:"最新の1件",zh:"最新一条"},
+  "aq.mode.random":{ko:"무작위 1개",en:"One at random",ja:"ランダムに1件",zh:"随机一条"},
+  "aq.f.to2":{ko:"열리는 시각",en:"Opens at",ja:"開く日時",zh:"打开时间"},
+  "aq.f.msg":{ko:"안내 문구",en:"Message",ja:"案内文",zh:"提示文字"},
+  "aq.f.min":{ko:"집중 시간 (분)",en:"Focus minutes",ja:"集中時間（分）",zh:"专注时长（分钟）"},
+  "aq.f.ssid":{ko:"Wi-Fi 이름",en:"Wi-Fi name",ja:"Wi-Fi名",zh:"Wi-Fi 名称"},
+  "aq.f.pw":{ko:"Wi-Fi 비밀번호",en:"Wi-Fi password",ja:"Wi-Fiパスワード",zh:"Wi-Fi 密码"},
+  "aq.f.name":{ko:"이름",en:"Name",ja:"名前",zh:"姓名"},
+  "aq.f.org":{ko:"회사·소속",en:"Company",ja:"会社・所属",zh:"公司·单位"},
+  "aq.f.tel":{ko:"전화",en:"Phone",ja:"電話",zh:"电话"},
+  "aq.f.email":{ko:"이메일",en:"Email",ja:"メール",zh:"邮箱"},
+  "aq.f.start":{ko:"시작",en:"Starts",ja:"開始",zh:"开始"},
+  "aq.f.end":{ko:"끝",en:"Ends",ja:"終了",zh:"结束"},
+  "aq.f.place":{ko:"장소",en:"Place",ja:"場所",zh:"地点"},
+  "aq.kvWarn":{ko:"서버 카운터(Upstash Redis)가 연결되면 동작해요. 그 전에는 이 규칙을 건너뛰어요.",en:"Works once the server counter (Upstash Redis) is connected; until then this rule is skipped.",ja:"サーバーのカウンター（Upstash Redis）接続後に動作します。それまではこのルールをスキップします。",zh:"连接服务器计数器（Upstash Redis）后生效；在此之前会跳过此规则。"},
+  "aq.kvNote":{ko:"선착순·N번째 조건은 서버 카운터(Upstash Redis) 연결 후 동작해요. 나머지 기능은 지금 바로 쓸 수 있어요.",en:"First-come and N-th conditions need the server counter (Upstash Redis). Everything else works now.",ja:"先着・N番目の条件はサーバーのカウンター（Upstash Redis）接続後に動作します。その他の機能はすぐ使えます。",zh:"先到先得和第N位条件需要连接服务器计数器（Upstash Redis）。其他功能现在即可使用。"},
+  "aq.noBlob":{ko:"서버 저장소가 연결되지 않아 액션 QR을 저장할 수 없어요.",en:"Server storage isn't connected, so action QRs can't be saved.",ja:"サーバーのストレージが接続されていないため、アクションQRを保存できません。",zh:"服务器存储未连接，无法保存动作二维码。"},
+  "aq.imgConsent":{ko:"이 이미지는 QR을 찍는 사람에게 공개돼요. 사람 얼굴 등 개인정보가 없는 이미지인가요?",en:"This image will be visible to whoever scans the QR. Is it free of personal data such as faces?",ja:"この画像はQRを読み取る人に公開されます。顔など個人情報を含まない画像ですか？",zh:"此图片会对扫码的人公开。确认不含人脸等个人信息吗？"},
+  "aq.locErr":{ko:"위치를 가져오지 못했어요",en:"Couldn't get your location",ja:"位置を取得できませんでした",zh:"无法获取位置"},
+  "aq.notSaved":{ko:"저장하면 QR이 만들어져요",en:"The QR appears once you save",ja:"保存するとQRが作成されます",zh:"保存后生成二维码"},
+  "aq.stats":{ko:"지금까지 {n}번 스캔됐어요",en:"Scanned {n} times so far",ja:"これまで{n}回読み取られました",zh:"目前已扫码 {n} 次"},
+  "aq.statsNoKv":{ko:"스캔 수는 서버 카운터(Upstash Redis) 연결 후 보여요",en:"Scan counts appear once the server counter (Upstash Redis) is connected",ja:"読み取り回数はサーバーのカウンター（Upstash Redis）接続後に表示されます",zh:"连接服务器计数器（Upstash Redis）后显示扫码次数"},
+  "aq.noKey":{ko:"이 휴대폰에는 관리 권한이 없어요. 관리 링크로 열어 주세요.",en:"This phone can't manage it. Open the management link.",ja:"このスマホには管理権限がありません。管理リンクで開いてください。",zh:"此手机没有管理权限，请通过管理链接打开。"},
+  "aq.needPass":{ko:"비밀번호 조건에 비밀번호를 입력해 주세요.",en:"Enter a password for the password condition.",ja:"パスワード条件にパスワードを入力してください。",zh:"请为密码条件输入密码。"},
+  "aq.saved":{ko:"저장했어요 — QR은 그대로 두고 언제든 바꿀 수 있어요",en:"Saved — you can change it anytime without reprinting",ja:"保存しました — QRはそのままでいつでも変更できます",zh:"已保存——无需重印，随时可改"},
+  "aq.discard":{ko:"저장하지 않은 변경이 있어요. 버리고 다른 걸 열까요?",en:"You have unsaved changes. Discard them?",ja:"保存していない変更があります。破棄しますか？",zh:"有未保存的更改，要放弃吗？"},
+  "aq.onT":{ko:"QR을 켰어요",en:"QR turned on",ja:"QRをオンにしました",zh:"二维码已开启"},
+  "aq.offT":{ko:"QR을 껐어요 — 방문자에겐 쉬는 중으로 보여요",en:"QR turned off — visitors see it's resting",ja:"QRをオフにしました — 訪問者にはお休み中と表示されます",zh:"二维码已关闭——访客会看到暂停中"},
+  "aq.keyCopied":{ko:"관리 링크를 복사했어요 — 안전한 곳에 보관하세요",en:"Management link copied — keep it safe",ja:"管理リンクをコピーしました — 安全に保管してください",zh:"已复制管理链接——请妥善保存"},
   "foot.contact":{ko:"문의",en:"Contact",zh:"联系",ja:"お問い合わせ"},
   "foot.motion":{ko:"모션 QR 실험실",en:"Motion QR Lab",zh:"动态二维码实验室",ja:"モーションQRラボ"},
   "foot.tag":{ko:"아름답고 스캔되는 QR을 만드는 스튜디오 · QR 생성·디자인은 브라우저에서 처리 (AI 기능만 서버 전송·저장 안 함)",en:"A studio for beautiful, scannable QR codes · QR building & design run in your browser (only AI features send to a server, and aren't stored)",zh:"打造美观且可扫描二维码的工作室 · 二维码生成与设计在浏览器中处理（仅 AI 功能会发送到服务器，且不存储）",ja:"美しくスキャン可能なQRを作るスタジオ · QR生成・デザインはブラウザで処理（AI機能のみサーバー送信・保存なし）"},
@@ -8647,6 +8834,7 @@ function applyLang(lang){
   try{ if($("galGrid") && ($("galGrid").children.length || curCat==="motion")) buildGallery(); }catch(e){}
   try{ if(typeof POSTER!=="undefined") POSTER.onLang(); }catch(e){}
   try{ if(typeof EVB!=="undefined") EVB.onLang(); }catch(e){}
+  try{ if(typeof AQB!=="undefined") AQB.onLang(); }catch(e){}
   try{ updateMeta(); }catch(e){}
   try{ centerUIvis(); }catch(e){}
   try{ if(typeof refreshProUI==="function") refreshProUI(); }catch(e){}
@@ -9467,6 +9655,158 @@ var EVB=(function(){
   }
   return { onView:function(v){ if(v==="ar") init(); }, onLang:function(){ if(inited){ fillDefaults(); update(); if(IM.local) $("evDropT").textContent=t("ev.dropAgain"); upd3d(); } } };
 })();
+// ---------- ACTION KEY QR builder (액션 QR tab) — see docs/action-qr-concept.md ----------
+// A QR holds only MAP_SITE+"/a/<id>"; rules live on the server (api/action.js). The owner key is kept in
+// localStorage ("aqk_<id>") and in the management link (#k=…); my QRs are listed from "aq_mine".
+var AQB=(function(){
+  var API="/api/action", inited=false, cur={id:"",key:""}, draft=null, srv=null, pvAs="owner", dirty=false;
+  function li(){ return ({ko:0,en:1,ja:2,zh:3})[(typeof LANG!=="undefined"&&LANG)||"ko"]||0; }
+  function L4(a){ return a[li()]; }
+  function ls(k,v){ try{ if(v===undefined) return localStorage.getItem(k); if(v===null) localStorage.removeItem(k); else localStorage.setItem(k,v); }catch(e){ return null; } }
+  function esc(x){ return escapeXml(String(x==null?"":x)); }
+  function mine(){ try{ return JSON.parse(ls("aq_mine")||"[]"); }catch(e){ return []; } }
+  function saveMine(list){ ls("aq_mine",JSON.stringify(list.slice(0,50))); }
+  function api(body){ return fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}).then(function(r){ return r.json().then(function(d){ d._st=r.status; return d; }); }); }
+  function isoIn(days,h){ var d=new Date(); d.setDate(d.getDate()+days); d.setHours(h||0,0,0,0); return d.toISOString(); }
+  function toLocal(iso){ if(!iso) return ""; var d=new Date(iso); if(isNaN(d)) return ""; var p=function(n){ return (n<10?"0":"")+n; }; return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+"T"+p(d.getHours())+":"+p(d.getMinutes()); }
+  // ---- templates (texts in the current language) ----
+  var TPL=[
+    {k:"memory",i:"📦",n:["추억 상자","Memory box","思い出ボックス","回忆盒"],d:["주인이 찍으면 사진을 남기고, 가족·친구가 찍으면 모인 사진을 봐요","Owner adds photos; family and friends see them all","オーナーは写真を追加、家族や友人は集まった写真を見る","主人添加照片，家人朋友查看所有照片"],
+     def:function(){ return {t:L4(["우리 가족 추억 상자","Our memory box","わが家の思い出ボックス","我们的回忆盒"]),c:"ff4d8d",rules:[
+       {if:[{k:"who",v:"owner"}],do:[{a:"vault.add",scope:"shared",title:L4(["오늘의 한 장 남기기","Add today's photo","今日の一枚を残す","留下今天的一张照片"])}]},
+       {if:[],do:[{a:"vault.show",scope:"shared",mode:"all",title:L4(["우리의 기록","Our memories","私たちの記録","我们的记录"])}]}]}; }},
+    {k:"gift",i:"🎁",n:["선물 상자 · 타임캡슐","Gift box · time capsule","ギフトボックス・タイムカプセル","礼物盒 · 时间胶囊"],d:["정해진 날짜 전엔 카운트다운, 그날이 되면 메시지가 열려요","Countdown until the day, then the message opens","指定日まではカウントダウン、当日にメッセージが開く","指定日期前倒计时，当天打开留言"],
+     def:function(){ var day=isoIn(7,0); return {t:L4(["너에게 보내는 선물","A gift for you","あなたへの贈り物","送给你的礼物"]),c:"f59e0b",rules:[
+       {if:[{k:"time",from:day}],do:[{a:"show",title:L4(["생일 축하해! 🎂","Happy birthday! 🎂","誕生日おめでとう！🎂","生日快乐！🎂"]),body:L4(["여기에 마음을 담은 메시지를 적어 주세요.","Write your heartfelt message here.","ここに心を込めたメッセージを書いてください。","在这里写下你的心意。"])}]},
+       {if:[],do:[{a:"countdown",to:day,msg:L4(["그날이 되면 열려요","Opens on the day","その日になったら開きます","那天就会打开"])}]}]}; }},
+    {k:"lost",i:"🏷️",n:["분실물 태그","Lost & found tag","落とし物タグ","失物招领标签"],d:["찍은 사람이 번호를 몰라도 주인에게 연락할 수 있어요","Finders can reach you without seeing your number","拾った人が番号を知らなくても連絡できる","拾到的人无需知道号码也能联系你"],
+     def:function(){ return {t:L4(["이 물건의 주인을 찾아요","Please help me get this back","この持ち主を探しています","请帮我找回这件物品"]),c:"10b981",rules:[
+       {if:[{k:"who",v:"owner"}],do:[{a:"show",title:L4(["분실물 태그 (주인 화면)","Lost & found tag (owner view)","落とし物タグ（オーナー画面）","失物标签（主人画面）"]),body:L4(["물건을 잃어버리면 편집에서 문구를 바꾸거나 연락 버튼을 고치세요. 다른 사람에겐 아래 '그 외' 규칙이 보여요.","If you lose it, edit the message or the contact button. Others see the 'everyone else' rule below.","なくしたら編集でメッセージや連絡ボタンを変更してください。他の人には下の「その他」ルールが表示されます。","丢失后可在编辑中修改文字或联系按钮。其他人会看到下面的“其他人”规则。"])}]},
+       {if:[],do:[{a:"show",title:L4(["찾아 주셔서 감사해요!","Thank you for finding this!","見つけてくださりありがとうございます！","感谢你捡到它！"]),body:L4(["아래 버튼으로 주인에게 연락해 주세요. 사례하겠습니다.","Please contact the owner with the button below. A reward is offered.","下のボタンで持ち主に連絡してください。お礼をします。","请通过下方按钮联系主人，必有酬谢。"]),url:"sms:010-0000-0000",label:L4(["주인에게 문자 보내기","Text the owner","持ち主にSMSを送る","给主人发短信"])}]}]}; }},
+    {k:"detox",i:"📵",n:["디지털 디톡스","Digital detox","デジタルデトックス","数字排毒"],d:["찍으면 집중 타이머 시작 (서약형). 전용 앱에서는 진짜 앱 차단","Starts a focus timer (pledge). The native app will truly block apps","集中タイマー開始（誓約型）。専用アプリでは本当にアプリを制限","开始专注计时（承诺型）。专用App将真正限制应用"],
+     def:function(){ return {t:L4(["오늘 밤은 폰 내려놓기","Phone down tonight","今夜はスマホを置こう","今晚放下手机"]),c:"6366f1",rules:[
+       {if:[{k:"hours",from:21,to:24}],do:[{a:"focus.start",min:60,title:L4(["잠들기 전 1시간","One hour before sleep","寝る前の1時間","睡前一小时"])}]},
+       {if:[],do:[{a:"focus.start",min:30}]}]}; }},
+    {k:"first",i:"🏁",n:["선착순 쿠폰","First-come coupon","先着クーポン","先到先得优惠券"],d:["처음 찍은 N명에게만 쿠폰, 이후엔 마감 안내","Coupon for the first N scans, then 'sold out'","最初のN人だけクーポン、以降は終了案内","前N位扫码者获得优惠券，之后显示已结束"],
+     def:function(){ return {t:L4(["선착순 30명 무료 음료","Free drink — first 30","先着30名ドリンク無料","前30名免费饮品"]),c:"ef4444",rules:[
+       {if:[{k:"count",from:1,to:30}],do:[{a:"show",title:L4(["🎉 당첨! 음료 1잔 무료","🎉 You got it! Free drink","🎉 当選！ドリンク1杯無料","🎉 恭喜！免费饮品一杯"]),body:L4(["이 화면을 직원에게 보여주세요.","Show this screen to the staff.","この画面をスタッフに見せてください。","请向店员出示此画面。"])}]},
+       {if:[],do:[{a:"show",title:L4(["오늘 쿠폰은 마감됐어요","Today's coupons are gone","本日のクーポンは終了しました","今天的优惠券已领完"]),body:L4(["다음 이벤트를 기대해 주세요!","Stay tuned for the next one!","次のイベントをお楽しみに！","敬请期待下次活动！"])}]}]}; }},
+    {k:"secret",i:"🔐",n:["비밀 메시지","Secret message","秘密のメッセージ","秘密留言"],d:["비밀번호를 아는 사람에게만 열려요","Opens only for people who know the password","パスワードを知る人だけに開く","只对知道密码的人打开"],
+     def:function(){ return {t:L4(["우리만의 비밀","Just between us","ふたりだけの秘密","只属于我们的秘密"]),c:"8b5cf6",rules:[
+       {if:[{k:"pass",p:""}],do:[{a:"show",title:L4(["비밀 메시지","Secret message","秘密のメッセージ","秘密留言"]),body:L4(["여기에 비밀 메시지를 적으세요.","Write your secret here.","ここに秘密を書いてください。","在这里写下秘密。"])}]},
+       {if:[],do:[{a:"show",title:L4(["비밀번호가 맞지 않아요","Wrong password","パスワードが違います","密码不正确"])}]}]}; }},
+    {k:"wifi",i:"📶",n:["매장 Wi-Fi + 일정","Wi-Fi + event","Wi-Fi＋予定","Wi-Fi + 日程"],d:["손님에게 Wi-Fi 비밀번호, 이벤트 날엔 캘린더 일정","Wi-Fi for guests, a calendar invite on event days","来店客にWi-Fi、イベント日はカレンダー予定","给客人Wi-Fi密码，活动日提供日历邀请"],
+     def:function(){ return {t:L4(["어서 오세요!","Welcome!","いらっしゃいませ！","欢迎光临！"]),c:"0ea5e9",rules:[
+       {if:[],do:[{a:"wifi",ssid:"MyCafe_5G",pw:"welcome1234"},{a:"calendar",title:L4(["원데이 클래스","One-day class","ワンデークラス","一日体验课"]),start:isoIn(10,15),end:isoIn(10,17),place:L4(["우리 매장","Our store","当店","本店"])}]}]}; }},
+    {k:"blank",i:"✏️",n:["직접 만들기","Start from scratch","ゼロから作る","从零开始"],d:["빈 규칙에서 시작해요","Start with an empty rule","空のルールから始める","从空规则开始"],
+     def:function(){ return {t:"",c:"111111",rules:[{if:[],do:[{a:"show",title:""}]}]}; }}
+  ];
+  // ---- condition / action catalog: field specs [key, type, i18n label key, extra] ----
+  var CND={ who:[["v","sel","aq.f.who",[["owner","aq.who.owner"],["visitor","aq.who.visitor"]]]], first:[["v","sel","aq.f.first",[[true,"aq.first.yes"],[false,"aq.first.no"]]]],
+    once:[], count:[["from","num","aq.f.from"],["to","num","aq.f.to"]], time:[["from","dt","aq.f.tfrom"],["to","dt","aq.f.tto"]],
+    hours:[["from","num","aq.f.hfrom"],["to","num","aq.f.hto"]], days:[["v","days","aq.f.days"]], pass:[["p","pw","aq.f.pass"]],
+    near:[["lat","num","aq.f.lat"],["lng","num","aq.f.lng"],["r","num","aq.f.r"],["_here","here","aq.f.here"]] };
+  var ACTF={ show:[["title","txt","aq.f.title"],["body","area","aq.f.body"],["img","img","aq.f.img"],["url","txt","aq.f.url"],["label","txt","aq.f.label"]],
+    link:[["url","txt","aq.f.url"],["label","txt","aq.f.label"],["title","txt","aq.f.title"]],
+    "vault.add":[["scope","sel","aq.f.scope",[["device","aq.scope.device"],["shared","aq.scope.shared"]]],["title","txt","aq.f.title"],["body","area","aq.f.body"]],
+    "vault.show":[["scope","sel","aq.f.scope",[["device","aq.scope.device"],["shared","aq.scope.shared"]]],["mode","sel","aq.f.mode",[["all","aq.mode.all"],["latest","aq.mode.latest"],["random","aq.mode.random"]]],["title","txt","aq.f.title"]],
+    countdown:[["to","dt","aq.f.to2"],["msg","txt","aq.f.msg"]], "focus.start":[["min","num","aq.f.min"],["title","txt","aq.f.title"],["body","area","aq.f.body"]],
+    "focus.end":[["title","txt","aq.f.title"],["body","area","aq.f.body"]], wifi:[["ssid","txt","aq.f.ssid"],["pw","txt","aq.f.pw"]],
+    contact:[["name","txt","aq.f.name"],["org","txt","aq.f.org"],["tel","txt","aq.f.tel"],["email","txt","aq.f.email"],["url","txt","aq.f.url"]],
+    calendar:[["title","txt","aq.f.title"],["start","dt","aq.f.start"],["end","dt","aq.f.end"],["place","txt","aq.f.place"],["body","area","aq.f.body"]] };
+  var NEEDKV={count:1,once:1};
+  function fieldHtml(spec,obj,path){ var k=spec[0], ty=spec[1], lab='<label class="'+(ty==="area"||ty==="days"||ty==="img"||ty==="here"?"full":"")+'">'+esc(t(spec[2]))+' ', v=obj[k], dp=' data-p="'+path+'" data-k="'+k+'" data-ty="'+ty+'"';
+    if(ty==="sel") return lab+'<select'+dp+'>'+spec[3].map(function(o){ return '<option value="'+esc(o[0])+'"'+(String(v)===String(o[0])?' selected':'')+'>'+esc(t(o[1]))+'</option>'; }).join("")+'</select></label>';
+    if(ty==="num") return lab+'<input type="number" step="any"'+dp+' value="'+esc(v==null?"":v)+'"></label>';
+    if(ty==="dt") return lab+'<input type="datetime-local"'+dp+' value="'+esc(toLocal(v))+'"></label>';
+    if(ty==="area") return lab+'<textarea'+dp+' maxlength="1000">'+esc(v||"")+'</textarea></label>';
+    if(ty==="pw") return lab+'<input type="text" autocomplete="off"'+dp+' value="'+esc(v||"")+'" placeholder="'+esc(obj.h?t("aq.f.passKeep"):"")+'"></label>';
+    if(ty==="days") return lab+'<div class="aq-days">'+[0,1,2,3,4,5,6].map(function(d){ return '<label><input type="checkbox" data-p="'+path+'" data-k="v" data-ty="day" data-d="'+d+'"'+((v||[]).indexOf(d)>=0?' checked':'')+'>'+esc(t("aq.dow."+d))+'</label>'; }).join("")+'</div></label>';
+    if(ty==="img") return lab+(v?'<img src="'+esc(v)+'" alt="" style="max-width:120px;border-radius:8px;display:block;margin:4px 0">':'')+'<input type="file" accept="image/*"'+dp+'>'+(v?'<button type="button" class="btn sec" data-p="'+path+'" data-k="img" data-ty="imgdel" style="margin-top:4px;padding:6px 10px;font-size:12px">'+esc(t("aq.f.imgDel"))+'</button>':'')+'</label>';
+    if(ty==="here") return '<label class="full"><button type="button" class="btn sec" data-p="'+path+'" data-ty="here" style="padding:7px 10px;font-size:12px">📍 '+esc(t(spec[2]))+'</button></label>';
+    return lab+'<input type="text"'+dp+' value="'+esc(v||"")+'" maxlength="300"></label>'; }
+  function render(){ var box=$("aqRules"), n=draft.rules.length;
+    box.innerHTML=draft.rules.map(function(r,ri){
+      var conds=r.if.map(function(c,ci){ return '<div class="aq-item"><div class="aq-item-h"><span>'+esc(t("aq.c."+c.k))+'</span><button type="button" class="aq-x" data-del="c" data-r="'+ri+'" data-i="'+ci+'">✕</button></div>'+
+        ((CND[c.k]||[]).length?'<div class="aq-f">'+CND[c.k].map(function(s){ return fieldHtml(s,c,"c."+ri+"."+ci); }).join("")+'</div>':'')+(NEEDKV[c.k]&&srv&&!srv.kv?'<div class="aq-kvw">⚠ '+esc(t("aq.kvWarn"))+'</div>':'')+'</div>'; }).join("");
+      var acts=r.do.map(function(a,ai){ return '<div class="aq-item"><div class="aq-item-h"><span>'+esc(t("aq.a."+a.a))+'</span><button type="button" class="aq-x" data-del="a" data-r="'+ri+'" data-i="'+ai+'">✕</button></div><div class="aq-f">'+(ACTF[a.a]||[]).map(function(s){ return fieldHtml(s,a,"a."+ri+"."+ai); }).join("")+'</div></div>'; }).join("");
+      return '<div class="aq-rule"><div class="aq-rule-h"><span>'+esc(t("aq.rule").replace("{n}",ri+1))+(r.if.length?'':' · '+esc(t("aq.else")))+'</span>'+
+        (ri>0?'<button type="button" data-mv="-1" data-r="'+ri+'" title="↑">↑</button>':'')+(ri<n-1?'<button type="button" data-mv="1" data-r="'+ri+'" title="↓">↓</button>':'')+'<button type="button" data-del="r" data-r="'+ri+'">✕</button></div>'+
+        '<div class="aq-sec">'+esc(t("aq.when"))+'</div>'+(conds||'<div class="hint" style="margin:0">'+esc(t("aq.always"))+'</div>')+
+        '<div class="aq-add"><select data-addc="'+ri+'"><option value="">＋ '+esc(t("aq.addCond"))+'</option>'+Object.keys(CND).map(function(k){ return '<option value="'+k+'">'+esc(t("aq.c."+k))+'</option>'; }).join("")+'</select></div>'+
+        '<div class="aq-sec">'+esc(t("aq.then"))+'</div>'+acts+(r.do.length<3?'<div class="aq-add"><select data-adda="'+ri+'"><option value="">＋ '+esc(t("aq.addAct"))+'</option>'+Object.keys(ACTF).map(function(k){ return '<option value="'+k+'">'+esc(t("aq.a."+k))+'</option>'; }).join("")+'</select></div>':'')+'</div>'; }).join(""); }
+  function target(path){ var p=path.split("."), r=draft.rules[+p[1]]; return p[0]==="c"?r.if[+p[2]]:r.do[+p[2]]; }
+  function onEdit(e){ var el=e.target, ty=el.getAttribute("data-ty"); if(!ty) return; var o=target(el.getAttribute("data-p")), k=el.getAttribute("data-k");
+    if(ty==="day"){ var d=+el.getAttribute("data-d"), arr=o.v||[]; arr=arr.filter(function(x){ return x!==d; }); if(el.checked) arr.push(d); o.v=arr.sort(); }
+    else if(ty==="dt") o[k]=el.value?new Date(el.value).toISOString():"";
+    else if(ty==="num") o[k]=el.value===""?"":+el.value;
+    else if(ty==="sel") o[k]=el.value==="true"?true:el.value==="false"?false:el.value;
+    else if(ty==="img"){ if(e.type!=="change") return; var f=el.files&&el.files[0]; if(!f) return; if(!confirm(t("aq.imgConsent"))){ el.value=""; return; } upImage(f).then(function(u){ o.img=u; render(); }).catch(function(){ toast(t("ev.im.err")); }); return; }
+    else if(ty==="pw"){ o.p=el.value; }
+    else o[k]=el.value;
+    dirty=true; }
+  function upImage(file){ return new Promise(function(res,rej){ var u=URL.createObjectURL(file), im=new Image(); im.onload=function(){ var k=Math.min(1,1280/Math.max(im.width,im.height)), c=document.createElement("canvas"); c.width=Math.round(im.width*k); c.height=Math.round(im.height*k); c.getContext("2d").drawImage(im,0,0,c.width,c.height); URL.revokeObjectURL(u); var d=c.toDataURL("image/webp",0.88); if(d.indexOf("data:image/webp")!==0) d=c.toDataURL("image/jpeg",0.88); res(d); }; im.onerror=rej; im.src=u; })
+    .then(function(d){ return fetch("/api/ar-asset",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({op:"upload",data:d})}).then(function(r){ return r.json(); }); }).then(function(r){ if(!r.url) throw r; return r.url; }); }
+  function onClick(e){ var b=e.target.closest("button"); if(!b) return;
+    if(b.hasAttribute("data-del")){ var r=draft.rules[+b.getAttribute("data-r")], w=b.getAttribute("data-del"), i=+b.getAttribute("data-i");
+      if(w==="r"){ if(draft.rules.length>1) draft.rules.splice(+b.getAttribute("data-r"),1); } else if(w==="c") r.if.splice(i,1); else { if(r.do.length>1) r.do.splice(i,1); } dirty=true; render(); return; }
+    if(b.hasAttribute("data-mv")){ var ri=+b.getAttribute("data-r"), to=ri+(+b.getAttribute("data-mv")), tmp=draft.rules[ri]; draft.rules[ri]=draft.rules[to]; draft.rules[to]=tmp; dirty=true; render(); return; }
+    var ty=b.getAttribute("data-ty");
+    if(ty==="imgdel"){ delete target(b.getAttribute("data-p")).img; dirty=true; render(); return; }
+    if(ty==="here"){ var o=target(b.getAttribute("data-p")); if(!navigator.geolocation) return; navigator.geolocation.getCurrentPosition(function(p){ o.lat=+p.coords.latitude.toFixed(6); o.lng=+p.coords.longitude.toFixed(6); if(!o.r) o.r=150; dirty=true; render(); },function(){ toast(t("aq.locErr")); },{enableHighAccuracy:true,timeout:15000}); } }
+  function onAdd(e){ var s=e.target, v=s.value; if(!v) return; var ri=+(s.getAttribute("data-addc")||s.getAttribute("data-adda"));
+    if(s.hasAttribute("data-addc")){ var c={k:v}; if(v==="who") c.v="owner"; if(v==="first") c.v=true; if(v==="count"){ c.from=1; c.to=10; } if(v==="hours"){ c.from=9; c.to=18; } if(v==="days") c.v=[1,2,3,4,5]; if(v==="near") c.r=150; if(v==="time") c.from=isoIn(1,0); draft.rules[ri].if.push(c); }
+    else { var a={a:v}; if(v==="vault.add"||v==="vault.show") a.scope="device"; if(v==="vault.show") a.mode="all"; if(v==="focus.start") a.min=30; if(v==="countdown") a.to=isoIn(7,0); if(v==="calendar"){ a.start=isoIn(7,19); a.end=isoIn(7,21); } draft.rules[ri].do.push(a); }
+    dirty=true; render(); }
+  // ---- output: QR, link, preview, management ----
+  function link(){ return cur.id?MAP_SITE+"/a/"+cur.id:""; }
+  function drawQr(){ var cv=$("aqQr"), g=cv.getContext("2d"), Z=cv.width, u=link(); g.fillStyle="#fff"; g.fillRect(0,0,Z,Z);
+    if(!u){ $("aqLink").textContent=t("aq.notSaved"); return; }
+    var q=qrcode(0,"M"); q.addData(u); q.make(); var n=q.getModuleCount(), m=3, un=Z/(n+m*2); g.fillStyle="#111";
+    for(var r=0;r<n;r++) for(var c=0;c<n;c++) if(q.isDark(r,c)) g.fillRect(Math.floor((c+m)*un),Math.floor((r+m)*un),Math.ceil(un),Math.ceil(un));
+    $("aqLink").innerHTML='<a href="'+esc(u)+'" target="_blank" rel="noopener">'+esc(u.replace(/^https?:\/\//,""))+'</a>'; }
+  function preview(){ var f=$("aqPrev"), ph=$("aqPvPh"); if(!cur.id){ f.removeAttribute("src"); ph.style.display="flex"; return; } ph.style.display="none";
+    f.src="action.html?i="+cur.id+"&preview=1&lang="+((typeof LANG!=="undefined"&&LANG)||"ko")+(pvAs==="visitor"?"&as=visitor":"")+"&r="+Date.now(); }
+  function manage(){ $("aqManage").style.display=cur.id?"":"none"; if(!cur.id) return; $("aqOn").checked=draft.on!==false;
+    fetch(API+"?stats="+cur.id+"&key="+encodeURIComponent(cur.key)).then(function(r){ return r.json(); }).then(function(d){ $("aqStats").textContent=d.kv?t("aq.stats").replace("{n}",d.n||0):t("aq.statsNoKv"); }).catch(function(){}); }
+  function listMine(){ var l=mine().filter(function(m){ return ls("aqk_"+m.id); }); $("aqMine").style.display=l.length?"":"none";
+    $("aqMineList").innerHTML=l.map(function(m){ return '<button type="button" data-open="'+m.id+'" class="'+(m.id===cur.id?'on':'')+'">'+esc(m.t||m.id)+'</button>'; }).join(""); }
+  function tpls(){ $("aqTpls").innerHTML=TPL.map(function(x){ return '<button type="button" data-tpl="'+x.k+'"><b>'+x.i+'</b><span>'+esc(L4(x.n))+'</span><small>'+esc(L4(x.d))+'</small></button>'; }).join(""); }
+  function openDraft(def,id,key){ draft=def; cur={id:id||"",key:key||""}; $("aqT").value=def.t||""; $("aqC").value="#"+(def.c||"111111"); $("aqBuilder").style.display=""; dirty=false; render(); drawQr(); preview(); manage(); listMine();
+    $("aqSave").textContent=t(cur.id?"aq.update":"aq.save"); }
+  function openSaved(id){ var key=ls("aqk_"+id); if(!key){ toast(t("aq.noKey")); return; }
+    api({op:"get",id:id,key:key}).then(function(d){ if(!d.def) throw d; var def=d.def; def.rules.forEach(function(r){ r.if.forEach(function(c){ if(c.k==="pass"){ c.p=""; } }); }); openDraft(def,id,key); $("aqBuilder").scrollIntoView({behavior:"smooth",block:"start"}); })
+      .catch(function(){ toast(t("ev.st.err")); }); }
+  function save(){ if(!srv||!srv.blob){ alert(t("aq.noBlob")); return; }
+    draft.t=$("aqT").value.trim(); draft.c=$("aqC").value.replace("#","");
+    var bad=draft.rules.some(function(r){ return r.if.some(function(c){ return c.k==="pass" && !c.p && !c.h; }); }); if(bad){ alert(t("aq.needPass")); return; }
+    var b=$("aqSave"); b.disabled=true; var p=cur.id?api({op:"update",id:cur.id,key:cur.key,def:draft}):api({op:"create",def:draft});
+    p.then(function(d){ if(d._st!==200) throw d;
+      if(!cur.id){ cur={id:d.id,key:d.key}; ls("aqk_"+d.id,d.key); var l=mine(); l.unshift({id:d.id,t:draft.t}); saveMine(l); try{ history.replaceState(history.state,"","#action="+d.id); }catch(e){} }
+      else { var l2=mine().map(function(m){ return m.id===cur.id?{id:m.id,t:draft.t}:m; }); saveMine(l2); }
+      return api({op:"get",id:cur.id,key:cur.key}); })
+     .then(function(d){ if(d&&d.def){ d.def.rules.forEach(function(r){ r.if.forEach(function(c){ if(c.k==="pass") c.p=""; }); }); draft=d.def; render(); }
+      dirty=false; toast(t("aq.saved")); drawQr(); preview(); manage(); listMine(); $("aqSave").textContent=t("aq.update"); if(typeof track==="function") track("action_qr_save"); })
+     .catch(function(){ toast(t("ev.st.err")); }).then(function(){ b.disabled=false; }); }
+  function init(){ if(inited) return; inited=true; tpls(); listMine();
+    fetch(API+"?status=1").then(function(r){ return r.json(); }).then(function(d){ srv={blob:!!d.blob,kv:!!d.kv}; }).catch(function(){ srv={blob:false,kv:false}; })
+      .then(function(){ var m=!srv.blob?"aq.noBlob":(!srv.kv?"aq.kvNote":""); $("aqSrv").innerHTML=m?esc(t(m)):""; $("aqSrv").style.display=m?"":"none"; if(draft) render(); });
+    $("aqTpls").addEventListener("click",function(e){ var b=e.target.closest("[data-tpl]"); if(!b) return; if(dirty && !confirm(t("aq.discard"))) return;
+      Array.prototype.forEach.call(this.children,function(x){ x.classList.toggle("on",x===b); }); var tp=TPL.filter(function(x){ return x.k===b.getAttribute("data-tpl"); })[0]; var d=tp.def(); d.tpl=tp.k; openDraft(d); $("aqBuilder").scrollIntoView({behavior:"smooth",block:"start"}); });
+    $("aqMineList").addEventListener("click",function(e){ var b=e.target.closest("[data-open]"); if(b){ if(dirty && !confirm(t("aq.discard"))) return; openSaved(b.getAttribute("data-open")); } });
+    var rb=$("aqRules"); rb.addEventListener("input",onEdit); rb.addEventListener("change",function(e){ if(e.target.matches("[data-addc],[data-adda]")) onAdd(e); else onEdit(e); }); rb.addEventListener("click",onClick);
+    $("aqT").addEventListener("input",function(){ dirty=true; }); $("aqC").addEventListener("input",function(){ dirty=true; });
+    $("aqAddRule").addEventListener("click",function(){ draft.rules.push({if:[{k:"who",v:"visitor"}],do:[{a:"show",title:""}]}); dirty=true; render(); });
+    $("aqSave").addEventListener("click",save);
+    $("aqPvSeg").addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return; Array.prototype.forEach.call(this.children,function(x){ x.classList.toggle("on",x===b); }); pvAs=b.dataset.v; preview(); });
+    $("aqOn").addEventListener("change",function(){ var on=this.checked; api({op:"onoff",id:cur.id,key:cur.key,on:on}).then(function(d){ if(d._st!==200) throw d; draft.on=on; toast(t(on?"aq.onT":"aq.offT")); preview(); }).catch(function(){ toast(t("ev.st.err")); }); });
+    $("aqKeyCopy").addEventListener("click",function(){ var u=link()+"#k="+cur.key; (navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(function(){ toast(t("aq.keyCopied")); },function(){ prompt("",u); }); });
+    $("aqToStudio").addEventListener("click",function(){ if(!link()){ alert(t("aq.notSaved")); return; } pushArLinkToStudio(link()); });
+    $("aqQrPng").addEventListener("click",function(){ if(!link()){ alert(t("aq.notSaved")); return; } download($("aqQr").toDataURL("image/png"),"action-qr-"+cur.id+".png"); });
+  }
+  return { onView:function(v){ if(v==="action") init(); }, open:function(id){ init(); openSaved(id); },
+    onLang:function(){ if(!inited) return; tpls(); if(draft){ render(); drawQr(); manage(); $("aqSave").textContent=t(cur.id?"aq.update":"aq.save"); } } };
+})();
 // ---------- POSTER: user image + text + a freely placed QR card ----------
 // Examples are starting points; everything (image, text, link, QR position/size) is user-set.
 // Add more examples by appending to EX (image in assets/, texts as [ko,en,ja,zh]).
@@ -9776,7 +10116,8 @@ if (typeof qrcode === "undefined"){
     } }catch(e){}
   })();
   (function initRoute(){
-    var h=location.hash.slice(1);
+    var h=location.hash.slice(1), aq=/^action=([a-z2-9]{10})$/.exec(h);
+    if(aq){ try{ history.replaceState({view:"action"},""); }catch(e){} gotoView("action",{noHistory:true}); AQB.open(aq[1]); return; }
     try{ history.replaceState({view:VIEWS.indexOf(h)>=0?h:"gallery"},""); }catch(e){}
     if(VIEWS.indexOf(h)>0) gotoView(h,{noHistory:true});
   })();
