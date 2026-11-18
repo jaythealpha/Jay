@@ -270,6 +270,22 @@
   .dexcell .dm{font-size:8px; margin-top:2px; color:var(--gold); font-weight:700; min-height:10px;}
   .dexcell.locked{opacity:.45;}
   .dexcell.locked .de{filter:grayscale(1) brightness(.4);}
+  .statgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:14px 0 6px;}
+  .statcell{background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08);
+    border-radius:12px; padding:10px 4px; text-align:center;}
+  .statcell .sv{font-size:19px; font-weight:900; color:var(--gold); line-height:1.1;}
+  .statcell .sl{font-size:10px; opacity:.72; margin-top:2px;}
+  .achhdr{font-size:12px; font-weight:800; opacity:.8; text-align:left; margin:12px 2px 6px;}
+  .achgrid{display:grid; grid-template-columns:repeat(2,1fr); gap:7px; margin-bottom:6px;}
+  .achcell{display:flex; align-items:center; gap:8px; text-align:left;
+    background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08);
+    border-radius:12px; padding:8px 9px;}
+  .achcell .ai{font-size:22px; line-height:1; width:26px; text-align:center; flex:0 0 auto;}
+  .achcell .an{font-size:11.5px; font-weight:800; line-height:1.15;}
+  .achcell .ad{font-size:9.5px; opacity:.72; margin-top:1px; line-height:1.15;}
+  .achcell.unlocked{border-color:rgba(255,210,63,.5); background:rgba(255,210,63,.09);}
+  .achcell.locked{opacity:.5;}
+  .achcell.locked .ai{filter:grayscale(1) brightness(.5);}
 
   /* Leaderboard */
   .lbmode{font-size:11px; opacity:.6; margin:-6px 0 10px;}
@@ -398,6 +414,7 @@
     <button class="btn ghost" id="shopBtnStart">🛒 상점 (영구 업그레이드)</button>
     <button class="btn ghost" id="lbBtnStart">🏆 랭킹 보기</button>
     <button class="btn ghost" id="dexBtnStart">📖 몬스터 도감 보기</button>
+    <button class="btn ghost" id="profileBtnStart">📊 내 프로필 (통계·업적)</button>
   </div>
 </div>
 
@@ -454,6 +471,18 @@
     <p style="margin-top:-8px">보유 코인: 🪙 <b id="shopCoins" style="color:var(--gold)">0</b> · 영구 업그레이드</p>
     <div id="shopList"></div>
     <button class="btn ghost" id="shopClose">닫기</button>
+  </div>
+</div>
+
+<!-- Profile overlay (lifetime stats + achievements) -->
+<div class="overlay hide" id="profileOverlay">
+  <div class="card">
+    <h2>📊 내 프로필</h2>
+    <p style="margin-top:-8px">업적 <b id="achProgress" style="color:var(--gold)">0</b>/<span id="achTotal">14</span> 달성</p>
+    <div class="statgrid" id="statGrid"></div>
+    <div class="achhdr">🏅 업적 도감</div>
+    <div class="achgrid" id="achGrid"></div>
+    <button class="btn ghost" id="profileClose">닫기</button>
   </div>
 </div>
 
@@ -865,6 +894,27 @@ function unlock(id,icon,text){
   ACH.add(id); localStorage.setItem("bb_ach",JSON.stringify([...ACH]));
   toast(icon,text);
 }
+/* central registry of the fixed achievements → for the profile viewer */
+const ACH_DEF=[
+  {id:"first",  icon:"🧩", name:"첫 줄 클리어",   desc:"처음으로 한 줄을 완성"},
+  {id:"double", icon:"⚡", name:"더블 클리어",    desc:"한 번에 2줄 동시 클리어"},
+  {id:"triple", icon:"🌟", name:"트리플!",        desc:"한 번에 3줄 동시 클리어"},
+  {id:"combo3", icon:"🔥", name:"3콤보 연쇄",     desc:"콤보를 3연속 이어가기"},
+  {id:"combo5", icon:"💥", name:"5콤보 폭주",     desc:"콤보를 5연속 이어가기"},
+  {id:"psy",    icon:"🔮", name:"에스퍼 각성",    desc:"에스퍼 타입 몬스터로 클리어"},
+  {id:"golden1",icon:"✨", name:"골든 헌터",      desc:"골든 몬스터를 클리어"},
+  {id:"ice1",   icon:"🧊", name:"얼음 깨기",      desc:"얼음 블록을 처음 제거"},
+  {id:"boss1",  icon:"👑", name:"보스 브레이커",  desc:"보스 몬스터를 클리어"},
+  {id:"big",    icon:"💎", name:"한 방 500",      desc:"한 번에 500점 이상 획득"},
+  {id:"k1",     icon:"🏅", name:"1,000점 돌파",   desc:"한 판에 1,000점 달성"},
+  {id:"k5",     icon:"👑", name:"5,000점 마스터", desc:"한 판에 5,000점 달성"},
+  {id:"rec",    icon:"🏆", name:"신기록 달성",    desc:"자신의 최고 점수를 경신"},
+  {id:"dexfull",icon:"📖", name:"도감 완성",      desc:`몬스터 ${CHARS.length}종 전부 수집`},
+];
+/* lifetime stats across all games */
+const STATS=Object.assign({games:0,lines:0,combo:0,chalWins:0},
+  JSON.parse(localStorage.getItem("bb_stats")||"{}"));
+function saveStats(){ localStorage.setItem("bb_stats",JSON.stringify(STATS)); }
 function toast(icon,text){
   const t=document.createElement("div"); t.className="toast";
   t.innerHTML=`<span style="font-size:20px">${icon}</span> ${text}`;
@@ -1372,6 +1422,38 @@ function openDex(){ buildDex(); document.getElementById("dexOverlay").classList.
 document.getElementById("dexChip").onclick=openDex;
 document.getElementById("dexBtnStart").onclick=openDex;
 
+/* ============ Profile overlay (lifetime stats + achievements) ============ */
+function buildProfile(){
+  const sg=document.getElementById("statGrid"); sg.innerHTML="";
+  const stats=[
+    ["🎮", STATS.games.toLocaleString(), "플레이 판수"],
+    ["🏆", best.toLocaleString(), "최고 점수"],
+    ["➖", STATS.lines.toLocaleString(), "누적 지운 줄"],
+    ["🔥", "x"+Math.max(1,STATS.combo), "역대 최고 콤보"],
+    ["📖", DEX.size+"/"+CHARS.length, "도감 수집"],
+    ["🎯", STATS.chalWins.toLocaleString(), "도전 승리"],
+  ];
+  stats.forEach(([ic,v,l])=>{
+    const d=document.createElement("div"); d.className="statcell";
+    d.innerHTML=`<div class="sv">${ic} ${v}</div><div class="sl">${l}</div>`;
+    sg.appendChild(d);
+  });
+  const ag=document.getElementById("achGrid"); ag.innerHTML="";
+  let got=0;
+  ACH_DEF.forEach(a=>{
+    const owned=ACH.has(a.id); if(owned)got++;
+    const d=document.createElement("div"); d.className="achcell "+(owned?"unlocked":"locked");
+    d.innerHTML=`<div class="ai">${owned?a.icon:"🔒"}</div>
+      <div><div class="an">${owned?a.name:"???"}</div><div class="ad">${a.desc}</div></div>`;
+    ag.appendChild(d);
+  });
+  document.getElementById("achProgress").textContent=got;
+  document.getElementById("achTotal").textContent=ACH_DEF.length;
+}
+function openProfile(){ buildProfile(); document.getElementById("profileOverlay").classList.remove("hide"); }
+document.getElementById("profileBtnStart").onclick=openProfile;
+document.getElementById("profileClose").onclick=()=>document.getElementById("profileOverlay").classList.add("hide");
+
 /* ============ Shop (permanent upgrades) ============ */
 function buildShop(){
   document.getElementById("shopCoins").textContent=coins;
@@ -1501,6 +1583,7 @@ function startGame(){
   document.getElementById("dexOverlay").classList.add("hide");
   document.getElementById("lbOverlay").classList.add("hide");
   document.getElementById("shopOverlay").classList.add("hide");
+  document.getElementById("profileOverlay").classList.add("hide");
   challengeBeaten=false; renderChallenge();
   buildBoard(); paint(); newTray(); renderScore(); hideCombo(); renderMission();
   bgmPlay(); maybeCoach();
@@ -1517,6 +1600,10 @@ function endGame(){
   document.getElementById("rsLines").textContent=runLines;
   document.getElementById("rsCombo").textContent="x"+Math.max(1,runBestCombo);
   document.getElementById("rsDex").textContent="+"+Math.max(0,DEX.size-dexAtStart);
+  // lifetime stats
+  STATS.games++; STATS.lines+=runLines; STATS.combo=Math.max(STATS.combo,runBestCombo);
+  if(challenge && score>challenge.score) STATS.chalWins++;
+  saveStats();
   const chalRes=document.getElementById("chalResult");
   if(challenge){
     chalRes.style.display="block";
