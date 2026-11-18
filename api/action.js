@@ -55,8 +55,12 @@ async function loadDef(id) {
 }
 async function saveDef(id, def) {
   const old = await blobList("aq/" + id + "/d-");
-  await blobPut("aq/" + id + "/d-" + ts() + ".json", JSON.stringify(def), "application/json");
-  await blobDel(old.map((o) => o.url));
+  // a later name always sorts after every existing version, even for two saves in the same millisecond
+  let name = "aq/" + id + "/d-" + ts() + ".json";
+  const last = old.map((o) => o.path).sort().pop();
+  if (last && name <= last) name = last.replace(/\.json$/, "") + "z.json";
+  await blobPut(name, JSON.stringify(def), "application/json");
+  await blobDel(old.filter((o) => o.path !== name).map((o) => o.url));
 }
 
 // ---- definition validation (keeps stored JSON bounded and well-formed) ----

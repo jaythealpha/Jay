@@ -28,7 +28,7 @@ const id = await pg.evaluate(() => (JSON.parse(localStorage.getItem('aq_mine') |
 check('saved → id + owner key stored locally', /^[a-z2-9]{10}$/.test(id || '') && !!(await pg.evaluate((i) => localStorage.getItem('aqk_' + i), id)));
 check('link uses /a/<id>', (await pg.textContent('#aqLink')).includes('/a/' + id));
 const pvTxt = await pg.frameLocator('#aqPrev').locator('#out').innerText(); check('preview shows owner action (vault.add)', /보관함|사진|오늘의 한 장/.test(pvTxt), pvTxt.slice(0, 60));
-await pg.screenshot({ path: process.env.SHOT_DIR ? process.env.SHOT_DIR + '/aq-builder.png' : '/dev/null', fullPage: false });
+if (process.env.SHOT_DIR) await pg.screenshot({ path: process.env.SHOT_DIR + '/aq-builder.png' });
 
 // owner scans their own QR and leaves a note
 const op = await owner.newPage(); watch(op);
@@ -42,7 +42,7 @@ const vis = await ctxNew({ width: 390, height: 800 }); const vp = await vis.newP
 await vp.goto(B + '/action.html?i=' + id + '&lang=ko'); await vp.waitForTimeout(900);
 check('visitor: no owner bar', !(await vp.isVisible('#owner')));
 check('visitor sees the shared note', (await vp.textContent('#out')).includes('첫 번째 추억'));
-await vp.screenshot({ path: process.env.SHOT_DIR ? process.env.SHOT_DIR + '/aq-visitor.png' : '/dev/null' });
+if (process.env.SHOT_DIR) await vp.screenshot({ path: process.env.SHOT_DIR + '/aq-visitor.png' });
 
 // ---- secret message (password) ----
 await pg.bringToFront(); await pg.click('[data-tpl="secret"]', { force: true }); pg.once('dialog', (d) => d.accept()); await pg.waitForTimeout(300);

@@ -5,7 +5,7 @@
 
 - 라이브: https://jay-inky.vercel.app (Vercel 프로젝트 `jay`) — 아래 브랜치에 push하면 프로덕션으로 자동 배포된다.
 - 작업 브랜치: `claude/website-analysis-implementation-8rolis` (main 브랜치 없음).
-- 먼저 읽을 문서: **`docs/ar-concept.md`** (AR 컨셉·구조·설정 키·API·로드맵·검증), **`docs/action-qr-concept.md`** (액션 키 QR — 웹→전용 앱 설계), `HANDOFF.md`(앱 전반, 일부 오래됨), `docs/research/ar-qr-tech-research-2026-11.md`(기술 조사).
+- 먼저 읽을 문서: **`DESIGN.md`** (디자인 브리프·토큰·UI 규칙 — 화면을 바꾸기 전 필수), **`docs/ar-concept.md`** (AR 컨셉·구조·설정 키·API·로드맵·검증), **`docs/action-qr-concept.md`** (액션 키 QR — 웹→전용 앱 설계), `HANDOFF.md`(앱 전반, 일부 오래됨), `docs/research/ar-qr-tech-research-2026-11.md`(기술 조사).
 
 ## 구조
 | 파일 | 역할 |
@@ -17,6 +17,7 @@
 | `map.html`, `motion.html` | 지도 앱 선택 페이지, 모션 실험실. |
 | `api/*.js` | Vercel 서버리스 함수(ESM `export default handler`, npm 의존성 없음, `fetch`만 사용). |
 | `vendor/` | 서드파티 JS를 직접 동봉(CDN 금지 — 일부 환경에서 차단됨). |
+| `assets/fonts/` | Pretendard 서브셋(자체 호스팅, OFL). 글꼴 CDN 금지. |
 | `tools/tests/` | 헤드리스 브라우저 테스트(`npm install --prefix tools/tests` 후 `node tools/tests/<name>.test.mjs`). |
 
 ## 반드시 지킬 규칙
