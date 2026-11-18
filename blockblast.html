@@ -84,11 +84,19 @@
     border:1px solid #ff6ac1; border-radius:14px; padding:10px 12px; margin:10px 0 2px; font-size:13px; font-weight:700; line-height:1.4;}
   .chalbanner b{color:#ffd23f;}
   #comboTag{
-    font-weight:900; font-size:15px; padding:3px 12px; border-radius:20px;
+    font-weight:900; font-size:15px; padding:3px 12px; border-radius:20px; white-space:nowrap;
     background:linear-gradient(90deg,#ff6a00,#ff2e63); box-shadow:0 4px 16px rgba(255,46,99,.4);
     opacity:0; transform:translateY(6px) scale(.8); transition:.2s;
   }
   #comboTag.show{opacity:1; transform:translateY(0) scale(1);}
+  /* combo escalation — the meter visibly overheats as the chain climbs */
+  #comboTag.hot{font-size:17px; background:linear-gradient(90deg,#ff7a00,#ff2e63);
+    box-shadow:0 4px 18px rgba(255,90,0,.55); animation:comboPulse 1s ease-in-out infinite;}
+  #comboTag.fire{font-size:19px; background:linear-gradient(90deg,#ff2e63,#ff006e);
+    box-shadow:0 0 22px rgba(255,0,110,.6),0 4px 18px rgba(255,46,99,.5); animation:comboPulse .72s ease-in-out infinite;}
+  #comboTag.mega{font-size:22px; color:#2a1500; background:linear-gradient(90deg,#ffd23f,#ff3d3d);
+    box-shadow:0 0 30px rgba(255,210,63,.75),0 0 12px rgba(255,61,61,.6); animation:comboPulse .5s ease-in-out infinite;}
+  @keyframes comboPulse{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(0) scale(1.15)}}
 
   /* ===== Board ===== */
   #boardWrap{position:relative; width:100%; aspect-ratio:1/1;}
@@ -1153,7 +1161,7 @@ function resolveClears(char, placed, ar, ac, golden){
   popText(cx,cy-40,`${char.emoji} ${TYPES[char.type].skill}`, TYPES[char.type].color, 18);
   if(golden) popText(cx,cy-108,"✨ GOLDEN! ✨","#ffd23f",22);
   if(lines>=2) popText(cx,cy-74, lines>=3?"🌟 어메이징!":"⚡ 퍼펙트!", "#ff6ac1", 20);
-  if(combo>1){ showCombo(combo); popText(cx,cy+38,`COMBO x${combo}`, "#ff8c42", 20); }
+  if(combo>1){ showCombo(combo); popText(cx,cy+38,`COMBO x${combo}`, "#ff8c42", 20); comboMilestone(combo,cx,cy); }
   spawnParticles(toClear, Math.min(6,2+power));
 
   // daily mission progress
@@ -1238,8 +1246,26 @@ function impact(power, cx, cy, color){
   else if(power>=2) buzz([0,30,20,40]);
   else buzz(25);
 }
-function showCombo(c){comboTag.textContent="COMBO x"+c; comboTag.classList.add("show");}
-function hideCombo(){comboTag.classList.remove("show");}
+function showCombo(c){
+  const pre = c>=8 ? "👑 " : (c>=3 ? "🔥 " : "");
+  comboTag.textContent = pre+"COMBO x"+c;
+  comboTag.classList.remove("hot","fire","mega");
+  if(c>=8) comboTag.classList.add("mega");
+  else if(c>=5) comboTag.classList.add("fire");
+  else if(c>=3) comboTag.classList.add("hot");
+  comboTag.classList.add("show");
+}
+function hideCombo(){comboTag.classList.remove("show","hot","fire","mega");}
+/* one-time celebration when a combo chain crosses a milestone */
+const COMBO_MILESTONE={3:["🔥 콤보 과열!","#ff7a00"],5:["💥 폭주 모드!","#ff006e"],8:["👑 전설의 콤보!","#ffd23f"],10:["⚡ MAX 콤보!! ⚡","#ffd23f"]};
+function comboMilestone(c,cx,cy){
+  const m=COMBO_MILESTONE[c]; if(!m)return;
+  popText(cx, cy-150, m[0], m[1], 24+Math.min(10,c));
+  flashEl.classList.remove("go"); void flashEl.offsetWidth; flashEl.classList.add("go");
+  boardEl.classList.remove("shake-hard"); void boardEl.offsetWidth; boardEl.classList.add("shake-hard");
+  try{ sndCombo(c); }catch(e){}
+  buzz([0,30,20,30,20,60]);
+}
 
 let _shownScore=0, _scoreTween=null;
 function renderScore(){
