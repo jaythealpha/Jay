@@ -252,6 +252,7 @@
   .dexcell .de{font-size:26px; line-height:1;}
   .dexcell .dn{font-size:11px; font-weight:700;}
   .dexcell .dt{font-size:9px; opacity:.7;}
+  .dexcell .ds{font-size:8px; opacity:.8; margin-top:1px; line-height:1.15;}
   .dexcell.locked{opacity:.45;}
   .dexcell.locked .de{filter:grayscale(1) brightness(.4);}
 
@@ -274,6 +275,22 @@
   .nameEntry button{flex:0 0 auto; padding:0 16px; border:none; border-radius:12px; cursor:pointer;
     font-weight:800; color:#fff; background:linear-gradient(90deg,#7c5cff,#ff2e63);}
   .myrank{font-size:14px; margin-top:8px; color:var(--mint); font-weight:800;}
+
+  /* Shop */
+  #shopList{display:flex; flex-direction:column; gap:9px; margin:14px 0;}
+  .shopItem{display:flex; align-items:center; gap:10px; text-align:left;
+    background:rgba(255,255,255,.05); border:1px solid var(--stroke); border-radius:14px; padding:10px 12px;}
+  .shopItem .si{font-size:24px;}
+  .shopItem .sinfo{flex:1; min-width:0;}
+  .shopItem .snm{font-weight:800; font-size:14px;}
+  .shopItem .sds{font-size:11px; color:var(--txt-dim);}
+  .shopItem .sdots{display:flex; gap:3px; margin-top:3px;}
+  .shopItem .sdots i{width:12px; height:5px; border-radius:3px; background:rgba(255,255,255,.18);}
+  .shopItem .sdots i.on{background:var(--mint);}
+  .shopbuy{flex:0 0 auto; border:none; border-radius:11px; cursor:pointer; font-weight:800; color:#fff;
+    padding:9px 12px; font-size:13px; background:linear-gradient(100deg,var(--accent),var(--accent2)); white-space:nowrap;}
+  .shopbuy.max{background:rgba(255,255,255,.12); color:var(--txt-dim); cursor:default;}
+  .shopbuy.poor{filter:grayscale(.6) brightness(.8); cursor:not-allowed;}
 
   /* run summary (game over) */
   .runstats{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:14px 0 4px;}
@@ -350,16 +367,17 @@
       ➖ 가로/세로 한 줄을 채우면 그 몬스터가 <b>무기 스킬</b> 발동!<br>
       ⚡번개 크로스 🔥화염 폭발 💧큰 파도 🌿씨앗폭탄<br>
       🔮염력 폭발 👻유령 장난 😴꿀잠 보너스 🎈자장가<br>
-      🔥 연속 클리어 = <b>콤보 배율</b>, 여러 줄 = <b>대박 보너스</b>.<br>
+      🔥 <b>콤보</b>: 몇 수 안에 계속 터뜨리면 배율이 쌓여요 (여러 줄 = 대박).<br>
       📖 처음 만난 몬스터는 <b>도감</b>에 등록 (<span class="totalCount">15</span>종 수집!).<br>
       🧊 <b>얼음 블록</b>은 줄을 채워야 사라져요.<br>
       ✨ 가끔 <b>골든 몬스터</b>가 등장 — 클리어 시 대박 점수!<br>
-      👑 15줄 클리어마다 <b>보스 몬스터</b> 등장, 클리어하면 전체 폭발!<br>
-      🎯 <b>오늘의 미션</b>을 깨면 보너스 코인 · 💰 코인으로 파워업 · 📅 매일 접속 보너스.<br>
+      👑 15줄 클리어마다 <b>보스 몬스터</b> 등장, 클리어하면 광역 폭발!<br>
+      🛒 쌓은 코인으로 <b>상점</b>에서 영구 업그레이드 · 🎯 오늘의 미션 · 📅 접속 보너스.<br>
       🏆 게임 오버 시 <b>랭킹 등록</b> — 전 세계(또는 이 기기) 최고 점수에 도전!
     </div>
     <div class="bestline">🏆 최고 기록: <span id="bestStart">0</span></div>
     <button class="btn" id="startBtn">게임 시작</button>
+    <button class="btn ghost" id="shopBtnStart">🛒 상점 (영구 업그레이드)</button>
     <button class="btn ghost" id="lbBtnStart">🏆 랭킹 보기</button>
     <button class="btn ghost" id="dexBtnStart">📖 몬스터 도감 보기</button>
   </div>
@@ -410,12 +428,36 @@
   </div>
 </div>
 
+<!-- Shop overlay -->
+<div class="overlay hide" id="shopOverlay">
+  <div class="card">
+    <h2>🛒 상점</h2>
+    <p style="margin-top:-8px">보유 코인: 🪙 <b id="shopCoins" style="color:var(--gold)">0</b> · 영구 업그레이드</p>
+    <div id="shopList"></div>
+    <button class="btn ghost" id="shopClose">닫기</button>
+  </div>
+</div>
+
 <script>
 "use strict";
 (function(){
 /* ============ Config ============ */
 const N=8;
 const COST={bomb:15,hammer:8,refresh:10};
+const COMBO_GRACE=2;   // placements you may miss and still keep a combo chain
+const COMBO_CAP=10;    // max combo level
+
+/* ---- Permanent shop (spend banked coins on lasting upgrades) ---- */
+const SHOP=[
+  {id:"score", emoji:"💯", name:"점수 부스트", desc:"획득 점수 +6%", max:5, cost:[60,120,240,480,960]},
+  {id:"luck",  emoji:"🍀", name:"행운의 손길", desc:"골든 확률 +1.5%p", max:3, cost:[90,180,360]},
+  {id:"tool",  emoji:"🧰", name:"비상 망치",   desc:"매 판 무료 망치 +1회", max:2, cost:[140,320]},
+  {id:"guard", emoji:"💗", name:"수호 부적",   desc:"시작 자장가 실드 +1", max:2, cost:[160,420]},
+];
+let shopLv=JSON.parse(localStorage.getItem("bb_shop")||"{}");
+function lv(id){return shopLv[id]||0;}
+function goldenChance(){ return 0.05 + 0.015*lv("luck"); }
+function scoreBoost(){ return 1 + 0.06*lv("score"); }
 
 /* ---- Global leaderboard backend (Supabase REST) ----
    To enable worldwide ranking, create a free Supabase project and paste its
@@ -556,9 +598,9 @@ const SHAPES=[
 ];
 
 /* ============ State ============ */
-let grid, score, coins, best, combo, streak, tray, activeTool, gameOver, muted, shield;
+let grid, score, coins, best, combo, streak, tray, activeTool, gameOver, muted, shieldCount;
 let placementsCount, obstacleWarned, bossCounter, pendingBoss;
-let runLines, runBestCombo, dexAtStart;
+let runLines, runBestCombo, dexAtStart, comboWindow, freeHammer;
 
 /* ============ DOM ============ */
 const boardEl=document.getElementById("board");
@@ -846,7 +888,7 @@ function normalize(sh){
   return sh.map(p=>[p[0]-mr,p[1]-mc]);
 }
 function newTray(){
-  tray=[0,1,2].map(()=>({shape:normalize(randShape()),char:randChar(),used:false,golden:Math.random()<0.05}));
+  tray=[0,1,2].map(()=>({shape:normalize(randShape()),char:randChar(),used:false,golden:Math.random()<goldenChance()}));
   if(pendingBoss){
     pendingBoss=false;
     tray[0]={shape:normalize(SHAPES[10]),char:BOSS_CHAR,used:false,golden:false};
@@ -860,13 +902,14 @@ function renderTray(){
     const slot=document.createElement("div"); slot.className="slot";
     slot.appendChild(makePieceEl(p,i));
     const nm=document.createElement("div"); nm.className="pcname";
-    nm.textContent=p.used?"":(p.golden?"✨":"")+p.char.name;
+    if(!p.used){ const glyph=TYPES[p.char.type].skill.split(" ").pop();
+      nm.textContent=(p.golden?"✨":"")+p.char.name+" "+glyph; }
     slot.appendChild(nm);
     trayEl.appendChild(slot);
   });
   if(tray.every(p=>p.used)){ newTray(); return; }
   if(!anyMove()){
-    if(shield){ shield=false; toast("🎈","자장가 발동! 새 몬스터로 위기 탈출"); newTray(); return; }
+    if(shieldCount>0){ shieldCount--; toast("🎈","자장가 발동! 새 몬스터로 위기 탈출"); newTray(); return; }
     endGame();
   }
 }
@@ -930,7 +973,10 @@ function place(idx,r,c){
 function maybeSpawnObstacle(){
   if(gameOver||!grid) return;
   let obCount=0; for(let r=0;r<N;r++)for(let c=0;c<N;c++) if(grid[r][c]&&grid[r][c].obstacle) obCount++;
-  if(obCount>=3 || placementsCount<6 || Math.random()>0.12) return;
+  // difficulty ramps with lines cleared: more ice, more often as the run goes on
+  const maxOb=Math.min(5, 2+Math.floor(runLines/8));
+  const chance=Math.min(0.22, 0.09+runLines*0.004);
+  if(obCount>=maxOb || placementsCount<6 || Math.random()>chance) return;
   const empties=[]; for(let r=0;r<N;r++)for(let c=0;c<N;c++) if(!grid[r][c]) empties.push([r,c]);
   if(!empties.length) return;
   const [r,c]=empties[Math.floor(Math.random()*empties.length)];
@@ -957,7 +1003,10 @@ function applySkill(char, placed, ar, ac){
   else if(t==="ice"){ for(let c=0;c<N;c++)add(ar,c); for(let r=0;r<N;r++)add(r,ac);
     for(let r=0;r<N;r++)for(let c=0;c<N;c++) if(grid[r][c]&&grid[r][c].obstacle) out.cells.add(r+","+c); }
   else if(t==="rock"){ for(const dr of[-1,0,1])for(let c=0;c<N;c++)add(ar+dr,c); for(const dc of[-1,0,1])for(let r=0;r<N;r++)add(r,ac+dc); }
-  else if(t==="legend"){ for(let r=0;r<N;r++)for(let c=0;c<N;c++) if(grid[r][c]) out.cells.add(r+","+c); out.bonusScore=1000; out.bonusCoin=50; }
+  else if(t==="legend"){ // 황금 폭풍: 5×5 범위 + 보스가 놓인 줄 클리어 (전체 클리어는 과함 → 긴장 유지)
+    for(let dr=-2;dr<=2;dr++)for(let dc=-2;dc<=2;dc++)add(ar+dr,ac+dc);
+    for(const[pr,pc]of placed){ for(let c=0;c<N;c++)add(pr,c); for(let r=0;r<N;r++)add(r,pc); }
+    out.mult=1.5; out.bonusScore=500; out.bonusCoin=12; }
   return out;
 }
 
@@ -967,8 +1016,12 @@ function resolveClears(char, placed, ar, ac, golden){
   for(let c=0;c<N;c++){let ok=true;for(let r=0;r<N;r++)if(!grid[r][c]){ok=false;break;} if(ok)fullCols.push(c);}
   const lines=fullRows.length+fullCols.length;
 
-  if(lines===0){ combo=0; hideCombo(); return; }
-  combo++;
+  if(lines===0){
+    // combo chain survives a few non-clearing placements (grace window)
+    if(combo>0){ comboWindow--; if(comboWindow<=0){ combo=0; hideCombo(); } }
+    return;
+  }
+  combo=Math.min(COMBO_CAP, combo+1); comboWindow=COMBO_GRACE;
   runLines+=lines; if(combo>runBestCombo) runBestCombo=combo;
   bossCounter+=lines;
   if(bossCounter>=15){ bossCounter-=15; pendingBoss=true; }
@@ -981,7 +1034,7 @@ function resolveClears(char, placed, ar, ac, golden){
   const sk=applySkill(char, placed, ar, ac);
   let skillOnly=0;
   sk.cells.forEach(k=>{ if(!toClear.has(k)) skillOnly++; toClear.add(k); });
-  if(sk.shield){ shield=true; }
+  if(sk.shield){ shieldCount=Math.min(3,shieldCount+1); }
 
   let iceCleared=0;
   toClear.forEach(k=>{const[r,c]=k.split(",").map(Number); if(grid[r][c]&&grid[r][c].obstacle) iceCleared++;});
@@ -993,9 +1046,9 @@ function resolveClears(char, placed, ar, ac, golden){
   const multiBonus=lines>=2 ? lines*(lines-1)*25 : 0;
   const comboMult=1+(combo-1)*0.5;
   const goldMult=golden?3:1;
-  const gained=Math.round((base+multiBonus)*comboMult*sk.mult*goldMult) + skillOnly*8 + sk.bonusScore + iceCleared*15;
+  const gained=Math.round((base+multiBonus)*comboMult*sk.mult*goldMult*scoreBoost()) + skillOnly*8 + sk.bonusScore + iceCleared*15;
   score+=gained;
-  coins += (lines + (lines>=2?lines:0) + (combo>1?combo:0) + Math.floor(skillOnly/3) + sk.bonusCoin) * (golden?2:1);
+  coins += (lines + (lines>=2?lines:0) + (combo>2?Math.floor(combo/2):0) + Math.floor(skillOnly/4) + sk.bonusCoin) * (golden?2:1);
 
   // effects — centered on the clear centroid, power scales the punch
   let sx=0, sy=0, nn=0;
@@ -1116,8 +1169,12 @@ function renderScore(){
 }
 function updateToolBtns(){
   document.querySelectorAll(".tool").forEach(t=>{
-    t.classList.toggle("disabled", coins<COST[t.dataset.tool]);
+    const tool=t.dataset.tool;
+    const ok = coins>=COST[tool] || (tool==="hammer" && freeHammer>0);
+    t.classList.toggle("disabled", !ok);
   });
+  const hcost=document.querySelector('.tool[data-tool="hammer"] .cost');
+  if(hcost) hcost.textContent = (freeHammer>0) ? ("무료 "+freeHammer) : ("🪙"+COST.hammer);
 }
 
 /* ============ Drag & drop ============ */
@@ -1205,8 +1262,9 @@ function onUp(e){
 /* ============ Power-ups ============ */
 document.querySelectorAll(".tool").forEach(t=>{
   t.addEventListener("click",()=>{
-    if(gameOver||coins<COST[t.dataset.tool])return;
     const tool=t.dataset.tool;
+    const affordable = coins>=COST[tool] || (tool==="hammer" && freeHammer>0);
+    if(gameOver||!affordable)return;
     if(tool==="refresh"){
       coins-=COST.refresh; sndCoin(); newTray(); renderScore();
       return;
@@ -1224,7 +1282,8 @@ boardEl.addEventListener("click",e=>{
   const r=+cell.dataset.r, c=+cell.dataset.c;
   if(activeTool==="hammer"){
     if(!grid[r][c])return;
-    coins-=COST.hammer; grid[r][c]=0; sndCoin();
+    if(freeHammer>0){ freeHammer--; toast("🧰","무료 망치 사용!"); } else coins-=COST.hammer;
+    grid[r][c]=0; sndCoin();
     cell.classList.add("clearing"); spawnParticles(new Set([r+","+c]));
     setTimeout(()=>{cell.classList.remove("clearing"); paint();},380);
   }else if(activeTool==="bomb"){
@@ -1243,7 +1302,7 @@ boardEl.addEventListener("click",e=>{
   document.querySelectorAll(".tool").forEach(x=>x.classList.remove("active"));
   renderScore(); saveMeta();
   if(!gameOver && !tray.every(p=>p.used) && !anyMove()){
-    if(shield){shield=false; toast("🎈","자장가 발동! 새 몬스터로 위기 탈출"); newTray();}
+    if(shieldCount>0){shieldCount--; toast("🎈","자장가 발동! 새 몬스터로 위기 탈출"); newTray();}
     else endGame();
   }
 });
@@ -1259,7 +1318,8 @@ function buildDex(){
       : `<div class="de">${owned?ch.emoji:"❓"}</div>`;
     d.innerHTML=`${face}
       <div class="dn">${owned?ch.name:"???"}</div>
-      <div class="dt" style="color:${owned?TYPES[ch.type].color:'#888'}">${owned?TYPE_KO[ch.type]:"미발견"}</div>`;
+      <div class="dt" style="color:${owned?TYPES[ch.type].color:'#888'}">${owned?TYPE_KO[ch.type]:"미발견"}</div>
+      <div class="ds">${owned?TYPES[ch.type].skill:""}</div>`;
     g.appendChild(d);
   });
   document.getElementById("dexProgress").textContent=DEX.size;
@@ -1267,6 +1327,44 @@ function buildDex(){
 function openDex(){ buildDex(); document.getElementById("dexOverlay").classList.remove("hide"); }
 document.getElementById("dexChip").onclick=openDex;
 document.getElementById("dexBtnStart").onclick=openDex;
+
+/* ============ Shop (permanent upgrades) ============ */
+function buildShop(){
+  document.getElementById("shopCoins").textContent=coins;
+  const list=document.getElementById("shopList"); list.innerHTML="";
+  SHOP.forEach(it=>{
+    const cur=lv(it.id), maxed=cur>=it.max, cost=maxed?0:it.cost[cur];
+    const poor=!maxed && coins<cost;
+    const dots=Array.from({length:it.max},(_,i)=>`<i class="${i<cur?'on':''}"></i>`).join("");
+    const btn = maxed ? `<button class="shopbuy max">MAX</button>`
+      : `<button class="shopbuy ${poor?'poor':''}" data-buy="${it.id}">🪙${cost}</button>`;
+    const row=document.createElement("div"); row.className="shopItem";
+    row.innerHTML=`<div class="si">${it.emoji}</div>
+      <div class="sinfo"><div class="snm">${it.name} <span style="color:var(--mint)">Lv.${cur}/${it.max}</span></div>
+      <div class="sds">${it.desc} · 현재효과 ${effectText(it,cur)}</div><div class="sdots">${dots}</div></div>${btn}`;
+    list.appendChild(row);
+  });
+  list.querySelectorAll("[data-buy]").forEach(b=>b.onclick=()=>buyShop(b.dataset.buy));
+}
+function effectText(it,cur){
+  if(it.id==="score") return "+"+(cur*6)+"%";
+  if(it.id==="luck") return "+"+(cur*1.5)+"%p";
+  if(it.id==="tool") return cur+"회";
+  if(it.id==="guard") return cur+"개";
+  return "";
+}
+function buyShop(id){
+  const it=SHOP.find(x=>x.id===id), cur=lv(id);
+  if(cur>=it.max) return;
+  const cost=it.cost[cur];
+  if(coins<cost){ sndBad(); return; }
+  coins-=cost; shopLv[id]=cur+1; localStorage.setItem("bb_shop",JSON.stringify(shopLv)); localStorage.setItem("bb_coins",coins);
+  sndCoin(); toast(it.emoji,`${it.name} Lv.${cur+1} 구매!`);
+  buildShop();
+}
+function openShop(){ buildShop(); document.getElementById("shopOverlay").classList.remove("hide"); }
+document.getElementById("shopBtnStart").onclick=openShop;
+document.getElementById("shopClose").onclick=()=>document.getElementById("shopOverlay").classList.add("hide");
 document.getElementById("dexClose").onclick=()=>document.getElementById("dexOverlay").classList.add("hide");
 
 /* ============ Leaderboard wiring ============ */
@@ -1295,13 +1393,15 @@ function hideCoach(){
 /* ============ Game flow ============ */
 function startGame(){
   grid=Array.from({length:N},()=>Array(N).fill(0));
-  score=0; combo=0; activeTool=null; gameOver=false; shield=false;
+  score=0; combo=0; comboWindow=0; activeTool=null; gameOver=false;
+  shieldCount=lv("guard"); freeHammer=lv("tool");   // apply permanent shop upgrades
   placementsCount=0; obstacleWarned=false; bossCounter=0; pendingBoss=false;
   runLines=0; runBestCombo=0; dexAtStart=DEX.size; _shownScore=0;
   document.getElementById("startOverlay").classList.add("hide");
   document.getElementById("overOverlay").classList.add("hide");
   document.getElementById("dexOverlay").classList.add("hide");
   document.getElementById("lbOverlay").classList.add("hide");
+  document.getElementById("shopOverlay").classList.add("hide");
   buildBoard(); paint(); newTray(); renderScore(); hideCombo(); renderMission();
   bgmPlay(); maybeCoach();
 }
