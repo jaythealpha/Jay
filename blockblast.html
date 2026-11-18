@@ -103,6 +103,13 @@
   #comboTag.mega{font-size:22px; color:#2a1500; background:linear-gradient(90deg,#ffd23f,#ff3d3d);
     box-shadow:0 0 30px rgba(255,210,63,.75),0 0 12px rgba(255,61,61,.6); animation:comboPulse .5s ease-in-out infinite;}
   @keyframes comboPulse{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(0) scale(1.15)}}
+  /* combo grace pips — how many non-clearing moves before the chain breaks */
+  .comboWrap{display:flex; flex-direction:column; align-items:flex-end; gap:3px;}
+  #comboGrace{display:none; align-items:center; gap:4px;}
+  #comboGrace .gp{width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,.2); transition:.15s;}
+  #comboGrace .gp.lit{background:#ff8c42; box-shadow:0 0 5px rgba(255,140,66,.7);}
+  #comboGrace.warn .gp.lit{background:#ff2e63; box-shadow:0 0 8px rgba(255,46,99,.95); animation:gpBlink .5s ease-in-out infinite;}
+  @keyframes gpBlink{0%,100%{opacity:1}50%{opacity:.35}}
   #dailyTag{display:none; position:fixed; top:calc(12px + env(safe-area-inset-top)); left:calc(12px + env(safe-area-inset-left)); z-index:30; font-size:11px; font-weight:800;
     padding:4px 10px; border-radius:20px; color:#0b0a16; background:linear-gradient(90deg,#7c5cff,#4dffb8);
     box-shadow:0 3px 12px rgba(124,92,255,.4);}
@@ -389,7 +396,7 @@
       <span id="missionChip">🎯 <span id="missionText">-</span></span>
       <span id="chalChip">🎯 <b id="chalTarget">0</b></span>
     </div>
-    <span id="comboTag">COMBO x2</span>
+    <div class="comboWrap"><span id="comboTag">COMBO x2</span><div id="comboGrace"></div></div>
   </div>
 
   <div id="boardWrap"><div id="board"></div><div id="boardFrame"></div></div>
@@ -1194,10 +1201,11 @@ function resolveClears(char, placed, ar, ac, golden){
 
   if(lines===0){
     // combo chain survives a few non-clearing placements (grace window)
-    if(combo>0){ comboWindow--; if(comboWindow<=0){ combo=0; hideCombo(); } }
+    if(combo>0){ comboWindow--; if(comboWindow<=0){ combo=0; hideCombo(); } else renderComboGrace(); }
     return;
   }
   combo=Math.min(COMBO_CAP, combo+1); comboWindow=COMBO_GRACE;
+  renderComboGrace();
   runLines+=lines; if(combo>runBestCombo) runBestCombo=combo;
   addTypeLines(char.type, lines);   // type mastery progress
   bossCounter+=lines;
@@ -1333,7 +1341,18 @@ function showCombo(c){
   else if(c>=3) comboTag.classList.add("hot");
   comboTag.classList.add("show");
 }
-function hideCombo(){comboTag.classList.remove("show","hot","fire","mega");}
+function hideCombo(){comboTag.classList.remove("show","hot","fire","mega"); const g=document.getElementById("comboGrace"); if(g)g.style.display="none";}
+/* show remaining grace moves (how many non-clearing placements keep the chain alive) */
+function renderComboGrace(){
+  const el=document.getElementById("comboGrace");
+  if(!el) return;
+  if(combo<2){ el.style.display="none"; return; }
+  el.style.display="flex";
+  let html="";
+  for(let i=0;i<COMBO_GRACE;i++) html+=`<span class="gp${i<comboWindow?' lit':''}"></span>`;
+  el.innerHTML=html;
+  el.classList.toggle("warn", comboWindow<=1);
+}
 /* one-time celebration when a combo chain crosses a milestone */
 const COMBO_MILESTONE={3:["🔥 콤보 과열!","#ff7a00"],5:["💥 폭주 모드!","#ff006e"],8:["👑 전설의 콤보!","#ffd23f"],10:["⚡ MAX 콤보!! ⚡","#ffd23f"]};
 function comboMilestone(c,cx,cy){
