@@ -77,6 +77,12 @@
   #missionChip{background:var(--glass); border:1px solid rgba(255,255,255,.12);
     border-radius:20px; padding:2px 10px; display:flex; align-items:center; gap:3px; white-space:nowrap;}
   #missionChip.done{color:#4dffb8; border-color:#4dffb8;}
+  #chalChip{display:none; align-items:center; gap:3px; background:rgba(255,106,193,.14);
+    border:1px solid #ff6ac1; border-radius:20px; padding:2px 10px; color:#ffb3e3; font-weight:700;}
+  #chalChip.beat{background:rgba(77,255,184,.18); border-color:var(--mint); color:var(--mint);}
+  .chalbanner{background:linear-gradient(90deg,rgba(255,106,193,.2),rgba(124,92,255,.2));
+    border:1px solid #ff6ac1; border-radius:14px; padding:10px 12px; margin:10px 0 2px; font-size:13px; font-weight:700; line-height:1.4;}
+  .chalbanner b{color:#ffd23f;}
   #comboTag{
     font-weight:900; font-size:15px; padding:3px 12px; border-radius:20px;
     background:linear-gradient(90deg,#ff6a00,#ff2e63); box-shadow:0 4px 16px rgba(255,46,99,.4);
@@ -343,6 +349,7 @@
       <span id="streakTag">📅 <b id="streakVal">1</b>일</span>
       <span id="dexChip">📖 <b id="dexCount">0</b>/<span class="totalCount">15</span></span>
       <span id="missionChip">🎯 <span id="missionText">-</span></span>
+      <span id="chalChip">🎯 <b id="chalTarget">0</b></span>
     </div>
     <span id="comboTag">COMBO x2</span>
   </div>
@@ -385,6 +392,7 @@
       🛒 쌓은 코인으로 <b>상점</b>에서 영구 업그레이드 · 🎯 오늘의 미션 · 📅 접속 보너스.<br>
       🏆 게임 오버 시 <b>랭킹 등록</b> — 전 세계(또는 이 기기) 최고 점수에 도전!
     </div>
+    <div id="chalBanner" class="chalbanner" style="display:none"></div>
     <div class="bestline">🏆 최고 기록: <span id="bestStart">0</span></div>
     <button class="btn" id="startBtn">게임 시작</button>
     <button class="btn ghost" id="shopBtnStart">🛒 상점 (영구 업그레이드)</button>
@@ -399,6 +407,7 @@
     <h2>게임 오버 😵</h2>
     <div class="bigscore" id="finalScore">0</div>
     <div id="recLine" class="newrec" style="display:none">🎉 새로운 신기록! 🎉</div>
+    <div id="chalResult" class="chalbanner" style="display:none"></div>
     <p id="overMsg">더 이상 놓을 곳이 없어요…</p>
     <div class="runstats">
       <div class="runstat a"><div class="rv" id="rsLines">0</div><div class="rl">지운 줄</div></div>
@@ -413,7 +422,7 @@
     <div class="myrank" id="myRankLine" style="display:none"></div>
     <button class="btn" id="againBtn">다시 하기</button>
     <button class="btn ghost" id="lbBtnOver">🏆 랭킹 보기</button>
-    <button class="btn ghost" id="shareBtn">📤 결과 공유하기</button>
+    <button class="btn ghost" id="shareBtn">📤 친구에게 도전장 보내기</button>
   </div>
 </div>
 
@@ -1197,6 +1206,7 @@ function renderScore(){
   if(to>from){ scoreVal.classList.remove("bump"); void scoreVal.offsetWidth; scoreVal.classList.add("bump"); }
   coinVal.textContent=coins;
   bestVal.textContent=Math.max(best,score).toLocaleString();
+  checkChallengeBeat();
   updateToolBtns();
 }
 function updateToolBtns(){
@@ -1424,6 +1434,60 @@ function hideCoach(){
   localStorage.setItem("bb_played","1");
 }
 
+/* ============ Friend challenge (async, no backend) ============ */
+let challenge=null, challengeBeaten=false;
+function parseChallenge(){
+  try{
+    const m=(location.hash||"").match(/[#&]c=(\d+)\.?(.*)$/);
+    if(m){
+      const sc=parseInt(m[1],10);
+      if(sc>0 && sc<100000000){
+        let nm=decodeURIComponent((m[2]||"").replace(/&.*$/,"")).trim().slice(0,10);
+        challenge={score:sc, name:nm||"친구"};
+      }
+    }
+  }catch(e){ challenge=null; }
+}
+function renderChallenge(){
+  const chip=document.getElementById("chalChip");
+  const banner=document.getElementById("chalBanner");
+  if(!challenge){ if(chip)chip.style.display="none"; if(banner)banner.style.display="none"; return; }
+  if(banner){
+    banner.style.display="block";
+    banner.innerHTML=`🎯 <b>${esc(challenge.name)}</b>님의 도전장!<br>${challenge.score.toLocaleString()}점을 넘어보세요 🔥`;
+  }
+  if(chip){
+    chip.style.display="inline-flex";
+    document.getElementById("chalTarget").textContent=challenge.score.toLocaleString();
+    chip.classList.toggle("beat", challengeBeaten);
+  }
+}
+function checkChallengeBeat(){
+  if(challenge && !challengeBeaten && score>challenge.score){
+    challengeBeaten=true;
+    const chip=document.getElementById("chalChip");
+    if(chip) chip.classList.add("beat");
+    try{ sndSkill(); }catch(e){}
+    try{ navigator.vibrate && navigator.vibrate([20,40,20,40,60]); }catch(e){}
+    toast("🎉",`도전 성공! ${challenge.name} 추월!`);
+    bigPop("🎉 추월! 🎉");
+  }
+}
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function bigPop(txt){
+  try{
+    const el=document.createElement("div");
+    el.textContent=txt;
+    el.style.cssText="position:fixed;left:50%;top:38%;transform:translate(-50%,-50%) scale(.6);z-index:60;"+
+      "font-size:28px;font-weight:900;color:#ffd23f;text-shadow:0 2px 12px rgba(0,0,0,.6);"+
+      "pointer-events:none;transition:transform .4s cubic-bezier(.2,1.4,.4,1),opacity .5s;opacity:0;";
+    document.body.appendChild(el);
+    requestAnimationFrame(()=>{ el.style.transform="translate(-50%,-50%) scale(1.15)"; el.style.opacity="1"; });
+    setTimeout(()=>{ el.style.opacity="0"; el.style.transform="translate(-50%,-90%) scale(1)"; },1100);
+    setTimeout(()=>el.remove(),1700);
+  }catch(e){}
+}
+
 /* ============ Game flow ============ */
 function startGame(){
   grid=Array.from({length:N},()=>Array(N).fill(0));
@@ -1437,6 +1501,7 @@ function startGame(){
   document.getElementById("dexOverlay").classList.add("hide");
   document.getElementById("lbOverlay").classList.add("hide");
   document.getElementById("shopOverlay").classList.add("hide");
+  challengeBeaten=false; renderChallenge();
   buildBoard(); paint(); newTray(); renderScore(); hideCombo(); renderMission();
   bgmPlay(); maybeCoach();
 }
@@ -1452,6 +1517,18 @@ function endGame(){
   document.getElementById("rsLines").textContent=runLines;
   document.getElementById("rsCombo").textContent="x"+Math.max(1,runBestCombo);
   document.getElementById("rsDex").textContent="+"+Math.max(0,DEX.size-dexAtStart);
+  const chalRes=document.getElementById("chalResult");
+  if(challenge){
+    chalRes.style.display="block";
+    if(score>challenge.score){
+      chalRes.style.borderColor="var(--mint)";
+      chalRes.innerHTML=`🎉 <b>${esc(challenge.name)}</b>님을 이겼어요!<br>${challenge.score.toLocaleString()} → ${score.toLocaleString()}점 추월 🏆`;
+    }else{
+      chalRes.style.borderColor="#ff6ac1";
+      const diff=(challenge.score-score);
+      chalRes.innerHTML=`😤 <b>${esc(challenge.name)}</b>님의 ${challenge.score.toLocaleString()}점까지<br>${diff.toLocaleString()}점 부족! 한 판 더 도전 🔥`;
+    }
+  }else{ chalRes.style.display="none"; }
   const msgs=["더 이상 놓을 곳이 없어요…","꽉 막혔네요! 다시 도전!","아깝다! 한 판 더?"];
   document.getElementById("overMsg").textContent=msgs[Math.floor(score)%msgs.length];
   saveMeta();
@@ -1471,11 +1548,17 @@ document.getElementById("muteBtn").onclick=function(){
   this.textContent=muted?"🔇":"🔊";
   if(muted) bgmStop(); else if(!gameOver && grid) bgmPlay();
 };
+function challengeLink(){
+  const nm=(localStorage.getItem("bb_name")||"").trim().slice(0,10);
+  const base=location.origin+location.pathname;
+  return base+"#c="+score+(nm?("."+encodeURIComponent(nm)):"");
+}
 document.getElementById("shareBtn").onclick=async function(){
-  const text=`🧩 블록 블라스트 몬스터 배틀에서 ${score.toLocaleString()}점! 📖 도감 ${DEX.size}/15 수집. 최고 ${best.toLocaleString()}점, 도전해봐! ⚔️`;
+  const link=challengeLink();
+  const text=`🧩 블록 블라스트 몬스터 배틀에서 ${score.toLocaleString()}점! ⚔️\n내 점수를 넘어봐 👉 ${link}`;
   try{
-    if(navigator.share){await navigator.share({title:"블록 블라스트 몬스터 배틀",text});}
-    else{await navigator.clipboard.writeText(text); toast("📋","결과가 복사됐어요!");}
+    if(navigator.share){await navigator.share({title:"블록 블라스트 도전장",text});}
+    else{await navigator.clipboard.writeText(text); toast("📋","도전 링크가 복사됐어요!");}
   }catch(e){}
 };
 
@@ -1491,6 +1574,9 @@ dexCountEl.textContent=DEX.size;
 document.getElementById("costBomb").textContent=COST.bomb;
 document.getElementById("costHammer").textContent=COST.hammer;
 document.getElementById("costRefresh").textContent=COST.refresh;
+parseChallenge();
+renderChallenge();
+window.addEventListener("hashchange",()=>{ parseChallenge(); challengeBeaten=false; renderChallenge(); });
 })();
 </script>
 </body>
