@@ -111,6 +111,14 @@
   @keyframes punch{0%{transform:scale(1)}22%{transform:scale(.9)}55%{transform:scale(1.06)}100%{transform:scale(1)}}
   #board.hitstop .cell.clearing{animation-play-state:paused;}
 
+  /* danger vignette — intensifies as the board fills */
+  #dangerVig{position:fixed; inset:0; z-index:43; pointer-events:none; opacity:0; transition:opacity .4s;
+    background:radial-gradient(ellipse at center, transparent 42%, rgba(255,40,70,.12) 66%, rgba(255,30,60,.5) 100%);
+    animation:dangerPulse 1.5s ease-in-out infinite;}
+  #dangerVig.fast{animation-duration:.7s;}
+  @keyframes dangerPulse{0%,100%{filter:brightness(.85)}50%{filter:brightness(1.3)}}
+  #board.danger2{box-shadow:inset 0 0 44px rgba(255,40,70,.8), 0 0 34px rgba(255,40,70,.5);}
+
   /* impact flash + shockwave */
   #flash{position:fixed; inset:0; z-index:45; pointer-events:none; opacity:0; mix-blend-mode:screen;
     background:radial-gradient(circle at 50% 42%, rgba(255,255,255,.9), rgba(255,210,80,.35) 40%, transparent 70%);}
@@ -253,6 +261,7 @@
   .dexcell .dn{font-size:11px; font-weight:700;}
   .dexcell .dt{font-size:9px; opacity:.7;}
   .dexcell .ds{font-size:8px; opacity:.8; margin-top:1px; line-height:1.15;}
+  .dexcell .dm{font-size:8px; margin-top:2px; color:var(--gold); font-weight:700; min-height:10px;}
   .dexcell.locked{opacity:.45;}
   .dexcell.locked .de{filter:grayscale(1) brightness(.4);}
 
@@ -351,6 +360,7 @@
 
 <div id="ghost"></div>
 <div id="flash"></div>
+<div id="dangerVig"></div>
 <div id="coachHint">👆 몬스터를 끌어서 판에 놓아요</div>
 <div class="pops" id="pops"></div>
 <div id="toasts"></div>
@@ -689,6 +699,16 @@ function buzz(pattern){ try{ if(navigator.vibrate) navigator.vibrate(pattern); }
 
 /* ============ Persistence ============ */
 const DEX=new Set(JSON.parse(localStorage.getItem("bb_dex2")||"[]"));
+/* type mastery: lines cleared per type (persistent) → active collection goal */
+const typeLines=JSON.parse(localStorage.getItem("bb_typelines")||"{}");
+const MASTERY=[[60,"🥇","마스터"],[30,"🥈","숙련"],[10,"🥉","입문"]];
+function tierOf(type){ const n=typeLines[type]||0; for(const m of MASTERY) if(n>=m[0]) return m[1]; return ""; }
+function addTypeLines(type,lines){
+  typeLines[type]=(typeLines[type]||0)+lines;
+  localStorage.setItem("bb_typelines",JSON.stringify(typeLines));
+  const n=typeLines[type];
+  for(const [req,ic,label] of MASTERY){ if(n>=req && n-lines<req){ unlock("mast_"+type+"_"+req, ic, `${TYPE_KO[type]} ${label}! (${req}줄 돌파)`); break; } }
+}
 let mission=JSON.parse(localStorage.getItem("bb_mission")||"null");
 const MISSION_POOL=["electric","fire","water","grass","psychic","ghost","normal","fairy","ice","rock"];
 function ensureMission(today){
@@ -875,9 +895,20 @@ function paint(){
   }
   updateDanger();
 }
+let _lastDanger=0, _dangerWarned=false;
 function updateDanger(){
   let f=0; for(let r=0;r<N;r++)for(let c=0;c<N;c++) if(grid[r][c])f++;
-  boardEl.classList.toggle("danger", f>=48);
+  const lvl = f>=58?2 : f>=47?1 : 0;
+  boardEl.classList.toggle("danger", lvl>=1);
+  boardEl.classList.toggle("danger2", lvl>=2);
+  const vig=document.getElementById("dangerVig");
+  vig.style.opacity = lvl===0?"0" : (lvl===1?".55":".95");
+  vig.classList.toggle("fast", lvl>=2);
+  if(lvl>_lastDanger){            // escalation tick
+    beep(170+lvl*45,0.18,"sawtooth",0.07);
+    if(lvl>=1 && !_dangerWarned){ _dangerWarned=true; toast("⚠️","판이 꽉 차고 있어요!"); buzz([0,30,60,30]); }
+  }
+  _lastDanger=lvl;
 }
 
 /* ============ Pieces ============ */
@@ -1023,6 +1054,7 @@ function resolveClears(char, placed, ar, ac, golden){
   }
   combo=Math.min(COMBO_CAP, combo+1); comboWindow=COMBO_GRACE;
   runLines+=lines; if(combo>runBestCombo) runBestCombo=combo;
+  addTypeLines(char.type, lines);   // type mastery progress
   bossCounter+=lines;
   if(bossCounter>=15){ bossCounter-=15; pendingBoss=true; }
 
@@ -1316,10 +1348,12 @@ function buildDex(){
     const face = owned && SPRITE[ch.id]
       ? `<div class="de" style="width:44px;height:44px;background:url('${SPRITE[ch.id].src}') center/contain no-repeat;image-rendering:pixelated"></div>`
       : `<div class="de">${owned?ch.emoji:"❓"}</div>`;
+    const tl=typeLines[ch.type]||0, tier=tierOf(ch.type);
     d.innerHTML=`${face}
       <div class="dn">${owned?ch.name:"???"}</div>
       <div class="dt" style="color:${owned?TYPES[ch.type].color:'#888'}">${owned?TYPE_KO[ch.type]:"미발견"}</div>
-      <div class="ds">${owned?TYPES[ch.type].skill:""}</div>`;
+      <div class="ds">${owned?TYPES[ch.type].skill:""}</div>
+      <div class="dm">${owned?("⚔ "+tl+"줄 "+tier):""}</div>`;
     g.appendChild(d);
   });
   document.getElementById("dexProgress").textContent=DEX.size;
@@ -1397,6 +1431,7 @@ function startGame(){
   shieldCount=lv("guard"); freeHammer=lv("tool");   // apply permanent shop upgrades
   placementsCount=0; obstacleWarned=false; bossCounter=0; pendingBoss=false;
   runLines=0; runBestCombo=0; dexAtStart=DEX.size; _shownScore=0;
+  _lastDanger=0; _dangerWarned=false; document.getElementById("dangerVig").style.opacity="0";
   document.getElementById("startOverlay").classList.add("hide");
   document.getElementById("overOverlay").classList.add("hide");
   document.getElementById("dexOverlay").classList.add("hide");
