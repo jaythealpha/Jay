@@ -46,7 +46,11 @@
     border:1px solid rgba(255,255,255,.12); border-radius:50%; width:38px; height:38px; font-size:16px;
     cursor:pointer; color:#fff; display:flex; align-items:center; justify-content:center;
     box-shadow:0 4px 12px rgba(0,0,0,.3);}
-  @media (hover:hover){ .themeBtn:hover, .muteBtn:hover{background:rgba(255,255,255,.15);} }
+  .pauseBtn{position:fixed; top:96px; right:12px; z-index:65; background:var(--glass); display:none;
+    border:1px solid rgba(255,255,255,.12); border-radius:50%; width:38px; height:38px; font-size:16px;
+    cursor:pointer; color:#fff; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,.3);}
+  .pauseBtn.on{display:flex;}
+  @media (hover:hover){ .themeBtn:hover, .muteBtn:hover, .pauseBtn:hover{background:rgba(255,255,255,.15);} }
 
   /* ===== Top bar ===== */
   .topbar{display:flex; align-items:center; gap:8px; padding-right:44px;}
@@ -401,6 +405,7 @@
 <div id="toasts"></div>
 <button class="muteBtn" id="muteBtn">🔊</button>
 <button class="themeBtn" id="themeBtn" title="배경 테마">🎨</button>
+<button class="pauseBtn" id="pauseBtn" title="일시정지">⏸️</button>
 <div id="dailyTag">📅 오늘의 도전</div>
 
 <!-- Start overlay -->
@@ -485,6 +490,18 @@
     <p style="margin-top:-8px">보유 코인: 🪙 <b id="shopCoins" style="color:var(--gold)">0</b> · 영구 업그레이드</p>
     <div id="shopList"></div>
     <button class="btn ghost" id="shopClose">닫기</button>
+  </div>
+</div>
+
+<!-- Pause / in-game menu overlay -->
+<div class="overlay hide" id="pauseOverlay">
+  <div class="card">
+    <h2>⏸️ 일시정지</h2>
+    <p style="margin-top:-8px">점수 <b id="pauseScore" style="color:var(--gold)">0</b></p>
+    <button class="btn" id="resumeBtn">▶️ 계속하기</button>
+    <button class="btn ghost" id="restartBtn">🔄 다시 시작</button>
+    <button class="btn ghost" id="homeBtn">🏠 홈으로</button>
+    <button class="btn ghost" id="resetBtn" style="color:#ff8c8c">🗑️ 데이터 초기화</button>
   </div>
 </div>
 
@@ -987,7 +1004,7 @@ function updateDanger(){
 /* ============ Deterministic RNG (for daily challenge) ============ */
 /* _rng is Math.random in normal play; in daily mode it is seeded from the
    calendar date so every player gets the exact same board + piece sequence. */
-let _rng=Math.random, dailyMode=false;
+let _rng=Math.random, dailyMode=false, paused=false;
 function rnd(){ return _rng(); }
 function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
 function todayKey(){ const d=new Date(); return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}`; }
@@ -1321,7 +1338,7 @@ function updateToolBtns(){
 let drag=null;
 function attachDrag(el,idx){
   el.addEventListener("pointerdown",e=>{
-    if(gameOver||activeTool||tray[idx].used)return;
+    if(gameOver||paused||activeTool||tray[idx].used)return;
     e.preventDefault();
     const p=tray[idx];
     ensureCtx();
@@ -1634,6 +1651,8 @@ function startGame(daily){
   document.getElementById("lbOverlay").classList.add("hide");
   document.getElementById("shopOverlay").classList.add("hide");
   document.getElementById("profileOverlay").classList.add("hide");
+  paused=false; document.getElementById("pauseOverlay").classList.add("hide");
+  document.getElementById("pauseBtn").classList.add("on");
   challengeBeaten=false; renderChallenge();
   document.getElementById("dailyTag").classList.toggle("on", dailyMode);
   buildBoard(); paint(); newTray(); renderScore(); hideCombo(); renderMission();
@@ -1642,6 +1661,7 @@ function startGame(daily){
 }
 function endGame(){
   if(gameOver)return; gameOver=true; sndOver();
+  document.getElementById("pauseBtn").classList.remove("on");
   document.getElementById("finalScore").textContent=score.toLocaleString();
   const isRec=score>best;
   if(isRec){best=score; localStorage.setItem("bb_best",best); unlock("rec","🏆","신기록 달성!");}
@@ -1691,6 +1711,38 @@ function endGame(){
 document.getElementById("startBtn").onclick=()=>startGame(false);
 document.getElementById("againBtn").onclick=()=>startGame(dailyMode);   // restart keeps current mode
 document.getElementById("dailyBtnStart").onclick=()=>startGame(true);
+
+/* ---- Pause / in-game menu ---- */
+function pauseGame(){
+  if(gameOver||!grid||paused) return;
+  paused=true; bgmStop();
+  document.getElementById("pauseScore").textContent=score.toLocaleString();
+  document.getElementById("pauseOverlay").classList.remove("hide");
+}
+function resumeGame(){
+  paused=false;
+  document.getElementById("pauseOverlay").classList.add("hide");
+  if(!muted && !gameOver && grid) bgmPlay();
+}
+function goHome(){
+  paused=false; bgmStop();
+  document.getElementById("pauseOverlay").classList.add("hide");
+  document.getElementById("pauseBtn").classList.remove("on");
+  document.getElementById("startOverlay").classList.remove("hide");
+}
+document.getElementById("pauseBtn").onclick=pauseGame;
+document.getElementById("resumeBtn").onclick=resumeGame;
+document.getElementById("restartBtn").onclick=()=>{ resumeGame(); startGame(dailyMode); };
+document.getElementById("homeBtn").onclick=goHome;
+document.getElementById("resetBtn").onclick=function(){
+  if(this.dataset.armed){
+    ["bb_best","bb_coins","bb_streak","bb_lastday","bb_dex2","bb_ach","bb_mission","bb_lb","bb_theme","bb_played","bb_shop","bb_typelines","bb_stats","bb_daily","bb_name"].forEach(k=>localStorage.removeItem(k));
+    location.reload();
+  }else{
+    this.dataset.armed="1"; this.textContent="⚠️ 정말 초기화? 한 번 더 탭";
+    setTimeout(()=>{ if(this){ this.dataset.armed=""; this.textContent="🗑️ 데이터 초기화"; } },3000);
+  }
+};
 document.getElementById("muteBtn").onclick=function(){
   muted=!muted; localStorage.setItem("bb_muted",muted?"1":"0");
   this.textContent=muted?"🔇":"🔊";
