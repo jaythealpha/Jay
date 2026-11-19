@@ -718,6 +718,19 @@ function ensureCtx(){
   if(actx && actx.state==="suspended"){ actx.resume().catch(()=>{}); }
   return actx;
 }
+/* Master bus: gain → limiter so stacked SFX on big combos never clip/harsh. */
+let _masterGain=null, _masterComp=null;
+function audioOut(){
+  if(!ensureCtx()) return null;
+  if(!_masterGain){
+    _masterGain=actx.createGain(); _masterGain.gain.value=0.85;
+    _masterComp=actx.createDynamicsCompressor();
+    _masterComp.threshold.value=-10; _masterComp.knee.value=22; _masterComp.ratio.value=12;
+    _masterComp.attack.value=0.003; _masterComp.release.value=0.25;
+    _masterGain.connect(_masterComp); _masterComp.connect(actx.destination);
+  }
+  return _masterGain;
+}
 /* Browsers block audio until a user gesture. Unlock on the first interaction. */
 function unlockAudio(){
   ensureCtx();
@@ -738,7 +751,7 @@ function beep(freq,dur,type,vol){
     o.type=type||"square"; o.frequency.value=freq;
     g.gain.setValueAtTime(vol||0.06, actx.currentTime);
     g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime+(dur||0.12));
-    o.connect(g); g.connect(actx.destination);
+    o.connect(g); g.connect(audioOut()||actx.destination);
     o.start(); o.stop(actx.currentTime+(dur||0.12));
   }catch(e){}
 }
@@ -748,8 +761,12 @@ function beep(freq,dur,type,vol){
 let bgm=new Audio(ASSET_DIR+"bgm.mp3"); bgm.loop=true; bgm.volume=0.30; bgm.preload="auto";
 function bgmPlay(){ if(muted) return; try{ const p=bgm.play(); if(p&&p.catch) p.catch(()=>{}); }catch(e){} }
 function bgmStop(){ try{bgm.pause();}catch(e){} }
-function sndPlace(){ beep(300,0.07,"square",0.16); setTimeout(()=>beep(440,0.07,"square",0.12),40); }
-function sndClear(n){ n=Math.max(1,n); for(let i=0;i<n;i++) setTimeout(()=>{beep(523+i*170,0.15,"square",0.18); beep(262+i*85,0.15,"triangle",0.10);}, i*65); }
+function sndPlace(){ const d=Math.random()*40-20; beep(300+d,0.07,"triangle",0.15); setTimeout(()=>beep(440+d,0.07,"square",0.11),40); }
+/* clear sound rises in pitch with the combo → the game literally sounds more exciting as you chain */
+function sndClear(n){ n=Math.max(1,n); const base=523+Math.min(8,Math.max(0,(combo||0)-1))*42;
+  for(let i=0;i<n;i++) setTimeout(()=>{beep(base+i*170,0.15,"square",0.17); beep(base/2+i*85,0.15,"triangle",0.09);}, i*60); }
+/* bright major-chord arpeggio for combo milestones */
+function sndChime(){ [0,4,7,12].forEach((s,i)=>setTimeout(()=>beep(523*Math.pow(2,s/12),0.45,"sine",0.13),i*70)); }
 function sndCombo(c){ beep(440+c*90,0.2,"sawtooth",0.16); setTimeout(()=>beep(660+c*90,0.2,"square",0.13),85); }
 function sndBad(){ beep(150,0.16,"sawtooth",0.13); }
 function sndCoin(){ beep(988,0.06,"sine",0.16); setTimeout(()=>beep(1319,0.13,"sine",0.14),55); }
@@ -763,7 +780,7 @@ function thump(power){
     const o=actx.createOscillator(), g=actx.createGain(); const t=actx.currentTime;
     o.type="sine"; o.frequency.setValueAtTime(180,t); o.frequency.exponentialRampToValueAtTime(45,t+0.18);
     g.gain.setValueAtTime(Math.min(0.28,0.12+power*0.04),t); g.gain.exponentialRampToValueAtTime(0.001,t+0.28);
-    o.connect(g); g.connect(actx.destination); o.start(); o.stop(t+0.3);
+    o.connect(g); g.connect(audioOut()||actx.destination); o.start(); o.stop(t+0.3);
   }catch(e){}
 }
 // short white-noise burst — the "crunch"
@@ -778,7 +795,7 @@ function noiseBurst(power){
     const bp=actx.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=1200+power*300; bp.Q.value=0.8;
     const g=actx.createGain(); g.gain.setValueAtTime(Math.min(0.18,0.08+power*0.02),actx.currentTime);
     g.gain.exponentialRampToValueAtTime(0.001,actx.currentTime+dur);
-    src.connect(bp); bp.connect(g); g.connect(actx.destination); src.start();
+    src.connect(bp); bp.connect(g); g.connect(audioOut()||actx.destination); src.start();
   }catch(e){}
 }
 function buzz(pattern){ try{ if(navigator.vibrate) navigator.vibrate(pattern); }catch(e){} }
@@ -1360,7 +1377,7 @@ function comboMilestone(c,cx,cy){
   popText(cx, cy-150, m[0], m[1], 24+Math.min(10,c));
   flashEl.classList.remove("go"); void flashEl.offsetWidth; flashEl.classList.add("go");
   boardEl.classList.remove("shake-hard"); void boardEl.offsetWidth; boardEl.classList.add("shake-hard");
-  try{ sndCombo(c); }catch(e){}
+  try{ sndChime(); }catch(e){}
   buzz([0,30,20,30,20,60]);
 }
 
