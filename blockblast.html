@@ -313,6 +313,12 @@
   .achcell.locked .ai{filter:grayscale(1) brightness(.5);}
 
   /* Leaderboard */
+  .helpbody{text-align:left; max-height:54vh; overflow-y:auto; margin:8px 0 2px; padding-right:4px;}
+  .helpsec{margin-bottom:12px;}
+  .helpsec h3{margin:0 0 4px; font-size:14px; color:var(--mint); font-weight:800;}
+  .helpsec p{margin:0; font-size:12.5px; line-height:1.55; opacity:.9;}
+  .helpsec ul{margin:5px 0 0; padding:0; list-style:none; font-size:12px; line-height:1.7; opacity:.9;}
+  .helpsec li{margin:0;}
   .lbscope{display:flex; gap:6px; margin:4px 0 8px;}
   .lbtab{flex:1; padding:8px; border-radius:11px; font-size:12px; font-weight:800; cursor:pointer;
     background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); color:#cfc9ef;}
@@ -427,17 +433,9 @@
     <h1 id="titleH1">블록 블라스트</h1>
     <p style="margin-top:-2px">몬스터 배틀 에디션 ⚔️</p>
     <div class="rules">
-      🧩 <b>몬스터 블록</b>을 드래그해 8×8 판에 놓으세요.<br>
-      ➖ 가로/세로 한 줄을 채우면 그 몬스터가 <b>무기 스킬</b> 발동!<br>
-      ⚡번개 크로스 🔥화염 폭발 💧큰 파도 🌿씨앗폭탄<br>
-      🔮염력 폭발 👻유령 장난 😴꿀잠 보너스 🎈자장가<br>
-      🔥 <b>콤보</b>: 몇 수 안에 계속 터뜨리면 배율이 쌓여요 (여러 줄 = 대박).<br>
-      📖 처음 만난 몬스터는 <b>도감</b>에 등록 (<span class="totalCount">15</span>종 수집!).<br>
-      🧊 <b>얼음 블록</b>은 줄을 채워야 사라져요.<br>
-      ✨ 가끔 <b>골든 몬스터</b>가 등장 — 클리어 시 대박 점수!<br>
-      👑 15줄 클리어마다 <b>보스 몬스터</b> 등장, 클리어하면 광역 폭발!<br>
-      🛒 쌓은 코인으로 <b>상점</b>에서 영구 업그레이드 · 🎯 오늘의 미션 · 📅 접속 보너스.<br>
-      🏆 게임 오버 시 <b>랭킹 등록</b> — 전 세계(또는 이 기기) 최고 점수에 도전!
+      🧩 <b>몬스터 블록</b>을 드래그해 8×8 판의 <b>가로/세로 줄</b>을 채우면<br>
+      그 몬스터의 <b>무기 스킬</b>이 발동! 🔥<b>콤보</b>로 배율을 쌓으세요.<br>
+      <span style="opacity:.75">자세한 규칙은 아래 <b>📖 게임 방법</b>에서 확인!</span>
     </div>
     <div id="chalBanner" class="chalbanner" style="display:none"></div>
     <div class="bestline">🏆 최고 기록: <span id="bestStart">0</span></div>
@@ -447,6 +445,7 @@
     <button class="btn ghost" id="lbBtnStart">🏆 랭킹 보기</button>
     <button class="btn ghost" id="dexBtnStart">📖 몬스터 도감 보기</button>
     <button class="btn ghost" id="profileBtnStart">📊 내 프로필 (통계·업적)</button>
+    <button class="btn ghost" id="helpBtnStart">📖 게임 방법</button>
   </div>
 </div>
 
@@ -517,8 +516,49 @@
     <p style="margin-top:-8px">점수 <b id="pauseScore" style="color:var(--gold)">0</b></p>
     <button class="btn" id="resumeBtn">▶️ 계속하기</button>
     <button class="btn ghost" id="restartBtn">🔄 다시 시작</button>
+    <button class="btn ghost" id="pauseHelpBtn">📖 게임 방법</button>
     <button class="btn ghost" id="homeBtn">🏠 홈으로</button>
     <button class="btn ghost" id="resetBtn" style="color:#ff8c8c">🗑️ 데이터 초기화</button>
+  </div>
+</div>
+
+<!-- Help / how-to-play overlay -->
+<div class="overlay hide" id="helpOverlay">
+  <div class="card">
+    <h2>📖 게임 방법</h2>
+    <div class="helpbody">
+      <div class="helpsec">
+        <h3>🎮 기본</h3>
+        <p>아래 <b>몬스터 블록 3개</b>를 드래그해 8×8 판에 놓으세요. 가로 또는 세로 <b>한 줄</b>을 꽉 채우면 사라지며 점수를 얻어요. 셋 다 놓을 곳이 없으면 게임 오버!</p>
+      </div>
+      <div class="helpsec">
+        <h3>⚔️ 무기 스킬</h3>
+        <p>줄을 완성시킨 몬스터의 <b>타입별 스킬</b>이 추가로 터집니다:</p>
+        <ul>
+          <li>⚡ <b>전기</b> — 십자(가로+세로) 폭발</li>
+          <li>🔥 <b>불</b> — 놓은 자리 주변 폭발</li>
+          <li>💧 <b>물</b> — 가장 꽉 찬 줄 쓸기</li>
+          <li>🌿 <b>풀</b> — 판 위 모든 풀 타입 수확</li>
+          <li>🔮 <b>에스퍼</b> — 주변 폭발 + 점수 2배</li>
+          <li>👻 <b>고스트</b> — 랜덤 블록 제거</li>
+          <li>😴 <b>노말</b>·🎈 <b>페어리</b> — 보너스 점수·위기 실드</li>
+          <li>🧊 <b>얼음</b>·🪨 <b>바위</b>·👑 <b>레전드</b> — 강력 광역기</li>
+        </ul>
+      </div>
+      <div class="helpsec">
+        <h3>🔥 콤보</h3>
+        <p>짧은 간격으로 계속 터뜨리면 <b>콤보 배율</b>이 쌓여요. 콤보 태그 아래 <b>유지 핍(●●)</b>이 줄면 곧 끊긴다는 신호 — <b>빨강 점멸</b>이 뜨면 서둘러 터뜨리세요! x3·x5·x8에서 특별 연출이 나옵니다.</p>
+      </div>
+      <div class="helpsec">
+        <h3>🧊 특수</h3>
+        <p>🧊 <b>얼음 블록</b>은 그 줄을 채워야 사라져요. ✨ <b>골든 몬스터</b>는 클리어 시 점수·코인 대박. 👑 <b>보스</b>는 15줄마다 등장하며 처치 시 광역 폭발!</p>
+      </div>
+      <div class="helpsec">
+        <h3>🏆 성장 · 경쟁</h3>
+        <p>📖 <b>도감</b>(24종) · 🛒 <b>상점</b>(코인으로 영구 업그레이드) · 🎯 <b>오늘의 미션</b> · 📅 <b>데일리 도전</b>(전원 같은 블록) · 📤 <b>친구 도전</b>(링크로 점수 대결) · 🏆 <b>랭킹</b>.</p>
+      </div>
+    </div>
+    <button class="btn" id="helpClose">확인</button>
   </div>
 </div>
 
@@ -1632,6 +1672,10 @@ function openShop(){ buildShop(); document.getElementById("shopOverlay").classLi
 document.getElementById("shopBtnStart").onclick=openShop;
 document.getElementById("shopClose").onclick=()=>document.getElementById("shopOverlay").classList.add("hide");
 document.getElementById("dexClose").onclick=()=>document.getElementById("dexOverlay").classList.add("hide");
+function openHelp(){ document.getElementById("helpOverlay").classList.remove("hide"); }
+document.getElementById("helpBtnStart").onclick=openHelp;
+document.getElementById("pauseHelpBtn").onclick=openHelp;
+document.getElementById("helpClose").onclick=()=>document.getElementById("helpOverlay").classList.add("hide");
 
 /* ============ Leaderboard wiring ============ */
 document.getElementById("submitScoreBtn").onclick=submitScore;
@@ -1727,6 +1771,7 @@ function startGame(daily){
   document.getElementById("lbOverlay").classList.add("hide");
   document.getElementById("shopOverlay").classList.add("hide");
   document.getElementById("profileOverlay").classList.add("hide");
+  document.getElementById("helpOverlay").classList.add("hide");
   paused=false; document.getElementById("pauseOverlay").classList.add("hide");
   document.getElementById("pauseBtn").classList.add("on");
   challengeBeaten=false; renderChallenge();
