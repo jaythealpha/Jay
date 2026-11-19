@@ -295,6 +295,11 @@
   .dexcell .dm{font-size:8px; margin-top:2px; color:var(--gold); font-weight:700; min-height:10px;}
   .dexcell.locked{opacity:.45;}
   .dexcell.locked .de{filter:grayscale(1) brightness(.4);}
+  #weeklyGoal{background:linear-gradient(90deg,rgba(124,92,255,.18),rgba(77,255,184,.14));
+    border:1px solid rgba(124,92,255,.4); border-radius:12px; padding:9px 11px; margin:10px 0 2px; text-align:left;}
+  #weeklyGoal .wgt{font-size:12.5px; font-weight:800;}
+  #weeklyGoal .wgbar{height:7px; border-radius:6px; background:rgba(255,255,255,.12); margin-top:6px; overflow:hidden;}
+  #weeklyGoal .wgfill{height:100%; border-radius:6px; background:linear-gradient(90deg,#7c5cff,#4dffb8); transition:width .4s;}
   .statgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:14px 0 6px;}
   .statcell{background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08);
     border-radius:12px; padding:10px 4px; text-align:center;}
@@ -567,6 +572,7 @@
   <div class="card">
     <h2>📊 내 프로필</h2>
     <p style="margin-top:-8px">업적 <b id="achProgress" style="color:var(--gold)">0</b>/<span id="achTotal">14</span> 달성</p>
+    <div id="weeklyGoal"></div>
     <div class="statgrid" id="statGrid"></div>
     <div class="achhdr">🏅 업적 도감</div>
     <div class="achgrid" id="achGrid"></div>
@@ -853,19 +859,78 @@ function addTypeLines(type,lines){
   for(const [req,ic,label] of MASTERY){ if(n>=req && n-lines<req){ unlock("mast_"+type+"_"+req, ic, `${TYPE_KO[type]} ${label}! (${req}줄 돌파)`); break; } }
 }
 let mission=JSON.parse(localStorage.getItem("bb_mission")||"null");
-const MISSION_POOL=["electric","fire","water","grass","psychic","ghost","normal","fairy","ice","rock"];
+const MISSION_TYPES=["electric","fire","water","grass","psychic","ghost","normal","fairy","ice","rock"];
+/* varied daily missions — one kind picked at random each day */
+const MISSION_TEMPLATES=[
+  {kind:"type",   mk:()=>({type:MISSION_TYPES[Math.floor(Math.random()*MISSION_TYPES.length)], target:5, reward:30})},
+  {kind:"lines",  mk:()=>({target:20,   reward:30})},
+  {kind:"combo",  mk:()=>({target:5,    reward:40})},
+  {kind:"golden", mk:()=>({target:3,    reward:40})},
+  {kind:"ice",    mk:()=>({target:8,    reward:35})},
+  {kind:"score",  mk:()=>({target:3000, reward:40})},
+];
+function rollMission(today){
+  const tpl=MISSION_TEMPLATES[Math.floor(Math.random()*MISSION_TEMPLATES.length)];
+  return Object.assign({date:today, kind:tpl.kind, progress:0, done:false}, tpl.mk());
+}
 function ensureMission(today){
   if(!mission || mission.date!==today){
-    const mtype=MISSION_POOL[Math.floor(Math.random()*MISSION_POOL.length)];
-    mission={date:today, type:mtype, target:5, progress:0, done:false};
+    mission=rollMission(today);
     localStorage.setItem("bb_mission",JSON.stringify(mission));
+  } else if(!mission.kind){ mission.kind="type"; mission.reward=mission.reward||30; } // migrate old format
+}
+function missionLabel(){
+  const p=Math.min(mission.progress,mission.target), t=mission.target;
+  switch(mission.kind){
+    case "type":   return `${TYPE_KO[mission.type]} 타입 ${p}/${t}`;
+    case "lines":  return `줄 지우기 ${p}/${t}`;
+    case "combo":  return `콤보 x${Math.min(mission.progress,t)}/x${t}`;
+    case "golden": return `골든 ${p}/${t}`;
+    case "ice":    return `얼음깨기 ${p}/${t}`;
+    case "score":  return `한판 ${p.toLocaleString()}/${t.toLocaleString()}`;
   }
+  return "";
 }
 function renderMission(){
   const chip=document.getElementById("missionChip");
-  document.getElementById("missionText").textContent=
-    `${TYPE_KO[mission.type]} 타입 ${Math.min(mission.progress,mission.target)}/${mission.target}${mission.done?" ✅":""}`;
+  document.getElementById("missionText").textContent = missionLabel()+(mission.done?" ✅":"");
   chip.classList.toggle("done",mission.done);
+}
+/* advance the daily mission from a clear event; returns true if it completed now */
+function missionProgress(ev){
+  if(!mission || mission.done) return;
+  const before=mission.progress;
+  switch(mission.kind){
+    case "type":   if(ev.type===mission.type) mission.progress++; break;
+    case "lines":  mission.progress+=ev.lines; break;
+    case "combo":  mission.progress=Math.max(mission.progress, ev.combo); break;
+    case "golden": if(ev.golden) mission.progress++; break;
+    case "ice":    mission.progress+=ev.iceCleared; break;
+    case "score":  mission.progress=Math.max(mission.progress, ev.score); break;
+  }
+  if(mission.progress===before) return;              // nothing changed — skip write
+  if(!mission.done && mission.progress>=mission.target){
+    mission.done=true; coins+=mission.reward; localStorage.setItem("bb_coins",coins);
+    toast("🎯",`오늘의 미션 완료! +${mission.reward}🪙`);
+    weeklyBump();
+  }
+  localStorage.setItem("bb_mission",JSON.stringify(mission));
+  renderMission();
+}
+
+/* ---- Weekly goal: complete N daily missions this week ---- */
+let weekly=JSON.parse(localStorage.getItem("bb_weekly")||"null");
+function weekKey(){ const d=new Date(); const oj=new Date(d.getFullYear(),0,1); const wk=Math.ceil((((d-oj)/86400000)+oj.getDay()+1)/7); return d.getFullYear()+"-W"+wk; }
+function ensureWeekly(){
+  const wk=weekKey();
+  if(!weekly || weekly.week!==wk){ weekly={week:wk, target:5, progress:0, done:false, reward:150}; localStorage.setItem("bb_weekly",JSON.stringify(weekly)); }
+}
+function weeklyBump(){
+  ensureWeekly();
+  if(weekly.done) return;
+  weekly.progress++;
+  if(weekly.progress>=weekly.target){ weekly.done=true; coins+=weekly.reward; localStorage.setItem("bb_coins",coins); setTimeout(()=>toast("🏅",`주간 목표 달성! +${weekly.reward}🪙`),900); }
+  localStorage.setItem("bb_weekly",JSON.stringify(weekly));
 }
 function load(){
   best=+(localStorage.getItem("bb_best")||0);
@@ -887,6 +952,7 @@ function load(){
     else setTimeout(()=>toast("📅",`출석 보너스 +${bonus}🪙`),700);
   }
   ensureMission(today);
+  ensureWeekly();
   renderMission();
 }
 function saveMeta(){
@@ -1307,13 +1373,8 @@ function resolveClears(char, placed, ar, ac, golden){
   if(combo>1){ showCombo(combo); popText(cx,cy+38,`COMBO x${combo}`, "#ff8c42", 20); comboMilestone(combo,cx,cy); }
   spawnParticles(toClear, Math.min(6,2+power));
 
-  // daily mission progress
-  if(mission && !mission.done && char.type===mission.type){
-    mission.progress++;
-    if(mission.progress>=mission.target){ mission.done=true; coins+=30; toast("🎯","오늘의 미션 완료! +30🪙"); }
-    localStorage.setItem("bb_mission",JSON.stringify(mission));
-    renderMission();
-  }
+  // daily mission progress (varied kinds)
+  missionProgress({type:char.type, lines:lines, combo:combo, golden:golden, iceCleared:iceCleared, score:score});
 
   // achievements
   unlock("first","🧩","첫 줄 클리어!");
@@ -1604,6 +1665,11 @@ document.getElementById("dexBtnStart").onclick=openDex;
 
 /* ============ Profile overlay (lifetime stats + achievements) ============ */
 function buildProfile(){
+  ensureWeekly();
+  const wg=document.getElementById("weeklyGoal");
+  const wp=Math.min(weekly.progress,weekly.target), pct=Math.round(wp/weekly.target*100);
+  wg.innerHTML=`<div class="wgt">🏅 주간 목표 — 일일 미션 ${wp}/${weekly.target} 완료 ${weekly.done?"✅ +"+weekly.reward+"🪙":`(달성 시 +${weekly.reward}🪙)`}</div>
+    <div class="wgbar"><div class="wgfill" style="width:${pct}%"></div></div>`;
   const sg=document.getElementById("statGrid"); sg.innerHTML="";
   const stats=[
     ["🎮", STATS.games.toLocaleString(), "플레이 판수"],
@@ -1857,7 +1923,7 @@ document.getElementById("restartBtn").onclick=()=>{ resumeGame(); startGame(dail
 document.getElementById("homeBtn").onclick=goHome;
 document.getElementById("resetBtn").onclick=function(){
   if(this.dataset.armed){
-    ["bb_best","bb_coins","bb_streak","bb_lastday","bb_dex2","bb_ach","bb_mission","bb_lb","bb_theme","bb_played","bb_shop","bb_typelines","bb_stats","bb_daily","bb_name"].forEach(k=>localStorage.removeItem(k));
+    ["bb_best","bb_coins","bb_streak","bb_lastday","bb_dex2","bb_ach","bb_mission","bb_weekly","bb_lb","bb_lb_daily","bb_theme","bb_played","bb_shop","bb_typelines","bb_stats","bb_daily","bb_name"].forEach(k=>localStorage.removeItem(k));
     location.reload();
   }else{
     this.dataset.armed="1"; this.textContent="⚠️ 정말 초기화? 한 번 더 탭";
