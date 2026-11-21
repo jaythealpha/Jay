@@ -166,6 +166,12 @@
     border:4px solid rgba(255,255,255,.85); transform:translate(-50%,-50%) scale(.2); opacity:.9;}
   .shockwave.go{animation:shock .5s cubic-bezier(.15,.7,.3,1) forwards;}
   @keyframes shock{to{transform:translate(-50%,-50%) scale(2.6); opacity:0; border-width:1px;}}
+  /* fireball burst when blocks explode */
+  .boom{position:fixed; z-index:44; pointer-events:none; border-radius:50%; mix-blend-mode:screen;
+    transform:translate(-50%,-50%) scale(.2); opacity:.95;
+    background:radial-gradient(circle, rgba(255,255,255,.95) 0%, rgba(255,214,90,.8) 32%, rgba(255,120,40,.5) 56%, transparent 72%);}
+  .boom.go{animation:boomExp .5s cubic-bezier(.15,.7,.3,1) forwards;}
+  @keyframes boomExp{to{transform:translate(-50%,-50%) scale(2.5); opacity:0;}}
   .cell{
     border-radius:7px; background:linear-gradient(160deg,rgba(255,255,255,.028),rgba(0,0,0,.14));
     box-shadow:inset 0 0 0 1px var(--cell-edge);
@@ -227,6 +233,15 @@
   #ghost.invalid{opacity:.55; filter:saturate(.35) brightness(.85) drop-shadow(0 4px 8px rgba(0,0,0,.5));}
   #ghost .pc{width:var(--gps); height:var(--gps); border-radius:7px; font-size:calc(var(--gps)*.62);
     box-shadow:inset 0 2px 4px rgba(255,255,255,.45), inset 0 -3px 6px rgba(0,0,0,.4), 0 2px 6px rgba(0,0,0,.35);}
+  /* landing shadow — semi-transparent preview of where the piece will drop */
+  #preview{position:fixed; left:0; top:0; pointer-events:none; z-index:41; display:grid; gap:4px;
+    transform:translate(-9999px,-9999px); opacity:0; transition:transform .06s cubic-bezier(.22,1,.3,1), opacity .1s;}
+  #preview.on{opacity:1;}
+  #preview .pc{width:var(--gps); height:var(--gps); border-radius:7px;
+    background:rgba(255,255,255,.14); box-shadow:inset 0 0 0 2px rgba(255,255,255,.75), 0 0 10px rgba(124,92,255,.35);
+    animation:previewPulse .7s ease-in-out infinite alternate;}
+  @keyframes previewPulse{from{box-shadow:inset 0 0 0 2px rgba(255,255,255,.55), 0 0 6px rgba(124,92,255,.3)}
+    to{box-shadow:inset 0 0 0 2px rgba(255,255,255,.95), 0 0 14px rgba(124,92,255,.6)}}
   #ghost.snap .pc{box-shadow:inset 0 2px 4px rgba(255,255,255,.5), 0 0 0 2px rgba(255,255,255,.55), 0 6px 14px rgba(0,0,0,.45);}
   .cell.hint{background:rgba(124,92,255,.32)!important; box-shadow:inset 0 0 0 2px rgba(255,255,255,.6)!important; animation:hintPulse .5s ease-in-out infinite alternate;}
   @keyframes hintPulse{from{box-shadow:inset 0 0 0 2px rgba(255,255,255,.45)}to{box-shadow:inset 0 0 0 2px rgba(255,255,255,.85), 0 0 8px rgba(124,92,255,.5)}}
@@ -439,6 +454,7 @@
 </div>
 
 <div id="ghost"></div>
+<div id="preview"></div>
 <div id="flash"></div>
 <div id="dangerVig"></div>
 <div id="coachHint">👆 몬스터를 끌어서 판에 놓아요</div>
@@ -766,6 +782,7 @@ let runLines, runBestCombo, dexAtStart, comboWindow, freeHammer;
 const boardEl=document.getElementById("board");
 const trayEl=document.getElementById("tray");
 const ghostEl=document.getElementById("ghost");
+const previewEl=document.getElementById("preview");
 const popsEl=document.getElementById("pops");
 const scoreVal=document.getElementById("scoreVal");
 const coinVal=document.getElementById("coinVal");
@@ -1407,7 +1424,8 @@ function resolveClears(char, placed, ar, ac, golden){
   const cx=nn?sx/nn:window.innerWidth/2, cy=nn?sy/nn:window.innerHeight*0.42;
   const power=lines + Math.max(0,combo-1) + (skillOnly>0?1:0) + (lines>=3?1:0) + (golden?2:0);
   impact(power, cx, cy, TYPES[char.type].color);
-  sndClear(lines); sndShatter(lines); sndSkill(); if(combo>1)sndCombo(combo); sndCoin();
+  if(power>=2) explosionBurst(cx, cy, power);     // fireball blast on bigger clears
+  sndClear(lines); sndShatter(lines); if(power>=2) sndExplode(power); sndSkill(); if(combo>1)sndCombo(combo); sndCoin();
   lineSweep(fullRows, fullCols);
   spawnShards(toClear, TYPES[char.type].color);
   popText(cx,cy,`+${gained}`, "#ffd23f", 26+Math.min(14,power*2));
@@ -1534,6 +1552,25 @@ function shockwave(x,y,color){
   document.body.appendChild(s); void s.offsetWidth; s.classList.add("go");
   setTimeout(()=>s.remove(),520);
 }
+/* fireball explosion burst — scales with clear power */
+function explosionBurst(cx,cy,power){
+  if(REDUCE) return;
+  const b=document.createElement("div"); b.className="boom";
+  const size=72+power*26; b.style.width=size+"px"; b.style.height=size+"px";
+  b.style.left=cx+"px"; b.style.top=cy+"px";
+  document.body.appendChild(b); void b.offsetWidth; b.classList.add("go");
+  setTimeout(()=>b.remove(),520);
+}
+/* explosive "pow" layered on top of the impact bass for a bigger blast */
+function sndExplode(power){
+  if(muted)return;
+  try{ if(!ensureCtx())return; const t=actx.currentTime;
+    const o=actx.createOscillator(), g=actx.createGain();
+    o.type="square"; o.frequency.setValueAtTime(230,t); o.frequency.exponentialRampToValueAtTime(55,t+0.2);
+    g.gain.setValueAtTime(Math.min(0.2,0.09+power*0.025),t); g.gain.exponentialRampToValueAtTime(0.001,t+0.22);
+    o.connect(g); g.connect(audioOut()||actx.destination); o.start(); o.stop(t+0.22);
+  }catch(e){}
+}
 // central game-feel orchestrator — power scales with lines + combo
 function impact(power, cx, cy, color){
   // impact flash
@@ -1626,22 +1663,27 @@ function attachDrag(el,idx){
     ensureCtx();
     const gps=(boardEl.clientWidth-16-4*7)/8;
     ghostEl.style.setProperty("--gps",gps+"px");
+    previewEl.style.setProperty("--gps",gps+"px");
     const rows=Math.max(...p.shape.map(s=>s[0]))+1, cols=Math.max(...p.shape.map(s=>s[1]))+1;
     ghostEl.style.gridTemplateColumns=`repeat(${cols},${gps}px)`;
     ghostEl.style.gridTemplateRows=`repeat(${rows},${gps}px)`;
-    ghostEl.innerHTML="";
+    previewEl.style.gridTemplateColumns=`repeat(${cols},${gps}px)`;
+    previewEl.style.gridTemplateRows=`repeat(${rows},${gps}px)`;
+    ghostEl.innerHTML=""; previewEl.innerHTML="";
     const set=new Set(p.shape.map(s=>s[0]+","+s[1]));
     for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
       const cell=document.createElement("div");
+      const pvc=document.createElement("div");
       if(set.has(r+","+c)){cell.className="pc"; cell.style.background=p.char.color;
         if(!spriteCSS(cell,p.char)) cell.textContent=p.char.emoji;
-        if(p.golden) cell.classList.add("golden");}
-      else cell.style.visibility="hidden";
-      ghostEl.appendChild(cell);
+        if(p.golden) cell.classList.add("golden");
+        pvc.className="pc"; pvc.style.background=hexA(TYPES[p.char.type].color,.22);}
+      else { cell.style.visibility="hidden"; pvc.style.visibility="hidden"; }
+      ghostEl.appendChild(cell); previewEl.appendChild(pvc);
     }
     // finger offset: piece sits just above the finger with a CONSTANT gap for every
     // piece size (bottom-center grab) → predictable aim across all shapes
-    drag={idx,p,gps,cols,rows,offX:cols*gps/2,offY:rows*gps+16,lastKey:null,target:null,moved:false};
+    drag={idx,p,gps,cols,rows,offX:cols*gps/2,offY:rows*gps+16,lift:Math.round(gps*0.6),lastKey:null,target:null,moved:false};
     el.classList.add("dragging","grabbing");
     ghostEl.classList.remove("snap","invalid");
     moveGhost(e.clientX,e.clientY);
@@ -1651,7 +1693,9 @@ function attachDrag(el,idx){
     window.addEventListener("pointercancel",onUp);
   });
 }
-function moveGhost(x,y){ ghostEl.style.transform=`translate(${x-drag.offX}px,${y-drag.offY}px)`; }
+/* held piece floats a bit ABOVE its landing shadow (Block-Blast style) so the
+   semi-transparent preview below it stays visible */
+function moveGhost(x,y){ ghostEl.style.transform=`translate(${x-drag.offX}px,${y-drag.offY-drag.lift}px)`; }
 function hoveredCell(x,y){
   const bx=x-drag.offX, by=y-drag.offY;
   const rect=boardEl.getBoundingClientRect();
@@ -1672,27 +1716,32 @@ function findSnap(r,c,shape){
   }
   return best;
 }
+function showPreview(snap){
+  const rect=boardEl.getBoundingClientRect(), pad=8, gap=4;
+  const gx=rect.left+pad + snap.c*(drag.gps+gap);
+  const gy=rect.top+pad + snap.r*(drag.gps+gap);
+  previewEl.style.transform=`translate(${gx}px,${gy}px)`;
+  previewEl.classList.add("on");
+}
+function hidePreview(){ previewEl.classList.remove("on"); previewEl.style.transform="translate(-9999px,-9999px)"; }
 function onMove(e){
   if(!drag)return; e.preventDefault();
   drag.moved=true;
   clearHints();
+  moveGhost(e.clientX,e.clientY);          // the held piece always follows the finger (lifted)
   const raw=hoveredCell(e.clientX,e.clientY);
   const snap=findSnap(raw.r,raw.c,drag.p.shape);
   if(snap){
     drag.target=snap;
-    // magnetic snap: lock the ghost onto the exact grid cells it will occupy
-    const rect=boardEl.getBoundingClientRect(), pad=8, gap=4;
-    const gx=rect.left+pad + snap.c*(drag.gps+gap);
-    const gy=rect.top+pad + snap.r*(drag.gps+gap);
-    ghostEl.style.transform=`translate(${gx}px,${gy}px)`;
-    ghostEl.classList.add("snap"); ghostEl.classList.remove("invalid");
+    showPreview(snap);                      // semi-transparent landing shadow on the grid
     for(const[dr,dc]of drag.p.shape) cells[snap.r+dr][snap.c+dc].classList.add("hint");
+    ghostEl.classList.remove("invalid");
     const key=snap.r+","+snap.c;
     if(drag.lastKey!==key){ drag.lastKey=key; buzz(6); }   // soft tick when target changes
   } else {
     drag.target=null;
-    moveGhost(e.clientX,e.clientY);
-    ghostEl.classList.remove("snap"); ghostEl.classList.add("invalid");
+    hidePreview();
+    ghostEl.classList.add("invalid");
     drag.lastKey=null;
   }
 }
@@ -1703,6 +1752,7 @@ function onUp(e){
   window.removeEventListener("pointercancel",onUp);
   ghostEl.style.transform="translate(-9999px,-9999px)";
   ghostEl.classList.remove("snap","invalid");
+  hidePreview();
   clearHints();
   const target=drag.target, idx=drag.idx, shape=drag.p.shape, moved=drag.moved;   // place exactly where the hint showed (WYSIWYG)
   drag=null;
