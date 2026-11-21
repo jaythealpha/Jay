@@ -114,6 +114,13 @@
     padding:4px 10px; border-radius:20px; color:#0b0a16; background:linear-gradient(90deg,#7c5cff,#4dffb8);
     box-shadow:0 3px 12px rgba(124,92,255,.4);}
   #dailyTag.on{display:block;}
+  #ghostHud{display:none; align-self:center; margin:-2px 0 0; white-space:nowrap;
+    font-size:11px; font-weight:800; padding:4px 12px; border-radius:20px; color:#fff;
+    background:rgba(20,16,40,.9); border:1px solid rgba(255,255,255,.2); box-shadow:0 3px 12px rgba(0,0,0,.4);}
+  #ghostHud.on{display:block;}
+  #ghostHud.ahead{border-color:var(--mint);}
+  #ghostHud.behind{border-color:#ff2e63;}
+  #ghostHud .gl{color:var(--mint);} #ghostHud .gb{color:#ff6b8a;}
 
   /* ===== Board ===== */
   #boardWrap{position:relative; width:100%; aspect-ratio:1/1;}
@@ -413,6 +420,8 @@
     </div>
     <div class="comboWrap"><span id="comboTag">COMBO x2</span><div id="comboGrace"></div></div>
   </div>
+
+  <div id="ghostHud"></div>
 
   <div id="boardWrap"><div id="board"></div><div id="boardFrame"></div></div>
 
@@ -1288,6 +1297,8 @@ function place(idx,r,c){
   renderScore();
   renderTray();
   saveMeta();
+  if(ghostTrace.length<GHOST_CAP) ghostTrace.push(score);   // record per-move score for ghost sharing
+  renderGhostHUD();
   setTimeout(maybeSpawnObstacle,450);
 }
 function maybeSpawnObstacle(){
@@ -1848,6 +1859,18 @@ function hideCoach(){
 
 /* ============ Friend challenge (async, no backend) ============ */
 let challenge=null, challengeBeaten=false;
+/* ghost replay: opponent's per-move score trajectory on the same seeded board */
+let ghostTrace=[], ghost=null, pendingGhost=null;
+const GHOST_CAP=80;
+function encodeGhost(trace){
+  const cap=trace.slice(0,GHOST_CAP); let prev=0, parts=[];
+  for(const s of cap){ parts.push(Math.max(0,s-prev).toString(36)); prev=s; }
+  return parts.join(".");
+}
+function decodeGhost(str){
+  try{ let acc=0, out=[]; for(const p of str.split(".")){ acc+=parseInt(p,36)||0; out.push(acc); } return out.length?out:null; }
+  catch(e){ return null; }
+}
 function parseChallenge(){
   try{
     const m=(location.hash||"").match(/[#&]c=(\d+)\.?(.*)$/);
@@ -1858,6 +1881,8 @@ function parseChallenge(){
         challenge={score:sc, name:nm||"친구"};
         const sm=(location.hash||"").match(/[#&]s=(\d+)/);
         if(sm){ const sd=parseInt(sm[1],10); if(sd>=0 && sd<=4294967295) challenge.seed=sd; }
+        const gm=(location.hash||"").match(/[#&]g=([0-9a-z.]+)/i);
+        if(gm){ const gt=decodeGhost(gm[1]); if(gt) challenge.ghost=gt; }
       }
     }
   }catch(e){ challenge=null; }
@@ -1868,13 +1893,16 @@ function renderChallenge(){
   const acc=document.getElementById("challengeAcceptBtn");
   if(!challenge){ if(chip)chip.style.display="none"; if(banner)banner.style.display="none"; if(acc)acc.style.display="none"; return; }
   const sameBoard = challenge.seed!=null;
+  const hasGhost = sameBoard && challenge.ghost;
   if(banner){
     banner.style.display="block";
-    banner.innerHTML = sameBoard
+    banner.innerHTML = hasGhost
+      ? `👻 <b>${esc(challenge.name)}</b>님과 <b>고스트 레이스!</b><br>같은 블록으로 매 수 점수를 겨뤄요 (상대 최종 ${challenge.score.toLocaleString()}) 🔥`
+      : sameBoard
       ? `⚔️ <b>${esc(challenge.name)}</b>님의 <b>같은 블록 대결!</b><br>${challenge.score.toLocaleString()}점을 똑같은 순서로 넘어보세요 🔥`
       : `🎯 <b>${esc(challenge.name)}</b>님의 도전장!<br>${challenge.score.toLocaleString()}점을 넘어보세요 🔥`;
   }
-  if(acc) acc.style.display = sameBoard ? "block" : "none";
+  if(acc){ acc.style.display = sameBoard ? "block" : "none"; acc.textContent = hasGhost ? "👻 고스트 레이스 수락" : "⚔️ 같은 블록으로 도전 수락"; }
   if(chip){
     chip.style.display="inline-flex";
     document.getElementById("chalTarget").textContent=challenge.score.toLocaleString();
@@ -1891,6 +1919,21 @@ function checkChallengeBeat(){
     toast("🎉",`도전 성공! ${challenge.name} 추월!`);
     bigPop("🎉 추월! 🎉");
   }
+}
+function renderGhostHUD(){
+  const el=document.getElementById("ghostHud");
+  if(!el) return;
+  if(!ghost){ el.classList.remove("on"); return; }
+  el.classList.add("on");
+  const k=ghostTrace.length;                       // placements I have made
+  const finished = k>=ghost.length;
+  const gScore = k>0 ? ghost[Math.min(k,ghost.length)-1] : 0;
+  const lead = score - gScore;
+  const nm = (challenge&&challenge.name)||"상대";
+  el.innerHTML = `👻 ${esc(nm)} <b>${gScore.toLocaleString()}</b>${finished?" 🏁":""} · 나 <b>${score.toLocaleString()}</b>` +
+    (lead>=0?` <span class="gl">▲+${lead.toLocaleString()}</span>`:` <span class="gb">▼${lead.toLocaleString()}</span>`);
+  el.classList.toggle("ahead", lead>=0);
+  el.classList.toggle("behind", lead<0);
 }
 function bigPop(txt){
   try{
@@ -1933,6 +1976,7 @@ function startGame(daily, seed){
   paused=false; document.getElementById("pauseOverlay").classList.add("hide");
   document.getElementById("pauseBtn").classList.add("on");
   challengeBeaten=false; renderChallenge();
+  ghostTrace=[]; ghost = challengeSeedMode ? pendingGhost : null; pendingGhost=null; renderGhostHUD();
   document.getElementById("dailyTag").classList.toggle("on", dailyMode);
   buildBoard(); paint(); newTray(); renderScore(); hideCombo(); renderMission();
   bgmPlay(); maybeCoach();
@@ -1990,7 +2034,7 @@ function endGame(){
 document.getElementById("startBtn").onclick=()=>startGame(false);
 document.getElementById("againBtn").onclick=()=>startGame(dailyMode);   // restart keeps current mode
 document.getElementById("dailyBtnStart").onclick=()=>startGame(true);
-document.getElementById("challengeAcceptBtn").onclick=()=>{ if(challenge) startGame(false, challenge.seed); };
+document.getElementById("challengeAcceptBtn").onclick=()=>{ if(challenge){ pendingGhost=challenge.ghost||null; startGame(false, challenge.seed); } };
 
 /* ---- Pause / in-game menu ---- */
 function pauseGame(){
@@ -2031,7 +2075,8 @@ document.getElementById("muteBtn").onclick=function(){
 function challengeLink(){
   const nm=(localStorage.getItem("bb_name")||"").trim().slice(0,10);
   const base=location.origin+location.pathname;
-  return base+"#c="+score+(nm?("."+encodeURIComponent(nm)):"")+"&s="+currentSeed;
+  const g = ghostTrace.length ? ("&g="+encodeGhost(ghostTrace)) : "";
+  return base+"#c="+score+(nm?("."+encodeURIComponent(nm)):"")+"&s="+currentSeed+g;
 }
 document.getElementById("shareBtn").onclick=async function(){
   const link=challengeLink();
