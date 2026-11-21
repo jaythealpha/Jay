@@ -1001,9 +1001,11 @@ const LB={
   async submit(entry){
     if(LB_ONLINE){
       try{
+        const body={name:entry.name, score:entry.score, dex:entry.dex};
+        if(entry.day) body.day=entry.day;   // only for daily (table needs a `day` column)
         const r=await fetch(`${LB_CONFIG.url}/rest/v1/${LB_CONFIG.table}`,{
           method:"POST", headers:Object.assign(this.headers(),{Prefer:"return=minimal"}),
-          body:JSON.stringify({name:entry.name, score:entry.score, dex:entry.dex})
+          body:JSON.stringify(body)
         });
         if(!r.ok) throw new Error("http "+r.status);
         return true;
@@ -1034,8 +1036,19 @@ const LB={
     const a=this.localTop(9999);
     return a.filter(e=>e.score>sc).length+1;
   },
-  /* daily-challenge local leaderboard (today's shared board, this device) */
-  dailyTop(n){
+  /* daily-challenge leaderboard — global (today's board) when online, else this device */
+  async dailyTop(n){
+    if(this.online){
+      try{
+        const u=`${LB_CONFIG.url}/rest/v1/${LB_CONFIG.table}?select=name,score,dex&day=eq.${todayKey()}&order=score.desc&limit=${n||20}`;
+        const r=await fetch(u,{headers:this.headers()});
+        if(!r.ok) throw new Error("http "+r.status);
+        return await r.json();
+      }catch(e){ this.online=false; return this.localDailyTop(n); }
+    }
+    return this.localDailyTop(n);
+  },
+  localDailyTop(n){
     const rec=JSON.parse(localStorage.getItem("bb_lb_daily")||"{}");
     if(rec.date!==todayKey()) return [];
     return (rec.rows||[]).slice().sort((x,y)=>y.score-x.score).slice(0,n||20);
@@ -1047,7 +1060,7 @@ const LB={
     rec.rows.sort((x,y)=>y.score-x.score); rec.rows=rec.rows.slice(0,50);
     localStorage.setItem("bb_lb_daily",JSON.stringify(rec));
   },
-  dailyRankOf(sc){ return this.dailyTop(9999).filter(e=>e.score>sc).length+1; }
+  dailyRankOf(sc){ return this.localDailyTop(9999).filter(e=>e.score>sc).length+1; }
 };
 let lastSubmitted=false, myScoreForLB=0, myDexForLB=0, lbScope="all", lbHighlight="";
 function esc(s){return String(s).replace(/[<>&"]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;","\"":"&quot;"}[c]));}
@@ -1059,12 +1072,12 @@ async function openLeaderboard(highlightName, scope){
   document.getElementById("lbTabDaily").classList.toggle("active", lbScope==="daily");
   const daily = lbScope==="daily";
   document.getElementById("lbMode").innerHTML = daily
-    ? "📅 <b>오늘의 도전</b> 랭킹 — 같은 블록으로 겨룬 이 기기 기록"
+    ? (LB.online ? "📅 <b>오늘의 도전</b> 글로벌 랭킹 — 같은 블록으로 전 세계 경쟁" : "📅 <b>오늘의 도전</b> 랭킹 — 같은 블록으로 겨룬 이 기기 기록")
     : (LB.online ? "🌍 <b>글로벌</b> 랭킹" : "📱 <b>이 기기</b> 랭킹 (글로벌은 설정 후 활성화)");
   const list=document.getElementById("lbList");
   list.innerHTML="<div class='lbempty'>불러오는 중…</div>";
   ov.classList.remove("hide");
-  const rows = daily ? LB.dailyTop(20) : await LB.top(20);
+  const rows = daily ? await LB.dailyTop(20) : await LB.top(20);
   if(!rows.length){ list.innerHTML = daily
     ? "<div class='lbempty'>오늘의 도전 기록이 아직 없어요. 📅 오늘의 도전을 플레이해보세요!</div>"
     : "<div class='lbempty'>아직 기록이 없어요. 첫 주인공이 되어보세요! 🏆</div>"; return; }
@@ -1088,7 +1101,7 @@ async function submitScore(){
   const line=document.getElementById("myRankLine");
   line.style.display="block"; line.textContent="랭킹 등록 중…";
   myScoreForLB=score; myDexForLB=DEX.size; lastSubmitted=true;
-  await LB.submit({name:nm, score:score, dex:DEX.size});
+  await LB.submit({name:nm, score:score, dex:DEX.size, day: dailyMode?todayKey():null});
   if(dailyMode){
     LB.dailyAdd({name:nm, score:score, dex:DEX.size});
     const drank=LB.dailyRankOf(score);

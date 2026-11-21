@@ -20,11 +20,14 @@ create table if not exists public.leaderboard (
   name       text not null check (char_length(name) <= 10),
   score      integer not null check (score >= 0 and score < 100000000),
   dex        integer default 0,
+  day        text,                 -- 오늘의 도전(데일리) 랭킹용 날짜키(YYYYMMDD), 일반판은 null
   created_at timestamptz default now()
 );
 
 -- 점수 내림차순 조회 최적화
 create index if not exists leaderboard_score_idx on public.leaderboard (score desc);
+-- 데일리(오늘의 도전) 글로벌 랭킹 조회 최적화
+create index if not exists leaderboard_day_idx on public.leaderboard (day, score desc);
 
 -- 행 수준 보안: 누구나 읽고, 점수 제출(insert)만 가능. 수정·삭제는 불가.
 alter table public.leaderboard enable row level security;
@@ -32,6 +35,9 @@ alter table public.leaderboard enable row level security;
 create policy "read_all"   on public.leaderboard for select using (true);
 create policy "insert_any" on public.leaderboard for insert with check (true);
 ```
+
+> 이미 `day` 컬럼 없이 테이블을 만들었다면 이 한 줄만 추가 실행하세요:
+> `alter table public.leaderboard add column if not exists day text;`
 
 ## 3. 게임에 키 연결
 `blockblast.html` 상단의 `LB_CONFIG` 를 채웁니다:
@@ -44,7 +50,7 @@ const LB_CONFIG={
 };
 ```
 
-저장하고 새로고침하면 랭킹 화면 상단이 **🌍 글로벌 랭킹**으로 바뀝니다. 끝!
+저장하고 새로고침하면 랭킹 화면이 **🌍 글로벌 랭킹**(전체)과 **📅 오늘의 도전 글로벌 랭킹**(같은 블록으로 전 세계 경쟁) 둘 다로 바뀝니다. 끝!
 
 ## 동작 방식
 - **점수 제출**: 게임 오버 시 이름 입력 후 `랭킹 등록` → `POST /rest/v1/leaderboard`
